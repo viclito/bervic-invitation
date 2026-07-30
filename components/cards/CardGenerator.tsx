@@ -381,42 +381,42 @@ export default function CardGenerator() {
   return (
     <div style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden', background: '#1A1614', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <header style={{ height: '64px', background: '#120F0D', borderBottom: '1px solid rgba(217,164,65,0.2)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 50 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Sparkles style={{ width: 20, height: 20, color: '#D9A441' }} />
+      <header className="min-h-[64px] bg-[#120F0D] border-b border-[#D9A441]/20 px-3 sm:px-7 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Sparkles style={{ width: 18, height: 18, color: '#D9A441' }} />
           <div>
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#D9A441', letterSpacing: 4, textTransform: 'uppercase', display: 'block', lineHeight: 1 }}>BERVIC</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#F8F3EA', lineHeight: 1.2 }}>Instagram Card Studio</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#D9A441', letterSpacing: 3, textTransform: 'uppercase', display: 'block', lineHeight: 1 }}>BERVIC</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#F8F3EA', lineHeight: 1.2 }}>Instagram Card Studio</span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           {/* Card Quota Display Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(217,164,65,0.12)', border: '1px solid rgba(217,164,65,0.3)', padding: '6px 14px', borderRadius: 99, color: '#D9A441', fontSize: 11, fontWeight: 700 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(217,164,65,0.12)', border: '1px solid rgba(217,164,65,0.3)', padding: '4px 10px', borderRadius: 99, color: '#D9A441', fontSize: 11, fontWeight: 700 }}>
             <span>Cards: {subscriptionData.usedCardsCount} / {subscriptionData.allowedCardsCount}</span>
             <button
               onClick={handleRefreshQuota}
-              style={{ background: '#7A1F2B', color: '#F8F3EA', border: 'none', padding: '2px 8px', borderRadius: 99, fontSize: 10, cursor: 'pointer', fontWeight: 800 }}
+              style={{ background: '#7A1F2B', color: '#F8F3EA', border: 'none', padding: '2px 6px', borderRadius: 99, fontSize: 10, cursor: 'pointer', fontWeight: 800 }}
               title="Refresh Card Quota for Testing"
             >
-              🔄 Refresh
+              🔄
             </button>
           </div>
 
           <button
             onClick={() => triggerDownloadConfirmation('png')}
             disabled={exporting}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 20px', borderRadius: 99, background: '#D9A441', color: '#221C17', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13, opacity: exporting ? 0.7 : 1, boxShadow: '0 4px 14px rgba(217,164,65,0.3)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 99, background: '#D9A441', color: '#221C17', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 12, opacity: exporting ? 0.7 : 1, boxShadow: '0 4px 14px rgba(217,164,65,0.3)' }}
           >
-            <ImageIcon style={{ width: 15, height: 15 }} />
-            {exporting ? 'Exporting…' : 'Download PNG'}
+            <ImageIcon style={{ width: 13, height: 13 }} />
+            {exporting ? 'Exporting…' : 'PNG'}
           </button>
           <button
             onClick={() => triggerDownloadConfirmation('pdf')}
             disabled={exporting}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 20px', borderRadius: 99, background: '#7A1F2B', color: '#F8F3EA', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13, opacity: exporting ? 0.7 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 99, background: '#7A1F2B', color: '#F8F3EA', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 12, opacity: exporting ? 0.7 : 1 }}
           >
-            <Download style={{ width: 15, height: 15 }} />
-            {exporting ? 'Exporting…' : 'Download PDF'}
+            <Download style={{ width: 13, height: 13 }} />
+            {exporting ? 'Exporting…' : 'PDF'}
           </button>
         </div>
       </header>

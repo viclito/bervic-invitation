@@ -432,10 +432,10 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
       {/* Top Header Controls Bar */}
-      <header className="fixed top-0 inset-x-0 z-[100] bg-[#F8F3EA] border-b border-[#D9A441]/40 px-4 py-3 shadow-md">
-        <div className="max-w-[1450px] mx-auto flex items-center justify-between gap-4">
+      <header className="fixed top-0 inset-x-0 z-[100] bg-[#F8F3EA] border-b border-[#D9A441]/40 px-2 sm:px-6 py-2 sm:py-3 shadow-md">
+        <div className="max-w-[1450px] mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
           {/* Left Title & Back Button */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={handleBack}
@@ -444,31 +444,32 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <div>
-              <span className="text-[10px] uppercase font-extrabold text-[#D9A441] tracking-widest block leading-none">
+            <div className="hidden md:block">
+              <span className="text-[9px] sm:text-[10px] uppercase font-extrabold text-[#D9A441] tracking-widest block leading-none">
                 BERVIC BUILDER
               </span>
-              <h1 className="text-sm sm:text-base font-bold text-[#221C17] leading-tight mt-0.5">
+              <h1 className="text-xs sm:text-base font-bold text-[#221C17] leading-tight mt-0.5">
                 Classic Floral Template
               </h1>
             </div>
           </div>
 
           {/* Center Tabs & Right Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             {/* View Mode Tab Selector */}
-            <div className="inline-flex items-center p-1 rounded-full bg-[#EFE7D8] border border-[#D9A441]/40 shadow-inner">
+            <div className="inline-flex items-center p-0.5 sm:p-1 rounded-full bg-[#EFE7D8] border border-[#D9A441]/40 shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveTab("edit")}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 transition-all ${
                   activeTab === "edit"
                     ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                     : "text-[#221C17]/70 hover:text-[#221C17]"
                 }`}
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>Form Editor</span>
+                <span className="hidden sm:inline">Form Editor</span>
+                <span className="sm:hidden">Edit</span>
               </button>
               <button
                 type="button"
@@ -485,24 +486,26 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("preview")}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 transition-all ${
                   activeTab === "preview"
                     ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                     : "text-[#221C17]/70 hover:text-[#221C17]"
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>Live Preview</span>
+                <span className="hidden sm:inline">Live Preview</span>
+                <span className="sm:hidden">Preview</span>
               </button>
             </div>
 
             {/* Dashboard Link Button */}
             <Link
               href="/dashboard"
-              className="px-3.5 py-2 rounded-full border border-[#7A1F2B] text-[#7A1F2B] text-xs font-bold hover:bg-[#7A1F2B]/10 transition-colors hidden md:flex items-center gap-1.5 shadow-sm"
+              className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full border border-[#7A1F2B] text-[#7A1F2B] text-xs font-bold hover:bg-[#7A1F2B]/10 transition-colors flex items-center gap-1 sm:gap-1.5 shadow-sm"
+              title="Dashboard"
             >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#7A1F2B]" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
 
             {/* Save to Profile Action Button */}
@@ -510,7 +513,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="btn-maroon px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-50 shrink-0"
+              className="btn-maroon px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-md disabled:opacity-50 shrink-0"
             >
               <Save className="w-3.5 h-3.5 text-[#D9A441]" />
               <span>{saving ? "Saving..." : "Save to Profile"}</span>
@@ -748,64 +751,73 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   <button
                     type="button"
                     onClick={() => removeEvent(idx)}
-                    className="absolute top-3 right-3 text-[#7A1F2B] opacity-60 hover:opacity-100"
+                    className="absolute top-3 right-3 text-[#7A1F2B] opacity-60 hover:opacity-100 transition-opacity"
+                    title="Remove Event"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
 
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="col-span-1">
-                      <label className="block text-[10px] font-semibold mb-1">Icon</label>
+                  <div className="flex items-center gap-2.5 pr-6">
+                    <div className="w-16 shrink-0">
+                      <label className="block text-[10px] font-bold text-[#221C17]/70 mb-1">Icon</label>
                       <input
                         type="text"
                         value={ev.icon}
                         onChange={(e) => handleEventChange(idx, "icon", e.target.value)}
-                        className="w-full px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
+                        className="w-full px-2 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs text-center font-bold"
                       />
                     </div>
-                    <div className="col-span-3">
-                      <label className="block text-[10px] font-semibold mb-1">Function Title</label>
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-[10px] font-bold text-[#221C17]/70 mb-1">Function Title</label>
                       <input
                         type="text"
                         value={ev.title}
                         onChange={(e) => handleEventChange(idx, "title", e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
+                        className="w-full px-3 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-1">📅 Select Date (Auto-synced / Custom)</label>
-                      <input
-                        type="date"
-                        value={parseDateToIsoString(ev.date, datePickerVal)}
-                        onChange={(e) => handleEventPickerDateChange(idx, e.target.value)}
-                        className="w-full px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs mb-1 font-semibold"
-                      />
-                      <input
-                        type="text"
-                        value={ev.date}
-                        onChange={(e) => handleEventChange(idx, "date", e.target.value)}
-                        placeholder="Nov 28, 2026"
-                        className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
-                      />
+                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-1 truncate">
+                        📅 Date (Synced / Custom)
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="date"
+                          value={parseDateToIsoString(ev.date, datePickerVal)}
+                          onChange={(e) => handleEventPickerDateChange(idx, e.target.value)}
+                          className="w-28 shrink-0 px-2 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
+                        />
+                        <input
+                          type="text"
+                          value={ev.date}
+                          onChange={(e) => handleEventChange(idx, "date", e.target.value)}
+                          placeholder="Nov 28, 2026"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-1">⏰ Select Time</label>
-                      <input
-                        type="time"
-                        onChange={(e) => handleEventPickerTimeChange(idx, e.target.value)}
-                        className="w-full px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={ev.time}
-                        onChange={(e) => handleEventChange(idx, "time", e.target.value)}
-                        placeholder="10:30 AM IST"
-                        className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
-                      />
+                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-1 truncate">
+                        ⏰ Time
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="time"
+                          onChange={(e) => handleEventPickerTimeChange(idx, e.target.value)}
+                          className="w-20 shrink-0 px-2 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
+                        />
+                        <input
+                          type="text"
+                          value={ev.time}
+                          onChange={(e) => handleEventChange(idx, "time", e.target.value)}
+                          placeholder="10:30 AM IST"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -836,7 +848,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={tl.icon}
                       onChange={(e) => handleTimelineChange(idx, "icon", e.target.value)}
-                      className="w-10 px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs text-center shrink-0"
+                      className="w-10 px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs text-center shrink-0 font-bold"
                     />
                     <input
                       type="text"
@@ -848,43 +860,48 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     <button
                       type="button"
                       onClick={() => removeTimelineItem(idx)}
-                      className="text-[#7A1F2B] opacity-60 hover:opacity-100"
+                      className="text-[#7A1F2B] opacity-60 hover:opacity-100 transition-opacity"
+                      title="Remove Timeline Item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5">📅 Date (Auto-synced / Custom)</label>
-                      <input
-                        type="date"
-                        value={parseDateToIsoString(tl.date, datePickerVal)}
-                        onChange={(e) => handleTimelinePickerDateChange(idx, e.target.value)}
-                        className="w-full px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={tl.date || (datePickerVal ? formatEventDate(datePickerVal) : "")}
-                        onChange={(e) => handleTimelineChange(idx, "date", e.target.value)}
-                        placeholder="Nov 28, 2026"
-                        className="w-full px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs"
-                      />
+                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">📅 Date</label>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="date"
+                          value={parseDateToIsoString(tl.date, datePickerVal)}
+                          onChange={(e) => handleTimelinePickerDateChange(idx, e.target.value)}
+                          className="w-28 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                        />
+                        <input
+                          type="text"
+                          value={tl.date || (datePickerVal ? formatEventDate(datePickerVal) : "")}
+                          onChange={(e) => handleTimelineChange(idx, "date", e.target.value)}
+                          placeholder="Nov 28, 2026"
+                          className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5">⏰ Time Selection</label>
-                      <input
-                        type="time"
-                        onChange={(e) => handleTimelinePickerTimeChange(idx, e.target.value)}
-                        className="w-full px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={tl.time}
-                        onChange={(e) => handleTimelineChange(idx, "time", e.target.value)}
-                        placeholder="07:00 PM"
-                        className="w-full px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs"
-                      />
+                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">⏰ Time</label>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="time"
+                          onChange={(e) => handleTimelinePickerTimeChange(idx, e.target.value)}
+                          className="w-20 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                        />
+                        <input
+                          type="text"
+                          value={tl.time}
+                          onChange={(e) => handleTimelineChange(idx, "time", e.target.value)}
+                          placeholder="07:00 PM"
+                          className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -206,11 +206,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Segmented Tab Navigation */}
-        <div className="flex items-center justify-between border-b border-[#D9A441]/20 mb-8 pb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-[#D9A441]/20 mb-8 pb-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab("invitations")}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`flex-1 sm:flex-initial px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                 activeTab === "invitations"
                   ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                   : "bg-[#EFE7D8]/60 text-[#221C17]/70 hover:bg-[#EFE7D8]"
@@ -222,7 +222,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setActiveTab("subscription")}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`flex-1 sm:flex-initial px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                 activeTab === "subscription"
                   ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                   : "bg-[#EFE7D8]/60 text-[#221C17]/70 hover:bg-[#EFE7D8]"
@@ -236,7 +236,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-4 text-xs text-[#221C17]/60 font-semibold">
+          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-xs text-[#221C17]/60 font-semibold pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9A441]/10">
             <span>Template Slots: <strong className="text-[#7A1F2B]">{subData.remainingTemplateSlots} left</strong></span>
             <span>Card Credits: <strong className="text-[#8B6519]">{subData.remainingCardSlots} left</strong></span>
           </div>
