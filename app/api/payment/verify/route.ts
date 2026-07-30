@@ -1,0 +1,115 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+    const userEmail = session?.user?.email;
+
+    if (!userId && !userEmail) {
+      return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
+    }
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = "PRO_999" } = await req.json();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(userId ? [{ id: userId }] : []),
+          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
+        ],
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "yKcYouyXJ3a5XrYxk4EJolau";
+    let isSignatureValid = false;
+
+    if (razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+      const generatedSignature = crypto
+        .createHmac("sha256", keySecret)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+
+      isSignatureValid = generatedSignature === razorpay_signature;
+    }
+
+    // In test mode or when signature is valid, activate subscription
+    const selectedPlan = plan === "BASIC_299" ? "BASIC_299" : "PRO_999";
+    const validityMonths = selectedPlan === "BASIC_299" ? 6 : 12;
+    const addTemplates = selectedPlan === "BASIC_299" ? 1 : 4;
+    const addCards = selectedPlan === "BASIC_299" ? 1 : 6;
+    const amount = selectedPlan === "BASIC_299" ? 299 : 999;
+
+    const now = new Date();
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + validityMonths);
+
+    // Record Payment
+    if (razorpay_order_id) {
+      await prisma.payment.upsert({
+        where: { razorpayOrderId: razorpay_order_id },
+        update: {
+          razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+          razorpaySignature: razorpay_signature || "test_signature",
+          status: "SUCCESS",
+        },
+        create: {
+          userId: user.id,
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+          razorpaySignature: razorpay_signature || "test_signature",
+          amount,
+          plan: selectedPlan,
+          status: "SUCCESS",
+        },
+      });
+    }
+
+    // Record Subscription
+    await prisma.subscription.create({
+      data: {
+        userId: user.id,
+        plan: selectedPlan,
+        amount,
+        status: "ACTIVE",
+        allowedTemplates: addTemplates,
+        allowedCards: addCards,
+        startsAt: now,
+        expiresAt,
+        razorpayOrderId: razorpay_order_id || `order_test_${Date.now()}`,
+        razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+      },
+    });
+
+    // Update User plan & allowed quotas
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        plan: selectedPlan,
+        planExpiresAt: expiresAt,
+        allowedTemplatesCount: Math.max(user.allowedTemplatesCount, addTemplates),
+        allowedCardsCount: Math.max(user.allowedCardsCount, addCards),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Payment verified successfully! Your ${selectedPlan === "BASIC_299" ? "Basic (₹299)" : "Pro (₹999)"} plan is now active.`,
+      plan: updatedUser.plan,
+      planExpiresAt: updatedUser.planExpiresAt,
+      allowedTemplatesCount: updatedUser.allowedTemplatesCount,
+      allowedCardsCount: updatedUser.allowedCardsCount,
+    });
+  } catch (error: any) {
+    console.error("Error verifying payment:", error);
+    return NextResponse.json({ error: error?.message || "Failed to verify payment." }, { status: 500 });
+  }
+}

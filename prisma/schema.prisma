@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String           @id @default(cuid())
+  name                  String?
+  email                 String           @unique
+  emailVerified         DateTime?
+  password              String?
+  image                 String?
+  phone                 String?
+  plan                  String           @default("NONE") // NONE, BASIC_299, PRO_999
+  planExpiresAt         DateTime?
+  allowedTemplatesCount Int              @default(0)
+  allowedCardsCount     Int              @default(0)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  accounts              Account[]
+  invitations           UserInvitation[]
+  subscriptions         Subscription[]
+  payments              Payment[]
+  cards                 UserCard[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model UserInvitation {
+  id                String   @id @default(cuid())
+  userId            String
+  templateSlug      String
+  coupleInitials    String
+  partnerOne        String
+  partnerTwo        String
+  tagline           String
+  inviteLine        String
+  weddingDate       String
+  weddingTime       String
+  heroImage         String
+  coupleImage       String
+  venuePlace        String
+  eventsJson        String   @db.Text
+  timelineDayJson   String   @db.Text
+  loveStoryText     String   @db.Text
+  loveStoryVideoUrl String
+  locationsJson     String   @db.Text
+  galleryImagesJson String   @db.Text
+  contactPhone      String
+  contactAddress    String
+  socialLinksJson   String   @db.Text
+  slug              String   @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guests Guest[]
+}
+
+model Guest {
+  id             String         @id @default(cuid())
+  invitationId   String
+  name           String
+  phone          String
+  email          String?
+  status         String         @default("PENDING") // PENDING, ATTENDING, DECLINED
+  plusOnes       Int            @default(0)
+  dietaryNotes   String?        @db.Text
+  uniqueCode     String         @default(cuid())
+  whatsappSentAt DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  invitation UserInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String
+  plan              String   // BASIC_299, PRO_999
+  amount            Float
+  status            String   @default("ACTIVE") // ACTIVE, EXPIRED
+  allowedTemplates  Int
+  allowedCards      Int
+  startsAt          DateTime @default(now())
+  expiresAt         DateTime
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  userId            String
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amount            Float
+  plan              String
+  status            String   @default("CREATED") // CREATED, SUCCESS, FAILED
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserCard {
+  id           String   @id @default(cuid())
+  userId       String
+  templateId   Int
+  templateName String
+  partnerOne   String
+  partnerTwo   String
+  weddingDate  String
+  weddingTime  String?
+  venue        String?
+  city         String?
+  tagline      String?
+  couplePhoto  String?
+  hashtag      String?
+  cardDataJson String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

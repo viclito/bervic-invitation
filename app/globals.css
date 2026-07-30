@@ -1,26 +1,131 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-cream: #F8F3EA;
+    --text-dark: #221C17;
+    --gold: #D9A441;
+    --gold-light: #F7E7C4;
+    --gold-glow: rgba(217, 164, 65, 0.35);
+    --maroon: #7A1F2B;
+    --maroon-hover: #631822;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--text-dark);
+    font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.font-accent {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+}
+
+/* Custom Utilities */
+.bg-cream {
+  background-color: #F8F3EA;
+}
+
+.text-near-black {
+  color: #221C17;
+}
+
+.text-gold {
+  color: #D9A441;
+}
+
+.bg-gold {
+  background-color: #D9A441;
+}
+
+.border-gold {
+  border-color: #D9A441;
+}
+
+.bg-maroon {
+  background-color: #7A1F2B;
+}
+
+.text-maroon {
+  color: #7A1F2B;
+}
+
+.hover\:bg-maroon-hover:hover {
+  background-color: #631822;
+}
+
+/* Button & Card Styles */
+.btn-maroon {
+  background-color: #7A1F2B;
+  color: #F8F3EA;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  will-change: transform;
+}
+
+.btn-maroon:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 25px rgba(217, 164, 65, 0.4);
+  background-color: #631822;
+}
+
+.btn-outline-cream {
+  background-color: rgba(248, 243, 234, 0.15);
+  backdrop-filter: blur(8px);
+  color: #F8F3EA;
+  border: 1px solid rgba(248, 243, 234, 0.4);
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
+}
+
+.btn-outline-cream:hover {
+  transform: scale(1.03);
+  background-color: rgba(248, 243, 234, 0.25);
+  border-color: #D9A441;
+}
+
+.card-shadow {
+  box-shadow: 0 10px 30px -5px rgba(34, 28, 23, 0.06), 0 4px 12px -2px rgba(34, 28, 23, 0.03);
+}
+
+.premium-card-glow {
+  box-shadow: 0 12px 35px -5px rgba(217, 164, 65, 0.25), 0 0 15px rgba(217, 164, 65, 0.2);
+}
+
+/* Section dividers */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #D9A441 50%, transparent 100%);
+  opacity: 0.4;
+}
+
+/* Glassmorphism Header */
+.header-glass {
+  background-color: rgba(248, 243, 234, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(217, 164, 65, 0.15);
+}
+
+/* Lenis Smooth Scroll Fixes */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
