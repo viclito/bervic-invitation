@@ -38,7 +38,15 @@ export async function GET(req: Request) {
             ...(userEmail ? [{ email: userEmail }] : []),
           ],
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          plan: true,
+          planExpiresAt: true,
+          allowedTemplatesCount: true,
+          allowedCardsCount: true,
           invitations: {
             select: { id: true, templateSlug: true, partnerOne: true, partnerTwo: true, slug: true },
           },

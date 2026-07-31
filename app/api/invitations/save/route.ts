@@ -17,7 +17,16 @@ export async function POST(req: Request) {
     // Ensure database user exists
     let dbUser = await prisma.user.findUnique({
       where: { email: session.user.email.toLowerCase() },
-      include: { invitations: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        planExpiresAt: true,
+        allowedTemplatesCount: true,
+        allowedCardsCount: true,
+        invitations: true,
+      },
     });
 
     if (!dbUser) {
@@ -28,7 +37,16 @@ export async function POST(req: Request) {
           image: session.user.image,
           emailVerified: new Date(),
         },
-        include: { invitations: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          plan: true,
+          planExpiresAt: true,
+          allowedTemplatesCount: true,
+          allowedCardsCount: true,
+          invitations: true,
+        },
       });
     }
 
