@@ -209,7 +209,7 @@ function CheckoutContent() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>1 High-Res Instagram Announcement Card</strong> (31 styles)</span>
+                  <span><strong>2 High-Res Instagram Announcement Cards</strong> (31 styles)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
