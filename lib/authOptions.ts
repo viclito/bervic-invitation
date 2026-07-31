@@ -28,11 +28,9 @@ export const authOptions: NextAuthOptions = {
           user = await prisma.user.findUnique({
             where: { email: cleanEmail },
           });
-        } catch {
-          // Ignore lookup error
-        }
+        } catch {}
 
-        // If user not in DB, attempt raw SQL fallback lookup
+        // Fallback to raw SQL query if Prisma lookup failed
         if (!user) {
           try {
             const raw: any = await prisma.$queryRawUnsafe(
@@ -70,6 +68,8 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (user.email) {
         const cleanEmail = user.email.toLowerCase().trim();
+        const newId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
         let dbUser: any = null;
         try {
           dbUser = await prisma.user.findUnique({
@@ -82,18 +82,24 @@ export const authOptions: NextAuthOptions = {
           try {
             dbUser = await prisma.user.create({
               data: {
+                id: newId,
                 name: user.name || "User",
                 email: cleanEmail,
                 image: user.image || null,
                 emailVerified: new Date(),
+                plan: "NONE",
+                allowedTemplatesCount: 0,
+                allowedCardsCount: 0,
+                role: "USER",
               },
               select: { id: true },
             });
           } catch {
-            const newId = `user_${Date.now()}`;
             try {
               await prisma.$executeRawUnsafe(
-                `INSERT INTO "User" ("id", "name", "email", "image", "emailVerified", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, NOW(), 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+                `INSERT INTO "User" ("id", "name", "email", "image", "emailVerified", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
+                 VALUES ($1, $2, $3, $4, NOW(), 'NONE', 0, 0, 'USER', NOW(), NOW()) 
+                 ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name"`,
                 newId,
                 user.name || "User",
                 cleanEmail,
@@ -103,6 +109,7 @@ export const authOptions: NextAuthOptions = {
             } catch {}
           }
         }
+
         if (dbUser?.id) {
           user.id = dbUser.id;
         }
@@ -123,7 +130,7 @@ export const authOptions: NextAuthOptions = {
 
         // Ensure user row is strictly persisted in PostgreSQL User table
         if (!dbUser) {
-          const newId = `user_${Date.now()}`;
+          const newId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
           try {
             dbUser = await prisma.user.create({
               data: {
@@ -131,13 +138,19 @@ export const authOptions: NextAuthOptions = {
                 name: token.name || (user?.name as string) || "User",
                 email: cleanEmail,
                 image: (token.picture as string) || user?.image || null,
+                plan: "NONE",
+                allowedTemplatesCount: 0,
+                allowedCardsCount: 0,
+                role: "USER",
               },
               select: { id: true },
             });
           } catch {
             try {
               await prisma.$executeRawUnsafe(
-                `INSERT INTO "User" ("id", "name", "email", "image", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+                `INSERT INTO "User" ("id", "name", "email", "image", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
+                 VALUES ($1, $2, $3, $4, 'NONE', 0, 0, 'USER', NOW(), NOW()) 
+                 ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name"`,
                 newId,
                 token.name || user?.name || "User",
                 cleanEmail,

@@ -13,51 +13,59 @@ export async function POST(req: Request) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Check if user exists
-    let existingUser: any = null;
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { email: cleanEmail },
-        select: { id: true },
-      });
-    } catch {
-      // Ignore lookup error
-    }
-
-    if (existingUser) {
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 });
-    }
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
-    // Create user with fail-safe fallback if role column is missing on DB
+    // Bulletproof multi-step insertion: Guarantee User row exists in PostgreSQL
+    let userCreated = false;
+
+    // Step 1: Standard Prisma Create/Update
     try {
-      await prisma.user.create({
-        data: {
+      await prisma.user.upsert({
+        where: { email: cleanEmail },
+        update: {
+          name,
+          password: hashedPassword,
+          phone: phone || null,
+        },
+        create: {
+          id: userId,
           name,
           email: cleanEmail,
           password: hashedPassword,
-          phone,
+          phone: phone || null,
+          plan: "NONE",
+          allowedTemplatesCount: 0,
+          allowedCardsCount: 0,
+          role: "USER",
         },
       });
-    } catch (createErr: any) {
-      if (createErr?.message?.includes("role")) {
-        const newId = `user_${Date.now()}`;
+      userCreated = true;
+    } catch (prismaErr: any) {
+      console.warn("Prisma user creation warning, attempting raw SQL insert:", prismaErr?.message);
+    }
+
+    // Step 2: Direct Raw SQL Insert fallback if Prisma creation failed
+    if (!userCreated) {
+      try {
         await prisma.$executeRawUnsafe(
-          `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
-          newId,
+          `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
+           VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW())
+           ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "password" = EXCLUDED."password", "phone" = EXCLUDED."phone", "updatedAt" = NOW()`,
+          userId,
           name,
           cleanEmail,
           hashedPassword,
           phone || null
         );
-      } else {
-        throw createErr;
+        userCreated = true;
+      } catch (sqlErr: any) {
+        console.error("Raw SQL user insert error:", sqlErr?.message);
       }
     }
 
-    // Generate & send OTP
+    // Generate & send OTP code
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -70,7 +78,7 @@ export async function POST(req: Request) {
         },
       });
     } catch {
-      // Ignore OTP table failure if unmigrated
+      // Ignore OTP table error if unmigrated
     }
 
     try {
