@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       if (createErr?.message?.includes("role")) {
         const newId = `user_${Date.now()}`;
         await prisma.$executeRawUnsafe(
-          `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, 'PRO_999', 99, 99, NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+          `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
           newId,
           name,
           cleanEmail,

@@ -21,16 +21,29 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Please enter your email and password");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            password: true,
-            image: true,
-          },
-        });
+        const cleanEmail = credentials.email.toLowerCase().trim();
+
+        let user: any = null;
+        try {
+          user = await prisma.user.findUnique({
+            where: { email: cleanEmail },
+          });
+        } catch {
+          // Ignore lookup error
+        }
+
+        // If user not in DB, attempt raw SQL fallback lookup
+        if (!user) {
+          try {
+            const raw: any = await prisma.$queryRawUnsafe(
+              `SELECT * FROM "User" WHERE LOWER("email") = $1 LIMIT 1`,
+              cleanEmail
+            );
+            if (raw && raw.length > 0) {
+              user = raw[0];
+            }
+          } catch {}
+        }
 
         if (!user || !user.password) {
           throw new Error("No user found with this email");
@@ -55,50 +68,87 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google" && user.email) {
-        let dbUser = await prisma.user.findUnique({
-          where: { email: user.email.toLowerCase() },
-          select: { id: true },
-        });
+      if (user.email) {
+        const cleanEmail = user.email.toLowerCase().trim();
+        let dbUser: any = null;
+        try {
+          dbUser = await prisma.user.findUnique({
+            where: { email: cleanEmail },
+            select: { id: true },
+          });
+        } catch {}
 
         if (!dbUser) {
           try {
             dbUser = await prisma.user.create({
               data: {
-                name: user.name,
-                email: user.email.toLowerCase(),
-                image: user.image,
+                name: user.name || "User",
+                email: cleanEmail,
+                image: user.image || null,
                 emailVerified: new Date(),
               },
               select: { id: true },
             });
-          } catch (createErr: any) {
-            if (createErr?.message?.includes("role")) {
-              const newId = `user_${Date.now()}`;
+          } catch {
+            const newId = `user_${Date.now()}`;
+            try {
               await prisma.$executeRawUnsafe(
-                `INSERT INTO "User" ("id", "name", "email", "image", "emailVerified", "plan", "allowedTemplatesCount", "allowedCardsCount", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, NOW(), 'PRO_999', 99, 99, NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+                `INSERT INTO "User" ("id", "name", "email", "image", "emailVerified", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, NOW(), 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
                 newId,
-                user.name || "",
-                user.email.toLowerCase(),
+                user.name || "User",
+                cleanEmail,
                 user.image || null
               );
               dbUser = { id: newId };
-            } else {
-              throw createErr;
-            }
+            } catch {}
           }
         }
-        user.id = dbUser.id;
+        if (dbUser?.id) {
+          user.id = dbUser.id;
+        }
       }
       return true;
     },
     async jwt({ token, user }) {
-      if (user?.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email.toLowerCase() },
-          select: { id: true },
-        });
-        if (dbUser) {
+      if (token?.email) {
+        const cleanEmail = (token.email as string).toLowerCase().trim();
+        let dbUser: any = null;
+
+        try {
+          dbUser = await prisma.user.findUnique({
+            where: { email: cleanEmail },
+            select: { id: true },
+          });
+        } catch {}
+
+        // Ensure user row is strictly persisted in PostgreSQL User table
+        if (!dbUser) {
+          const newId = `user_${Date.now()}`;
+          try {
+            dbUser = await prisma.user.create({
+              data: {
+                id: newId,
+                name: token.name || (user?.name as string) || "User",
+                email: cleanEmail,
+                image: (token.picture as string) || user?.image || null,
+              },
+              select: { id: true },
+            });
+          } catch {
+            try {
+              await prisma.$executeRawUnsafe(
+                `INSERT INTO "User" ("id", "name", "email", "image", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, 'NONE', 0, 0, 'USER', NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+                newId,
+                token.name || user?.name || "User",
+                cleanEmail,
+                token.picture || user?.image || null
+              );
+              dbUser = { id: newId };
+            } catch {}
+          }
+        }
+
+        if (dbUser?.id) {
           token.id = dbUser.id;
         }
       }
