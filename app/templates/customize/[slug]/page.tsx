@@ -131,6 +131,14 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
     galleryImages: sampleWeddingData.galleryImages?.slice(0, 6) || DEFAULT_SIX_MOMENTS,
   });
 
+  const [baseUrl, setBaseUrl] = useState("https://bervic-invitation-six.vercel.app");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setBaseUrl(window.location.origin);
+    }
+  }, []);
+
   const [datePickerVal, setDatePickerVal] = useState("2026-11-28");
   const [timePickerVal, setTimePickerVal] = useState("10:30");
 
@@ -565,7 +573,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 />
               </div>
               <span className="text-[10px] text-[#221C17]/60 block font-medium">
-                Live URL Preview: <strong className="text-[#7A1F2B]">http://localhost:3000/invitations/{customSlug || "your-custom-link"}</strong>
+                Live URL Preview: <strong className="text-[#7A1F2B]">{baseUrl}/invitations/{customSlug || "your-custom-link"}</strong>
               </span>
             </div>
 
