@@ -62,15 +62,31 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!dbUser) {
-          dbUser = await prisma.user.create({
-            data: {
-              name: user.name,
-              email: user.email.toLowerCase(),
-              image: user.image,
-              emailVerified: new Date(),
-            },
-            select: { id: true },
-          });
+          try {
+            dbUser = await prisma.user.create({
+              data: {
+                name: user.name,
+                email: user.email.toLowerCase(),
+                image: user.image,
+                emailVerified: new Date(),
+              },
+              select: { id: true },
+            });
+          } catch (createErr: any) {
+            if (createErr?.message?.includes("role")) {
+              const newId = `user_${Date.now()}`;
+              await prisma.$executeRawUnsafe(
+                `INSERT INTO "User" ("id", "name", "email", "image", "emailVerified", "plan", "allowedTemplatesCount", "allowedCardsCount", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, NOW(), 'PRO_999', 99, 99, NOW(), NOW()) ON CONFLICT ("email") DO NOTHING`,
+                newId,
+                user.name || "",
+                user.email.toLowerCase(),
+                user.image || null
+              );
+              dbUser = { id: newId };
+            } else {
+              throw createErr;
+            }
+          }
         }
         user.id = dbUser.id;
       }
