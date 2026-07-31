@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
-    const userEmail = session?.user?.email;
+    const userEmail = session?.user?.email?.toLowerCase().trim();
 
     if (!userId && !userEmail) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
@@ -20,8 +20,16 @@ export async function POST(req: Request) {
       where: {
         OR: [
           ...(userId ? [{ id: userId }] : []),
-          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
         ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        allowedTemplatesCount: true,
+        allowedCardsCount: true,
       },
     });
 
@@ -54,49 +62,63 @@ export async function POST(req: Request) {
 
     // Record Payment
     if (razorpay_order_id) {
-      await prisma.payment.upsert({
-        where: { razorpayOrderId: razorpay_order_id },
-        update: {
-          razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
-          razorpaySignature: razorpay_signature || "test_signature",
-          status: "SUCCESS",
-        },
-        create: {
-          userId: user.id,
-          razorpayOrderId: razorpay_order_id,
-          razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
-          razorpaySignature: razorpay_signature || "test_signature",
-          amount,
-          plan: selectedPlan,
-          status: "SUCCESS",
-        },
-      });
+      try {
+        await prisma.payment.upsert({
+          where: { razorpayOrderId: razorpay_order_id },
+          update: {
+            razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+            razorpaySignature: razorpay_signature || "test_signature",
+            status: "SUCCESS",
+          },
+          create: {
+            userId: user.id,
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+            razorpaySignature: razorpay_signature || "test_signature",
+            amount,
+            plan: selectedPlan,
+            status: "SUCCESS",
+          },
+        });
+      } catch (payErr: any) {
+        console.warn("Payment record error:", payErr?.message);
+      }
     }
 
     // Record Subscription
-    await prisma.subscription.create({
-      data: {
-        userId: user.id,
-        plan: selectedPlan,
-        amount,
-        status: "ACTIVE",
-        allowedTemplates: addTemplates,
-        allowedCards: addCards,
-        startsAt: now,
-        expiresAt,
-        razorpayOrderId: razorpay_order_id || `order_test_${Date.now()}`,
-        razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
-      },
-    });
+    try {
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          plan: selectedPlan,
+          amount,
+          status: "ACTIVE",
+          allowedTemplates: addTemplates,
+          allowedCards: addCards,
+          startsAt: now,
+          expiresAt,
+          razorpayOrderId: razorpay_order_id || `order_test_${Date.now()}`,
+          razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
+        },
+      });
+    } catch (subErr: any) {
+      console.warn("Subscription record error:", subErr?.message);
+    }
 
-    // Update User plan & allowed quotas
+    // Update User plan & allowed quotas with explicit selection
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         plan: selectedPlan,
         planExpiresAt: expiresAt,
-        allowedTemplatesCount: Math.max(user.allowedTemplatesCount, addTemplates),
-        allowedCardsCount: Math.max(user.allowedCardsCount, addCards),
+        allowedTemplatesCount: Math.max(user.allowedTemplatesCount || 0, addTemplates),
+        allowedCardsCount: Math.max(user.allowedCardsCount || 0, addCards),
+      },
+      select: {
+        plan: true,
+        planExpiresAt: true,
+        allowedTemplatesCount: true,
+        allowedCardsCount: true,
       },
     });
 
