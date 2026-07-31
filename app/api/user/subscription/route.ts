@@ -22,9 +22,12 @@ export async function GET(req: Request) {
         usedCardsCount: 0,
         remainingTemplateSlots: 0,
         remainingCardSlots: 0,
+        userInvitations: [],
         savedCards: [],
       });
     }
+
+    const isAdmin = userEmail === "berglin1998@gmail.com";
 
     let user: any = null;
     try {
@@ -42,6 +45,12 @@ export async function GET(req: Request) {
           cards: {
             orderBy: { createdAt: "desc" },
           },
+          payments: {
+            where: { status: "SUCCESS" },
+          },
+          subscriptions: {
+            where: { status: "ACTIVE" },
+          },
         },
       });
     } catch (dbErr: any) {
@@ -50,70 +59,83 @@ export async function GET(req: Request) {
 
     if (!user) {
       return NextResponse.json({
-        plan: userEmail === "berglin1998@gmail.com" ? "PRO_999" : "NONE",
-        isActive: true,
-        allowedTemplatesCount: 99,
-        allowedCardsCount: 99,
+        plan: isAdmin ? "PRO_999" : "NONE",
+        isActive: isAdmin,
+        allowedTemplatesCount: isAdmin ? 99 : 0,
+        allowedCardsCount: isAdmin ? 99 : 0,
         usedTemplatesCount: 0,
         usedCardsCount: 0,
-        remainingTemplateSlots: 99,
-        remainingCardSlots: 99,
+        remainingTemplateSlots: isAdmin ? 99 : 0,
+        remainingCardSlots: isAdmin ? 99 : 0,
+        userInvitations: [],
         savedCards: [],
       });
     }
 
     const now = new Date();
-    const targetPlan = user.plan === "NONE" ? "PRO_999" : user.plan;
     const usedTemplatesCount = (user.invitations || []).length;
     const usedCardsCount = (user.cards || []).length;
 
-    // Minimum template slots & card credits for active subscriptions
-    const targetTemplates = Math.max(targetPlan === "BASIC_299" ? 1 : 4, usedTemplatesCount + 1);
-    const targetCards = Math.max(targetPlan === "BASIC_299" ? 1 : 6, usedCardsCount + 3);
-
-    const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-
-    // Enforce quota updates safely
-    if (
-      user.plan === "NONE" ||
-      !user.planExpiresAt ||
-      new Date(user.planExpiresAt) <= now ||
-      user.allowedTemplatesCount < targetTemplates ||
-      user.allowedCardsCount < targetCards
-    ) {
-      try {
-        const updated = await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            plan: targetPlan,
-            planExpiresAt: expiresAt,
-            allowedTemplatesCount: targetTemplates,
-            allowedCardsCount: targetCards,
-          },
-          include: {
-            invitations: { select: { id: true, templateSlug: true, partnerOne: true, partnerTwo: true, slug: true } },
-            cards: { orderBy: { createdAt: "desc" } },
-          },
-        });
-        user = updated;
-      } catch (updateErr: any) {
-        console.warn("Failed to auto-update subscription quota in DB:", updateErr?.message);
-        user.plan = targetPlan;
-        user.allowedTemplatesCount = targetTemplates;
-        user.allowedCardsCount = targetCards;
-      }
+    // Admin always gets full pass
+    if (isAdmin) {
+      return NextResponse.json({
+        plan: "PRO_999",
+        planExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        isActive: true,
+        allowedTemplatesCount: 99,
+        allowedCardsCount: 99,
+        usedTemplatesCount,
+        usedCardsCount,
+        remainingTemplateSlots: 99,
+        remainingCardSlots: 99,
+        userInvitations: user.invitations || [],
+        savedCards: user.cards || [],
+      });
     }
 
-    const remainingTemplateSlots = Math.max(0, user.allowedTemplatesCount - usedTemplatesCount);
-    const remainingCardSlots = Math.max(0, user.allowedCardsCount - usedCardsCount);
+    // Check if user has real paid payments or active subscriptions
+    const hasSuccessfulPayment = (user.payments || []).length > 0;
+    const hasActiveSubscription = (user.subscriptions || []).some(
+      (sub: any) => new Date(sub.expiresAt) > now
+    );
+    const hasAdminGrantedQuotas = (user.allowedTemplatesCount || 0) > 0 || (user.allowedCardsCount || 0) > 0;
+
+    const isSubscribed =
+      user.plan !== "NONE" &&
+      user.planExpiresAt &&
+      new Date(user.planExpiresAt) > now &&
+      (hasSuccessfulPayment || hasActiveSubscription || hasAdminGrantedQuotas);
+
+    // If user has not paid and has no subscription, clean up mock free quotas
+    if (!isSubscribed && user.plan !== "NONE") {
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            plan: "NONE",
+            planExpiresAt: null,
+            allowedTemplatesCount: user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : 0,
+            allowedCardsCount: user.allowedCardsCount > 0 ? user.allowedCardsCount : 0,
+          },
+        });
+      } catch {
+        // Ignore cleanup warning
+      }
+      user.plan = "NONE";
+      user.planExpiresAt = null;
+    }
+
+    const allowedTemplates = user.allowedTemplatesCount || 0;
+    const allowedCards = user.allowedCardsCount || 0;
+    const remainingTemplateSlots = Math.max(0, allowedTemplates - usedTemplatesCount);
+    const remainingCardSlots = Math.max(0, allowedCards - usedCardsCount);
 
     return NextResponse.json({
-      plan: user.plan,
-      planExpiresAt: user.planExpiresAt,
-      isActive: true,
-      allowedTemplatesCount: user.allowedTemplatesCount,
-      allowedCardsCount: user.allowedCardsCount,
+      plan: isSubscribed ? user.plan : "NONE",
+      planExpiresAt: isSubscribed ? user.planExpiresAt : null,
+      isActive: isSubscribed,
+      allowedTemplatesCount: allowedTemplates,
+      allowedCardsCount: allowedCards,
       usedTemplatesCount,
       usedCardsCount,
       remainingTemplateSlots,
@@ -123,20 +145,17 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error("Error fetching user subscription:", error);
-    return NextResponse.json(
-      {
-        plan: "PRO_999",
-        isActive: true,
-        allowedTemplatesCount: 99,
-        allowedCardsCount: 99,
-        usedTemplatesCount: 0,
-        usedCardsCount: 0,
-        remainingTemplateSlots: 99,
-        remainingCardSlots: 99,
-        userInvitations: [],
-        savedCards: [],
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      plan: "NONE",
+      isActive: false,
+      allowedTemplatesCount: 0,
+      allowedCardsCount: 0,
+      usedTemplatesCount: 0,
+      usedCardsCount: 0,
+      remainingTemplateSlots: 0,
+      remainingCardSlots: 0,
+      userInvitations: [],
+      savedCards: [],
+    });
   }
 }
