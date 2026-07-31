@@ -92,6 +92,16 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {status === "authenticated" ? (
             <div className="flex items-center gap-3">
+              {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
+                <Link
+                  href="/admin"
+                  className="px-3.5 py-1.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center gap-1.5 shadow-md border border-[#D9A441]/40 hover:scale-105 transition-all"
+                  title="Admin Authority Panel"
+                >
+                  <Sparkles className="w-3.5 h-3.5 fill-current" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
               <Link
                 href="/dashboard"
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${

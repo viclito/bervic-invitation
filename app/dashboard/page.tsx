@@ -195,6 +195,15 @@ export default function DashboardPage() {
 
           {/* Quick Header Action */}
           <div className="flex items-center gap-3 w-full md:w-auto">
+            {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
+              <Link
+                href="/admin"
+                className="px-4 py-3 rounded-2xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all border border-[#D9A441]/40 shrink-0"
+              >
+                <Crown className="w-4 h-4 fill-current" />
+                <span>Admin Authority Panel</span>
+              </Link>
+            )}
             <Link
               href="/templates"
               className="btn-maroon px-5 py-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all w-full md:w-auto shrink-0"

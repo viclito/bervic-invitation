@@ -115,11 +115,11 @@ export const sampleWeddingData: TemplateClassicFloralProps = {
     "/images/templates/gallery-5.jpg",
     "/images/templates/gallery-6.jpg",
   ],
-  contactPhone: "+91 98765 43210",
+  contactPhone: "+91 90421 27115",
   contactAddress: "Your City, State, Country",
   socialLinks: {
     instagram: "https://instagram.com",
-    whatsapp: "https://wa.me/919876543210",
+    whatsapp: "https://wa.me/919042127115",
     facebook: "https://facebook.com",
     youtube: "https://youtube.com",
   },

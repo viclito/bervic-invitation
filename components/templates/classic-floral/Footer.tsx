@@ -21,7 +21,7 @@ export default function FooterSection({
   coupleInitials = "T | A",
   partnerOne = "Terance",
   partnerTwo = "Ancy",
-  contactPhone = "+91 98765 43210",
+  contactPhone = "+91 90421 27115",
   contactAddress = "Kochi, Kerala, India",
   socialLinks = {},
 }: FooterProps) {

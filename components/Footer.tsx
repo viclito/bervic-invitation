@@ -81,11 +81,15 @@ export default function Footer() {
             <ul className="space-y-2 text-xs text-[#F8F3EA]/80">
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-[#D9A441]" />
-                <span>hello@bervic.app</span>
+                <a href="mailto:berglin1998@gmail.com" className="hover:text-[#D9A441] transition-colors">
+                  berglin1998@gmail.com
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#D9A441]" />
-                <span>+91 98765 43210</span>
+                <a href="tel:+919042127115" className="hover:text-[#D9A441] transition-colors">
+                  +91 90421 27115
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-[#D9A441]" />

@@ -19,6 +19,7 @@ model User {
   planExpiresAt         DateTime?
   allowedTemplatesCount Int              @default(0)
   allowedCardsCount     Int              @default(0)
+  role                  String           @default("USER") // USER, ADMIN
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   accounts              Account[]
