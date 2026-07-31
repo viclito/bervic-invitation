@@ -18,35 +18,45 @@ export async function GET() {
       try {
         const dbUser: any = await prisma.user.findUnique({
           where: { email: currentUserEmail },
+          select: { role: true },
         });
         if (!dbUser || dbUser.role !== "ADMIN") {
           return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
         }
       } catch {
-        // If DB check fails, default allow berglin1998@gmail.com
+        // Default allow admin
       }
     }
 
-    // Execute fast sequential queries with individual catch blocks to avoid connection pool locks
+    // Resilient multi-tier query for all registered users
     let rawUsers: any[] = [];
-    let invitations: any[] = [];
-    let cards: any[] = [];
-    let subscriptions: any[] = [];
-    let payments: any[] = [];
+    let isFallback = false;
 
     try {
       rawUsers = await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          plan: true,
+          planExpiresAt: true,
+          allowedTemplatesCount: true,
+          allowedCardsCount: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: "desc" },
       });
-    } catch (err: any) {
-      console.warn("Retrying user.findMany()...");
-      await new Promise((res) => setTimeout(res, 500));
+    } catch (err1: any) {
+      console.warn("Prisma findMany failed, attempting raw SQL query for User table:", err1?.message);
       try {
-        rawUsers = await prisma.user.findMany({
-          orderBy: { createdAt: "desc" },
-        });
+        rawUsers = await prisma.$queryRawUnsafe(
+          `SELECT "id", "name", "email", "phone", "role", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
+        );
       } catch (err2: any) {
-        console.error("Failed to fetch raw users:", err2?.message);
+        console.error("Raw SQL query for User table also failed:", err2?.message);
+        isFallback = true;
         rawUsers = [
           {
             id: (session.user as any)?.id || "admin-1",
@@ -62,6 +72,11 @@ export async function GET() {
         ];
       }
     }
+
+    let invitations: any[] = [];
+    let cards: any[] = [];
+    let subscriptions: any[] = [];
+    let payments: any[] = [];
 
     try {
       invitations = await prisma.userInvitation.findMany({ select: { userId: true } });
@@ -89,25 +104,25 @@ export async function GET() {
     // Group invitations count per user
     const invCountMap: Record<string, number> = {};
     invitations.forEach((inv) => {
-      invCountMap[inv.userId] = (invCountMap[inv.userId] || 0) + 1;
+      if (inv?.userId) invCountMap[inv.userId] = (invCountMap[inv.userId] || 0) + 1;
     });
 
     // Group cards count per user
     const cardCountMap: Record<string, number> = {};
     cards.forEach((c) => {
-      cardCountMap[c.userId] = (cardCountMap[c.userId] || 0) + 1;
+      if (c?.userId) cardCountMap[c.userId] = (cardCountMap[c.userId] || 0) + 1;
     });
 
     // Group revenue per user
     const revenueMap: Record<string, number> = {};
     payments.forEach((p) => {
-      revenueMap[p.userId] = (revenueMap[p.userId] || 0) + (p.amount || 0);
+      if (p?.userId) revenueMap[p.userId] = (revenueMap[p.userId] || 0) + (p.amount || 0);
     });
 
     // Group active subscription per user
     const activeSubMap: Record<string, boolean> = {};
     subscriptions.forEach((sub) => {
-      if (sub.status === "ACTIVE" && new Date(sub.expiresAt) > now) {
+      if (sub?.userId && sub.status === "ACTIVE" && new Date(sub.expiresAt) > now) {
         activeSubMap[sub.userId] = true;
       }
     });
@@ -117,8 +132,9 @@ export async function GET() {
     let totalInvitationsCount = invitations.length;
     let totalCardsCount = cards.length;
 
-    const users = rawUsers.map((user: any) => {
-      const isUserAdmin = user.email.toLowerCase() === "berglin1998@gmail.com" || user.role === "ADMIN";
+    const users = (rawUsers || []).map((user: any) => {
+      const email = (user.email || "").toLowerCase();
+      const isUserAdmin = email === "berglin1998@gmail.com" || user.role === "ADMIN";
       const usedTemplatesCount = invCountMap[user.id] || 0;
       const usedCardsCount = cardCountMap[user.id] || 0;
       const userRevenue = revenueMap[user.id] || 0;
@@ -132,7 +148,7 @@ export async function GET() {
       return {
         id: user.id,
         name: user.name || "Anonymous User",
-        email: user.email,
+        email: user.email || "N/A",
         phone: user.phone || "N/A",
         role: isUserAdmin ? "ADMIN" : user.role || "USER",
         plan: user.plan || "NONE",
@@ -160,6 +176,7 @@ export async function GET() {
       success: true,
       stats: overviewStats,
       users,
+      isFallback,
     });
   } catch (error: any) {
     console.error("Admin Overview Error:", error);
