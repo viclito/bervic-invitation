@@ -727,6 +727,35 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 onChange={(url) => handleInputChange("coupleImage", url)}
                 placeholder="/images/templates/couple-photo.jpg"
               />
+
+              {/* Moments Gallery Uploaders (Up to 6 Photos) */}
+              <div className="pt-4 border-t border-[#D9A441]/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                    <span>Our Moments Gallery (Upload Up to 6 Photos)</span>
+                  </h4>
+                  <span className="text-[10px] text-[#7A1F2B] font-bold bg-[#EFE7D8] px-2 py-0.5 rounded-full border border-[#D9A441]/30">
+                    {(formData.galleryImages || []).length} / 6 Photos
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((slotIdx) => (
+                    <CloudinaryUploader
+                      key={slotIdx}
+                      label={`Moment Photo ${slotIdx + 1}`}
+                      value={(formData.galleryImages && formData.galleryImages[slotIdx]) || ""}
+                      onChange={(url) => {
+                        const currentList = [...(formData.galleryImages || DEFAULT_SIX_MOMENTS)];
+                        currentList[slotIdx] = url;
+                        handleInputChange("galleryImages", currentList);
+                      }}
+                      placeholder={`/images/templates/gallery-${slotIdx + 1}.jpg`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Step 4: Wedding Events Suite */}

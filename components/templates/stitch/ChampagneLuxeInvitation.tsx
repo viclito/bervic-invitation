@@ -44,14 +44,15 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC5LDsbI8ezaXVQQeR9l0joOae8jE11VwHKbBeEkVCk8x3F8ZetmdJNAiq0Uar8Rwsvk1c0w2eH86S2-99keASr2Bbb0Z2eQj6OJzKWdxFXGamnMQShz55QdoC97KWMMC4to74JTVATtotz1RrZ0UG4uRMFJrbL_PDbn1i5Z7XdEBrh2xGHkblU55OhltVTI3plF9L3_SuhYdo4ubn8EQnHw98Pju5C2OsqcJ3ScAHvNHusHnny8lS4",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCNOXm6_aL7gAYR066cUhjc7OwCujuXxaBjIX4xp00Oht5xaSRRf93LYTdrrgQjsQ8EKIsWINzLn0tdGPy1beez46BkjVCTlbokXVX1OvqKXGqd7qeuAmGgg6lj0DAGr-5OlyFdC6vwekzyyx7iNYZ4zLoTAQFU6dJJlBSBh40dIyuZf7_iA6COVoxH343C1NmOqWQ_0XS65n1_5WnjBfFPBWoZBDID5Ee13u6AqB0dcksI154BDOVn",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuArBPO2Z1b_biEAPqImmP-zklngEcidA_kAhFgGmt3v0ZLBjTG7Y5MC5yE4dKKGKlsmMBTwCuYv13ZSmY3LwX386mueQ21VXu1dunR8p_ee9QHLu2HV2jpKWnka5RUdxXvNjCkRPzmn7ireGHc4aDxTS_jYxrADNH0R__rJtO8fb8PGwpXxFvYHxPjI-gq2J9K65ysUNoRTrKMVpyZN62lwVfq48g7GqjSQeRTozphrPD3LWu5Xlm8q",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuB7r7kGm7krbDPDIhMdcy8CcXwDOrXN-nxHASR4vobkIloSAgwMfBVQliS7jFh8B0ID6Is5DL55ocwiP80b4II6bnUqA3TLi1eqNDCIz_bmvv4ShvAkBwHQAvk8sKnFZOi8IT5QafDALXEedNet0X5uQ6qE_2j-RmBHnxFsLvxS-HXU13KDPw6lsjhRQzovqqq-_WrGOIeg3BLr8DsS-CJTCsVDK-pY_I4SvBNAEPD9-F7F5J0UgshU",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAM09-3OONxGFX6j7OZiN39lRSrIK_a-KhCtImkci_ho7mM0qNdjNFncL8HKqErXgA6aRvipcigybIpvl-G5HvgzP9pSAB3le7K7ZDtKD7Zdj1npzSczeTikDHdKxabcMOzLW5YKTkg2DsyyMxgDBQEs2a1G648Ots90b6ws6wV-ITkAdOIjYZT50mx281K6yuLY-YgLiCrGoV2s-8V7DOpNvCAiItJhtteoPMsZkWdrGBgxbwusnNE",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 4 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#faf9f6] text-[#1a1c1a] font-sans antialiased selection:bg-[#d4af37]/30 selection:text-[#735c00] relative min-h-screen overflow-hidden">

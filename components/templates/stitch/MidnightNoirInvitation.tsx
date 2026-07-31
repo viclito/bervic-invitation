@@ -72,15 +72,15 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAh4A07g-NSjgdAzLKI4NNkJkcUA46yBvDvDOTZHTxAEkTuHLMCyyzQW0fjRa6iGS06seEOzL6X9R70hoJEVMKSZeYXAbAQnRo0B7GzX96tqbnC92AHD8RsCxRtpFv4vGt4PkU8qRRPO6OklIp3LTmlwbTDJ15c9TQJQKNrvt22cBlzz-nFyyIrs8FEYe_S8S-0WX4y_3rRhFBDCNeNg5h9d80Zf27KxAjs0UF4-xhz6_oQzUpw8ZzD",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCFw5ieDZtKZigW0NJ1xOIcnwt2LcW9VM22ncsg10e_7adqiEFnVOUZkLQI9KwLUAPA87LgDK42skSoNi0-hrN7k4UUf4rQXq0jIHqu0HVh4fBJkLbPg_HjSBvWkG2bDICdFBugya93mO4Lf6J7L3ylqLri4TOce8Ml5xD20v7OstBeQhcTF9EFtseLsNsEQmU3uJ9rCTFkaBmBKg9y1sBmR07mgv5YDsheOK0-q-aaKHZTJXRYdGFe",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAPott7vbcfo6zVfuCm_IgIQZyt9Uqfca8Vk62Ncvxe6FC5LfrWzcC1W7NYSr4mASpZPk1hs-58hi5lIZH3nN0FTq4MKvFdSGDjDMK7gabLQ5bsjs3PLE9uQEbyi9aU18RvBQLhSNEBLuqJ-jpTgDbjuMJFYo53FUgSG5ufq1Yv-vj3LyFA_b1G-CwOg61PHaL90g5tpQ0UOFILtdF1NzEyCaIbFCtrUsDvR-i96xY5UEPwWEmGdnhs",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBoASRJNj40ClHzm27HVpxHh1_KGc8EFqoXfAV9zgSi13cGkJjWI78LhPl8EV_yy6rOuiACBZ76SoIUuVECi6DYkaAY8O4GURp9UAdRAQFIv5h0FwcEJVHeoPdFL-VQ9lnlXkdc5MrS6H74LWaLXWciyzMhxJoIFIvNJPyroi5hX75K3OVSdBw2ywNt3yJTe0NKXM5MDud-n8GDVWNW7EFNKe8oOGnM49fh2OTuLRjE9qA8U1WAm815",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAqEg4pPRhoA56FV11_3ZMSWiA1KPFzIsvPAeMOm7wCiv8SdIuKIn49y8WaHfNoh36LqgoYIKwppx_vHkqBGVwA2jjuGOEFBfh-9wdNrzwkdtEkAIGnNzAGJgurDAshLM0DjkUyyJOFyt-ti3PU-HfcjVTdbY9hpA4IoWKNgoDATcqdEEzFuRSM_9o5i2SJnuyq9PMfMmab60EREswezev6ymUIzIYqJ7tAx6WcmXLK_oodBJWjMtJh",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBy2Yg412xRWidDL4X10FJ2C6CKiXEuYob0nu9n8UUhGNs7CLY2nRCS8uWpTBNVd2gQQ7hNBY2nev7ktfXZ_onNUStd-ygbYFnfR3JOwFi4RvSlGRSzrdKNdinsjAj9JDE8du9DuipBIuSxYZ2EstsDE3wGFqbtxf-DF4BY_wjuaUsx743WWwKoBWtjfp9k5pSmMVUpKkqGFYLTfL2xAiopEaHMz_HzlkjrXejmJxYpYp0akMNyR35s",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 4 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#081425] text-[#d8e3fb] font-sans antialiased selection:bg-[#c1c7cf] selection:text-[#081425] relative min-h-screen overflow-hidden">

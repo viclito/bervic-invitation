@@ -46,12 +46,15 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuASdYAi2MmBB_JykdiM5HSk_ctmCa5QY3b12mxJcGWpoEBVRUks2qBQoI03TAI5AbGvO15RFxe-to3M2_a59tLwthx2II33M3zn-V4YUtVwXxWw7LTJuLtiRkMVlWwkUUkKU5YLWFnko1tHqM51rKwQ-oy5_p8FD6LdAjd58BDF3PrOSBlthM3wHpZfCmjYwnGzZednwIfKOYOD1JxAB2WCgwWKOzVe3hWDqujyLspyyxcoX5Tx5yLm",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDSVVG7G29vUJVFrW26yTbz2xTnumlpD6YD6n2hBIRhohpRXqzeXTu05PuZVQci1BLx5tDaa1XEP0Zjr2i6IP7CMBFuCR2Rr2r0Kg-TLwxbdkRn6Kx_RvN5vWZjiKKswKL0WMNi6R1YrK5LD9KCjrjf6gjLW0RfcgeFjT-krEYK-d_Z2Ttqcty-HCYkO2Jndro8-H25uOVoCUSxsA6XsIxs_09NEOrRcLb-BsYKdX7Ml_mq7EMTzRLR",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuARUgLCLuGACfOPOrKcwzkgc3CwAGSCnegSa-61C4DcSIThHl4p13PQsAr2QhsClITZirRR69VNB8_YS7edwsD42qrEaQezhgyRB2viszm9myvHmo1-p5pnH-ypBW-2oitpMyIy2r-VnEpAiEkZCFq4quSpRc5VN9ZopxZxz_iyDJuOulyyjYBfqW70sjDtIctQIJuKu_NLFfcD1Y01dY6bBebrd5xmz7JgRXjwH1LnKa03B_LRELLS",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 3 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#131410] text-[#e5e2db] font-sans antialiased selection:bg-[#d4af37] selection:text-black relative min-h-screen overflow-hidden">

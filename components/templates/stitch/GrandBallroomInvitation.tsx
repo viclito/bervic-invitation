@@ -62,12 +62,15 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBOKTYrPoHDJYdajFSzpXiuIBT7k8fowDi8bZKGGM-Ze3-y7TrctJMkPia3lWnv-VKd4vtlUhIv82wP6QAu947LsxfStD4akikV-1WZ0TzRJR6IfZkYvYyQqPeISrdVPbpkMesabEahjD10XB2e4zoVsAxDHMU41bHyc90J0V5DXYqDZEEvsybzyYXSh5kRdErS1IwTepvPHjq-xp01TkhEHZB4MgtmKAnGW1HSHAHubI6xwZBBz3bp",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCZioZroLRRLlKiiGWAZ_X5iveDNVnTJewBUuhIH0iu4eqCsM4xb6LgbRDsD4uquPiD2uDk6i5LjA47hJxECcDUvmJ3pyzRK1FzJUQ7bjJM694MtB5UQr4nh5Onl9t5S-oPuWCHI9ppt-Z1Gb1NzpCbe2skMJB5aszXMLSzLLMfVYn8Mis6mkvKR941ehVAvD-0u3TWF-tlzRI8UGEQbtMdWvKPpTQ6ttgzL_EtNIQjtRVf71N6_vNo",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuD6BCmIoqT7Y2XFB7THGVojj-jfeh9ToRIdmWjrySRujPDIkD_Qg_V7M5HFfR1vHve9VRzcNwbZeWHivqXQJ24akYU_tIByU8tNlgfFtkNNPwYKMVgWywkPjA4Uzn3WoOspoNtOweuG0XVb6FW4kTkB4hBSxrlqP1reIcn3GrUIFnx3wVCJKIuu_c1I5nhgQulstaouQzGdHwipwrOjHmy1QEJV95KFAxC0Wlr9QfdwwghyYuk7E2V_",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 3 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#fbf9f4] text-[#1b1c19] font-sans antialiased selection:bg-[#D4AF37]/30 selection:text-[#31105C] relative min-h-screen overflow-hidden">

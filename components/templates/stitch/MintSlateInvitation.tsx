@@ -44,15 +44,15 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuAjriyi8OKqSxX-n7aG6XHdetfdvjDv0raDmoJ1in-VEh4vteFYS3EXy1UffuU12xdbx2McQAlch2eYV0UXsWwlWkMB7_o2sF4QdSZHXdSmudh31wSi0TjKKpbkuL11N9GsxOTaCBcw6QNcg1llf9qYbAVv5ezYiql6JZlddV_LT8pONm32_ZPSnoSaoF_XW02gthMw_pWI4DNf2ds3TiuWNvIHDkNxQT70PJtsV1N18KUF_e8VH1xG";
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida/AP1WRLv7A8kyvN_MpvqRpthu-z7KMF7mC9mwkADuTHS4vnOyzMKdxfTp4BtAj4de04cJq7x5GkZe0FmLc-nUxM2dbGc5sEnEtiQM49uGb9LaaTxlDJFGb9CCg6WbqsZGm9wWL0rjSQ-nnsVpOhsZjtglowAm9NCxYV1DrK9Hz7huTlTjW6I2nWvVGLdzbhEET9v9s8IVLrbzoev__d-zBFFjHpdZC-eVZRh_AUC_hdEOZ6ncM8h2vYr3qsLAOlA",
-    "https://lh3.googleusercontent.com/aida/AP1WRLuKl3y0d0Ur1X0GR89jNyA4tEh4O7Y9UEl2cVy7zcSATunTKNQZtR35thtJl5Pkb-s6CPt33p3oOu-JhqV_K-KJmJRlMrpbU1-4GZfyaQ9DOPQUazfx_2qfUu_AvJdoIg244iozw3hbq4C_Rwri61oRBQxBVjGhWo21FOuxPVKyKjon-PqvR0SHL6tjNATYYnWcLiGbk8ue4ddwEjft9Qmw-jM9GreY-frQygH28AtXSXRSApySh6sEts8",
-    "https://lh3.googleusercontent.com/aida/AP1WRLvEhJXxSb9zoAY7xYoYlyOOe-3Y9n3_5L3jySpdXWJkWR4hKFi2Tyc5gw55QTcXYIcTRpHfbteRMdbV3E99JnaDT4-tth5lKwWI7GCa5RD9veh_BoV2IVV9vcpX4MvHdCpQvWWWOTdrz2nLexFVTJOpSKk00GSrv-7lU_Np5wntEcKLkvpNnrDqRQZslqk4TXPIyRIIJGKevFxdllwl-58RsLUY_viqOHouprDUyJHuo1Bnr32F4MhJTJM",
-    "https://lh3.googleusercontent.com/aida/AP1WRLt-EmTuDPVWoS8a3KOuvb1nZuz3QNMdn7ERfhrxMCNKJ6qW3mKa3k_4FmVZa5THA9uZ-_KDEPVFlDdrKtqpluQhzjA37_jwYoqLmt25V0iVNEDw31slPowT_RNSFvTv_7qS1-8ztMBREfFQTAm_zIH_GM-vvwkkhfM10741b9CexocgtgxkX6ltdQ0Svxa6xhhtYYBQvyMb3Vzlj6CRzpNow4xFxBdcc9tQOOXj50MJqhh4OFkPrM5Spg",
-    "https://lh3.googleusercontent.com/aida/AP1WRLvWfzXdN3dHblHMwCfYoZzOQpFd55WruE3qhpS4L0St43rwB0l9HRsSVUPWL226kWxQkGJRu6OUJ5cOQo4G0Vp8s-N63YtcTfH8vIaWTvvr9rHykEUQ0mI_v8bBC7ZTc8VAO1--z-jMa4pg_IU1uaN3Gd76BW-8k-d4R5LU4PtaWr7aPUpDbHttGiVo0D0y6Y_O7PNACCjqktCyXRVWMTP8nJzTwqnxpfozIb53uukdEtbwZ1iwTN6b4rI",
-    "https://lh3.googleusercontent.com/aida/AP1WRLtKz9lJnGkGr1HEozNINKPO3psDlp8ptMnCyX1z4oft_p6uW5Je460e3ZVLPtFYD3UEFqkvm9Q2rOXYPKJe6ts3G-0Ti4-a-wM2bdTGiAMSkQOC8m5Eamp3Ngl5VCVeuhv9Y_XIxdS1ooIi3D40fFiAFwBQ4uVsVfnRERsG3a4A-ac9wFX5UYBtLoz2wPm3i3yLOQu0R0pVED5aWtJjs4-S8AuEn9J0mBnZp1k8rY4U0vcK3FeRC0kULw",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 6 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#f8fafa] text-[#191c1d] font-sans antialiased selection:bg-[#aaf0d1] selection:text-[#2a6f57] relative min-h-screen overflow-hidden">

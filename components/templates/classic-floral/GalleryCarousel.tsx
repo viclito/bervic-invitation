@@ -9,13 +9,22 @@ interface GalleryCarouselProps {
   galleryImages: string[];
 }
 
+const DEFAULT_MOMENTS_PLACEHOLDERS = [
+  "/images/templates/gallery-1.jpg",
+  "/images/templates/gallery-2.jpg",
+  "/images/templates/gallery-3.jpg",
+  "/images/templates/gallery-4.jpg",
+  "/images/templates/gallery-5.jpg",
+  "/images/templates/gallery-6.jpg",
+];
+
 export default function GalleryCarousel({ galleryImages }: GalleryCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeLightbox, setActiveLightbox] = useState<string | null>(null);
 
   // Filter out any empty/uninitialized strings
   const validImages = galleryImages?.filter((img) => Boolean(img && img.trim())) || [];
-  const activeList = validImages.length > 0 ? validImages : ["/images/templates/gallery-1.jpg"];
+  const activeList = validImages.length > 0 ? validImages : DEFAULT_MOMENTS_PLACEHOLDERS;
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev === 0 ? activeList.length - 1 : prev - 1));

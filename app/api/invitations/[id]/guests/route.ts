@@ -100,6 +100,44 @@ export async function POST(req: Request, { params }: RouteParams) {
   }
 }
 
+export async function PUT(req: Request, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id: invitationId } = await params;
+    const body = await req.json();
+
+    const { guestId, name, phone, email, status = "PENDING", plusOnes = 0, dietaryNotes = "" } = body;
+
+    if (!guestId || !name || !phone) {
+      return NextResponse.json({ error: "Guest ID, Name and Phone number are required" }, { status: 400 });
+    }
+
+    // Clean phone number (keep digits and leading +)
+    const cleanedPhone = phone.trim().replace(/[^\d+]/g, "");
+
+    const updatedGuest = await prisma.guest.update({
+      where: { id: guestId, invitationId },
+      data: {
+        name: name.trim(),
+        phone: cleanedPhone,
+        email: email?.trim() || null,
+        status,
+        plusOnes: Number(plusOnes) || 0,
+        dietaryNotes: dietaryNotes?.trim() || null,
+      },
+    });
+
+    return NextResponse.json({ message: "Guest updated successfully", guest: updatedGuest });
+  } catch (error: any) {
+    console.error("Update Guest Error:", error);
+    return NextResponse.json({ error: error?.message || "Failed to update guest" }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);

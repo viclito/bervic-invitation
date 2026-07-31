@@ -77,9 +77,12 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBa-6aC-Qrw97_WvQjg_p6QrRu7ODVN28o2SFJSqihUOeI_pAgqXKvY9MdcA01f2KQAmxV_DTfMfNR5m3u6Dq2kAIDgXGnIA_z-SQIsr6JhUdhTVGB0_blRLnwy2_W-nJhfPkDbAoSILAbxrF9VbZhhZlD_zUb64FEKKdYGxSFEI1hmVVk3n10LE39_V5al2jM9lxUmU9pFljwqPc-eC3NL4ggCl5ldllZQY_IHFcsq8ULxa_EWQUW4",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBCZUp_cQ59DhuXwSR5Nl0tFGf7JeJbVkGyjdexVjT0r5stRPZuYoF9Tk-HHRwRPLr5YRQ9S9UO8VEgPibxTaU2yjUDmIZof2s_jp_HUshqMhA8UNnHToNVAyDBWpcX8xC0sdlsY07QhhGkqgOh2ek3vvWnozUIB5pw-_0HrO32CombfK7Qo_MKTE6nOCuxhUcrVhTNt8KNeq-RknMdOEASmtK1fLOpDrA8lzt7px2YpF2xbxSw7PNH",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAkeCkbhmJiTj6DGUz5Uu_TWcagPZTdGiskXgAd0xQmW-Pc3Mkf6pG4nvTSjEhLeBVh3FQXATjI8jYvT6e6wFp1V07OdlKW4oxYVsZRYZjq-iZOGEmXovClQTm8iLO9FdySTJRHos8SwCttMzFl8vpuk1XCnVVfwTKvl9e3-YYZLmFLIgMHR6aDXowgJ7FEcgGOT3KjIfiHBmyFAqIDdPo3N0NTHa_z0xvuhY943c9oMWxcE0v7QNKT",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
   const galleryList =

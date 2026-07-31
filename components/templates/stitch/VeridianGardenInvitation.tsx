@@ -59,12 +59,15 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
       : defaultTimeline;
 
   const defaultGallery = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCUz0cnV241uvI_OHaJPjSJ97w8MMWbOYAQ_1F1GEA2nQOYHYp-Hmppn29Nl6LJrvjotXtr5oAmo3vHrswtxMEloIHM91NELnTD1ObKcXzumtzaw7SLaw8dqcnkLJCixgqxC2MwhN0rl7sHAULb8yU98qMjekfm6nO2yymlCzLsnyFEX0ANShLdc9sw19Idr0x21_QCeRtRBeWMi72u8C1ebSvjoJ-0yfvc0WJe6QWpzhByK-W3UO7F",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCSDfag3Gcfp9UjchLN3NXiFcEKzW96Iq0rWZVo2hyMAYFcVDwjlWeadMZLG2Unc0rV54ifVgxZXuBCcDcajcyT_iXd_qLDNLChGymMJdUSs2t3qvDS-aFOD90Gu3JqP6QPvMylWRCGOOhVA_Hh-HRLf5S_ojYRzPKcaDJozENxzaJc0UjK63gk5GldozFDxQF1hQc_oqjyHM_P81qUGbjMY1yHW18trqruXr9e2Nhmg4qgBMCqwr5Z",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBRgKKA45k3FsudZ1UMmVv0UdnWdb7gA72ODWEC1CTH8RYGYi01jROFBCLMWNTIpya_Nf7nKmjepc93IfhUZ0y7cUbIX4S6D--nKjcSg8ZvvDdpEKc6LX-8Q5zZTZ3Ah14uYginvoX-6sTJajAvhzgM8bSQO-vzAUPHxAKMz-NgU8xXW7qMrbVO-F46zAU7Eod5JOUYnYuFrXAywsr1iA6BffnwxHlKyFpamm-ApdpeDuyAWWZizEDd",
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
   ];
 
-  const galleryList = props.galleryImages && props.galleryImages.length >= 3 ? props.galleryImages : defaultGallery;
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
   return (
     <div className="bg-[#fbf9f8] text-[#1b1c1c] font-serif antialiased selection:bg-[#735c00]/30 selection:text-[#061b0e] relative min-h-screen overflow-hidden">
