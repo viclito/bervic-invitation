@@ -250,19 +250,13 @@ export async function GET() {
       };
     });
 
-    // Also include payments/subscriptions total revenue fallback
-    let fallbackPaymentsRevenue = 0;
-    (payments || []).forEach((p) => {
-      if (p.amount) fallbackPaymentsRevenue += Number(p.amount) || 0;
-    });
-
-    const finalRevenue = Math.max(calculatedTotalRevenue, fallbackPaymentsRevenue);
+    const payingUserCount = users.filter((u) => u.role !== "ADMIN" && u.plan !== "NONE").length;
 
     const overviewStats = {
       totalUsers: users.length,
-      totalSubscriptions: Math.max((subscriptions || []).length, (payments || []).length, activeSubscriptionsCount),
+      totalSubscriptions: payingUserCount,
       activeSubscriptions: activeSubscriptionsCount,
-      totalRevenue: finalRevenue,
+      totalRevenue: calculatedTotalRevenue,
       totalInvitationsCreated: (invitations || []).length,
       totalCardsGenerated: (cards || []).length,
     };
