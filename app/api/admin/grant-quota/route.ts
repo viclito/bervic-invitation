@@ -58,8 +58,25 @@ export async function POST(req: Request) {
     const templateInc = parseInt(addTemplateSlots, 10) || 0;
     const cardInc = parseInt(addCardCredits, 10) || 0;
 
-    const newTemplateQuota = Math.max(0, (targetUser.allowedTemplatesCount || 0) + templateInc);
-    const newCardQuota = Math.max(0, (targetUser.allowedCardsCount || 0) + cardInc);
+    let currentTemplates = targetUser.allowedTemplatesCount || 0;
+    let currentCards = targetUser.allowedCardsCount || 0;
+
+    const targetPlan = overridePlan || targetUser.plan;
+
+    // Normalize legacy 99 / 100 mock values to actual plan base before adding granted quota
+    if (targetPlan === "BASIC_299") {
+      if (currentTemplates >= 99) currentTemplates = 1;
+      if (currentCards >= 99) currentCards = 2;
+    } else if (targetPlan === "PRO_999") {
+      if (currentTemplates >= 99) currentTemplates = 4;
+      if (currentCards >= 99) currentCards = 6;
+    } else {
+      if (currentTemplates >= 99) currentTemplates = 0;
+      if (currentCards >= 99) currentCards = 0;
+    }
+
+    const newTemplateQuota = Math.max(0, currentTemplates + templateInc);
+    const newCardQuota = Math.max(0, currentCards + cardInc);
 
     const updateData: any = {
       allowedTemplatesCount: newTemplateQuota,
@@ -90,7 +107,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully granted +${templateInc} template slots and +${cardInc} card credits to ${updatedUser.name || updatedUser.email}!`,
+      message: `Successfully granted +${templateInc} template slots and +${cardInc} card credits to ${updatedUser.name || updatedUser.email}! Total: ${updatedUser.allowedTemplatesCount} template slots & ${updatedUser.allowedCardsCount} card credits.`,
       user: {
         id: updatedUser.id,
         name: updatedUser.name,

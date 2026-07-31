@@ -405,10 +405,10 @@ export default function AdminPage() {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-[#7A1F2B]">
-                            {user.usedTemplatesCount} / {user.allowedTemplatesCount}
+                            {user.role === "ADMIN" ? `${user.usedTemplatesCount} / Unlimited` : `${user.usedTemplatesCount} / ${user.allowedTemplatesCount}`}
                           </span>
                           <span className="text-[10px] text-[#221C17]/60">
-                            ({Math.max(0, user.allowedTemplatesCount - user.usedTemplatesCount)} left)
+                            ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedTemplatesCount - user.usedTemplatesCount)} left`})
                           </span>
                         </div>
                       </td>
@@ -417,10 +417,10 @@ export default function AdminPage() {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-[#8B6519]">
-                            {user.usedCardsCount} / {user.allowedCardsCount}
+                            {user.role === "ADMIN" ? `${user.usedCardsCount} / Unlimited` : `${user.usedCardsCount} / ${user.allowedCardsCount}`}
                           </span>
                           <span className="text-[10px] text-[#221C17]/60">
-                            ({Math.max(0, user.allowedCardsCount - user.usedCardsCount)} left)
+                            ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedCardsCount - user.usedCardsCount)} left`})
                           </span>
                         </div>
                       </td>
