@@ -194,11 +194,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Header Action */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
             {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
               <Link
                 href="/admin"
-                className="px-4 py-3 rounded-2xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all border border-[#D9A441]/40 shrink-0"
+                className="px-4 py-3 rounded-2xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all border border-[#D9A441]/40 w-full sm:w-auto"
               >
                 <Crown className="w-4 h-4 fill-current" />
                 <span>Admin Authority Panel</span>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
             )}
             <Link
               href="/templates"
-              className="btn-maroon px-5 py-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all w-full md:w-auto shrink-0"
+              className="btn-maroon px-5 py-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 text-[#D9A441]" />
               <span>Create New Invitation</span>
@@ -246,8 +246,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-xs text-[#221C17]/60 font-semibold pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9A441]/10">
-            <span>Template Slots: <strong className="text-[#7A1F2B]">{subData.remainingTemplateSlots} left</strong></span>
-            <span>Card Credits: <strong className="text-[#8B6519]">{subData.remainingCardSlots} left</strong></span>
+            <span>Template Slots: <strong className="text-[#7A1F2B]">{session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited" : `${subData.remainingTemplateSlots} left`}</strong></span>
+            <span>Card Credits: <strong className="text-[#8B6519]">{session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited" : `${subData.remainingCardSlots} left`}</strong></span>
           </div>
         </div>
 
