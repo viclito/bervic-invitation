@@ -23,6 +23,13 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase().trim() },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            password: true,
+            image: true,
+          },
         });
 
         if (!user || !user.password) {
@@ -51,6 +58,7 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google" && user.email) {
         let dbUser = await prisma.user.findUnique({
           where: { email: user.email.toLowerCase() },
+          select: { id: true },
         });
 
         if (!dbUser) {
@@ -61,6 +69,7 @@ export const authOptions: NextAuthOptions = {
               image: user.image,
               emailVerified: new Date(),
             },
+            select: { id: true },
           });
         }
         user.id = dbUser.id;
@@ -71,6 +80,7 @@ export const authOptions: NextAuthOptions = {
       if (user?.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email.toLowerCase() },
+          select: { id: true },
         });
         if (dbUser) {
           token.id = dbUser.id;
