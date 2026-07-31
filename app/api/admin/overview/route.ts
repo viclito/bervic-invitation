@@ -77,6 +77,7 @@ export async function GET() {
     let cards: any[] = [];
     let subscriptions: any[] = [];
     let payments: any[] = [];
+    let otps: any[] = [];
 
     try {
       invitations = await prisma.userInvitation.findMany({ select: { userId: true } });
@@ -98,6 +99,34 @@ export async function GET() {
         select: { userId: true, amount: true },
       });
     } catch {}
+
+    try {
+      otps = await prisma.otpVerification.findMany({ select: { email: true, createdAt: true } });
+    } catch {}
+
+    // Merge registered accounts from OTP verifications if missing in rawUsers
+    const userEmailsSeen = new Set((rawUsers || []).map((u: any) => (u.email || "").toLowerCase().trim()));
+
+    otps.forEach((otp) => {
+      const cleanEmail = (otp.email || "").toLowerCase().trim();
+      if (cleanEmail && !userEmailsSeen.has(cleanEmail) && cleanEmail !== "berglin1998@gmail.com") {
+        userEmailsSeen.add(cleanEmail);
+        const namePart = cleanEmail.split("@")[0].replace(/[._]/g, " ");
+        const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        rawUsers.push({
+          id: `user_otp_${cleanEmail}`,
+          name: formattedName,
+          email: cleanEmail,
+          phone: "N/A",
+          role: "USER",
+          plan: "NONE",
+          planExpiresAt: null,
+          allowedTemplatesCount: 0,
+          allowedCardsCount: 0,
+          createdAt: otp.createdAt || new Date(),
+        });
+      }
+    });
 
     const now = new Date();
 
