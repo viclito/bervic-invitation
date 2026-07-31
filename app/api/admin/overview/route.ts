@@ -3,41 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 
-async function fetchUsersWithRetry(retries = 2, delayMs = 400) {
-  let lastErr: any = null;
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await prisma.user.findMany({
-        orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: {
-              invitations: true,
-              cards: true,
-              subscriptions: true,
-            },
-          },
-          subscriptions: {
-            orderBy: { createdAt: "desc" },
-            take: 5,
-          },
-          payments: {
-            where: { status: "SUCCESS" },
-            select: { amount: true },
-          },
-        },
-      });
-    } catch (err: any) {
-      lastErr = err;
-      console.warn(`[Admin Overview DB Attempt ${i + 1}/${retries} Failed]:`, err?.message || err);
-      if (i < retries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-      }
-    }
-  }
-  throw lastErr;
-}
-
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -62,56 +27,67 @@ export async function GET() {
       }
     }
 
-    // Fetch users with retry & fallback
-    let rawUsers: any[] = [];
-    let isFallback = false;
-
-    try {
-      rawUsers = await fetchUsersWithRetry(2, 500);
-    } catch (dbErr: any) {
-      console.warn("Neon Cloud DB connection cold-start timeout. Serving graceful admin session view.");
-      isFallback = true;
-      rawUsers = [
-        {
-          id: (session.user as any)?.id || "admin-berglin-1",
-          name: session.user.name || "berglin viclito",
-          email: "berglin1998@gmail.com",
-          phone: "+91 90421 27115",
-          role: "ADMIN",
-          plan: "PRO_999",
-          planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          allowedTemplatesCount: 99,
-          allowedCardsCount: 99,
-          createdAt: new Date(),
-          _count: { invitations: 1, cards: 1, subscriptions: 1 },
-          payments: [{ amount: 999 }],
-          subscriptions: [{ status: "ACTIVE", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }],
-        },
-      ];
-    }
+    // Execute fast, decoupled parallel queries to prevent heavy join locks on Neon Cloud
+    const [rawUsers, invitations, cards, subscriptions, payments] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.userInvitation.findMany({
+        select: { userId: true },
+      }),
+      prisma.userCard.findMany({
+        select: { userId: true },
+      }),
+      prisma.subscription.findMany({
+        select: { userId: true, plan: true, amount: true, status: true, expiresAt: true },
+      }),
+      prisma.payment.findMany({
+        where: { status: "SUCCESS" },
+        select: { userId: true, amount: true },
+      }),
+    ]);
 
     const now = new Date();
 
+    // Group invitations count per user
+    const invCountMap: Record<string, number> = {};
+    invitations.forEach((inv) => {
+      invCountMap[inv.userId] = (invCountMap[inv.userId] || 0) + 1;
+    });
+
+    // Group cards count per user
+    const cardCountMap: Record<string, number> = {};
+    cards.forEach((c) => {
+      cardCountMap[c.userId] = (cardCountMap[c.userId] || 0) + 1;
+    });
+
+    // Group revenue per user
+    const revenueMap: Record<string, number> = {};
+    payments.forEach((p) => {
+      revenueMap[p.userId] = (revenueMap[p.userId] || 0) + (p.amount || 0);
+    });
+
+    // Group active subscription per user
+    const activeSubMap: Record<string, boolean> = {};
+    subscriptions.forEach((sub) => {
+      if (sub.status === "ACTIVE" && new Date(sub.expiresAt) > now) {
+        activeSubMap[sub.userId] = true;
+      }
+    });
+
     let totalRevenue = 0;
     let activeSubscriptionsCount = 0;
-    let totalInvitationsCount = 0;
-    let totalCardsCount = 0;
+    let totalInvitationsCount = invitations.length;
+    let totalCardsCount = cards.length;
 
     const users = rawUsers.map((user: any) => {
       const isUserAdmin = user.email.toLowerCase() === "berglin1998@gmail.com" || user.role === "ADMIN";
-      const usedTemplatesCount = user._count?.invitations || 0;
-      const usedCardsCount = user._count?.cards || 0;
+      const usedTemplatesCount = invCountMap[user.id] || 0;
+      const usedCardsCount = cardCountMap[user.id] || 0;
+      const userRevenue = revenueMap[user.id] || 0;
+      const hasActiveSub = !!activeSubMap[user.id];
 
-      totalInvitationsCount += usedTemplatesCount;
-      totalCardsCount += usedCardsCount;
-
-      const userRevenue = (user.payments || []).reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
       totalRevenue += userRevenue;
-
-      const hasActiveSub = (user.subscriptions || []).some(
-        (sub: any) => sub.status === "ACTIVE" && new Date(sub.expiresAt) > now
-      );
-
       if (hasActiveSub) {
         activeSubscriptionsCount++;
       }
@@ -134,18 +110,9 @@ export async function GET() {
       };
     });
 
-    let totalSubscriptionsCount = activeSubscriptionsCount;
-    if (!isFallback) {
-      try {
-        totalSubscriptionsCount = await prisma.subscription.count();
-      } catch {
-        totalSubscriptionsCount = activeSubscriptionsCount;
-      }
-    }
-
     const overviewStats = {
       totalUsers: users.length,
-      totalSubscriptions: totalSubscriptionsCount,
+      totalSubscriptions: subscriptions.length,
       activeSubscriptions: activeSubscriptionsCount,
       totalRevenue,
       totalInvitationsCreated: totalInvitationsCount,
@@ -156,12 +123,11 @@ export async function GET() {
       success: true,
       stats: overviewStats,
       users,
-      isFallback,
     });
   } catch (error: any) {
     console.error("Admin Overview Error:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to connect to database" },
+      { error: error?.message || "Failed to fetch user analytics" },
       { status: 500 }
     );
   }
