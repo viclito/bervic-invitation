@@ -15,20 +15,10 @@ export async function GET() {
     const isAdmin = currentUserEmail === "berglin1998@gmail.com";
 
     if (!isAdmin) {
-      try {
-        const dbUser: any = await prisma.user.findUnique({
-          where: { email: currentUserEmail },
-          select: { role: true },
-        });
-        if (!dbUser || dbUser.role !== "ADMIN") {
-          return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
-        }
-      } catch {
-        // Default allow admin
-      }
+      return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
     }
 
-    // 1. Fetch Users with multi-tier resilience
+    // 1. Fetch Users cleanly WITHOUT requesting unmigrated 'role' column from PostgreSQL
     let rawUsers: any[] = [];
 
     try {
@@ -38,7 +28,6 @@ export async function GET() {
           name: true,
           email: true,
           phone: true,
-          role: true,
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
@@ -48,22 +37,21 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
       });
     } catch (err1: any) {
-      console.warn("Prisma findMany failed, attempting raw SQL query for User table:", err1?.message);
+      console.warn("Prisma findMany user query warning, attempting SQL fallback:", err1?.message);
       try {
         rawUsers = await prisma.$queryRawUnsafe(
-          `SELECT "id", "name", "email", "phone", "role", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
+          `SELECT "id", "name", "email", "phone", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
         );
       } catch (err2: any) {
-        console.error("Raw SQL query for User table also failed:", err2?.message);
+        console.error("Raw SQL user query error:", err2?.message);
       }
     }
 
-    // Ensure rawUsers is an array and never empty if users exist in DB
     if (!Array.isArray(rawUsers)) {
       rawUsers = [];
     }
 
-    // Guarantee admin account is in rawUsers list
+    // Guarantee admin account is present in rawUsers list
     const hasAdminInList = rawUsers.some((u: any) => u.email && u.email.toLowerCase() === "berglin1998@gmail.com");
     if (!hasAdminInList) {
       rawUsers.unshift({
@@ -71,7 +59,6 @@ export async function GET() {
         name: session.user.name || "berglin viclito",
         email: "berglin1998@gmail.com",
         phone: "+91 90421 27115",
-        role: "ADMIN",
         plan: "PRO_999",
         allowedTemplatesCount: 99,
         allowedCardsCount: 99,
@@ -79,7 +66,7 @@ export async function GET() {
       });
     }
 
-    // 2. Fetch Invitations, Cards, Subscriptions, Payments with resilience
+    // 2. Fetch Invitations, Cards, Subscriptions, Payments
     let invitations: any[] = [];
     let cards: any[] = [];
     let subscriptions: any[] = [];
@@ -117,15 +104,15 @@ export async function GET() {
 
     try {
       payments = await prisma.payment.findMany({
-        select: { id: true, userId: true, amount: true, status: true },
+        select: { id: true, userId: true, amount: true, status: true, plan: true },
       });
     } catch {
       try {
-        payments = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "amount", "status" FROM "Payment"`);
+        payments = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "amount", "status", "plan" FROM "Payment"`);
       } catch {}
     }
 
-    // 3. Scan invitations & subscriptions for any user ID missing in rawUsers
+    // 3. Scan invitations, subscriptions, payments for any user IDs missing in rawUsers
     const existingUserIds = new Set(rawUsers.map((u: any) => u.id));
     const missingUserIds = new Set<string>();
 
@@ -148,7 +135,6 @@ export async function GET() {
             name: true,
             email: true,
             phone: true,
-            role: true,
             plan: true,
             planExpiresAt: true,
             allowedTemplatesCount: true,
@@ -181,31 +167,31 @@ export async function GET() {
     const revenueMap: Record<string, number> = {};
     
     (payments || []).forEach((p) => {
-      if (p?.userId && p.amount && (p.status === "SUCCESS" || p.status === "CREATED" || !p.status)) {
-        revenueMap[p.userId] = Math.max(revenueMap[p.userId] || 0, p.amount);
+      if (p?.userId && p.amount) {
+        revenueMap[p.userId] = Math.max(revenueMap[p.userId] || 0, Number(p.amount) || 0);
       }
     });
 
     (subscriptions || []).forEach((sub) => {
       if (sub?.userId && sub.amount) {
-        revenueMap[sub.userId] = Math.max(revenueMap[sub.userId] || 0, sub.amount);
+        revenueMap[sub.userId] = Math.max(revenueMap[sub.userId] || 0, Number(sub.amount) || 0);
       }
     });
 
     // Group active subscription status per user
     const activeSubMap: Record<string, boolean> = {};
     (subscriptions || []).forEach((sub) => {
-      if (sub?.userId && sub.status === "ACTIVE" && new Date(sub.expiresAt) > now) {
+      if (sub?.userId && (sub.status === "ACTIVE" || !sub.status) && new Date(sub.expiresAt) > now) {
         activeSubMap[sub.userId] = true;
       }
     });
 
-    let totalRevenue = 0;
+    let calculatedTotalRevenue = 0;
     let activeSubscriptionsCount = 0;
 
     const users = rawUsers.map((user: any) => {
-      const email = (user.email || "").toLowerCase();
-      const isUserAdmin = email === "berglin1998@gmail.com" || user.role === "ADMIN";
+      const email = (user.email || "").toLowerCase().trim();
+      const isUserAdmin = email === "berglin1998@gmail.com";
       const usedTemplatesCount = invCountMap[user.id] || 0;
       const usedCardsCount = cardCountMap[user.id] || 0;
       
@@ -221,9 +207,11 @@ export async function GET() {
         ((user.plan && user.plan !== "NONE" && user.planExpiresAt && new Date(user.planExpiresAt) > now) ||
           !!activeSubMap[user.id]);
 
-      totalRevenue += isUserAdmin ? 0 : userRevenue;
-      if (hasActiveSub) {
-        activeSubscriptionsCount++;
+      if (!isUserAdmin) {
+        calculatedTotalRevenue += userRevenue;
+        if (hasActiveSub) {
+          activeSubscriptionsCount++;
+        }
       }
 
       // Allowed quotas
@@ -246,10 +234,10 @@ export async function GET() {
 
       return {
         id: user.id,
-        name: user.name || "Anonymous User",
+        name: user.name || (email ? email.split("@")[0] : "User"),
         email: user.email || "N/A",
         phone: user.phone || "N/A",
-        role: isUserAdmin ? "ADMIN" : user.role || "USER",
+        role: isUserAdmin ? "ADMIN" : "USER",
         plan: isUserAdmin ? "PRO_999" : user.plan || "NONE",
         planExpiresAt: user.planExpiresAt,
         allowedTemplatesCount: isUserAdmin ? 99 : allowedTemplates,
@@ -262,11 +250,19 @@ export async function GET() {
       };
     });
 
+    // Also include payments/subscriptions total revenue fallback
+    let fallbackPaymentsRevenue = 0;
+    (payments || []).forEach((p) => {
+      if (p.amount) fallbackPaymentsRevenue += Number(p.amount) || 0;
+    });
+
+    const finalRevenue = Math.max(calculatedTotalRevenue, fallbackPaymentsRevenue);
+
     const overviewStats = {
       totalUsers: users.length,
-      totalSubscriptions: Math.max(subscriptions.length, activeSubscriptionsCount),
+      totalSubscriptions: Math.max((subscriptions || []).length, (payments || []).length, activeSubscriptionsCount),
       activeSubscriptions: activeSubscriptionsCount,
-      totalRevenue,
+      totalRevenue: finalRevenue,
       totalInvitationsCreated: (invitations || []).length,
       totalCardsGenerated: (cards || []).length,
     };
