@@ -24,31 +24,60 @@ export async function GET() {
     }
 
     const userEmail = session.user.email.toLowerCase().trim();
+    const userIdFromSession = (session.user as any)?.id;
 
     let dbUser: any = null;
     try {
       dbUser = await prisma.user.findUnique({
         where: { email: userEmail },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+        },
       });
     } catch (dbErr: any) {
-      console.warn("User lookup DB error in my-invitations:", dbErr?.message);
+      console.warn("User lookup DB warning in my-invitations:", dbErr?.message);
     }
 
     if (!dbUser) {
-      return NextResponse.json({ invitations: [] });
+      try {
+        const raw: any = await prisma.$queryRawUnsafe(
+          `SELECT "id", "email", "phone" FROM "User" WHERE LOWER("email") = $1 LIMIT 1`,
+          userEmail
+        );
+        if (raw && raw.length > 0) {
+          dbUser = raw[0];
+        }
+      } catch {}
     }
+
+    const targetUserId = dbUser?.id || userIdFromSession;
 
     let invitations: any[] = [];
-    try {
-      invitations = await prisma.userInvitation.findMany({
-        where: { userId: dbUser.id },
-        orderBy: { updatedAt: "desc" },
-      });
-    } catch (invErr: any) {
-      console.warn("Invitations fetch DB error in my-invitations:", invErr?.message);
+    if (targetUserId) {
+      try {
+        invitations = await prisma.userInvitation.findMany({
+          where: {
+            OR: [
+              { userId: targetUserId },
+              ...(userEmail ? [{ userId: `user_otp_${userEmail}` }] : []),
+            ],
+          },
+          orderBy: { updatedAt: "desc" },
+        });
+      } catch (invErr: any) {
+        console.warn("Invitations fetch DB warning in my-invitations:", invErr?.message);
+        try {
+          invitations = await prisma.$queryRawUnsafe(
+            `SELECT * FROM "UserInvitation" WHERE "userId" = $1 ORDER BY "updatedAt" DESC`,
+            targetUserId
+          );
+        } catch {}
+      }
     }
 
-    return NextResponse.json({ invitations });
+    return NextResponse.json({ invitations: invitations || [] });
   } catch (error: any) {
     console.error("Fetch User Invitations Error:", error);
     return NextResponse.json(

@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     if (!isAdmin) {
       const dbUser: any = await prisma.user.findUnique({
         where: { email: currentUserEmail },
+        select: { id: true, role: true },
       });
       if (!dbUser || dbUser.role !== "ADMIN") {
         return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
@@ -34,6 +35,14 @@ export async function POST(req: Request) {
     try {
       targetUser = await prisma.user.findUnique({
         where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          plan: true,
+          allowedTemplatesCount: true,
+          allowedCardsCount: true,
+        },
       });
     } catch (dbErr: any) {
       return NextResponse.json(
@@ -69,6 +78,14 @@ export async function POST(req: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        allowedTemplatesCount: true,
+        allowedCardsCount: true,
+      },
     });
 
     return NextResponse.json({
