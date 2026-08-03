@@ -1,0 +1,569 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { TemplateClassicFloralProps } from "@/types/template";
+import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
+import RsvpSection from "../classic-floral/RsvpSection";
+import { Menu, X, Wine, Utensils, Music, MapPin, Car, Shirt } from "lucide-react";
+
+export default function ZenJapandiCalmInvitation(
+  props: TemplateClassicFloralProps
+) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Celebrant name
+  const celebrantName =
+    props.partnerOne && props.partnerOne !== "Your Name"
+      ? props.partnerOne
+      : "Evelyn";
+
+  const celebrationHeader = `EVELYN'S 30TH`;
+
+  // Countdown timer state
+  const [timeLeft, setTimeLeft] = useState({
+    days: 42,
+    hours: 14,
+    minutes: 30,
+  });
+
+  useEffect(() => {
+    const targetDate = new Date(
+      props.weddingDate || "2026-11-15T18:00:00"
+    ).getTime();
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const difference = Math.max(0, targetDate - now);
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor(
+        (difference % (1000 * 60 * 60)) / (1000 * 60)
+      );
+
+      setTimeLeft({ days, hours, minutes });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [props.weddingDate]);
+
+  // Gallery items matching exact Stitch screen a439264a19914fe392d707563594c943
+  const galleryList =
+    props.galleryImages && props.galleryImages.length >= 3
+      ? props.galleryImages
+      : [
+          {
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCNwqi234BE9QmwnrysNENt7qR5469NSENJVC2JJGl5NRYiCs9tFiWCie8l-DsmDINWoIqgKKnuYT41DMb6Dy_TDp5oL6rPyu1VIcrWC_oW8Os_4S8roRwy0F8GDW1rnwHXHPjCJRcbk0P_s6fDRjc2tgo_Fg1WfPiWl6fLNgyFufX7DdqG7nLdpugTqhEfPrH0KindZeBV4AgYd8cFpPnsp1Ldv4aXiMFj8X4DYkOugv_9Oy5-PaQv",
+            caption: "Minimalist table setting",
+            rotate: "rotate-1",
+          },
+          {
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB7kkZLcgtRsPCvKndKS8Fikp3jBEpBxrIGcBXPUaIZ1sZI6zGxMeR6t7CoIBG74B4dxbuA_3RHKmC-KFwIkFTPiU2qk4go9SnRNJmt_1802oh6_0vUmqwITJOMToWCGrrN6zaWJpQF_QhEPDv9P5qjGREjlwS9Kl_cZpcjE3NqNJyrR_eWo4G3LtQGZqtYjZmJaWSH2FkldCdWaBCuML6YwjYZzWKjc8-QbehQskd6zgM3wJEuWLHu",
+            caption: "Ceramics and dried flowers",
+            rotate: "rotate-[-2deg]",
+          },
+          {
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUJU6AiPtZe1zQI_GDNKEukBB7sZIo0cHAn0ea53Hrx9ZcTQFkYcHC9CxhXlvozySp3rx9rOXML1uExoHMROGG0lxBB_7q5877tct5LDAlr-TtYto-aZtA7BRm8TgPoi87oEeeB6u43BC_wzEryl1iHVybHl_15wXQiRkqxC3VuPwizKCQjUOEgMixgX9xuHwWhwJlsUaHa_vTOg4YN6o_rBylCCWC-YlK9f5z9aYXIySjGV-YI2a5",
+            caption: "Natural light streaming in",
+            rotate: "rotate-2",
+          },
+        ];
+
+  // Timeline items matching exact Stitch screen a439264a19914fe392d707563594c943
+  const timelineSteps =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay
+      : [
+          {
+            time: "6:00 PM",
+            title: "Welcome Drinks",
+            desc: "Arrive and unwind with a signature botanical cocktail or natural wine.",
+            icon: Wine,
+          },
+          {
+            time: "7:30 PM",
+            title: "Artisanal Dinner",
+            desc: "A curated menu of seasonal, locally sourced dishes shared family-style.",
+            icon: Utensils,
+          },
+          {
+            time: "9:00 PM",
+            title: "Music & Mingling",
+            desc: "Soft jazz, warm ambient lighting, and meaningful conversations.",
+            icon: Music,
+          },
+        ];
+
+  // Venue location matching exact Stitch screen a439264a19914fe392d707563594c943
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? props.locations[0]
+      : {
+          name: "The Serene Estate",
+          address: "123 Calm Way, Tranquil Hills",
+          mapLink: "https://maps.google.com",
+        };
+
+  // Hero image fallback matching Japandi serenity
+  const isNonJapandiHero =
+    !props.heroImage ||
+    props.heroImage.includes("unsplash.com") ||
+    props.heroImage.includes("wedding") ||
+    props.heroImage.includes("photo-1519741497674") ||
+    props.heroImage.includes("photo-1511795409834") ||
+    props.heroImage.includes("AB6AXuCbj6E_qQBW8N2") ||
+    Boolean(props.partnerTwo && props.partnerTwo.trim() !== "");
+
+  const displayHeroImage =
+    props.heroImage && !isNonJapandiHero
+      ? props.heroImage
+      : "https://lh3.googleusercontent.com/aida-public/AB6AXuCwStl7oL6JNsQipmukGmF1Ybs5-Hh28xDfmcpE33duw7cgIfQjq6efgoSXIPfSWkib7UtwiIbPGtx36ySUc-7Gz-nlm5jsQ2MEhltR9z7QSL7qJAnvvoyM8ZylgSXTpB72FH8Sqv6ypw1EBq5DGc-WabiXYifw7eZYYAwU7lSlHI8ONceDTUfh3n3DDjSrAp2zL1mQZVJlua5ozso3M3ba4hVa9hFXkBZ-K-yTu59cQmYO2OCfFt0-";
+
+  return (
+    <div className="bg-[#fcf9f4] text-[#1c1c19] font-sans antialiased overflow-x-hidden relative selection:bg-[#60291e]/20 selection:text-[#60291e] min-h-screen flex flex-col">
+      {/* Material Symbols Font */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap"
+        rel="stylesheet"
+      />
+
+      {/* Japandi CSS Engine & Animations */}
+      <style>{`
+        .sticker-peel {
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .sticker-peel:hover {
+          transform: scale(1.02) rotate(-2deg);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.1), -5px -5px 15px rgba(255,255,255,0.8);
+          border-bottom-right-radius: 20px;
+        }
+
+        .glass-card {
+          background: rgba(240, 237, 233, 0.7);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+      `}</style>
+
+      {/* Envelope Cover Integration */}
+      <PersonalizedEnvelopeCover
+        guestName={props.guestName}
+        partnerOne={celebrantName}
+        partnerTwo=""
+        weddingTime={props.weddingTime || "Saturday at 6:00 PM"}
+        isCustomizer={props.isCustomizer}
+        templateSlug="zen-japandi-calm"
+      />
+
+      {/* Top Navigation Bar */}
+      <nav className="sticky top-0 z-50 w-full bg-[#fcf9f4]/90 backdrop-blur-md border-b border-[#e5e2dd] transition-all duration-300">
+        <div className="flex justify-between items-center w-full px-6 md:px-16 py-4 max-w-[1120px] mx-auto">
+          <a
+            className="font-serif text-2xl tracking-[0.1em] text-[#60291e] uppercase font-medium"
+            href="#"
+          >
+            SERENE
+          </a>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex gap-8 items-center text-xs font-semibold uppercase tracking-widest text-[#534340]">
+            <a
+              className="hover:text-[#60291e] transition-colors duration-300"
+              href="#story"
+            >
+              Our Story
+            </a>
+            <a
+              className="hover:text-[#60291e] transition-colors duration-300"
+              href="#venue"
+            >
+              The Venue
+            </a>
+            <a
+              className="hover:text-[#60291e] transition-colors duration-300"
+              href="#schedule"
+            >
+              Schedule
+            </a>
+            <a
+              className="hover:text-[#60291e] transition-colors duration-300"
+              href="#gallery"
+            >
+              Gallery
+            </a>
+            <a
+              className="hover:text-[#60291e] transition-colors duration-300"
+              href="#rsvp"
+            >
+              RSVP
+            </a>
+          </div>
+
+          <a
+            className="hidden md:inline-flex items-center justify-center px-6 py-3 bg-[#60291e] text-white text-xs font-semibold uppercase tracking-widest rounded transition-all duration-300 hover:bg-[#7c3f33]"
+            href="#rsvp"
+          >
+            Contact Us
+          </a>
+
+          <button
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            className="md:hidden text-[#60291e] p-2"
+          >
+            {mobileNavOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown */}
+        {mobileNavOpen && (
+          <div className="md:hidden bg-[#fcf9f4] border-t border-[#e5e2dd] px-6 py-4 flex flex-col gap-3 text-center">
+            <a
+              href="#story"
+              onClick={() => setMobileNavOpen(false)}
+              className="text-[#534340] font-semibold py-2 border-b border-[#f0ede9]"
+            >
+              Our Story
+            </a>
+            <a
+              href="#venue"
+              onClick={() => setMobileNavOpen(false)}
+              className="text-[#534340] font-semibold py-2 border-b border-[#f0ede9]"
+            >
+              The Venue
+            </a>
+            <a
+              href="#schedule"
+              onClick={() => setMobileNavOpen(false)}
+              className="text-[#534340] font-semibold py-2 border-b border-[#f0ede9]"
+            >
+              Schedule
+            </a>
+            <a
+              href="#gallery"
+              onClick={() => setMobileNavOpen(false)}
+              className="text-[#534340] font-semibold py-2 border-b border-[#f0ede9]"
+            >
+              Gallery
+            </a>
+            <a
+              href="#rsvp"
+              onClick={() => setMobileNavOpen(false)}
+              className="bg-[#60291e] text-white py-2.5 rounded font-semibold text-xs uppercase tracking-widest"
+            >
+              RSVP Now
+            </a>
+          </div>
+        )}
+      </nav>
+
+      <main className="flex-grow flex flex-col">
+        {/* Hero Section */}
+        <section className="relative min-h-[880px] flex items-center justify-center px-6 md:px-16 py-16 overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <img
+              alt={`${celebrantName} Japandi Hero`}
+              className="w-full h-full object-cover opacity-80"
+              src={displayHeroImage}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#fcf9f4]/40 to-[#fcf9f4]"></div>
+          </div>
+
+          <div className="relative z-10 text-center max-w-2xl mx-auto flex flex-col items-center gap-4 mt-12">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6b5c4c]">
+              Join me to celebrate
+            </span>
+            <h1 className="font-serif text-4xl md:text-6xl text-[#60291e] tracking-wider leading-tight">
+              {celebrationHeader}
+            </h1>
+            <p className="text-base md:text-lg text-[#534340] max-w-lg mt-2 font-light">
+              A gathering of warmth, simplicity, and shared moments.
+            </p>
+            <div className="mt-6">
+              <a
+                className="inline-flex items-center justify-center px-8 py-4 border border-[#60291e] text-[#60291e] text-xs font-semibold uppercase tracking-widest rounded transition-all duration-300 hover:bg-[#60291e] hover:text-white"
+                href="#rsvp"
+              >
+                RSVP Now
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Minimalist Countdown */}
+        <section className="py-16 px-6 md:px-16 bg-[#f6f3ee] border-y border-[#e5e2dd]/60">
+          <div className="max-w-[1120px] mx-auto flex flex-wrap justify-center gap-8 md:gap-16 text-center items-center">
+            <div className="flex flex-col items-center">
+              <span className="font-serif text-3xl md:text-4xl text-[#60291e]">
+                {String(timeLeft.days).padStart(2, "0")}
+              </span>
+              <span className="text-xs text-[#6b5c4c] tracking-widest uppercase font-semibold mt-2">
+                Days
+              </span>
+            </div>
+            <div className="hidden md:block w-[1px] h-12 bg-[#d8c2bd]"></div>
+
+            <div className="flex flex-col items-center">
+              <span className="font-serif text-3xl md:text-4xl text-[#60291e]">
+                {String(timeLeft.hours).padStart(2, "0")}
+              </span>
+              <span className="text-xs text-[#6b5c4c] tracking-widest uppercase font-semibold mt-2">
+                Hours
+              </span>
+            </div>
+            <div className="hidden md:block w-[1px] h-12 bg-[#d8c2bd]"></div>
+
+            <div className="flex flex-col items-center">
+              <span className="font-serif text-3xl md:text-4xl text-[#60291e]">
+                {String(timeLeft.minutes).padStart(2, "0")}
+              </span>
+              <span className="text-xs text-[#6b5c4c] tracking-widest uppercase font-semibold mt-2">
+                Mins
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* About / Story */}
+        <section className="py-24 md:py-[120px] px-6 md:px-16 max-w-[1120px] mx-auto" id="story">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1 relative h-[480px] w-full rounded-lg overflow-hidden group shadow-sm">
+              <img
+                alt="Abstract pampas grass still life"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxunjWYJwmyADikBYUO0hJa44BWO9mC0jhz53TzDc0_4QY_hOgHOdL6K1XCc8UVH7lSIDxMm8MG7vkjF38u_R6fAO0K7-9UZbfKFLaKPdpSVYARL5C0f2EeO6KMmpFXwClQeEMqCrDCrPLKhUUD7ZIasaw6RtkjxAv9V6oUj9EqxICq3De2a2rGpBpIwmR3pGxznubq_WScfYVFzZOtTR5lPN0NAVajFOACMAe4eIeRuKgPvAudHhq"
+              />
+              <div className="absolute inset-0 bg-[#60291e]/5 group-hover:bg-transparent transition-colors duration-500"></div>
+            </div>
+
+            <div className="order-1 md:order-2 flex flex-col gap-6 md:pl-6">
+              <h2 className="font-serif text-3xl md:text-4xl text-[#60291e]">
+                A New Decade
+              </h2>
+              <p className="text-base text-[#534340] leading-relaxed">
+                Thirty feels like a profound threshold—a time to shed the unnecessary and embrace what truly matters. This celebration is an invitation to slow down, connect deeply, and enjoy the simple beauty of good company in a tranquil setting.
+              </p>
+              <p className="text-base text-[#534340] leading-relaxed">
+                We'll share curated bites, natural wines, and an atmosphere designed for unhurried conversation.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Event Timeline */}
+        <section className="py-24 md:py-[120px] px-6 md:px-16 max-w-[1120px] mx-auto" id="schedule">
+          <div className="text-center mb-12">
+            <h2 className="font-serif text-3xl md:text-4xl text-[#60291e]">
+              The Day's Flow
+            </h2>
+          </div>
+
+          <div className="max-w-2xl mx-auto flex flex-col gap-8 relative before:absolute before:inset-0 before:ml-[28px] md:before:mx-auto md:before:left-0 md:before:right-0 before:h-full before:w-[1px] before:bg-[#d8c2bd] before:-z-10">
+            {timelineSteps.map((step, idx) => {
+              const isEven = idx % 2 === 1;
+              const iconProp = (step as any).icon;
+              const isComponent = typeof iconProp === "function" || typeof iconProp === "object";
+
+              return (
+                <div
+                  key={idx}
+                  className={`relative flex items-center justify-between md:justify-normal ${
+                    isEven ? "md:flex-row-reverse" : ""
+                  } group`}
+                >
+                  {/* Circle Icon Pin */}
+                  <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[#fcf9f4] border border-[#d8c2bd] text-[#60291e] shrink-0 z-10 md:mx-auto shadow-sm group-hover:border-[#60291e] transition-colors">
+                    {isComponent ? (
+                      (() => {
+                        const IconComp = iconProp;
+                        return <IconComp className="w-5 h-5" />;
+                      })()
+                    ) : (
+                      <span className="text-xl leading-none">
+                        {typeof iconProp === "string" ? iconProp : "✨"}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Card Content */}
+                  <div
+                    className={`w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-[#f6f3ee] p-6 rounded-lg border border-[#e5e2dd]/60 group-hover:border-[#60291e]/20 transition-colors ${
+                      isEven ? "text-left md:text-left" : "text-left md:text-right"
+                    }`}
+                  >
+                    <span className="text-xs font-semibold text-[#6b5c4c] tracking-widest uppercase block mb-1">
+                      {step.time}
+                    </span>
+                    <h3 className="font-serif text-xl text-[#60291e] mb-2 font-medium">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-[#534340] leading-relaxed">
+                      {"desc" in step
+                        ? (step as any).desc
+                        : "Enjoy the serene company."}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Venue & Map */}
+        <section
+          className="py-24 md:py-[120px] px-6 md:px-16 bg-[#f6f3ee] border-y border-[#e5e2dd]/60"
+          id="venue"
+        >
+          <div className="max-w-[1120px] mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div className="flex flex-col gap-6">
+              <h2 className="font-serif text-3xl md:text-4xl text-[#60291e]">
+                The Setting
+              </h2>
+              <p className="text-base text-[#534340] leading-relaxed">
+                We are gathering at a tranquil, secluded estate designed to blend indoors and outdoors harmoniously.
+              </p>
+
+              <div className="flex items-start gap-4">
+                <MapPin className="w-5 h-5 text-[#60291e] mt-1 shrink-0" />
+                <div>
+                  <h4 className="text-xs font-semibold text-[#60291e] uppercase tracking-widest">
+                    Location
+                  </h4>
+                  <p className="text-sm text-[#534340] mt-1">
+                    {mainVenue.name || "The Serene Estate"}<br />
+                    {mainVenue.address || "123 Calm Way, Tranquil Hills"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <Car className="w-5 h-5 text-[#60291e] mt-1 shrink-0" />
+                <div>
+                  <h4 className="text-xs font-semibold text-[#60291e] uppercase tracking-widest">
+                    Details
+                  </h4>
+                  <p className="text-sm text-[#534340] mt-1">
+                    Complimentary valet parking is available at the entrance.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <Shirt className="w-5 h-5 text-[#60291e] mt-1 shrink-0" />
+                <div>
+                  <h4 className="text-xs font-semibold text-[#60291e] uppercase tracking-widest">
+                    Attire
+                  </h4>
+                  <p className="text-sm text-[#534340] mt-1">
+                    Casual Elegance (neutral tones recommended)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Map Area */}
+            <div className="relative w-full h-[380px] bg-[#fcf9f4] rounded-lg border border-[#d8c2bd]/40 flex items-center justify-center overflow-hidden shadow-sm">
+              <div
+                className="absolute inset-0 opacity-40 pointer-events-none"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(#d8c2bd 1px, transparent 1px)",
+                  backgroundSize: "20px 20px",
+                }}
+              />
+              <div className="relative z-10 flex flex-col items-center text-[#6b5c4c] gap-2">
+                <MapPin className="w-10 h-10 text-[#60291e]" />
+                <span className="text-xs font-semibold tracking-widest uppercase">
+                  Map Details Provided Upon RSVP
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Highlight Banner */}
+        <section className="py-24 px-6 text-center bg-[#60291e] text-white">
+          <div className="max-w-3xl mx-auto flex flex-col items-center gap-4">
+            <span className="text-white/50 text-3xl italic">“</span>
+            <h2 className="font-serif text-3xl md:text-5xl font-light italic opacity-90 leading-tight">
+              "In simplicity, we find beauty."
+            </h2>
+          </div>
+        </section>
+
+        {/* Gallery */}
+        <section className="py-24 md:py-[120px] px-6 md:px-16 max-w-[1120px] mx-auto" id="gallery">
+          <div className="text-center mb-12">
+            <h2 className="font-serif text-3xl md:text-4xl text-[#60291e]">
+              Captured Moments
+            </h2>
+            <p className="text-sm text-[#534340] mt-2 max-w-lg mx-auto">
+              Glimpses of the aesthetic and mood we hope to share.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
+            {galleryList.map((item: any, i: number) => {
+              const url = typeof item === "string" ? item : item.url;
+              const caption =
+                typeof item === "string" ? `Moment #${i + 1}` : item.caption;
+              const rotate =
+                typeof item === "string"
+                  ? i === 0
+                    ? "rotate-1"
+                    : i === 1
+                    ? "-rotate-2"
+                    : "rotate-2"
+                  : item.rotate || "";
+
+              return (
+                <div
+                  key={i}
+                  className={`bg-[#fcf9f4] p-3 shadow-md rounded-sm transform ${rotate} sticker-peel`}
+                >
+                  <div className="aspect-square bg-[#f6f3ee] overflow-hidden rounded-xs">
+                    <img
+                      alt={caption}
+                      className="w-full h-full object-cover"
+                      src={url}
+                    />
+                  </div>
+                  <p className="text-xs font-semibold text-center mt-3 text-[#6b5c4c]">
+                    {caption}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* RSVP */}
+        <section id="rsvp" className="py-24 bg-[#f6f3ee] border-t border-[#e5e2dd]/60">
+          <RsvpSection partnerOne={celebrantName} partnerTwo="" />
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-[#f6f3ee] border-t border-[#e5e2dd]">
+        <div className="flex flex-col md:flex-row justify-between items-center w-full px-6 md:px-16 py-8 max-w-[1120px] mx-auto gap-4 text-center md:text-left">
+          <span className="font-serif text-lg text-[#1c1c19] uppercase tracking-widest">
+            SERENE
+          </span>
+          <div className="flex gap-6 text-xs font-semibold text-[#6b5c4c]">
+            <a href="#" className="hover:text-[#60291e] transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-[#60291e] transition-colors">
+              Contact
+            </a>
+          </div>
+          <span className="text-xs text-[#6b5c4c]">
+            © {new Date().getFullYear()} Serene Invitations. All rights reserved.
+          </span>
+        </div>
+      </footer>
+    </div>
+  );
+}

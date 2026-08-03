@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Celebration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#797865",
+                      "on-secondary-fixed": "#2e1500",
+                      "error-container": "#ffdad6",
+                      "surface-container-highest": "#e4e2e1",
+                      "primary": "#5f5f00",
+                      "secondary-fixed-dim": "#ffb77c",
+                      "on-primary-fixed-variant": "#494900",
+                      "on-background": "#1b1c1c",
+                      "on-surface": "#1b1c1c",
+                      "tertiary-fixed-dim": "#c9c6c2",
+                      "on-primary-container": "#fffbff",
+                      "inverse-on-surface": "#f3f0f0",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed": "#ffdcc2",
+                      "surface-container-low": "#f6f3f2",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#6e3a00",
+                      "background": "#fcf9f8",
+                      "on-tertiary-fixed-variant": "#474743",
+                      "surface-container": "#f0eded",
+                      "secondary": "#904d00",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#fcf9f8",
+                      "on-secondary-fixed-variant": "#6d3900",
+                      "on-tertiary-fixed": "#1c1c19",
+                      "surface-variant": "#e4e2e1",
+                      "surface-dim": "#dcd9d9",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed": "#1d1d00",
+                      "surface-tint": "#626200",
+                      "surface": "#fcf9f8",
+                      "primary-fixed": "#e9e86b",
+                      "primary-fixed-dim": "#cccc52",
+                      "secondary-container": "#ffa049",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#767471",
+                      "inverse-primary": "#cccc52",
+                      "inverse-surface": "#303030",
+                      "surface-container-high": "#eae7e7",
+                      "on-tertiary-container": "#fcffe3",
+                      "primary-container": "#797900",
+                      "outline-variant": "#cac7b1",
+                      "tertiary": "#5d5c58",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#e5e2dd",
+                      "on-surface-variant": "#484837",
+                      "carnival-pink": "#FF3366",
+                      "carnival-cyan": "#00E5FF",
+                      "carnival-yellow": "#FFEA00",
+                      "carnival-bg": "#FFFDF7",
+                      "carnival-ink": "#111111"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "margin-mobile": "20px",
+                      "container-max": "1280px",
+                      "margin-desktop": "64px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Literata"
+                      ],
+                      "label-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-sm": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-sm": [
+                              "Literata"
+                      ],
+                      "display-lg-mobile": [
+                              "Literata"
+                      ],
+                      "display-lg": [
+                              "Literata"
+                      ],
+                      "body-lg": [
+                              "Literata"
+                      ],
+                      "headline-md": [
+                              "Literata"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            opacity: 0;
+            border: 2px solid #111111;
+        }
+        @keyframes fall {
+            0% { opacity: 1; top: -10%; transform: translateX(0) rotate(0deg); }
+            100% { opacity: 0; top: 110%; transform: translateX(20px) rotate(360deg); }
+        }
+        .brutal-border {
+            border: 4px solid #111111;
+            box-shadow: 6px 6px 0px #111111;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .brutal-border:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px #111111;
+        }
+        .brutal-button {
+            border: 3px solid #111111;
+            box-shadow: 4px 4px 0px #111111;
+            transition: all 0.2s ease;
+        }
+        .brutal-button:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #111111;
+        }
+        .sparkle-anim {
+            animation: sparkle 2s infinite ease-in-out alternate;
+        }
+        @keyframes sparkle {
+            0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+            100% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+        }
+      </style>
+</head>
+<body class="bg-carnival-bg text-carnival-ink font-body-md min-h-screen selection:bg-carnival-pink selection:text-white">
+<!-- TopNavBar -->
+<nav class="bg-carnival-bg/90 backdrop-blur-md font-body-md text-body-md fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b-4 border-carnival-ink">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<div class="font-headline-sm text-headline-sm text-carnival-ink font-bold italic relative">
+<span class="relative z-10">Evelyn's Celebration</span>
+<div class="absolute -bottom-1 -right-2 w-full h-3 bg-carnival-cyan -z-10 skew-x-[-15deg]"></div>
+</div>
+<div class="hidden md:flex gap-8 items-center font-label-md uppercase tracking-wider">
+<a class="text-carnival-ink hover:text-carnival-pink transition-colors duration-300 font-bold" href="#about">About</a>
+<a class="text-carnival-ink hover:text-carnival-cyan transition-colors duration-300 font-bold" href="#timeline">Timeline</a>
+<a class="text-carnival-ink hover:text-carnival-pink transition-colors duration-300 font-bold" href="#venue">Venue</a>
+<a class="text-carnival-ink hover:text-carnival-cyan transition-colors duration-300 font-bold" href="#gallery">Gallery</a>
+<a class="text-carnival-ink hover:text-carnival-pink transition-colors duration-300 font-bold" href="#rsvp">RSVP</a>
+</div>
+<button class="bg-carnival-yellow text-carnival-ink font-label-md font-bold uppercase tracking-widest px-6 py-3 brutal-button">
+                RSVP Now
+            </button>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden bg-carnival-bg" id="hero">
+<div class="absolute inset-0 pointer-events-none z-10" id="confetti-container"></div>
+<!-- Decorative bg shapes -->
+<div class="absolute top-1/4 left-10 w-32 h-32 bg-carnival-pink rounded-full border-4 border-carnival-ink -z-1 opacity-20"></div>
+<div class="absolute bottom-1/4 right-10 w-48 h-48 bg-carnival-cyan border-4 border-carnival-ink rotate-12 -z-1 opacity-20"></div>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop relative z-20 text-center flex flex-col items-center">
+<div class="relative mb-6">
+<h1 class="font-display-lg-mobile md:font-display-lg text-carnival-ink font-black uppercase relative z-10 tracking-tight">
+                    Join the <br/> <span class="text-carnival-pink underline decoration-carnival-yellow decoration-8 underline-offset-8">Celebration</span>
+</h1>
+<!-- Sparkle accents -->
+<span class="material-symbols-outlined absolute -top-8 -right-8 text-carnival-cyan text-5xl sparkle-anim">flare</span>
+<span class="material-symbols-outlined absolute bottom-4 -left-12 text-carnival-yellow text-6xl sparkle-anim" style="animation-delay: 1s;">star</span>
+</div>
+<div class="bg-white brutal-border p-6 max-w-2xl mx-auto mb-10 rotate-[-1deg]">
+<p class="font-body-lg text-carnival-ink font-medium">
+                    A joyous occasion marking a special milestone. We invite you to share in the laughter, memories, and a truly unforgettable night full of surprises and confetti!
+                </p>
+</div>
+<div class="flex gap-6">
+<button class="bg-carnival-pink text-white font-label-md text-label-md px-8 py-4 uppercase tracking-widest font-black brutal-button">
+                    Join the Party
+                </button>
+<button class="bg-carnival-cyan text-carnival-ink font-label-md text-label-md px-8 py-4 uppercase tracking-widest font-black brutal-button">
+                    View Details
+                </button>
+</div>
+</div>
+</header>
+<!-- Countdown Section -->
+<section class="py-24 bg-carnival-yellow border-y-4 border-carnival-ink relative overflow-hidden" id="countdown">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#111 2px, transparent 2px); background-size: 20px 20px;"></div>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center relative z-10">
+<h2 class="font-display-lg-mobile md:font-display-lg text-carnival-ink font-black uppercase mb-12">The Countdown Begins</h2>
+<div class="flex justify-center gap-4 md:gap-8 flex-wrap">
+<div class="bg-white brutal-border p-6 min-w-[140px] rotate-[2deg]">
+<div class="font-display-lg text-carnival-pink font-black" id="days">30</div>
+<div class="font-label-md text-carnival-ink font-bold uppercase tracking-widest mt-2 border-t-2 border-carnival-ink pt-2">Days</div>
+</div>
+<div class="bg-white brutal-border p-6 min-w-[140px] rotate-[-2deg]">
+<div class="font-display-lg text-carnival-cyan font-black" id="hours">12</div>
+<div class="font-label-md text-carnival-ink font-bold uppercase tracking-widest mt-2 border-t-2 border-carnival-ink pt-2">Hours</div>
+</div>
+<div class="bg-white brutal-border p-6 min-w-[140px] rotate-[1deg]">
+<div class="font-display-lg text-carnival-pink font-black" id="minutes">45</div>
+<div class="font-label-md text-carnival-ink font-bold uppercase tracking-widest mt-2 border-t-2 border-carnival-ink pt-2">Mins</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+<section class="py-8 bg-carnival-ink overflow-hidden border-b-4 border-carnival-ink">
+<div class="flex whitespace-nowrap animate-[marquee_20s_linear_infinite]">
+<span class="text-carnival-yellow font-display-lg uppercase font-black px-8">★ GET READY TO PARTY ★ EVELYN IS CELEBRATING ★ BRING YOUR DANCING SHOES ★</span>
+<span class="text-carnival-cyan font-display-lg uppercase font-black px-8">★ GET READY TO PARTY ★ EVELYN IS CELEBRATING ★ BRING YOUR DANCING SHOES ★</span>
+</div>
+</section>
+<style>
+@keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+}
+</style>
+<!-- Our Story Section -->
+<section class="py-24 bg-carnival-bg relative" id="about">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+<div class="col-span-1 md:col-span-5 relative">
+<div class="bg-carnival-cyan brutal-border aspect-square w-full absolute top-4 -left-4 -z-10"></div>
+<div class="bg-white brutal-border p-4 relative aspect-[4/3] flex items-center justify-center cursor-pointer group">
+<div class="absolute inset-0 bg-carnival-ink/10 group-hover:bg-transparent transition-colors z-10"></div>
+<span class="material-symbols-outlined text-carnival-pink text-6xl z-20 brutal-button bg-white rounded-full p-4 group-hover:scale-110 transition-transform">play_arrow</span>
+<!-- Placeholder for video -->
+<div class="absolute inset-0 bg-gray-200 border-2 border-carnival-ink m-4 flex items-center justify-center overflow-hidden">
+<span class="text-carnival-ink/50 font-bold">Video Placeholder</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-7 md:pl-12">
+<div class="inline-block bg-carnival-yellow border-2 border-carnival-ink px-4 py-1 mb-4 transform -rotate-2">
+<span class="font-label-md font-bold uppercase tracking-widest text-carnival-ink">The Journey</span>
+</div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-carnival-ink font-black uppercase mb-6 leading-tight">
+                    A Story Worth <br/><span class="text-carnival-pink">Celebrating</span>
+</h2>
+<p class="font-body-lg text-carnival-ink font-medium mb-6 bg-white brutal-border p-6">
+                    From the earliest memories to this incredible milestone, Evelyn's journey has been filled with laughter, adventure, and the unwavering support of friends and family. This celebration is as much about honoring the past as it is looking forward to the vibrant future ahead.
+                </p>
+<button class="bg-carnival-cyan text-carnival-ink font-label-md text-label-md px-6 py-3 uppercase tracking-widest font-black brutal-button inline-flex items-center gap-2">
+                    Read More <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="py-24 bg-carnival-cyan/20 border-y-4 border-carnival-ink" id="timeline">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-16">
+<h2 class="font-display-lg-mobile md:font-display-lg text-carnival-ink font-black uppercase">Schedule of Events</h2>
+<div class="w-24 h-4 bg-carnival-pink border-2 border-carnival-ink mx-auto mt-4"></div>
+</div>
+<div class="max-w-3xl mx-auto relative">
+<!-- Vertical Line -->
+<div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-2 bg-carnival-ink -translate-x-1/2"></div>
+<!-- Timeline Item 1 -->
+<div class="relative flex items-center justify-between mb-12 md:flex-row flex-col">
+<div class="w-full md:w-[45%] text-right pr-12 md:pr-0 md:text-right hidden md:block">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Welcome Drinks</h3>
+<p class="font-body-md text-carnival-ink mt-2">Signature cocktails and mingling as guests arrive.</p>
+</div>
+<div class="absolute left-4 md:left-1/2 w-8 h-8 bg-carnival-yellow border-4 border-carnival-ink rounded-full -translate-x-1/2 z-10"></div>
+<div class="w-full md:w-[45%] pl-12 md:pl-0 bg-white brutal-border p-4 rotate-1">
+<div class="font-display-lg text-carnival-pink font-black">7:00 PM</div>
+<div class="md:hidden mt-2">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Welcome Drinks</h3>
+<p class="font-body-md text-carnival-ink mt-1">Signature cocktails and mingling.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative flex items-center justify-between mb-12 md:flex-row-reverse flex-col">
+<div class="w-full md:w-[45%] text-left pl-12 md:pl-0 md:text-left hidden md:block">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Dinner &amp; Toasts</h3>
+<p class="font-body-md text-carnival-ink mt-2">A feast to remember, followed by heartfelt words.</p>
+</div>
+<div class="absolute left-4 md:left-1/2 w-8 h-8 bg-carnival-pink border-4 border-carnival-ink rounded-full -translate-x-1/2 z-10"></div>
+<div class="w-full md:w-[45%] pl-12 md:pl-0 md:pr-0 text-left md:text-right bg-white brutal-border p-4 -rotate-1">
+<div class="font-display-lg text-carnival-cyan font-black">8:30 PM</div>
+<div class="md:hidden mt-2">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Dinner &amp; Toasts</h3>
+<p class="font-body-md text-carnival-ink mt-1">A feast to remember.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative flex items-center justify-between md:flex-row flex-col">
+<div class="w-full md:w-[45%] text-right pr-12 md:pr-0 md:text-right hidden md:block">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Dance Floor Opens</h3>
+<p class="font-body-md text-carnival-ink mt-2">Time to party! DJ starts spinning the best tracks.</p>
+</div>
+<div class="absolute left-4 md:left-1/2 w-8 h-8 bg-carnival-yellow border-4 border-carnival-ink rounded-full -translate-x-1/2 z-10"></div>
+<div class="w-full md:w-[45%] pl-12 md:pl-0 bg-white brutal-border p-4 rotate-2">
+<div class="font-display-lg text-carnival-pink font-black">10:00 PM</div>
+<div class="md:hidden mt-2">
+<h3 class="font-headline-sm font-bold text-carnival-ink uppercase">Dance Floor Opens</h3>
+<p class="font-body-md text-carnival-ink mt-1">Time to party!</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Venue Section -->
+<section class="py-24 bg-carnival-bg" id="venue">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+<div class="col-span-1 md:col-span-5 flex flex-col justify-center">
+<div class="inline-block bg-carnival-cyan border-2 border-carnival-ink px-4 py-1 mb-4 self-start transform rotate-2">
+<span class="font-label-md font-bold uppercase tracking-widest text-carnival-ink">The Location</span>
+</div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-carnival-ink font-black uppercase mb-6">
+                    The Grand <br/><span class="text-carnival-yellow bg-carnival-ink px-2">Ballroom</span>
+</h2>
+<div class="bg-white brutal-border p-6 mb-8">
+<h3 class="font-headline-sm font-bold text-carnival-ink mb-2">123 Celebration Ave</h3>
+<p class="font-body-md text-carnival-ink font-medium mb-4">Festivity District, Party City, PC 90210</p>
+<p class="font-body-md text-carnival-ink mb-4">
+                        Join us at the city's most vibrant venue. Valet parking is available at the main entrance.
+                    </p>
+<div class="flex gap-4">
+<button class="bg-carnival-pink text-white font-label-md px-4 py-2 uppercase tracking-widest font-black brutal-button flex items-center gap-2">
+<span class="material-symbols-outlined">directions</span> Get Directions
+                        </button>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-7">
+<div class="bg-carnival-yellow brutal-border p-2 w-full h-full min-h-[400px] relative transform rotate-1">
+<!-- Map Area Placeholder -->
+<div class="absolute inset-0 m-2 border-4 border-carnival-ink bg-gray-200 overflow-hidden flex items-center justify-center">
+<span class="text-carnival-ink/50 font-bold text-2xl uppercase tracking-widest flex flex-col items-center">
+<span class="material-symbols-outlined text-6xl mb-2">map</span>
+                            Map Area
+                        </span>
+</div>
+<div class="absolute -top-6 -right-6 w-16 h-16 bg-carnival-cyan border-4 border-carnival-ink rounded-full flex items-center justify-center animate-bounce">
+<span class="material-symbols-outlined text-carnival-ink font-bold">location_on</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Gallery Section -->
+<section class="py-24 bg-carnival-pink border-t-4 border-carnival-ink overflow-hidden" id="gallery">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center relative z-10">
+<h2 class="font-display-lg-mobile md:font-display-lg text-white font-black uppercase mb-4 drop-shadow-[4px_4px_0_#111]">Memories</h2>
+<p class="font-body-lg text-white font-bold mb-16 max-w-2xl mx-auto bg-carnival-ink px-4 py-2 inline-block transform -rotate-1">A sneak peek into the fun times</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+<!-- Polaroid 1 -->
+<div class="bg-white brutal-border p-4 pb-12 rotate-[-4deg] hover:rotate-0 transition-transform duration-300 z-10 hover:z-20 relative">
+<div class="aspect-square bg-gray-200 border-2 border-carnival-ink mb-4 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-carnival-ink/30">photo_camera</span>
+</div>
+<div class="font-label-md font-bold text-carnival-ink uppercase text-center absolute bottom-4 left-0 w-full">The Early Days</div>
+<div class="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-carnival-yellow border-2 border-carnival-ink rounded-full z-10" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 80%);"></div>
+</div>
+<!-- Polaroid 2 -->
+<div class="bg-white brutal-border p-4 pb-12 rotate-[3deg] hover:rotate-0 transition-transform duration-300 z-10 hover:z-20 relative translate-y-4 md:translate-y-8">
+<div class="aspect-square bg-gray-200 border-2 border-carnival-ink mb-4 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-carnival-ink/30">celebration</span>
+</div>
+<div class="font-label-md font-bold text-carnival-ink uppercase text-center absolute bottom-4 left-0 w-full">Graduation</div>
+<div class="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-carnival-cyan border-2 border-carnival-ink rounded-full z-10" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 80%);"></div>
+</div>
+<!-- Polaroid 3 -->
+<div class="bg-white brutal-border p-4 pb-12 rotate-[-2deg] hover:rotate-0 transition-transform duration-300 z-10 hover:z-20 relative">
+<div class="aspect-[4/5] bg-gray-200 border-2 border-carnival-ink mb-4 overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-carnival-ink/30">favorite</span>
+</div>
+<div class="font-label-md font-bold text-carnival-ink uppercase text-center absolute bottom-4 left-0 w-full">Recent Adventures</div>
+<div class="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-carnival-pink border-2 border-carnival-ink rounded-full z-10 shadow-sm" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 80%);"></div>
+</div>
+</div>
+</div>
+<!-- Decorative bg shapes for gallery -->
+<div class="absolute top-10 left-10 w-24 h-24 border-[8px] border-carnival-yellow rounded-full -z-1 opacity-50"></div>
+<div class="absolute bottom-10 right-20 w-32 h-32 bg-carnival-cyan rotate-45 border-4 border-carnival-ink -z-1 opacity-50"></div>
+</section>
+<!-- Footer -->
+<footer class="bg-carnival-ink w-full py-16 border-t-8 border-carnival-yellow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-4 bg-carnival-cyan/20"></div>
+<div class="max-w-container-max mx-auto px-margin-desktop flex flex-col items-center gap-8 relative z-10">
+<div class="font-display-lg text-carnival-yellow font-black uppercase text-center">
+                Evelyn's <span class="text-carnival-pink">Celebration</span>
+</div>
+<div class="flex gap-8 font-label-md font-bold uppercase tracking-widest text-white mb-4">
+<a class="hover:text-carnival-pink transition-colors" href="#">Privacy</a>
+<a class="hover:text-carnival-cyan transition-colors" href="#">Contact</a>
+<a class="hover:text-carnival-yellow transition-colors" href="#">RSVP</a>
+</div>
+<div class="font-label-sm text-gray-400 bg-carnival-ink border border-gray-700 px-4 py-2">
+                © 2024 Crafted with Love (and Confetti) for Evelyn's Special Day
+            </div>
+</div>
+</footer>
+<script>
+        // Simple confetti effect
+        const container = document.getElementById('confetti-container');
+        const colors = ['#FF3366', '#00E5FF', '#FFEA00', '#111111'];
+        
+        for (let i = 0; i < 60; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti-piece');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Randomize shape (rectangle or small square)
+            if (Math.random() > 0.5) {
+                confetti.style.width = '15px';
+                confetti.style.height = '15px';
+            }
+            
+            confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear infinite`;
+            container.appendChild(confetti);
+        }
+    </script>
+</body></html>

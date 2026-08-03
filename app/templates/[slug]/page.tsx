@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
+import { sampleBirthdayData } from "@/data/sampleBirthdayData";
+import { templatesRegistry } from "@/data/templatesRegistry";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,6 +16,15 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
   const { slug } = use(params);
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const targetTemplate =
+    templatesRegistry.find((t) => t.slug === slug && t.category === "birthday") ||
+    templatesRegistry.find((t) => t.slug === slug);
+
+  const initialData =
+    targetTemplate?.category === "birthday"
+      ? sampleBirthdayData
+      : sampleWeddingData;
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -30,5 +41,5 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
     );
   }
 
-  return <DynamicTemplateCard {...sampleWeddingData} templateSlug={slug} />;
+  return <DynamicTemplateCard {...initialData} templateSlug={slug} />;
 }

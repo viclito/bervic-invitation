@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Grand Soirée</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;family=Work+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#eae7e7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#763217",
+                        "on-background": "#1c1b1b",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#645d53",
+                        "surface-dim": "#dcd9d9",
+                        "surface": "#fcf9f8",
+                        "secondary-fixed": "#ffdbcf",
+                        "surface-variant": "#e5e2e1",
+                        "on-tertiary-container": "#785f00",
+                        "primary-container": "#e8ded1",
+                        "background": "#fcf9f8",
+                        "outline": "#7c766e",
+                        "secondary-fixed-dim": "#ffb59b",
+                        "on-surface-variant": "#4b463f",
+                        "tertiary-fixed": "#ffe088",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#380d00",
+                        "on-surface": "#1c1b1b",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#1f1b13",
+                        "tertiary-container": "#ffdc76",
+                        "on-tertiary-fixed": "#241a00",
+                        "secondary": "#94492c",
+                        "on-primary-container": "#686257",
+                        "surface-container": "#f0eded",
+                        "surface-bright": "#fcf9f8",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-tertiary-fixed-variant": "#574500",
+                        "primary-fixed": "#ebe1d4",
+                        "tertiary": "#735c00",
+                        "inverse-primary": "#cfc5b9",
+                        "on-secondary-container": "#773318",
+                        "primary-fixed-dim": "#cfc5b9",
+                        "outline-variant": "#cdc5bb",
+                        "on-primary-fixed-variant": "#4c463c",
+                        "secondary-container": "#fe9d7a",
+                        "primary": "#645d53",
+                        "surface-container-low": "#f6f3f2",
+                        "inverse-surface": "#313030",
+                        "surface-container-highest": "#e5e2e1",
+                        "tertiary-fixed-dim": "#e9c349"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "blueprint-margin": "40px",
+                        "gutter": "24px",
+                        "panel-gap": "16px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Space Mono"],
+                        "technical": ["Space Mono"],
+                        "label-caps": ["Work Sans"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "body-lg": ["Space Mono"],
+                        "display-lg-mobile": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "technical": ["13px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "0.15em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.1", "letterSpacing": "0.1em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        body {
+            background-image: linear-gradient(#fcf9f8, #fcf9f8), url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20zM20 0h20v20H20V0z' fill='%23cdc5bb' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            background-blend-mode: overlay;
+        }
+
+        .blueprint-grid {
+            background-image: 
+                linear-gradient(to right, rgba(124, 118, 110, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(124, 118, 110, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .typewriter {
+            overflow: hidden;
+            border-right: .15em solid #1c1b1b;
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: .15em;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #1c1b1b; }
+        }
+
+        .cloud-mask {
+            clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);
+        }
+
+        .sticker-peel {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .sticker-peel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            background: linear-gradient(225deg, transparent 50%, #94492c 50%);
+            transition: all 0.3s ease;
+            box-shadow: -2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sticker-peel:hover::after {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .sticker-peel:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen blueprint-grid selection:bg-secondary-container selection:text-on-secondary-container overflow-x-hidden">
+<!-- TopNavBar (Shared Component) -->
+<header class="hidden md:flex justify-between items-center px-blueprint-margin py-4 w-full max-w-[1280px] mx-auto border-b-[0.5px] border-outline bg-background dark:bg-background z-50 relative top-0">
+<div class="font-display-lg text-display-lg text-secondary dark:text-secondary-fixed">Celebration</div>
+<nav class="flex space-x-gutter">
+<a class="text-secondary dark:text-secondary-fixed border-b-2 border-secondary font-display-lg text-display-lg uppercase tracking-widest hover:text-tertiary dark:hover:text-tertiary-fixed transition-colors duration-300 hover:translate-y-[-1px] active:translate-y-[1px]" href="#story">Our Story</a>
+<a class="text-primary dark:text-primary-fixed-dim font-display-lg text-display-lg uppercase tracking-widest hover:text-tertiary dark:hover:text-tertiary-fixed transition-colors duration-300 hover:translate-y-[-1px] active:translate-y-[1px]" href="#gallery">Gallery</a>
+<a class="text-primary dark:text-primary-fixed-dim font-display-lg text-display-lg uppercase tracking-widest hover:text-tertiary dark:hover:text-tertiary-fixed transition-colors duration-300 hover:translate-y-[-1px] active:translate-y-[1px]" href="#rsvp">RSVP</a>
+<a class="text-primary dark:text-primary-fixed-dim font-display-lg text-display-lg uppercase tracking-widest hover:text-tertiary dark:hover:text-tertiary-fixed transition-colors duration-300 hover:translate-y-[-1px] active:translate-y-[1px]" href="#wishes">Wishes</a>
+</nav>
+<button class="border-[1px] border-on-background px-4 py-2 font-label-caps text-label-caps uppercase hover:bg-secondary hover:text-on-secondary transition-all duration-300 hover:translate-y-[-2px]">
+            Gift Registry
+        </button>
+</header>
+<!-- SideNavBar (Mobile Bottom Nav fallback logic applied to prevent full sidebar on small screens, adapting for structural requirement) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-low border-t-[0.5px] border-outline flex justify-around py-4 z-50">
+<a class="flex flex-col items-center text-secondary" href="#story">
+<span class="material-symbols-outlined mb-1">auto_awesome</span>
+<span class="font-technical text-technical uppercase font-bold">Overview</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded" href="#timeline">
+<span class="material-symbols-outlined mb-1">history_edu</span>
+<span class="font-technical text-technical uppercase">Timeline</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded" href="#gallery">
+<span class="material-symbols-outlined mb-1">menu_book</span>
+<span class="font-technical text-technical uppercase">Guestbook</span>
+</a>
+</nav>
+<main class="max-w-[1280px] mx-auto px-blueprint-margin pb-32 md:pb-blueprint-margin pt-8 md:pt-16 border-x-[0.5px] border-outline relative">
+<!-- Hero Section -->
+<section class="relative min-h-[819px] flex flex-col md:flex-row items-center justify-center gap-blueprint-margin border-b-[1px] border-outline pb-blueprint-margin">
+<div class="absolute inset-0 z-[-1] opacity-20 pointer-events-none">
+<!-- Watercolor texture placeholder background -->
+<div class="w-full h-full bg-gradient-to-br from-secondary-container to-transparent"></div>
+</div>
+<div class="flex-1 flex flex-col items-start space-y-6 z-10">
+<div class="border-[1px] border-on-background px-3 py-1 inline-block">
+<span class="font-label-caps text-label-caps text-on-surface uppercase tracking-widest">Est. 1994</span>
+</div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background typewriter inline-block">
+                    Evelyn's Grand Soirée
+                </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+                    Join us for an eclectic celebration of thirty remarkable years. A curated evening of warmth, curiosity, and artisanal quality.
+                </p>
+<div class="pt-4">
+<button class="border-[1px] border-on-background px-8 py-4 font-label-caps text-label-caps uppercase bg-background hover:bg-secondary hover:text-on-secondary transition-all duration-300 hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(28,27,27,1)] hover:shadow-none">
+                        RSVP Now
+                    </button>
+</div>
+</div>
+<div class="flex-1 relative flex justify-center items-center h-[500px] w-full max-w-[500px]">
+<!-- Sunburst Decorative Element -->
+<div class="absolute inset-0 border-8 border-dashed border-tertiary opacity-30 rounded-full animate-spin-slow" style="animation: spin 60s linear infinite;"></div>
+<div class="relative w-full h-full cloud-mask overflow-hidden border-[1px] border-outline bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A sophisticated portrait of an elegant woman (Evelyn) looking towards the horizon. The setting is a chic, sunlit loft with terracotta brick walls and warm beige furnishings. High-contrast lighting highlights her features. The mood is celebratory, warm, and slightly nostalgic. The overall aesthetic is editorial boutique with subtle watercolor texture overlays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt"/>
+</div>
+</div>
+</section>
+<!-- Countdown Section -->
+<section class="py-blueprint-margin border-b-[1px] border-outline relative">
+<h2 class="font-headline-md text-headline-md text-center mb-12">The Anticipation</h2>
+<div class="flex justify-center gap-panel-gap md:gap-gutter">
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-[1px] border-outline flex items-center justify-center relative bg-surface">
+<div class="absolute inset-2 border-[0.5px] border-secondary rounded-full"></div>
+<span class="font-display-lg-mobile text-display-lg-mobile">14</span>
+</div>
+<span class="font-label-caps text-label-caps mt-4">Days</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-[1px] border-outline flex items-center justify-center relative bg-surface">
+<div class="absolute inset-2 border-[0.5px] border-secondary rounded-full"></div>
+<span class="font-display-lg-mobile text-display-lg-mobile">08</span>
+</div>
+<span class="font-label-caps text-label-caps mt-4">Hours</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-[1px] border-outline flex items-center justify-center relative bg-surface">
+<div class="absolute inset-2 border-[0.5px] border-secondary rounded-full"></div>
+<span class="font-display-lg-mobile text-display-lg-mobile">45</span>
+</div>
+<span class="font-label-caps text-label-caps mt-4">Mins</span>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+<section class="py-blueprint-margin border-b-[1px] border-outline relative bg-secondary text-on-secondary">
+<div class="max-w-4xl mx-auto text-center px-4">
+<h2 class="font-display-lg text-display-lg-mobile md:text-display-lg italic opacity-90">
+            "Life is a curated collection of beautiful moments."
+        </h2>
+</div>
+</section>
+<!-- Story Section -->
+<section class="py-blueprint-margin border-b-[1px] border-outline relative" id="story-section">
+<h2 class="font-headline-md text-headline-md mb-12 text-center md:text-left">The Curated Journey</h2>
+<div class="flex flex-col md:flex-row gap-gutter items-center">
+<div class="flex-1 w-full relative group">
+<div class="border-[1px] border-on-background bg-surface p-2 absolute inset-0 transform translate-x-2 translate-y-2"></div>
+<div class="border-[1px] border-on-background bg-background relative z-10 flex items-center justify-center h-64 md:h-96 overflow-hidden">
+<div class="absolute inset-0 bg-secondary/10 group-hover:bg-secondary/20 transition-colors"></div>
+<span class="material-symbols-outlined text-6xl text-on-surface-variant group-hover:text-secondary transition-colors cursor-pointer relative z-20">play_circle</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 mt-8 md:mt-0">
+<p class="font-body-lg text-body-lg text-on-surface">
+                Every detail of the past thirty years has been meticulously gathered, like artifacts in a personal museum. From the quiet mornings in the studio to the vibrant evenings shared with kindred spirits.
+            </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                This celebration is more than a milestone; it is an exhibition of growth, creativity, and the enduring bonds that have shaped Evelyn's narrative.
+            </p>
+</div>
+</div>
+</section>
+<!-- About Me / Timeline (Comic Panels) -->
+<section class="py-blueprint-margin border-b-[1px] border-outline" id="timeline">
+<h2 class="font-headline-md text-headline-md mb-12">Chapters of Evelyn</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-[2px] border-on-background bg-background">
+<!-- Panel 1 -->
+<div class="border-[1px] border-on-background p-panel-gap relative group overflow-hidden bg-surface-container-low min-h-[300px] flex flex-col justify-end">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-500" data-alt="A vintage-style photograph of a young child drawing enthusiastically on a large blueprint. The setting is a cluttered, creative workshop bathed in warm, golden hour light. The color palette emphasizes warm beige and soft black. The aesthetic resembles a comic panel with a subtle halftone pattern overlay." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBY4Ki58ZtLCaVVnfpQ4A94NrOkyp9g5oYyMGKRjpgv54O1m4GwpMcTsMqr9wU6lzrWdSbN2UyDBoJDrJlsqjMJSsOxS0eMtrN4ucz5pDZ_CVjUhIzn-o7HGQ0wd-tqPXKaLhSklMP35Zsv5S5jNc467d1UpFaYZ618snkeXeFJw6RrQ_Q0_bBkXfvRn-aexCl5P0nTDTCMX-_3rRXrjr-59QSocg0tBW4DdDblqLqx5_O-eQqhofZ"/>
+</div>
+<div class="relative z-10 bg-background/90 border-[1px] border-on-background p-4 transform -skew-x-3 w-5/6">
+<span class="font-label-caps text-label-caps text-secondary block mb-2">1998</span>
+<p class="font-technical text-technical">The early drafts. Always a creator.</p>
+</div>
+</div>
+<!-- Panel 2 -->
+<div class="border-[1px] border-on-background p-panel-gap relative group overflow-hidden bg-surface-container-low min-h-[300px] flex flex-col justify-start">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-500" data-alt="A stylized, architectural photograph of a young woman standing in front of a modern, geometric art installation. The lighting is crisp and high-contrast. The color palette features terracotta accents against a soft black background. The mood is ambitious and focused, fitting an editorial boutique design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrCSKm9xxHDBn1y5IsR8gOz-spSeNvCQr2I-yblJakb0IBzNwbueX3o-O6S8D_9Hsxui-5ZVTwPYbABxwK_p2YnprsBN15KM6gcliIL0bi_nhX8WEnV_Qb79Vf-3HPmSxGaRpsULdBBmaE4y7Z0qWInWU24jTfWfu9o2HNxDUP8q5GiCREgEq_hHpcgyMrto3B9CWvwlKrtB9w10T6pEmhD5MdbhV9aZE8fkz1V4UyEbl3k7EKJ-yl"/>
+</div>
+<div class="relative z-10 bg-secondary/90 text-on-secondary border-[1px] border-on-background p-4 transform skew-x-3 w-5/6 self-end">
+<span class="font-label-caps text-label-caps block mb-2">2012</span>
+<p class="font-technical text-technical">Discovering the geometry of life.</p>
+</div>
+</div>
+<!-- Panel 3 -->
+<div class="border-[1px] border-on-background p-panel-gap relative group overflow-hidden bg-surface-container-low min-h-[300px] flex flex-col justify-center">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-500" data-alt="A close-up, warm-toned image of hands working with clay in an artisanal studio. Dust particles float in the sunbeams crossing the room. The palette focuses on warm beiges, terracottas, and copper highlights. The image feels tactile, organic, and meticulously crafted." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhWZ3obGcPLOm0hvM6IUON2VCnVzbkzpCosf2POa9Zb305guZax3T1WTtW05-yuuPfd9H0FAfcdoaOgK004PgN8m2pl788bWC6kiPCoCkunCEONGzuwPNjJ4qq3b6u3qH42fqQDCcje6EPajmoJZ2RctpT_wc3VbZUp-yUv5TOU6O-C_n9XonKtEZRBOdh1bFgpS2ByrQZlIyaSZifPodpQ0R_2nX9WJdtQ2OXn5xhzJh3Ubwosz6J"/>
+</div>
+<div class="relative z-10 bg-tertiary-container text-on-tertiary-container border-[1px] border-on-background p-4 text-center">
+<span class="font-label-caps text-label-caps block mb-2">2024</span>
+<p class="font-technical text-technical">Mastering the craft.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Event Timeline -->
+<section class="py-blueprint-margin border-b-[1px] border-outline" id="itinerary">
+<h2 class="font-headline-md text-headline-md mb-12 text-center">The Celebration Itinerary</h2>
+<div class="max-w-3xl mx-auto relative border-l-[1px] border-outline ml-4 md:mx-auto md:pl-0">
+<!-- Event 1 -->
+<div class="mb-10 pl-8 relative">
+<div class="absolute w-4 h-4 rounded-full border-[1px] border-on-background bg-surface-container -left-[8px] top-1"></div>
+<span class="font-label-caps text-label-caps text-secondary block mb-1">5:00 PM</span>
+<h3 class="font-headline-md text-2xl mb-2">Welcome Receptions &amp; Aperitifs</h3>
+<p class="font-body-md text-on-surface-variant">Gather in the conservatory for artisanal cocktails and a curated selection of hors d'oeuvres.</p>
+</div>
+<!-- Event 2 -->
+<div class="mb-10 pl-8 relative">
+<div class="absolute w-4 h-4 rounded-full border-[1px] border-on-background bg-surface-container -left-[8px] top-1"></div>
+<span class="font-label-caps text-label-caps text-secondary block mb-1">7:00 PM</span>
+<h3 class="font-headline-md text-2xl mb-2">The Grand Feast</h3>
+<p class="font-body-md text-on-surface-variant">A multi-course culinary experience inspired by Evelyn's travels, served in the main dining hall.</p>
+</div>
+<!-- Event 3 -->
+<div class="mb-10 pl-8 relative">
+<div class="absolute w-4 h-4 rounded-full border-[1px] border-on-background bg-secondary -left-[8px] top-1"></div>
+<span class="font-label-caps text-label-caps text-secondary block mb-1">9:00 PM</span>
+<h3 class="font-headline-md text-2xl mb-2">Toasts &amp; Revelry</h3>
+<p class="font-body-md text-on-surface-variant">Stories shared, glasses raised, and live music to carry us into the night.</p>
+</div>
+</div>
+</section>
+<!-- Venue & Map -->
+<section class="py-blueprint-margin border-b-[1px] border-outline" id="venue">
+<h2 class="font-headline-md text-headline-md mb-12 text-center md:text-left">The Grand Estate</h2>
+<div class="flex flex-col md:flex-row-reverse gap-gutter items-center">
+<div class="flex-1 w-full">
+<div class="border-[1px] border-outline p-2 bg-surface">
+<div class="w-full h-64 md:h-80 border-[0.5px] border-outline bg-surface-container-low flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer hover:bg-surface-variant transition-colors">
+<div class="absolute inset-0 blueprint-grid opacity-30"></div>
+<span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2 relative z-10 group-hover:text-secondary transition-colors">map</span>
+<span class="font-label-caps text-label-caps relative z-10 group-hover:text-secondary transition-colors">View Directions</span>
+</div>
+</div>
+</div>
+<div class="flex-1 space-y-6 mt-8 md:mt-0 text-center md:text-left">
+<div>
+<h3 class="font-display-lg-mobile text-display-lg-mobile mb-2">The Artisan Foundry</h3>
+<p class="font-technical text-technical text-on-surface-variant">123 Creative District Avenue<br/>Metropolis, NY 10001</p>
+</div>
+<p class="font-body-md text-on-surface">
+                An industrial-chic venue with exposed brick, terracotta accents, and ample natural light. Valet parking provided.
+            </p>
+<button class="border-b-[2px] border-secondary font-label-caps text-label-caps uppercase text-secondary hover:text-tertiary transition-colors pb-1">
+                Open in Maps
+            </button>
+</div>
+</div>
+</section>
+<!-- Gallery (Sticker-Peel) -->
+<section class="py-blueprint-margin border-b-[1px] border-outline" id="gallery">
+<h2 class="font-headline-md text-headline-md mb-12">The Curated Archive</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<div class="sticker-peel border-[1px] border-outline bg-surface p-2 h-64 cursor-pointer">
+<div class="w-full h-full border-[0.5px] border-outline/50 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover mix-blend-multiply" data-alt="A candid, joyous moment captured at a sophisticated dinner party. The lighting is low and warm, with copper string lights blurring in the background. People are laughing, holding glasses of wine. The palette emphasizes warm beige, terracotta, and soft blacks. The mood is intimate and celebratory." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdKXCRxcIDBXoKSebaIZlcxJBDX_tkJeyzsH6j6gN1MVrqkV9Hl4c7t3PVD0H6LJPsV9MLQeR_quxN4vo7TO2fWB0LL4lwKKN7rFf6IkrAYqnli1m6hzJKFwysPogrgYC4PQZFXB9KLdcb7I5tnYtZ78GLO0dosXyL7fkd3CsZ5fb2V_J-LbqEiOgQU0YbPE43paxPBRwla3vp-7nCX-3fpsr4RCOLFxbPbg2kErJ_OBbO048x3kvQ"/>
+</div>
+</div>
+<div class="sticker-peel border-[1px] border-outline bg-surface p-2 h-64 cursor-pointer mt-8 md:mt-12">
+<div class="w-full h-full border-[0.5px] border-outline/50 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover mix-blend-multiply" data-alt="A still life arrangement of vintage books, a copper compass, and scattered dried flowers on a blueprint drafting table. The lighting is directional, casting distinct, sharp shadows. The aesthetic is heavily editorial boutique and technical craft, with a predominantly warm beige and soft black palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_g_bJbhH9dbAzj07IUxP5ec7aB_MMSmxmYPQ2UC0zkT3xQ7sXQaZe771wslYYs6ghlCwDcrW_hScK_eZhKnLNC3zh22hicVB2M1BA6VOvUCDRbhHzRMBtsSv788xvb4V0NR28MqSyDBTZoH_rdPElc70j0L1_6HHWO6TyJAa8lIYeIL--tMbX2gy0I3l39Y-EF8rgMHmrYcwv0uxGxk7Acj109_kf4xVUHnX0lHVIhsgolF9YXljm"/>
+</div>
+</div>
+<div class="sticker-peel border-[1px] border-outline bg-surface p-2 h-64 cursor-pointer">
+<div class="w-full h-full border-[0.5px] border-outline/50 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover mix-blend-multiply" data-alt="A beautifully plated, artisanal cake resting on a rough ceramic stand. The background is a textured watercolor wash in warm terracotta tones. The lighting is soft and diffuse, highlighting the textures of the icing and the ceramic. The mood is refined, welcoming, and artisanal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH0-s4zXoSeI9Rf4iozsoeTrx6wvEOrJBEd-DhxoykTDkkmgiqRyIZFHGLXOn4e3Ue_iTQRZ12JwpkOJ3uVTo_ZAkmok3TKLJseHCUUOgXDQI3ZxyceQPlkhLP4vUMSLTOQ8sHxNygleqdo0owQWrS30bZ3iVEDU9D58ASsO3QJDZoiMKEwRsk8CA3kI4y7SCf4ttjCNMzT19cu1MTf4QSOOKWqJAMc-6vVpsvwtq9kCLEpL3U9tVl"/>
+</div>
+</div>
+<div class="sticker-peel border-[1px] border-outline bg-surface p-2 h-64 cursor-pointer mt-8 md:mt-12">
+<div class="w-full h-full border-[0.5px] border-outline/50 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover mix-blend-multiply" data-alt="An abstract, architectural shot looking up at a spiraling staircase made of terracotta and steel. The sky above is a pale, warm beige. The composition is highly geometric and visually striking, fitting the maximalist-lite and blueprint aesthetic of the design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCugwguA0QJJyPU9PriWc9GPniBIA16I4I3AoaDewf8ulmtXj63BNYpGl30FnibYVvw9yfvUjH-j-1blvMdr35wlkdfUmhRoH-oBzUHA9ZyUx9nB0nekF4LWYB5XxMG3HvP1nQwhukORE2k8J9TBUhdomfWxFmSku_Xik_KTxBRZ1kydFaQFDbl4ST1n4HDGDIQAZTcQGoV7muGQ3miphruYQIwqBuzpyCnAgf1AlVdjRryKJCUiNoQ"/>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="w-full px-blueprint-margin py-unit flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto border-t-[2px] border-on-background mt-gutter bg-background dark:bg-background z-10 relative">
+<div class="font-display-lg-mobile text-display-lg-mobile text-on-surface dark:text-on-surface mb-4 md:mb-0">
+            E
+        </div>
+<div class="font-label-caps text-label-caps text-on-surface dark:text-on-surface text-center md:text-left mb-4 md:mb-0">
+            © 2024 THE CURATED COLLECTIVE. DESIGNED IN BLUEPRINT.
+        </div>
+<div class="flex space-x-gutter font-label-caps text-label-caps">
+<a class="text-on-surface-variant opacity-70 hover:opacity-100 hover:text-secondary transition-opacity duration-300" href="#">Privacy</a>
+<a class="text-on-surface-variant opacity-70 hover:opacity-100 hover:text-secondary transition-opacity duration-300" href="#">Terms</a>
+<a class="text-on-surface-variant opacity-70 hover:opacity-100 hover:text-secondary transition-opacity duration-300" href="#">Archives</a>
+</div>
+</footer>
+</body></html>

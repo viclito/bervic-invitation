@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn - Grandeur Invitation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400&amp;family=Playfair+Display:wght@700;900&amp;family=Poiret+One&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#241a00",
+                        "on-secondary-fixed": "#002114",
+                        "on-secondary-fixed-variant": "#204f3c",
+                        "secondary-container": "#22513e",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#b3b3b3",
+                        "surface-container-high": "#2a2b1b",
+                        "primary-fixed-dim": "#e9c349",
+                        "on-secondary": "#033826",
+                        "inverse-on-surface": "#303221",
+                        "on-error": "#690005",
+                        "background": "#131407",
+                        "surface-tint": "#e9c349",
+                        "inverse-surface": "#e4e4cc",
+                        "primary-fixed": "#ffe088",
+                        "surface-container-low": "#1b1d0e",
+                        "surface-container-lowest": "#0e0f03",
+                        "surface-bright": "#393a29",
+                        "on-tertiary-fixed": "#1b1b1b",
+                        "inverse-primary": "#735c00",
+                        "surface-container": "#1f2111",
+                        "outline-variant": "#4d4635",
+                        "tertiary-fixed-dim": "#c6c6c6",
+                        "primary": "#f2ca50",
+                        "secondary-fixed-dim": "#a0d1b8",
+                        "secondary": "#a0d1b8",
+                        "on-primary-fixed-variant": "#574500",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "tertiary": "#cecece",
+                        "surface": "#131407",
+                        "tertiary-fixed": "#e2e2e2",
+                        "secondary-fixed": "#bbeed3",
+                        "surface-variant": "#343625",
+                        "on-tertiary-container": "#454545",
+                        "surface-container-highest": "#343625",
+                        "error-container": "#93000a",
+                        "on-tertiary": "#303030",
+                        "on-secondary-container": "#92c3aa",
+                        "on-surface-variant": "#d0c5af",
+                        "on-primary": "#3c2f00",
+                        "on-surface": "#e4e4cc",
+                        "outline": "#99907c",
+                        "on-primary-container": "#554300",
+                        "on-background": "#e4e4cc",
+                        "primary-container": "#d4af37",
+                        "on-error-container": "#ffdad6",
+                        "surface-dim": "#131407"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "80px",
+                        "unit": "8px",
+                        "container-max-width": "1200px",
+                        "margin-mobile": "24px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Montserrat"],
+                        "headline-lg-mobile": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"],
+                        "display-accent": ["Poiret One"],
+                        "label-caps": ["Poiret One"],
+                        "body-md": ["Montserrat"],
+                        "headline-xl": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-accent": ["24px", { "lineHeight": "32px", "letterSpacing": "0.4em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-xl": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "900" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        /* Art Deco Double Border Frame */
+        .deco-frame {
+            border: 2px solid theme('colors.primary');
+            padding: 4px;
+            position: relative;
+        }
+        .deco-frame::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            border: 1px solid theme('colors.primary-fixed-dim');
+            pointer-events: none;
+        }
+        
+        /* Sunburst Background Pattern */
+        .sunburst-bg {
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(242, 202, 80, 0.05),
+                rgba(242, 202, 80, 0.05) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+        }
+
+        /* Geometric Divider */
+        .deco-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        .deco-divider::before, .deco-divider::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background-color: theme('colors.primary');
+        }
+        .deco-divider .diamond {
+            width: 12px;
+            height: 12px;
+            border: 1px solid theme('colors.primary');
+            transform: rotate(45deg);
+            margin: 0 1rem;
+        }
+        
+        /* The Global Viewport Frame */
+        .global-frame {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 2px solid;
+            border-image: linear-gradient(to bottom, #f2ca50, #b89327) 1;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: rgba(19, 20, 7, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(242, 202, 80, 0.3);
+        }
+
+        /* Sticker Peel Effect */
+        .sticker-peel {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom right;
+        }
+        .sticker-peel:hover {
+            transform: scale(1.05) rotate(-2deg) translate(-5px, -5px);
+            box-shadow: 15px 15px 20px rgba(0,0,0,0.4), -1px -1px 2px rgba(255,255,255,0.1);
+        }
+        .sticker-peel::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%);
+            transition: all 0.4s ease;
+            box-shadow: -2px -2px 5px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+        .sticker-peel:hover::after {
+            width: 40px;
+            height: 40px;
+        }
+        
+        /* Gold Leaf Texture */
+        .gold-leaf-bg {
+            background-color: theme('colors.primary');
+            background-image: url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)" opacity="0.15"/%3E%3C/svg%3E');
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden pt-[100px]">
+<!-- Global Frame -->
+<div class="global-frame"></div>
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop py-6 bg-background/90 backdrop-blur-md border-b-2 border-double border-primary">
+<div class="font-headline-lg text-headline-lg text-primary tracking-widest hidden md:block">
+            GRANDEUR
+        </div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-widest md:hidden">
+            GRANDEUR
+        </div>
+<ul class="hidden md:flex gap-8">
+<li class="font-display-accent text-display-accent uppercase text-primary border-b border-primary pb-1 cursor-pointer active:opacity-80">The Estate</li>
+<li class="font-display-accent text-display-accent uppercase text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 cursor-pointer active:opacity-80">Itinerary</li>
+<li class="font-display-accent text-display-accent uppercase text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 cursor-pointer active:opacity-80">Gallery</li>
+<li class="font-display-accent text-display-accent uppercase text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 cursor-pointer active:opacity-80">Registry</li>
+</ul>
+<button class="deco-frame bg-primary text-on-primary font-label-caps text-label-caps px-6 py-2 uppercase hover:opacity-90 transition-opacity">
+            RSVP
+        </button>
+</nav>
+<!-- Main Content Container -->
+<main class="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop pb-24">
+<!-- Hero Section -->
+<section class="relative min-h-[819px] flex flex-col items-center justify-center text-center mb-32 pt-12">
+<div class="sunburst-bg absolute inset-0 -z-10 opacity-30"></div>
+<div class="glass-panel p-12 md:p-24 w-full max-w-4xl relative">
+<!-- Inner Deco Frame -->
+<div class="absolute inset-4 border border-primary opacity-50 pointer-events-none"></div>
+<div class="absolute inset-6 border border-primary pointer-events-none"></div>
+<h1 class="font-headline-xl text-headline-xl text-primary mb-6">Evelyn's Soirée</h1>
+<p class="font-display-accent text-display-accent text-on-surface-variant mb-12 uppercase tracking-widest">A Night of Unparalleled Opulence</p>
+<div class="flex flex-col md:flex-row gap-8 justify-center items-center">
+<div class="text-center">
+<span class="block font-headline-lg text-headline-lg text-primary">XIV</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">October</span>
+</div>
+<div class="hidden md:block h-16 w-px bg-primary"></div>
+<div class="text-center">
+<span class="block font-headline-lg text-headline-lg text-primary">VII</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Evening</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Event Commencement Countdown -->
+<section class="mb-32 flex justify-center">
+<div class="glass-panel p-8 md:p-12 text-center max-w-3xl w-full border border-primary relative">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-background px-4">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-[0.3em]">Event Commencement</span>
+</div>
+<div class="flex justify-center gap-8 md:gap-16">
+<div class="flex flex-col items-center">
+<span class="font-headline-xl text-headline-xl text-primary mb-2">42</span>
+<span class="font-display-accent text-sm md:text-display-accent text-on-surface-variant uppercase">Days</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-headline-xl text-headline-xl text-primary mb-2">18</span>
+<span class="font-display-accent text-sm md:text-display-accent text-on-surface-variant uppercase">Hours</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-headline-xl text-headline-xl text-primary mb-2">30</span>
+<span class="font-display-accent text-sm md:text-display-accent text-on-surface-variant uppercase">Mins</span>
+</div>
+</div>
+</div>
+</section>
+<div class="deco-divider"><div class="diamond"></div></div>
+<!-- The Golden Era (Story) -->
+<section class="mb-32">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<div class="col-span-1 md:col-span-6 deco-frame p-8 flex flex-col justify-center bg-surface-container-high h-full">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-6">The Golden Era</h2>
+<p class="font-body-md text-body-md text-on-surface mb-6">
+                        Join us in celebrating Evelyn's grand milestone. Expect an evening steeped in the glamour of a bygone era, where every detail is meticulously curated to reflect her impeccable taste. Prepare for a night of jazz, champagne, and geometric perfection. Let the opulence of the roaring twenties wash over you in a symphony of gold and shadow.
+                    </p>
+</div>
+<div class="col-span-1 md:col-span-6 h-[400px] deco-frame p-2 relative bg-surface-container-lowest flex items-center justify-center">
+<div class="absolute inset-0 border border-primary m-4 opacity-30 pointer-events-none"></div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-6xl text-primary mb-4">play_circle</span>
+<span class="font-display-accent text-display-accent uppercase tracking-widest text-sm">A Glimpse of Grandeur</span>
+</div>
+</div>
+</div>
+</section>
+<!-- The Soirée Schedule -->
+<section class="mb-32 relative">
+<div class="sunburst-bg absolute inset-0 -z-10 opacity-20"></div>
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">The Soirée Schedule</h2>
+<div class="w-24 h-px bg-primary mx-auto"></div>
+</div>
+<div class="max-w-4xl mx-auto relative">
+<!-- Timeline Line -->
+<div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-primary hidden md:block"></div>
+<!-- Timeline Items -->
+<div class="space-y-12 md:space-y-24">
+<div class="flex flex-col md:flex-row items-center justify-between group">
+<div class="md:w-5/12 text-center md:text-right mb-4 md:mb-0 pr-0 md:pr-8">
+<span class="font-headline-lg text-headline-lg text-primary block">VII</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Evening</span>
+</div>
+<div class="w-8 h-8 rounded-none border-2 border-primary bg-background transform rotate-45 z-10 flex items-center justify-center mb-4 md:mb-0 group-hover:bg-primary transition-colors">
+<div class="w-2 h-2 bg-primary group-hover:bg-background transition-colors"></div>
+</div>
+<div class="md:w-5/12 text-center md:text-left pl-0 md:pl-8 bg-surface-container p-6 border border-primary/30 relative">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full w-4 h-px bg-primary/30 hidden md:block"></div>
+<h3 class="font-display-accent text-display-accent text-primary uppercase mb-2">Cocktails &amp; Canapés</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Arrival and signature libations in the grand foyer.</p>
+</div>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-between group">
+<div class="md:w-5/12 text-center md:text-right mb-4 md:mb-0 pr-0 md:pr-8 bg-surface-container p-6 border border-primary/30 relative order-3 md:order-1">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full w-4 h-px bg-primary/30 hidden md:block"></div>
+<h3 class="font-display-accent text-display-accent text-primary uppercase mb-2">The Grand Feast</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">A curated five-course culinary journey.</p>
+</div>
+<div class="w-8 h-8 rounded-none border-2 border-primary bg-background transform rotate-45 z-10 flex items-center justify-center mb-4 md:mb-0 order-2 group-hover:bg-primary transition-colors">
+<div class="w-2 h-2 bg-primary group-hover:bg-background transition-colors"></div>
+</div>
+<div class="md:w-5/12 text-center md:text-left pl-0 md:pl-8 order-1 md:order-3 mb-4 md:mb-0">
+<span class="font-headline-lg text-headline-lg text-primary block">VIII</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Evening</span>
+</div>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-between group">
+<div class="md:w-5/12 text-center md:text-right mb-4 md:mb-0 pr-0 md:pr-8">
+<span class="font-headline-lg text-headline-lg text-primary block">IX</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Evening</span>
+</div>
+<div class="w-8 h-8 rounded-none border-2 border-primary bg-background transform rotate-45 z-10 flex items-center justify-center mb-4 md:mb-0 group-hover:bg-primary transition-colors">
+<div class="w-2 h-2 bg-primary group-hover:bg-background transition-colors"></div>
+</div>
+<div class="md:w-5/12 text-center md:text-left pl-0 md:pl-8 bg-surface-container p-6 border border-primary/30 relative">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full w-4 h-px bg-primary/30 hidden md:block"></div>
+<h3 class="font-display-accent text-display-accent text-primary uppercase mb-2">Jazz &amp; Dancing</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Revel in the syncopated rhythms of the house band.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- The Estate Grounds -->
+<section class="mb-32">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-surface-container p-8 deco-frame">
+<div class="order-2 md:order-1 h-[400px] border border-primary p-2 relative bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/50 mb-2">map</span>
+<span class="font-label-caps text-label-caps text-primary/50 uppercase absolute bottom-4">Map Integration</span>
+</div>
+<div class="order-1 md:order-2 flex flex-col justify-center text-center p-8">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-6">The Estate Grounds</h2>
+<div class="w-12 h-px bg-primary mx-auto mb-6"></div>
+<p class="font-display-accent text-display-accent text-on-surface mb-2">The Gatsby Mansion</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-1">1924 West Egg Boulevard</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">Long Island, New York</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic mb-8">
+                Valet parking will be provided upon arrival at the main gates.
+            </p>
+<button class="bg-transparent border border-primary text-primary font-label-caps text-label-caps px-8 py-3 uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-colors self-center">
+                Get Directions
+            </button>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+</main>
+<section class="w-full gold-leaf-bg py-24 px-margin-mobile md:px-margin-desktop mb-32 relative flex justify-center items-center text-center border-y-4 border-double border-background">
+<div class="absolute inset-0 bg-black/60 mix-blend-overlay"></div>
+<div class="relative z-10 max-w-4xl border border-on-primary/30 p-12 bg-black/40 backdrop-blur-sm">
+<p class="font-headline-lg text-3xl md:text-headline-lg text-primary leading-relaxed">
+            "A night where every detail is a masterpiece, and every moment a memory in gold."
+        </p>
+</div>
+</section>
+<main class="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop pb-24">
+<!-- The Portrait Gallery -->
+<section class="mb-32">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">The Portrait Gallery</h2>
+<div class="w-24 h-px bg-primary mx-auto"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 p-8">
+<div class="aspect-[3/4] bg-surface-container-high p-4 border border-primary shadow-xl rotate-[-2deg] sticker-peel relative">
+<div class="w-full h-full bg-surface-container-lowest border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="Vintage champagne glass" class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_JH44cFP46ThEWh6od0hSuOU9vdctmMvd58Y8c7Mvl-JL8gRP6m_BnaYteF6eHdYGMH1V-gf0VyuR33V-4oFOKrmYY2xK4Cr1qoes3zkq-vFTTX5e4SQDNyhAoDYpuwXDnuz8JmnlM6HTHqkGnq2IfjY0gOMMK6Fuc9a2zxzOaKGGaKzUL6J5hyNOjxx203TU50rf8fjXLtDg1snZ6XQNef1O1JS8wuuBQcjpO_iA-fd-eQ000rKA"/>
+</div>
+<div class="absolute -bottom-4 right-4 bg-background px-3 py-1 border border-primary z-20">
+<span class="font-label-caps text-label-caps text-primary text-[10px]">I</span>
+</div>
+</div>
+<div class="aspect-[3/4] bg-surface-container-high p-4 border border-primary shadow-xl rotate-[3deg] sticker-peel relative translate-y-8">
+<div class="w-full h-full bg-surface-container-lowest border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="Art deco details" class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_BZeacw_hip-3hinpK1xnBJjKXlRW4ipj9rG92kOuyDeKKbCMSoBZdMpc5mjF3I-HW6QmC-ckNEkwDZaFhWMpys_F5n1hAf2rtrRm7hZUItTTQNoGKxvOOz7RZdrPqG4In_8ILYO8cYK2k5hlKehNkMLjaL6Wy4qlQ36LGdRV4_r1ZJJrglBLYd1z5SqINVpbf6LgxoI51_l_0cXs6rVMC6I_zPJAWfWF1SYru7Ca0ySCjHL5R7gG"/>
+</div>
+<div class="absolute -bottom-4 right-4 bg-background px-3 py-1 border border-primary z-20">
+<span class="font-label-caps text-label-caps text-primary text-[10px]">II</span>
+</div>
+</div>
+<div class="aspect-[3/4] bg-surface-container-high p-4 border border-primary shadow-xl rotate-[-1deg] sticker-peel relative">
+<div class="w-full h-full bg-surface-container-lowest border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="Jazz musicians" class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6E1WoKLtT8MMieGenO-MGCkF-utFe4EIv9ODuhzsO8GKAETRhW0Z-lVbKr23UO3ZBQQDiZPihHTQaWk6HBYNFC2d1-XEu1JOAtD213iHKpv5YVNZRM5-S2YWd0od2UAPTKBQ0uVu6wqdyc7zA4qRffQ1L7Crl9_lc9IGe7gyqvRPSLPQwrUzDgK2LAJZOsgEShUKLQkXjBsIDPKASdUUlP1HHyV9iHKRFtuFaL7MR_JH_i25cW898"/>
+</div>
+<div class="absolute -bottom-4 right-4 bg-background px-3 py-1 border border-primary z-20">
+<span class="font-label-caps text-label-caps text-primary text-[10px]">III</span>
+</div>
+</div>
+</div>
+</section>
+<!-- RSVP Form Section -->
+<section class="max-w-2xl mx-auto bg-surface-container-high p-8 md:p-12 deco-frame mb-12 relative overflow-hidden">
+<div class="sunburst-bg absolute inset-0 -z-10 opacity-10"></div>
+<div class="text-center mb-8">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Secure Your Attendance</h2>
+<div class="deco-divider w-1/2 mx-auto"><div class="diamond"></div></div>
+</div>
+<form class="flex flex-col gap-8">
+<div>
+<input class="w-full bg-transparent border-0 border-b border-primary text-on-surface font-display-accent text-display-accent focus:ring-0 focus:border-primary-fixed-dim px-0 py-2 placeholder-on-surface-variant/50" placeholder="NAME OF GUEST" type="text"/>
+</div>
+<div>
+<input class="w-full bg-transparent border-0 border-b border-primary text-on-surface font-display-accent text-display-accent focus:ring-0 focus:border-primary-fixed-dim px-0 py-2 placeholder-on-surface-variant/50" placeholder="ELECTRONIC MAIL" type="email"/>
+</div>
+<div class="flex items-center gap-4 mt-4">
+<input class="w-4 h-4 bg-transparent border border-primary text-primary focus:ring-primary focus:ring-offset-background" id="plus_one" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-widest" for="plus_one">Accompanied by a guest</label>
+</div>
+<button class="mt-8 bg-primary text-on-primary font-label-caps text-label-caps px-8 py-4 uppercase tracking-widest deco-frame hover:bg-primary-fixed transition-colors" type="button">
+                    Confirm RSVP
+                </button>
+</form>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full bottom-0 py-unit-8 px-margin-desktop flex flex-col items-center gap-gutter bg-surface-container-lowest border-t-4 border-double border-primary-container z-40 relative mt-auto">
+<div class="font-display-accent text-display-accent text-primary mb-4">
+            GRANDEUR
+        </div>
+<div class="flex gap-6 mb-4">
+<span class="font-label-caps text-label-caps text-on-tertiary-fixed-variant hover:text-primary transition-all cursor-pointer">Privacy Policy</span>
+<span class="font-label-caps text-label-caps text-on-tertiary-fixed-variant hover:text-primary transition-all cursor-pointer">Contact Concierge</span>
+<span class="font-label-caps text-label-caps text-on-tertiary-fixed-variant hover:text-primary transition-all cursor-pointer">Terms of Service</span>
+</div>
+<div class="font-label-caps text-label-caps text-primary">
+            © MCMXXIV GRANDEUR ESTATE. ALL RIGHTS RESERVED.
+        </div>
+</footer>
+</body></html>

@@ -10,6 +10,8 @@ import PricingCheckoutModal from "@/components/payment/PricingCheckoutModal";
 
 
 import { sampleWeddingData } from "@/data/sampleWeddingData";
+import { sampleBirthdayData } from "@/data/sampleBirthdayData";
+import { templatesRegistry } from "@/data/templatesRegistry";
 import { TemplateClassicFloralProps, WeddingEvent, TimelineStep, LocationVenue } from "@/types/template";
 import {
   Sparkles,
@@ -118,6 +120,10 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const searchParams = useSearchParams();
   const invitationId = searchParams.get("id");
 
+  const targetTemplate = templatesRegistry.find((t) => t.slug === templateSlug);
+  const isBirthday = targetTemplate?.category === "birthday";
+  const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
+
   // Auth Protection
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -127,8 +133,8 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   // Form State
   const [formData, setFormData] = useState<TemplateClassicFloralProps>({
-    ...sampleWeddingData,
-    galleryImages: sampleWeddingData.galleryImages?.slice(0, 6) || DEFAULT_SIX_MOMENTS,
+    ...defaultSampleData,
+    galleryImages: defaultSampleData.galleryImages?.slice(0, 6) || DEFAULT_SIX_MOMENTS,
   });
 
   const [baseUrl, setBaseUrl] = useState("https://bervic-invitation-six.vercel.app");
@@ -136,11 +142,18 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setBaseUrl(window.location.origin);
+      if (window.innerWidth < 1024) {
+        setActiveTab("edit");
+      }
     }
   }, []);
 
-  const [datePickerVal, setDatePickerVal] = useState("2026-11-28");
-  const [timePickerVal, setTimePickerVal] = useState("10:30");
+  const [datePickerVal, setDatePickerVal] = useState(
+    isBirthday ? "2026-09-15" : "2026-11-28"
+  );
+  const [timePickerVal, setTimePickerVal] = useState(
+    isBirthday ? "18:00" : "10:30"
+  );
 
   const [customSlug, setCustomSlug] = useState("");
   const [activeTab, setActiveTab] = useState<"edit" | "preview" | "split">("split");
@@ -457,7 +470,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 BERVIC BUILDER
               </span>
               <h1 className="text-xs sm:text-base font-bold text-[#221C17] leading-tight mt-0.5">
-                Classic Floral Template
+                {targetTemplate?.title || "Invitation Builder"}
               </h1>
             </div>
           </div>
@@ -537,9 +550,9 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
           data-lenis-prevent
           className={`p-6 sm:p-8 bg-[#F8F3EA] border-r border-[#D9A441]/20 overflow-y-auto max-h-[calc(100vh-80px)] ${
             activeTab === "edit"
-              ? "col-span-12"
+              ? "col-span-12 block"
               : activeTab === "split"
-              ? "col-span-12 lg:col-span-5"
+              ? "hidden lg:block col-span-12 lg:col-span-5"
               : "hidden"
           }`}
         >
@@ -577,36 +590,36 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               </span>
             </div>
 
-            {/* Step 1: Couple Details */}
+            {/* Step 1: Details */}
             <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
               <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2 border-b border-[#D9A441]/20 pb-3">
                 <Heart className="w-4 h-4 text-[#D9A441] fill-current" />
-                <span>1. Couple Details</span>
+                <span>{isBirthday ? "1. Celebrant & Event Details" : "1. Couple Details"}</span>
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
-                    Partner One Name
+                    {isBirthday ? "Celebrant Name" : "Partner One Name"}
                   </label>
                   <input
                     type="text"
                     value={formData.partnerOne}
                     onChange={(e) => handleInputChange("partnerOne", e.target.value)}
-                    placeholder="Your Name"
+                    placeholder={isBirthday ? "Celebrant Name" : "Your Name"}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
-                    Partner Two Name
+                    {isBirthday ? "Secondary Name (Optional)" : "Partner Two Name"}
                   </label>
                   <input
                     type="text"
                     value={formData.partnerTwo}
                     onChange={(e) => handleInputChange("partnerTwo", e.target.value)}
-                    placeholder="Partner's Name"
+                    placeholder={isBirthday ? "Optional Subtitle/Name" : "Partner's Name"}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
                 </div>
@@ -654,11 +667,11 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               </div>
             </div>
 
-            {/* Step 2: Date & Venue (Interactive Date & Time Pickers) */}
+            {/* Step 2: Date & Venue */}
             <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
               <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2 border-b border-[#D9A441]/20 pb-3">
                 <Calendar className="w-4 h-4 text-[#D9A441]" />
-                <span>2. Select Wedding Date & Time</span>
+                <span>{isBirthday ? "2. Select Event Date & Time" : "2. Select Wedding Date & Time"}</span>
               </h3>
 
               {/* Native Calendar & Time Pickers Row */}
@@ -1202,9 +1215,9 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
           data-lenis-prevent
           className={`bg-[#221C17] overflow-y-auto max-h-[calc(100vh-80px)] ${
             activeTab === "preview"
-              ? "col-span-12"
+              ? "col-span-12 block"
               : activeTab === "split"
-              ? "col-span-12 lg:col-span-7"
+              ? "hidden lg:block col-span-12 lg:col-span-7"
               : "hidden"
           }`}
         >
@@ -1214,6 +1227,35 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
         </div>
       </main>
+
+      {/* Mobile Quick Floating View Toggle Pill Bar */}
+      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#221C17]/90 backdrop-blur-md border-2 border-[#D9A441] text-[#F8F3EA] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("edit")}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+            activeTab === "edit" || activeTab === "split"
+              ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
+              : "text-[#F8F3EA]/70 hover:text-white"
+          }`}
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+          <span>Edit Form</span>
+        </button>
+        <div className="w-px h-4 bg-[#D9A441]/40" />
+        <button
+          type="button"
+          onClick={() => setActiveTab("preview")}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+            activeTab === "preview"
+              ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
+              : "text-[#F8F3EA]/70 hover:text-white"
+          }`}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>Live Preview</span>
+        </button>
+      </div>
 
       {/* Success Modal Overlay */}
       {savedSuccessModal && (

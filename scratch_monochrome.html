@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Celebration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#797865",
+                        "on-secondary-fixed": "#2e1500",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e4e2e1",
+                        "primary": "#5f5f00",
+                        "secondary-fixed-dim": "#ffb77c",
+                        "on-primary-fixed-variant": "#494900",
+                        "on-background": "#1b1c1c",
+                        "on-surface": "#1b1c1c",
+                        "tertiary-fixed-dim": "#c9c6c2",
+                        "on-primary-container": "#fffbff",
+                        "inverse-on-surface": "#f3f0f0",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface-container-low": "#f6f3f2",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#6e3a00",
+                        "background": "#fcf9f8",
+                        "on-tertiary-fixed-variant": "#474743",
+                        "surface-container": "#f0eded",
+                        "secondary": "#904d00",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-fixed-variant": "#6d3900",
+                        "on-tertiary-fixed": "#1c1c19",
+                        "surface-variant": "#e4e2e1",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#1d1d00",
+                        "surface-tint": "#626200",
+                        "surface": "#fcf9f8",
+                        "primary-fixed": "#e9e86b",
+                        "primary-fixed-dim": "#cccc52",
+                        "secondary-container": "#ffa049",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#767471",
+                        "inverse-primary": "#cccc52",
+                        "inverse-surface": "#303030",
+                        "surface-container-high": "#eae7e7",
+                        "on-tertiary-container": "#fcffe3",
+                        "primary-container": "#797900",
+                        "outline-variant": "#cac7b1",
+                        "tertiary": "#5d5c58",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e5e2dd",
+                        "on-surface-variant": "#484837"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-mobile": "20px",
+                        "container-max": "1280px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Literata"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "body-lg": ["Literata"],
+                        "headline-md": ["Literata"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .slow-zoom {
+            animation: slowZoom 20s ease-in-out infinite alternate;
+        }
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        .gold-shimmer {
+            background: linear-gradient(90deg, #5f5f00 0%, #cccc52 50%, #5f5f00 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmer 5s linear infinite;
+        }
+        @keyframes shimmer {
+            to {
+                background-position: 200% center;
+            }
+        }
+        .polaroid {
+            background: white;
+            padding: 10px 10px 40px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .polaroid:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            z-index: 10;
+        }
+        .sparkle {
+            animation: sparkle 2s infinite alternate;
+        }
+        @keyframes sparkle {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md transition-all duration-300 ease-in-out border-b-0">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-20">
+<a class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim italic gold-shimmer" href="#">
+                Evelyn's Celebration
+            </a>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-label-md text-label-md uppercase" href="#about">About</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-label-md text-label-md uppercase" href="#timeline">Timeline</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-label-md text-label-md uppercase" href="#venue">Venue</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300 font-label-md text-label-md uppercase" href="#gallery">Gallery</a>
+<a class="bg-primary text-on-primary px-6 py-3 rounded hover:bg-surface-tint transition-colors font-label-md text-label-md uppercase tracking-wider" href="#rsvp">RSVP Now</a>
+</div>
+<button aria-label="Menu" class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<!-- Hero Section (Editorial Focus) -->
+<header class="relative h-screen min-h-[800px] w-full overflow-hidden flex items-center justify-center pt-20" id="home">
+<div class="absolute inset-0 w-full h-full z-0 overflow-hidden bg-surface-variant">
+<img alt="Evelyn Hero Image" class="w-full h-full object-cover slow-zoom opacity-80 mix-blend-multiply" data-alt="A striking, high-fashion editorial portrait of a woman in an elegant, flowing minimalist olive gown, standing against a stark bone-white architectural backdrop with deep, dramatic shadows. The lighting is cinematic and moody, highlighting the texture of the fabric and the structural lines of the space. The overall aesthetic is artisanal minimalism, sophisticated and grounded in natural tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6MhPxL4j6t8_2R_vUIlGULcWtu5R482vWVS8JZo7GFQTvPwIOAKz2mE4G3wLCunkD7fITHBDTwqO9GxmUd_FQEx00SqFblVmhWy-kJJk09VqK4HmrStNJYpxIWF50a7-_9CDmcm-CDHinGNYKU08xfq8kgP6fReUPACkoQD1mrxKkhRIvI77_X6fnDDc8gXoCAqUytTMuRsmoDS3zuL0GT-TUS4T6Ge7XJOnp0yC0jxIVBgYhrhws"/>
+</div>
+<div class="relative z-10 text-center px-margin-mobile md:px-margin-desktop fade-up">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg mb-6 max-w-4xl mx-auto italic gold-shimmer">
+                A Celebration of Thirty Years.
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-12">
+                Join us for an evening of quiet elegance, artisanal spirits, and shared memories as we toast to a new decade.
+            </p>
+<a class="inline-block bg-primary text-on-primary px-10 py-4 rounded hover:bg-surface-tint transition-colors font-label-md text-label-md uppercase tracking-widest border border-primary" href="#rsvp">
+                Confirm Attendance
+            </a>
+</div>
+<div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 animate-bounce text-primary">
+<a aria-label="Scroll Down" href="#countdown">
+<span class="material-symbols-outlined text-3xl">expand_more</span>
+</a>
+</div>
+</header>
+<!-- Countdown Section -->
+<section class="py-24 bg-surface" id="countdown">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center fade-up">
+<h2 class="font-headline-md text-headline-md text-primary mb-12 italic gold-shimmer">The Countdown Begins</h2>
+<div class="flex justify-center gap-4 md:gap-8 flex-wrap">
+<div class="flex flex-col items-center">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-primary/30 flex items-center justify-center bg-surface-container-low shadow-[0_0_15px_rgba(95,95,0,0.1)] mb-4">
+<span class="font-display-lg text-primary">14</span>
+</div>
+<span class="font-label-sm text-tertiary uppercase tracking-widest">Days</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-primary/30 flex items-center justify-center bg-surface-container-low shadow-[0_0_15px_rgba(95,95,0,0.1)] mb-4">
+<span class="font-display-lg text-primary">08</span>
+</div>
+<span class="font-label-sm text-tertiary uppercase tracking-widest">Hours</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-primary/30 flex items-center justify-center bg-surface-container-low shadow-[0_0_15px_rgba(95,95,0,0.1)] mb-4">
+<span class="font-display-lg text-primary">45</span>
+</div>
+<span class="font-label-sm text-tertiary uppercase tracking-widest">Mins</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-primary/30 flex items-center justify-center bg-surface-container-low shadow-[0_0_15px_rgba(95,95,0,0.1)] mb-4">
+<span class="font-display-lg text-primary">22</span>
+</div>
+<span class="font-label-sm text-tertiary uppercase tracking-widest">Secs</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Wave Divider -->
+<div class="w-full overflow-hidden leading-none bg-surface-container-low">
+<svg class="relative block w-full h-[50px] fill-surface" preserveaspectratio="none" viewbox="0 0 1200 120">
+<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+</svg>
+</div>
+<!-- Our Story Section -->
+<section class="py-24 bg-surface-container-low" id="about">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop fade-up">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<div class="md:col-span-5 md:col-start-2">
+<h2 class="font-headline-md text-headline-md text-primary mb-6 italic">A Journey of <br/>Thirty Years</h2>
+<p class="font-body-md text-on-surface-variant mb-4">
+                    From the quiet streets of her childhood home to the bustling avenues of her professional life, Evelyn has always moved with grace and purpose. This evening is a reflection of the chapters written and a prelude to those yet to come.
+                </p>
+<p class="font-body-md text-on-surface-variant">
+                    We gather not just to mark the passage of time, but to celebrate the beautiful tapestry of friendships, experiences, and love that define her world.
+                </p>
+</div>
+<div class="md:col-span-5">
+<div class="aspect-[4/5] bg-surface-variant overflow-hidden rounded-lg">
+<img alt="Evelyn reading" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEdDZx1aRPUE3fFkophuJEeS31oluEC0l7esbN7rHFetOJbnlEFxPjR5YLKWxoZS6_iaaPXSaREWsNcQyE-wRdIZ6B57dx4NLkONSTJLw_YoqOBW1EJM4OO_MAYABhtRgz3rbnYfn5FO-FKUUKOQDJ7URWNVF0H7nPUBHn23BcS0K4dvzGDj5q_6JCegOi1Enllf2fF2dxma3Xs5kkHcCUURM6dXG7erffgQF29bVZFGAHbcAI08RA"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="py-24 bg-surface" id="timeline">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop fade-up">
+<h2 class="font-headline-md text-headline-md text-center text-primary mb-16 italic gold-shimmer">The Evening's Flow</h2>
+<div class="relative max-w-3xl mx-auto">
+<!-- Vertical Line -->
+<div class="absolute left-1/2 transform -translate-x-1/2 w-px h-full bg-primary/20"></div>
+<!-- Event 1 -->
+<div class="relative flex items-center justify-between mb-12 w-full">
+<div class="w-5/12 text-right pr-8">
+<h3 class="font-headline-sm text-primary">Arrival &amp; Welcome</h3>
+<p class="font-body-md text-on-surface-variant mt-2">Signature cocktails and light canapés upon arrival.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-surface border-2 border-primary rounded-full z-10"></div>
+<div class="w-5/12 pl-8">
+<span class="font-label-md text-tertiary tracking-widest uppercase">7:00 PM</span>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="relative flex items-center justify-between mb-12 w-full flex-row-reverse">
+<div class="w-5/12 text-left pl-8">
+<h3 class="font-headline-sm text-primary">Dinner is Served</h3>
+<p class="font-body-md text-on-surface-variant mt-2">A curated three-course meal by our guest chef.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-surface border-2 border-primary rounded-full z-10"></div>
+<div class="w-5/12 pr-8 text-right">
+<span class="font-label-md text-tertiary tracking-widest uppercase">8:30 PM</span>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="relative flex items-center justify-between w-full">
+<div class="w-5/12 text-right pr-8">
+<h3 class="font-headline-sm text-primary">Toasts &amp; Dancing</h3>
+<p class="font-body-md text-on-surface-variant mt-2">Words from loved ones followed by music into the night.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-surface border-2 border-primary rounded-full z-10"></div>
+<div class="w-5/12 pl-8">
+<span class="font-label-md text-tertiary tracking-widest uppercase">10:00 PM</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+<section class="py-24 bg-primary text-on-primary relative overflow-hidden flex items-center">
+<div class="absolute inset-0 opacity-20 mix-blend-overlay">
+<img alt="Abstract texture" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuExxZkYePZ4zsez2qB8y-7i1-PWU6EovrOXELLPYb9D8Uh7DmtzBRNmKXkJlj6OFeNDQIhpwJvZJhbleOmdSqemuJb58QhZAXJdr1ef8EPcs3yoXaMt5MoOjlKbBEDFZql4durbLnSIjdPRHveL6B6yHCdY89TUAyVFABJFFFsjlehfqSQ3RiR9D06_VCdtZCJJTanZmYbbQ6Kn43IfYP15ijGaYffanEWvcq6zK_Z1CYdkJ1g87Y"/>
+</div>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop relative z-10 text-center fade-up w-full">
+<p class="font-display-lg italic mb-6">"Elegance is the only beauty that never fades."</p>
+<span class="font-label-md uppercase tracking-widest opacity-80">- Audrey Hepburn</span>
+</div>
+</section>
+<!-- Venue Section -->
+<section class="py-24 bg-surface" id="venue">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop fade-up">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<div class="md:col-span-5 md:col-start-2 order-2 md:order-1">
+<div class="aspect-square bg-surface-variant rounded-lg flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-6xl text-tertiary opacity-50">map</span>
+<!-- Placeholder for interactive map -->
+</div>
+</div>
+<div class="md:col-span-5 order-1 md:order-2 mb-8 md:mb-0">
+<h2 class="font-headline-md text-headline-md text-primary mb-6 italic">The Venue</h2>
+<h3 class="font-headline-sm mb-2">The Glasshouse Conservatory</h3>
+<p class="font-body-md text-on-surface-variant mb-6">
+                    123 Botanical Gardens Way<br/>
+                    Metropolis, NY 10001
+                </p>
+<p class="font-body-md text-on-surface-variant mb-8">
+                    Valet parking will be provided at the main entrance. Please arrive via the South Gate for expedited entry.
+                </p>
+<a class="inline-flex items-center gap-2 text-primary hover:text-surface-tint font-label-md uppercase tracking-wide transition-colors" href="#">
+                    Get Directions <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Gallery Section -->
+<section class="py-24 bg-surface-container-low overflow-hidden" id="gallery">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop fade-up">
+<div class="flex items-center justify-center gap-2 mb-16">
+<span class="material-symbols-outlined text-primary sparkle">auto_awesome</span>
+<h2 class="font-headline-md text-headline-md text-center text-primary italic">Our Moments</h2>
+<span class="material-symbols-outlined text-primary sparkle">auto_awesome</span>
+</div>
+<div class="flex flex-wrap justify-center gap-8 px-4">
+<div class="polaroid w-64 transform -rotate-3">
+<img alt="Memory 1" class="w-full aspect-square object-cover mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6Xt4nFO26JrgTkI976YIDXHb56VeLqLydsYlcbtdeg_t5AI2CKES1uDYlqOJmPrYjZ4faFh8oEQ7CIcY2TQX68bH7c6HWcz2WMUoIzXlrNflserp1HTMp-u_9xP3kulIHX6syv458dE4N5JtmXGTV3TpqRyo_3to-np2uA5PLzYaiF46P9Tb9DtBHShDRtx6e8SdKiAyZIlCmhFfQ5V-zcZKA5mwfICOsKIfqXbmKTSpsul9Wby3s"/>
+<p class="text-center font-label-md text-on-surface-variant italic">Paris, 2018</p>
+</div>
+<div class="polaroid w-64 transform rotate-2 mt-8 md:mt-0">
+<img alt="Memory 2" class="w-full aspect-square object-cover mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAXiKfUzw73sz7TacdLykZ1M_EOFbMMtyMocbayMD183eaWhyLF5k9rVxD1M-bVXGfbUftecenn810Vv1Yz1VqBirwwNsMocLXD8YNLjwMHfxihldFJraO_9jtHLN0sqwh8loKWZnK96NZkW0Dt7IKv9_M5jmfc7P8oZL0MNWFZfE018tXUYjAwd7KepdOaeiHka74SU4VWg3PF0HY_QofpHBT7R19ld8mfZtGEpW81xY0QtBlSgDK"/>
+<p class="text-center font-label-md text-on-surface-variant italic">Graduation Day</p>
+</div>
+<div class="polaroid w-64 transform -rotate-1 mt-8 md:mt-12">
+<img alt="Memory 3" class="w-full aspect-square object-cover mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAuDwOpLgDxUoEwsO-qWAfDxDsFogP38IZNCu-zHLO089LD8Ui85p3QMK7UqQl4ipcCUnwLpuBPDn0NUjQ3dJ789U23rMPedO01RzcHPprtNKiACpFDlwK6WaiRm8eF2CSXS2w-Mpq06rrtEcRx1BztLbgNmwbwdsplBTGtiqk94khtsbDaPn5okKjCUe9aNeYcPM9u8cmHyWauq0on2XXwV3IAB0353IieJ-g0a6Z6WZxWADFv_hc"/>
+<p class="text-center font-label-md text-on-surface-variant italic">Family Dinner</p>
+</div>
+</div>
+</div>
+</section>
+<!-- RSVP Section -->
+<section class="py-32 bg-surface" id="rsvp">
+<div class="max-w-xl mx-auto px-margin-mobile fade-up">
+<div class="text-center mb-12">
+<h2 class="font-headline-md text-headline-md text-primary mb-4 italic gold-shimmer">RSVP</h2>
+<p class="font-body-md text-on-surface-variant">Please confirm your attendance by October 1st.</p>
+</div>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block font-label-sm uppercase tracking-wide text-on-surface-variant mb-2" for="firstName">First Name</label>
+<input class="w-full bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary rounded-sm shadow-sm font-body-md px-4 py-3" id="firstName" type="text"/>
+</div>
+<div>
+<label class="block font-label-sm uppercase tracking-wide text-on-surface-variant mb-2" for="lastName">Last Name</label>
+<input class="w-full bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary rounded-sm shadow-sm font-body-md px-4 py-3" id="lastName" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm uppercase tracking-wide text-on-surface-variant mb-2" for="email">Email Address</label>
+<input class="w-full bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary rounded-sm shadow-sm font-body-md px-4 py-3" id="email" type="email"/>
+</div>
+<div>
+<label class="block font-label-sm uppercase tracking-wide text-on-surface-variant mb-4">Will you be joining us?</label>
+<div class="flex gap-6">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="text-primary focus:ring-primary border-outline-variant" name="attending" type="radio" value="yes"/>
+<span class="font-body-md text-on-surface">Joyfully Accept</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary border-outline-variant" name="attending" type="radio" value="no"/>
+<span class="font-body-md text-on-surface">Regretfully Decline</span>
+</label>
+</div>
+</div>
+<div>
+<label class="block font-label-sm uppercase tracking-wide text-on-surface-variant mb-2" for="dietary">Dietary Requirements</label>
+<textarea class="w-full bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary rounded-sm shadow-sm font-body-md px-4 py-3" id="dietary" rows="3"></textarea>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded hover:bg-surface-tint transition-colors font-label-md text-label-md uppercase tracking-widest mt-8 border border-primary" type="button">
+                Send RSVP
+            </button>
+</form>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-12 bg-surface-container-low dark:bg-surface-container-lowest border-t border-outline-variant/30">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="font-headline-sm text-headline-sm text-primary opacity-90 hover:opacity-100 transition-opacity italic">
+                Evelyn's Celebration
+            </span>
+<div class="flex gap-6 font-label-sm text-label-sm text-tertiary dark:text-tertiary-fixed-dim">
+<a class="text-on-surface-variant hover:text-secondary transition-colors uppercase" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors uppercase" href="#">Contact</a>
+</div>
+<p class="font-label-sm text-label-sm text-tertiary dark:text-tertiary-fixed-dim">
+                © 2024 Crafted with Love for Evelyn's Special Day
+            </p>
+</div>
+</footer>
+<script>
+        // Simple Intersection Observer for fade-up animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const animatedElements = document.querySelectorAll('.fade-up');
+            animatedElements.forEach(el => observer.observe(el));
+        });
+    </script>
+</body></html>

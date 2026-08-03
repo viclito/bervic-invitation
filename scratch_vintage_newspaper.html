@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Special Dispatch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&amp;family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&amp;family=Domine:wght@400..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e5e2db",
+                        "background": "#fcf9f2",
+                        "on-secondary-fixed-variant": "#474747",
+                        "inverse-on-surface": "#f3f0e9",
+                        "tertiary-container": "#1c1b1a",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-bright": "#fcf9f2",
+                        "on-background": "#1c1c18",
+                        "primary-container": "#1c1b1b",
+                        "on-tertiary-fixed-variant": "#484645",
+                        "on-tertiary-container": "#868382",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#cac6c4",
+                        "secondary-container": "#e4e2e2",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "surface-dim": "#dcdad3",
+                        "on-secondary-container": "#656464",
+                        "secondary-fixed": "#e4e2e2",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-variant": "#e5e2db",
+                        "on-primary-fixed": "#1c1b1b",
+                        "primary-fixed": "#e5e2e1",
+                        "inverse-primary": "#c8c6c5",
+                        "outline-variant": "#c4c7c7",
+                        "surface": "#fcf9f2",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f6f3ec",
+                        "inverse-surface": "#31312c",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "on-primary-container": "#858383",
+                        "surface-container-high": "#ebe8e1",
+                        "surface-tint": "#5f5e5e",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "surface-container": "#f1eee7",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1c1c18",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#444748",
+                        "on-tertiary-fixed": "#1c1b1a",
+                        "secondary": "#5e5e5e",
+                        "tertiary-fixed": "#e6e2df",
+                        "outline": "#747878",
+                        "secondary-fixed-dim": "#c8c6c6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "page-margin": "40px",
+                        "section-gap": "64px",
+                        "column-gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Domine"],
+                        "body-md": ["Courier Prime"],
+                        "headline-sm": ["Domine"],
+                        "display-lg-mobile": ["Domine"],
+                        "display-lg": ["Domine"],
+                        "body-lg": ["Courier Prime"],
+                        "label-caps": ["Archivo Narrow"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.1", "fontWeight": "700" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["14px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fcf9f2; /* background */
+            color: #1c1c18; /* on-background */
+        }
+        /* Emulate newspaper column lines */
+        .newspaper-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 24px;
+        }
+        .v-rule {
+            border-left: 1px solid #1A1A1A;
+            height: 100%;
+        }
+        .h-rule {
+            border-top: 1px solid #1A1A1A;
+            width: 100%;
+        }
+        .h-rule-thick {
+            border-top: 4px solid #1A1A1A;
+            width: 100%;
+        }
+        .cutout {
+            background-color: #1A1A1A;
+            color: #fcf9f2;
+        }
+        .drop-cap::first-letter {
+            font-family: 'Domine', serif;
+            font-size: 4rem;
+            font-weight: bold;
+            line-height: 1;
+            float: left;
+            margin-right: 0.5rem;
+            margin-top: 0.2rem;
+            color: #1A1A1A;
+        }
+        .polaroid-frame {
+            background: #fcf9f2;
+            padding: 1rem 1rem 3rem 1rem;
+            border: 1px solid #1A1A1A;
+            box-shadow: 4px 4px 0px rgba(26,26,26,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .polaroid-frame:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            box-shadow: 8px 8px 0px rgba(26,26,26,0.2);
+            z-index: 10;
+        }
+        .coupon-border {
+            border: 2px dashed #1A1A1A;
+            padding: 2rem;
+            position: relative;
+        }
+        .coupon-border::before {
+            content: "✂";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            font-size: 20px;
+            color: #1A1A1A;
+            background: #fcf9f2;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md min-h-screen flex flex-col">
+<!-- Header (Shared Component: TopAppBar) -->
+<header class="flex justify-between items-center px-page-margin py-4 w-full max-w-full bg-background dark:bg-on-tertiary-fixed border-b-2 border-primary dark:border-outline-variant flat no shadows sticky top-0 z-50">
+<div class="flex items-center gap-6">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary-container tracking-tighter uppercase">THE DAILY CHRONICLE</h1>
+<nav class="hidden md:flex gap-6">
+<a class="text-secondary dark:text-secondary-fixed-dim font-body-md text-body-md hover:bg-primary hover:text-on-primary dark:hover:bg-primary-fixed dark:hover:text-on-primary-fixed transition-colors duration-150 ease-in-out px-2 py-1" href="#story">Report</a>
+<a class="text-secondary dark:text-secondary-fixed-dim font-body-md text-body-md hover:bg-primary hover:text-on-primary dark:hover:bg-primary-fixed dark:hover:text-on-primary-fixed transition-colors duration-150 ease-in-out px-2 py-1" href="#timeline">Dispatch</a>
+<a class="text-secondary dark:text-secondary-fixed-dim font-body-md text-body-md hover:bg-primary hover:text-on-primary dark:hover:bg-primary-fixed dark:hover:text-on-primary-fixed transition-colors duration-150 ease-in-out px-2 py-1" href="#rsvp">RSVP</a>
+</nav>
+</div>
+<button class="font-headline-md text-headline-md font-bold uppercase text-primary dark:text-inverse-primary border-2 border-primary px-4 py-2 hover:bg-primary hover:text-on-primary dark:hover:bg-primary-fixed dark:hover:text-on-primary-fixed transition-colors duration-150 ease-in-out text-sm">
+            Subscribe
+        </button>
+</header>
+<main class="flex-grow px-page-margin py-section-gap flex flex-col gap-section-gap max-w-[1440px] mx-auto w-full">
+<!-- Hero: News Headline -->
+<section class="flex flex-col items-center text-center gap-6 pb-12 border-b-4 border-primary relative">
+<p class="font-label-caps text-label-caps text-secondary tracking-widest uppercase">Special Edition Dispatch</p>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg uppercase max-w-4xl leading-tight">Evelyn's Grand Celebration Declared</h2>
+<p class="font-body-lg text-body-lg max-w-2xl text-on-surface-variant">
+                Citizens are hereby summoned to partake in an evening of unprecedented revelry, commemorating another illustrious year in the annals of history.
+            </p>
+</section>
+<!-- Countdown Widget -->
+<section class="flex justify-center -mt-16 relative z-10">
+<div class="bg-surface border-2 border-primary p-6 text-center shadow-[4px_4px_0_#000]">
+<p class="font-label-caps text-label-caps font-bold mb-4 uppercase border-b border-primary pb-2">Edition Countdown</p>
+<div class="flex gap-4 md:gap-8 font-headline-md">
+<div class="flex flex-col items-center">
+<span class="text-4xl md:text-5xl font-bold">14</span>
+<span class="font-label-caps text-xs mt-1">Days</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-4xl md:text-5xl font-bold">08</span>
+<span class="font-label-caps text-xs mt-1">Hours</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-4xl md:text-5xl font-bold">45</span>
+<span class="font-label-caps text-xs mt-1">Mins</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Our Story / Special Report -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-8 border-b-2 border-primary pb-section-gap" id="story">
+<div class="col-span-1 md:col-span-12 text-center mb-4">
+<h3 class="font-headline-md text-headline-md uppercase border-y-2 border-primary py-2 inline-block px-8">Special Report: The Journey So Far</h3>
+</div>
+<div class="col-span-1 md:col-span-7 flex flex-col gap-6">
+<div class="aspect-video bg-surface-dim border border-primary flex items-center justify-center relative overflow-hidden group">
+<span class="material-symbols-outlined text-6xl text-primary opacity-50 group-hover:opacity-100 transition-opacity z-10 absolute">play_circle</span>
+<div class="absolute inset-0 flex items-center justify-center font-headline-md text-surface-tint uppercase opacity-30">Latest Newsreel</div>
+<img alt="Vintage newsreel placeholder" class="w-full h-full object-cover mix-blend-luminosity opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj3CvobW7gsQYwkfoAOootCuUgtdPvoOrhAs_N_lgeq9Arj1ulHZKjnXc7O9rJIJoLSp0ZlHmOaA6btrEP8CeFLaF_Pjw49qQi5JL_75EQioNX2QVVhtDjH1sr7zPKY6eDlXWb5SiSduZr-al3XItn_AmkNHx5KxdMnb9CqaumzJ3AUQY6kSgIdyvw8S2X4jnmpe7IDa24Se5LU5-aoqc8lOP9gRtbWoARW-iOEVAkgsFYyBpKoDJo"/>
+</div>
+<p class="font-label-caps text-center text-secondary italic text-sm">Fig. 1 - Archival footage of the early years.</p>
+</div>
+<div class="col-span-1 md:col-span-5 border-t md:border-t-0 md:border-l border-primary pt-6 md:pt-0 md:pl-8 columns-1 sm:columns-2 md:columns-1 gap-6 text-justify">
+<p class="drop-cap mb-4">
+                From the very beginning, it was clear that Evelyn was destined for greatness. Born under an auspicious star, her early days were marked by a curiosity that confounded scholars and delighted observers alike. The local gazettes frequently featured her nascent exploits, from the great tricycle expedition of '98 to the profound philosophical inquiries posited during afternoon tea.
+            </p>
+<p class="mb-4">
+                As the years progressed, so too did her influence. A beacon of modern thought and uncompromising style, she has traversed the globe, leaving an indelible mark upon the cultural zeitgeist. Friends and confidants note her unparalleled ability to turn a mundane gathering into an affair of historic proportions.
+            </p>
+<p>
+                Now, as we stand on the precipice of another momentous anniversary, the city holds its breath in anticipation of what promises to be the most spectacular gala of the decade. The archives have been dusted off, the champagne secured, and the press alerted.
+            </p>
+</div>
+</section>
+<!-- Event Timeline -->
+<section class="border-b-2 border-primary pb-section-gap" id="timeline">
+<div class="text-center mb-10">
+<h3 class="font-headline-md text-headline-md uppercase border-y-2 border-primary py-2 inline-block px-8">The Day's Dispatch</h3>
+<p class="font-label-caps text-secondary mt-2">Schedule of Proceedings</p>
+</div>
+<div class="max-w-3xl mx-auto relative">
+<!-- Vertical Line -->
+<div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-primary transform md:-translate-x-1/2"></div>
+<!-- Timeline Item 1 -->
+<div class="relative flex items-center justify-between mb-8 flex-col md:flex-row">
+<div class="order-1 w-full md:w-5/12 pl-12 md:pl-0 text-left md:text-right pr-4">
+<h4 class="font-headline-sm text-primary uppercase">Arrival &amp; Registration</h4>
+<p class="font-body-md text-on-surface-variant mt-1">Guests are requested to present their credentials at the main vestibule. Libations will be served.</p>
+</div>
+<div class="z-20 flex items-center justify-center order-1 bg-surface border-2 border-primary w-10 h-10 rounded-full shadow-[2px_2px_0_#000] absolute left-0 md:left-1/2 transform md:-translate-x-1/2">
+<span class="font-label-caps font-bold text-sm">6PM</span>
+</div>
+<div class="order-1 w-full md:w-5/12 hidden md:block"></div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative flex items-center justify-between mb-8 flex-col md:flex-row">
+<div class="order-1 w-full md:w-5/12 hidden md:block"></div>
+<div class="z-20 flex items-center justify-center order-1 bg-surface border-2 border-primary w-10 h-10 rounded-full shadow-[2px_2px_0_#000] absolute left-0 md:left-1/2 transform md:-translate-x-1/2">
+<span class="font-label-caps font-bold text-sm">7PM</span>
+</div>
+<div class="order-1 w-full md:w-5/12 pl-12 md:pl-4 text-left">
+<h4 class="font-headline-sm text-primary uppercase">Grand Banquet</h4>
+<p class="font-body-md text-on-surface-variant mt-1">A sumptuous feast awaits in the dining hall, prepared by renowned culinary artisans.</p>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative flex items-center justify-between mb-8 flex-col md:flex-row">
+<div class="order-1 w-full md:w-5/12 pl-12 md:pl-0 text-left md:text-right pr-4">
+<h4 class="font-headline-sm text-primary uppercase">Ceremonial Toast</h4>
+<p class="font-body-md text-on-surface-variant mt-1">Raise your glasses as distinguished guests deliver remarks and accolades.</p>
+</div>
+<div class="z-20 flex items-center justify-center order-1 bg-surface border-2 border-primary w-10 h-10 rounded-full shadow-[2px_2px_0_#000] absolute left-0 md:left-1/2 transform md:-translate-x-1/2">
+<span class="font-label-caps font-bold text-sm">9PM</span>
+</div>
+<div class="order-1 w-full md:w-5/12 hidden md:block"></div>
+</div>
+<!-- Timeline Item 4 -->
+<div class="relative flex items-center justify-between flex-col md:flex-row">
+<div class="order-1 w-full md:w-5/12 hidden md:block"></div>
+<div class="z-20 flex items-center justify-center order-1 bg-surface border-2 border-primary w-10 h-10 rounded-full shadow-[2px_2px_0_#000] absolute left-0 md:left-1/2 transform md:-translate-x-1/2">
+<span class="font-label-caps font-bold text-sm text-[10px]">LATE</span>
+</div>
+<div class="order-1 w-full md:w-5/12 pl-12 md:pl-4 text-left">
+<h4 class="font-headline-sm text-primary uppercase">Revelry &amp; Dance</h4>
+<p class="font-body-md text-on-surface-variant mt-1">The orchestra shall commence, and the floor will be open for jubilant celebration until the early hours.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Photo Archive (Gallery) -->
+<section class="border-b-2 border-primary pb-section-gap">
+<div class="text-center mb-10">
+<h3 class="font-headline-md text-headline-md uppercase border-y-2 border-primary py-2 inline-block px-8">Photo Archive</h3>
+<p class="font-label-caps text-secondary mt-2">Glimpses of Yesteryear</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-4">
+<!-- Photo 1 -->
+<div class="polaroid-frame transform -rotate-2">
+<div class="aspect-square bg-surface-dim border border-primary overflow-hidden relative">
+<img alt="Vintage portrait" class="w-full h-full object-cover grayscale contrast-125 sepia-[.3]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW-SJwPvD3NwRI7Xw3UR9x2l68xmKvVzmdmHFaRFC3q4Zxz1a33wdjiB4R_3RVUaZSEP0TxAxsvNoiHOkqUUnnzyZVLIO9NlC_FR_ndjM6EosYiMzK6BXJfnkTcwCmZWRE9tE9_Mpwt6cgX4zg2ttsMzzHWCtSNEdS1Ko8milCZG4S2TdSArYnYMo2Y_IDpo5ABDq2n1kxzIFbHih0DKnYxs3EE8Px4eso3TS8q1o1snzbe2VJl-h5"/>
+</div>
+<p class="font-body-md text-center mt-3 text-sm italic">The Early Years</p>
+</div>
+<!-- Photo 2 -->
+<div class="polaroid-frame transform rotate-3">
+<div class="aspect-square bg-surface-dim border border-primary overflow-hidden relative">
+<img alt="Vintage gathering" class="w-full h-full object-cover grayscale contrast-125 sepia-[.3]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDc75eTcJrJFyqlT3xZ6qnw0MKXlrJa-qiPaht2mNk36bYfIJtmV4wKNbPtpT1-ivtz6feWPNZH1MlqezxC2V23mfCDMMlZ58XY-aVkYJY0fzm37o82M1fPgYIMPmVNZSC7RxlICx1mYf3gqW2YWC4EpezNyHy4dfrlOmdtNp_q--tFzcGD5DvITaW1JPZ6EGVO_xk2gacOJdAfNRXi4jNKx3VlDTzChmTHELt5sK-9x8A-1R5xluP"/>
+</div>
+<p class="font-body-md text-center mt-3 text-sm italic">A Grand Affair</p>
+</div>
+<!-- Photo 3 -->
+<div class="polaroid-frame transform -rotate-1">
+<div class="aspect-square bg-surface-dim border border-primary overflow-hidden relative">
+<img alt="Vintage travel" class="w-full h-full object-cover grayscale contrast-125 sepia-[.3]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs26g_jGdGVvZdN0Ajvzq882DwcJHRUcG3rg3Rhsz9nUmZVcxMNu3WhxPTjDrOlt9yUJRxRSSYoR1KUwYdXeP3EQCJDG36YQoAEPSYfs_GiNTpx-JhpuhKPhcumkoCEnAi4Rgsl0wjqSpISqY_2Ml3muRbO0_mzGRaIuyLM2pwR_FSgnMedUvx20jMq92iSly02XY9C0Qn4Q-obXaHNLvb4KiXm4dvhYqVePhUMWHHM9U9wADrR218"/>
+</div>
+<p class="font-body-md text-center mt-3 text-sm italic">Overseas Dispatch</p>
+</div>
+<!-- Photo 4 -->
+<div class="polaroid-frame transform rotate-2">
+<div class="aspect-square bg-surface-dim border border-primary overflow-hidden relative">
+<img alt="Vintage celebration" class="w-full h-full object-cover grayscale contrast-125 sepia-[.3]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3RyZDJvpuJF16bzgXVJhCVDZoXXVSNrlqf98SRgcoe0xS_CEu8r7YfoHeK48tMlUA52WlZV7GzpsXjAG3U_1n1g8L8gRSNEhAKm3RV7cz3P-UBJ-jQ3IKClXHNl06biCUmdzL6sqQdvmuh08m1UTm7pbysDWGY62oE9WEaMqGHHjmobaKsfZdjIZkTgT8k1ujRMM8RM_Zzw0R-Ky-0DRaivCVoHXvHRC9sURXSfAc3N3_J8215nKw"/>
+</div>
+<p class="font-body-md text-center mt-3 text-sm italic">Unprecedented Joy</p>
+</div>
+</div>
+</section>
+<!-- RSVP Coupon -->
+<section class="max-w-2xl mx-auto py-12" id="rsvp">
+<div class="coupon-border bg-surface">
+<div class="text-center mb-6 border-b border-primary pb-4">
+<h3 class="font-headline-md uppercase">Subscription &amp; RSVP</h3>
+<p class="font-label-caps mt-2">Please remit your response by the 15th inst.</p>
+</div>
+<form class="space-y-6">
+<div>
+<label class="block font-label-caps font-bold mb-2 uppercase" for="name">Name of Attendee(s)</label>
+<input class="w-full bg-transparent border-b-2 border-primary focus:outline-none focus:border-primary-fixed-dim py-2 font-body-md" id="name" placeholder="M_______________________" type="text"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block font-label-caps font-bold mb-2 uppercase" for="guests">Number in Party</label>
+<input class="w-full bg-transparent border-b-2 border-primary focus:outline-none focus:border-primary-fixed-dim py-2 font-body-md" id="guests" min="1" placeholder="e.g. 2" type="number"/>
+</div>
+<div>
+<label class="block font-label-caps font-bold mb-2 uppercase">Intentions</label>
+<div class="flex flex-col gap-2 mt-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-radio text-primary border-primary focus:ring-primary w-5 h-5 bg-transparent" name="attendance" type="radio" value="yes"/>
+<span class="font-body-md group-hover:underline decoration-primary underline-offset-4">Accepts with Pleasure</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-radio text-primary border-primary focus:ring-primary w-5 h-5 bg-transparent" name="attendance" type="radio" value="no"/>
+<span class="font-body-md group-hover:underline decoration-primary underline-offset-4">Declines with Regret</span>
+</label>
+</div>
+</div>
+</div>
+<div class="pt-4 flex justify-center">
+<button class="font-headline-sm uppercase bg-primary text-on-primary px-8 py-3 hover:bg-surface-tint transition-colors border-2 border-primary hover:border-surface-tint shadow-[4px_4px_0_rgba(26,26,26,0.3)] hover:shadow-[2px_2px_0_rgba(26,26,26,0.3)] hover:translate-y-[2px] hover:translate-x-[2px]" type="submit">
+                            Dispatch Reply
+                        </button>
+</div>
+</form>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="flex flex-col md:flex-row justify-between items-center px-page-margin py-8 w-full border-t-2 border-primary dark:border-outline-variant mt-section-gap bg-background dark:bg-on-tertiary-fixed flat no shadows">
+<p class="font-label-caps text-label-caps font-bold text-primary dark:text-inverse-primary text-center md:text-left mb-4 md:mb-0">
+            © MCMXXIV THE DAILY CHRONICLE PUBLISHING CO. ALL RIGHTS RESERVED.
+        </p>
+<div class="flex flex-wrap justify-center gap-6 mt-4 md:mt-0">
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 transition-opacity" href="#">Terms of Service</a>
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 transition-opacity" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 transition-opacity" href="#">Contact Editor</a>
+<a class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 transition-opacity" href="#">Staff Directory</a>
+</div>
+</footer>
+</body></html>

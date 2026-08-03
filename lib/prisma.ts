@@ -7,7 +7,8 @@ const globalForPrisma = globalThis as unknown as {
 const getDbUrl = () => {
   let url = process.env.DATABASE_URL || "";
   if (url && !url.includes("connection_limit")) {
-    url += (url.includes("?") ? "&" : "?") + "connection_limit=20&pool_timeout=30&connect_timeout=30";
+    const pgbouncerParam = url.includes("pooler") && !url.includes("pgbouncer") ? "&pgbouncer=true" : "";
+    url += (url.includes("?") ? "&" : "?") + `connection_limit=10&pool_timeout=15&connect_timeout=15${pgbouncerParam}`;
   }
   return url;
 };

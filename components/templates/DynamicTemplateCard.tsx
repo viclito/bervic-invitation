@@ -25,6 +25,26 @@ import ForestFernInvitation from "./stitch/ForestFernInvitation";
 import CelestialNightInvitation from "./stitch/CelestialNightInvitation";
 import RoyalMaharaniInvitation from "./stitch/RoyalMaharaniInvitation";
 import SunsetTerracottaInvitation from "./stitch/SunsetTerracottaInvitation";
+import TropicalLuauSplashInvitation from "./stitch/TropicalLuauSplashInvitation";
+import NeonRetroArcadeInvitation from "./stitch/NeonRetroArcadeInvitation";
+import MidnightGoldGalaInvitation from "./stitch/MidnightGoldGalaInvitation";
+import BoldPopArtInvitation from "./stitch/BoldPopArtInvitation";
+import MinimalistScandinavianInvitation from "./stitch/MinimalistScandinavianInvitation";
+import BotanicalGardenEleganceInvitation from "./stitch/BotanicalGardenEleganceInvitation";
+import ModernMonochromeEditorialInvitation from "./stitch/ModernMonochromeEditorialInvitation";
+import CheerfulConfettiCarnivalInvitation from "./stitch/CheerfulConfettiCarnivalInvitation";
+import ConfettiCarnivalClassicInvitation from "./stitch/ConfettiCarnivalClassicInvitation";
+import EvelynsCelebrationMasterpieceInvitation from "./stitch/EvelynsCelebrationMasterpieceInvitation";
+import ZenJapandiCalmInvitation from "./stitch/ZenJapandiCalmInvitation";
+import ElegantWatercolorFloralInvitation from "./stitch/ElegantWatercolorFloralInvitation";
+import IndustrialLoftChicInvitation from "./stitch/IndustrialLoftChicInvitation";
+import SpaceGalaxyAdventureInvitation from "./stitch/SpaceGalaxyAdventureInvitation";
+import VintageNewspaperInvitation from "./stitch/VintageNewspaperInvitation";
+import TinySweetInvitation from "./stitch/TinySweetInvitation";
+import UrbanStreetwearBashInvitation from "./stitch/UrbanStreetwearBashInvitation";
+import ArtDecoGrandeurInvitation from "./stitch/ArtDecoGrandeurInvitation";
+import FreshCitrusSummerInvitation from "./stitch/FreshCitrusSummerInvitation";
+import EclecticChicMasterpieceInvitation from "./stitch/EclecticChicMasterpieceInvitation";
 import Navbar from "./classic-floral/Navbar";
 import Hero from "./classic-floral/Hero";
 import CountdownTimer from "./classic-floral/CountdownTimer";
@@ -82,7 +102,7 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
     return <PhotoGalleryInvitation {...props} />;
   }
 
-  if (currentSlug === "whimsical-storybook") {
+  if (currentSlug === "whimsical-storybook" && (!props.partnerTwo || props.partnerTwo === "")) {
     return <WhimsicalStorybookInvitation {...props} />;
   }
 
@@ -136,6 +156,90 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
 
   if (currentSlug === "sunset-terracotta") {
     return <SunsetTerracottaInvitation {...props} />;
+  }
+
+  if (currentSlug === "tropical-luau-splash") {
+    return <TropicalLuauSplashInvitation {...props} />;
+  }
+
+  if (currentSlug === "neon-retro-arcade") {
+    return <NeonRetroArcadeInvitation {...props} />;
+  }
+
+  if (currentSlug === "midnight-gold-gala") {
+    return <MidnightGoldGalaInvitation {...props} />;
+  }
+
+  if (currentSlug === "bold-pop-art") {
+    return <BoldPopArtInvitation {...props} />;
+  }
+
+  if (currentSlug === "minimalist-scandinavian") {
+    return <MinimalistScandinavianInvitation {...props} />;
+  }
+
+  if (currentSlug === "botanical-garden-elegance") {
+    return <BotanicalGardenEleganceInvitation {...props} />;
+  }
+
+  if (currentSlug === "whimsical-storybook" || currentSlug === "whimsical-storybook-birthday" || currentSlug === "whimsical-storybook-bday") {
+    return <WhimsicalStorybookInvitation {...props} />;
+  }
+
+  if (currentSlug === "modern-monochrome-editorial") {
+    return <ModernMonochromeEditorialInvitation {...props} />;
+  }
+
+  if (currentSlug === "cheerful-confetti-carnival") {
+    return <CheerfulConfettiCarnivalInvitation {...props} />;
+  }
+
+  if (currentSlug === "cheerful-confetti-carnival-v1" || currentSlug === "confetti-carnival-classic") {
+    return <ConfettiCarnivalClassicInvitation {...props} />;
+  }
+
+  if (currentSlug === "evelyns-celebration-masterpiece") {
+    return <EvelynsCelebrationMasterpieceInvitation {...props} />;
+  }
+
+  if (currentSlug === "zen-japandi-calm") {
+    return <ZenJapandiCalmInvitation {...props} />;
+  }
+
+  if (currentSlug === "elegant-watercolor-floral") {
+    return <ElegantWatercolorFloralInvitation {...props} />;
+  }
+
+  if (currentSlug === "industrial-loft-chic") {
+    return <IndustrialLoftChicInvitation {...props} />;
+  }
+
+  if (currentSlug === "space-galaxy-adventure") {
+    return <SpaceGalaxyAdventureInvitation {...props} />;
+  }
+
+  if (currentSlug === "vintage-newspaper") {
+    return <VintageNewspaperInvitation {...props} />;
+  }
+
+  if (currentSlug === "tiny-sweet") {
+    return <TinySweetInvitation {...props} />;
+  }
+
+  if (currentSlug === "urban-streetwear-bash") {
+    return <UrbanStreetwearBashInvitation {...props} />;
+  }
+
+  if (currentSlug === "art-deco-grandeur") {
+    return <ArtDecoGrandeurInvitation {...props} />;
+  }
+
+  if (currentSlug === "fresh-citrus-summer") {
+    return <FreshCitrusSummerInvitation {...props} />;
+  }
+
+  if (currentSlug === "eclectic-chic-masterpiece") {
+    return <EclecticChicMasterpieceInvitation {...props} />;
   }
 
   const themeItem: TemplateRegistryItem =
@@ -204,7 +308,12 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
       <GalleryCarousel galleryImages={props.galleryImages} />
 
       {/* Section 8: RSVP Form */}
-      <RsvpSection partnerOne={props.partnerOne} partnerTwo={props.partnerTwo} />
+      <RsvpSection
+        partnerOne={props.partnerOne}
+        partnerTwo={props.partnerTwo}
+        guestName={props.guestName}
+        guestPhone={props.guestPhone}
+      />
 
       {/* Footer */}
       <Footer

@@ -116,7 +116,11 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      if (token?.id && trigger !== "update") {
+        return token;
+      }
+
       if (token?.email) {
         const cleanEmail = (token.email as string).toLowerCase().trim();
         let dbUser: any = null;

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Space &amp; Galaxy Adventure</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#ae397b",
+                        "secondary-fixed-dim": "#3cd7ff",
+                        "surface": "#0b1326",
+                        "on-tertiary-fixed": "#3d0026",
+                        "on-secondary-fixed": "#001f27",
+                        "on-background": "#dae2fd",
+                        "tertiary": "#ffafd3",
+                        "background": "#0b1326",
+                        "error": "#ffb4ab",
+                        "surface-container": "#171f33",
+                        "secondary": "#a2e7ff",
+                        "surface-container-low": "#131b2e",
+                        "on-secondary-container": "#005669",
+                        "inverse-on-surface": "#283044",
+                        "inverse-surface": "#dae2fd",
+                        "surface-bright": "#31394d",
+                        "surface-dim": "#0b1326",
+                        "primary-fixed-dim": "#d2bbff",
+                        "inverse-primary": "#732ee4",
+                        "tertiary-fixed-dim": "#ffafd3",
+                        "on-tertiary": "#620040",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "outline": "#958da1",
+                        "outline-variant": "#4a4455",
+                        "on-secondary-fixed-variant": "#004e5f",
+                        "on-primary-fixed": "#25005a",
+                        "tertiary-fixed": "#ffd8e7",
+                        "on-error": "#690005",
+                        "on-primary-container": "#ede0ff",
+                        "surface-variant": "#2d3449",
+                        "on-secondary": "#003642",
+                        "secondary-container": "#00d2fd",
+                        "secondary-fixed": "#b4ebff",
+                        "primary-fixed": "#eaddff",
+                        "surface-container-lowest": "#060e20",
+                        "primary-container": "#7c3aed",
+                        "surface-container-highest": "#2d3449",
+                        "on-surface-variant": "#ccc3d8",
+                        "error-container": "#93000a",
+                        "on-tertiary-container": "#ffdce9",
+                        "primary": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#3f008e",
+                        "on-surface": "#dae2fd",
+                        "surface-container-high": "#222a3d",
+                        "surface-tint": "#d2bbff",
+                        "on-tertiary-fixed-variant": "#85145a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "24px",
+                        "container-max": "1440px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "headline-lg-mobile": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "headline-xl": ["Space Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "700" }],
+                        "headline-xl": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-mono": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+        }
+        .orbit-ring {
+            border: 1px solid rgba(60, 215, 255, 0.3);
+            border-radius: 50%;
+            animation: spin 20s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .star-field {
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 160px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 130px 80px, #ffffff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+        }
+        .draw-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 3s ease forwards infinite alternate;
+        }
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        .sticker-peel:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.5),
+                0 10px 10px -5px rgba(0, 0, 0, 0.3),
+                -10px 10px 15px rgba(255, 255, 255, 0.1) inset;
+            border-color: rgba(124, 58, 237, 0.8);
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, theme('colors.secondary'), theme('colors.primary'), transparent);
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen star-field">
+<!-- Top Navigation (Suppressed due to linear/transactional nature of an invitation) -->
+<main class="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 space-y-24">
+<!-- Hero Section -->
+<section class="relative w-full rounded-xl overflow-hidden glass-panel h-[716px] flex flex-col justify-center items-center text-center p-8">
+<div class="absolute inset-0 z-0 bg-cover bg-center" data-alt="A deep space nebula backdrop in rich navy and violet hues, with swirling stardust and distant glowing stars." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALT96qJSyicbEl7cNwi8mbXovX7pw_o2elt8Ux8-6dbqaYdRCd69TLH8Ae3RnlsCAI_RpdI1L2UV5Xom0lNNT_71Sk_a5HXPOxUZM54Q41_7uSKlKs19PiQlPU84j-CJyBEWalqdbD76kYeHp-Lb51JzdstRhDOLJCtf8EAQJREYlEUWz_hHSjjzHTyuBJezgWqJThxXOk_H636gkQkLNeJboqOScjJhkHS2OHbmMC1FkA4BeuqKs8')"></div>
+<div class="relative z-10 space-y-6 max-w-2xl">
+<span class="font-label-caps text-label-caps text-secondary tracking-[0.2em]">Initiating Launch Sequence</span>
+<h1 class="font-headline-xl text-headline-xl text-primary font-bold tracking-tighter drop-shadow-[0_0_15px_rgba(124,58,237,0.8)]">
+                    Evelyn's Space &amp; Galaxy Adventure
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Join us for a cosmic celebration across the stars.</p>
+<button class="mt-8 bg-gradient-to-r from-primary-container to-secondary-container text-white px-8 py-4 rounded-full font-label-caps text-label-caps hover:shadow-[0_0_20px_rgba(124,58,237,0.6)] transition-all flex items-center justify-center gap-2 mx-auto">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+                    RSVP NOW
+                </button>
+</div>
+</section>
+<!-- Countdown Section -->
+<section class="relative flex flex-col items-center py-16">
+<h2 class="font-headline-md text-headline-md text-primary mb-12">T-Minus to Launch</h2>
+<div class="relative w-64 h-64 flex justify-center items-center">
+<div class="absolute inset-0 orbit-ring"></div>
+<div class="absolute inset-4 orbit-ring" style="animation-direction: reverse; animation-duration: 25s;"></div>
+<div class="glass-panel w-48 h-48 rounded-full flex flex-col justify-center items-center neon-glow">
+<span class="font-headline-xl text-headline-xl text-secondary" id="days">14</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Days</span>
+</div>
+<span class="absolute top-0 right-10 material-symbols-outlined text-secondary animate-pulse" style="font-size: 24px;">satellite_alt</span>
+</div>
+</section>
+<!-- Mission Log (About Me) Section -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter items-center">
+<div class="glass-panel p-8 rounded-xl border-t border-l border-white/10 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50"></div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Commander Evelyn's Mission Log</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                    Preparing for her 10th solar rotation! Commander Evelyn has been exploring the outer rim, charting new nebulas and making first contact with friendly alien species.
+                </p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+                    Now, she is calling all cadets to join her back at home base for a celebration of galactic proportions. Bring your space suits and your sense of wonder as we embark on a journey through the Milky Way and beyond!
+                </p>
+<div class="flex gap-4">
+<span class="px-4 py-1 rounded-full bg-surface-variant text-secondary-fixed-dim font-label-mono text-label-mono text-xs border border-secondary/20 shadow-[0_0_10px_rgba(60,215,255,0.1)]">Explorer Class</span>
+<span class="px-4 py-1 rounded-full bg-surface-variant text-primary-fixed-dim font-label-mono text-label-mono text-xs border border-primary/20 shadow-[0_0_10px_rgba(210,187,255,0.1)]">Astrophysicist Level 10</span>
+</div>
+</div>
+<div class="h-96 rounded-xl overflow-hidden glass-panel flex items-center justify-center p-2 relative group">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
+<div class="w-full h-full rounded-lg bg-cover bg-center z-0" data-alt="Portrait of a young girl astronaut looking at a glowing galaxy hologram" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCckQlOtAYjoW-p2VtsankHVm7_IT6RoNnX28VToM16IqMpbgM1xwYL9T1JrRvVfhw4AFugtO7iDGfOFYfNrX1AWk0MsQq6WGXRT5SNETghBBeQ9MHOX2YH5AW4ih6eI0TdzwsGmnaezT9HYj_E69FGPCzTKMBpO6_M4zrpIX_4QvXAmqp053d4Ns3t-VVqLG2TouvG1l7rxSxJ2bmLsiz746MTo3hs9rgxeALwpq5D6YAYr_V4PXzW')"></div>
+<!-- HUD Elements -->
+<div class="absolute top-4 left-4 z-20 text-secondary font-label-mono text-[10px] opacity-70">
+                    SCAN: ACTIVE<br/>
+                    TARGET: ANDROMEDA
+                </div>
+<div class="absolute bottom-4 right-4 z-20">
+<span class="material-symbols-outlined text-primary animate-pulse">radar</span>
+</div>
+</div>
+</section>
+<!-- Star Chart (Timeline) Section -->
+<section class="py-16 relative">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Mission Itinerary</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">The coordinates for our cosmic journey.</p>
+</div>
+<div class="relative max-w-4xl mx-auto timeline-line py-8">
+<!-- Timeline Item 1 -->
+<div class="relative flex items-center justify-between w-full mb-16 group">
+<div class="w-5/12 text-right pr-8">
+<div class="glass-panel p-6 rounded-xl inline-block transform transition-transform group-hover:-translate-x-2">
+<span class="font-label-mono text-secondary block mb-2">10:00 AM</span>
+<h3 class="font-headline-md text-primary mb-2">Lift Off &amp; Boarding</h3>
+<p class="text-on-surface-variant font-body-md">All cadets report to the main hanger for briefing and spacesuit fitting.</p>
+</div>
+</div>
+<div class="w-2/12 flex justify-center z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-secondary flex items-center justify-center neon-glow">
+<span class="material-symbols-outlined text-secondary">rocket</span>
+</div>
+</div>
+<div class="w-5/12 pl-8"></div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative flex items-center justify-between w-full mb-16 group">
+<div class="w-5/12 pr-8"></div>
+<div class="w-2/12 flex justify-center z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center neon-glow">
+<span class="material-symbols-outlined text-primary">cake</span>
+</div>
+</div>
+<div class="w-5/12 text-left pl-8">
+<div class="glass-panel p-6 rounded-xl inline-block transform transition-transform group-hover:translate-x-2">
+<span class="font-label-mono text-primary block mb-2">12:30 PM</span>
+<h3 class="font-headline-md text-primary mb-2">Zero-G Cake Cutting</h3>
+<p class="text-on-surface-variant font-body-md">Celebrating Commander Evelyn's 10th successful orbit around the sun.</p>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative flex items-center justify-between w-full group">
+<div class="w-5/12 text-right pr-8">
+<div class="glass-panel p-6 rounded-xl inline-block transform transition-transform group-hover:-translate-x-2">
+<span class="font-label-mono text-secondary block mb-2">02:00 PM</span>
+<h3 class="font-headline-md text-primary mb-2">Asteroid Field Games</h3>
+<p class="text-on-surface-variant font-body-md">Test your piloting skills in the obstacle course and win cosmic prizes.</p>
+</div>
+</div>
+<div class="w-2/12 flex justify-center z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-secondary flex items-center justify-center neon-glow">
+<span class="material-symbols-outlined text-secondary">sports_esports</span>
+</div>
+</div>
+<div class="w-5/12 pl-8"></div>
+</div>
+</div>
+</section>
+<!-- Nebula Quote (Highlight Banner) -->
+<section class="w-full relative h-[300px] rounded-xl overflow-hidden glass-panel flex items-center justify-center my-16">
+<div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-screen" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBYd_dsQAMErj7qx9MyiPuV-qdQaYsEc0K44fgy3SzyieX1Jy2cpxciXdEkjt8NOY51WrLPTGVJ4AP1I74Yz05WsUOrBZrDVYiCgHFNgk2IXUvCwG2Ob3jrRBgKvXvIty9Bx0MVSoYmPQJO-p_v0l4DqatXUOkGsf7WEpqY4YCf6s-AW_A2GRE8WgJUno-SBNNJIsn4K3voS5I0BJzr6dwaLwGh7KutL9pBJR_BKr69_vbKfd2nFRlR')"></div>
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<path class="draw-line" d="M 0 150 Q 500 50 1000 150 T 2000 150" fill="transparent" stroke="rgba(124, 58, 237, 0.5)" stroke-width="2"></path>
+<path class="draw-line" d="M 0 150 Q 500 250 1000 150 T 2000 150" fill="transparent" stroke="rgba(60, 215, 255, 0.5)" stroke-width="2" style="animation-delay: 1s;"></path>
+</svg>
+<div class="relative z-10 text-center px-4">
+<h2 class="font-headline-xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary italic drop-shadow-lg">
+                    "Across the stars and back again"
+                </h2>
+<p class="mt-4 font-label-mono text-on-surface-variant tracking-widest uppercase">The universe awaits</p>
+</div>
+</section>
+<!-- Cosmic Gallery -->
+<section class="py-16">
+<div class="text-center mb-12">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Commander's Log Visuals</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Glimpses from past solar rotations.</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<!-- Gallery Item 1 -->
+<div class="glass-panel p-3 rounded-lg transform -rotate-2 transition-all duration-300 sticker-peel cursor-pointer aspect-square">
+<div class="w-full h-full bg-cover bg-center rounded" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD26RzMNw98_I6dJCR-GzELYeg2VupxVmrw2aVGIpwXvtAbHsIeUWo0XI9e_7_NL4wbptfmuPPzZ51gMm7PufWteR_dg5ODYpQ7uHjNE0TNFRVRadz_5Py4hIJ8l7Nz1Oebx9cAo0QpvyqVko4dBMh1Ev4AMQPMQMa1OqlZl2LF8jsXv2l4l_vVlztLJFAixJaMlmTkuFb2vIhapQHcfCcAcmlY-thMu4Y6pk6WNUzzmGtQZXsIjWRM')"></div>
+</div>
+<!-- Gallery Item 2 -->
+<div class="glass-panel p-3 rounded-lg transform rotate-3 transition-all duration-300 sticker-peel cursor-pointer aspect-square md:translate-y-8">
+<div class="w-full h-full bg-cover bg-center rounded" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuATb68zas_DcqvanAtszGWs6S-et4FbOWa9ihxA57kUgezb8s5Sb5VbH1GunwY0RP2ITh14DQVpAjWqgIDkfllPd2Cu650mMOOOxs0b_dVECzLrzzBdKqhFX4FtqcIIu4S4AlJxj_-Yhrwu2IZmu0zybfUo18rtWzWqaN36PJVh7rg6yk_iZg7FkJa5ysYYJOVC7kvWRh5t1zp3gnqR5Am-plL0PUL_3tQguMfpPL0ttKRFwSKwTv2o')"></div>
+</div>
+<!-- Gallery Item 3 -->
+<div class="glass-panel p-3 rounded-lg transform -rotate-1 transition-all duration-300 sticker-peel cursor-pointer aspect-square">
+<div class="w-full h-full bg-cover bg-center rounded" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAa3yrjA-9MbAPF4GZtZtmVHkyyJ0Ug7IsQpwiyK5D6LMpgnZQfWmgnh8CI89JV-D9Qvv24IceGZIrjV34TSWnz4fJrxtOt5jZGFochWgwwtMs_HTvfWK1KNQ7iv3h04JRYQi5U6crl2gC21bJmZWzABlJqH6dzfihgOARUNgNVBgI24Buva3DK_sVV3r-ddRblrHaADrf6CYytz7-_JSXjahduWNGATXWvlyofdUQS-hVR7UqTanpW')"></div>
+</div>
+<!-- Gallery Item 4 -->
+<div class="glass-panel p-3 rounded-lg transform rotate-2 transition-all duration-300 sticker-peel cursor-pointer aspect-square md:translate-y-8">
+<div class="w-full h-full bg-cover bg-center rounded" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB0WW1Qag9XNEKdyXcwr8y-1S6TUogH6BCRR3HdrhIlJtu7BVwiI4UA0g3N6lLVIaNg3jlk_MfndAgcry_zN0O1lgmVRXMLPbjrXkCtcaZwkEY3J5Ejd8yKcjOw1v21ykmyI297D0D1YRyi56c0uAX_tWn768rbT3VMUu7A3yj99REO_d5p4uux11iELYnxfPHRLHHX_M8UYznAU6_h1yisSwVlUtsMHWvkN6lNmaUUpU9l2IYar1eW')"></div>
+</div>
+</div>
+</section>
+<!-- Galactic Coordinates (Venue & Map) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch py-16">
+<div class="md:col-span-1 glass-panel p-8 rounded-xl flex flex-col justify-center border-l-4 border-l-secondary">
+<div class="flex items-center gap-3 mb-6 text-secondary">
+<span class="material-symbols-outlined text-3xl">radar</span>
+<h2 class="font-headline-md text-headline-md m-0">Galactic Coordinates</h2>
+</div>
+<div class="space-y-6">
+<div>
+<h3 class="font-label-mono text-primary mb-1 uppercase text-sm">Space Station</h3>
+<p class="font-body-md text-on-surface text-lg font-semibold">St. Antony Church Hall</p>
+</div>
+<div>
+<h3 class="font-label-mono text-primary mb-1 uppercase text-sm">Sector</h3>
+<p class="font-body-md text-on-surface-variant">
+                            Kaval Kinaru<br/>
+                            Tirunelveli District,<br/>
+                            Tamil Nadu, Earth
+                        </p>
+</div>
+<a class="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors font-label-mono mt-4 border border-secondary/30 rounded-full px-4 py-2 hover:bg-secondary/10" href="https://maps.google.com" target="_blank">
+<span class="material-symbols-outlined text-sm">navigation</span>
+                        Engage Thrusters (Map)
+                    </a>
+</div>
+</div>
+<div class="md:col-span-2 rounded-xl overflow-hidden glass-panel h-80 relative group">
+<!-- Simulated Radar/Map UI Overlay -->
+<div class="absolute inset-0 bg-surface/40 z-10 pointer-events-none border border-secondary/20 flex flex-col">
+<div class="w-full h-8 border-b border-secondary/20 flex items-center px-4 gap-2 bg-surface-container-high/80">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="ml-2 font-label-mono text-[10px] text-on-surface-variant tracking-widest">NAV-SYSTEM ONLINE</span>
+</div>
+<div class="flex-1 relative">
+<!-- Crosshairs -->
+<div class="absolute top-1/2 left-0 w-full h-[1px] bg-secondary/30"></div>
+<div class="absolute top-0 left-1/2 w-[1px] h-full bg-secondary/30"></div>
+<!-- Radar Sweep -->
+<div class="absolute top-1/2 left-1/2 w-48 h-48 rounded-full border border-secondary/20 -translate-x-1/2 -translate-y-1/2"></div>
+<div class="absolute top-1/2 left-1/2 w-96 h-96 rounded-full border border-secondary/10 -translate-x-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+<!-- Grayscale map image for styling -->
+<div class="absolute inset-0 bg-cover bg-center z-0 grayscale opacity-50" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB30HGxpouL2TCobBa6EntSuGZLEA6jh1KqT_x3Vqv7vy0adoHG3ULhZwrn3GCERjQ4njF2RnorO-mMTlmvjvUQqdzaZjUekxeWuVd1zpwSLl9PlGRpaemRHVFVXlG3mJLzWwAw7w44MtS5ufggsAjaACBu23pXpy6yiBI4gspFdDpVuu-7AggQ2j7bBssxX4gS87WgEwKNWZTK9tG7sSUArI8YaazhB_TDESSDf5rPNSc0JYAC601D')"></div>
+</div>
+</section>
+<!-- Mission Briefing (RSVP) -->
+<section class="glass-panel p-10 rounded-xl text-center max-w-3xl mx-auto border-t-4 border-t-primary mb-12">
+<span class="material-symbols-outlined text-5xl text-primary mb-4 animate-bounce">rocket_launch</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Mission Briefing Acceptance</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">
+                Confirm your coordinates for Evelyn's 10th Solar Rotation celebration. Space is limited, so lock in your trajectory soon!
+            </p>
+<form class="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
+<input class="flex-1 bg-surface-container-low border border-outline-variant rounded-full px-6 py-3 font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/50" placeholder="Enter Cadet Email..." type="email"/>
+<button class="bg-gradient-to-r from-primary to-secondary text-surface-container-lowest px-8 py-3 rounded-full font-label-caps text-label-caps hover:shadow-[0_0_20px_rgba(124,58,237,0.6)] transition-all flex items-center justify-center gap-2 whitespace-nowrap" type="submit">
+                    RSVP NOW
+                </button>
+</form>
+</section>
+</main>
+</body></html>

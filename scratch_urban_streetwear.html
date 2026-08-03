@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Urban Streetwear Bash</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#002022",
+                      "secondary-fixed": "#ffd7f5",
+                      "surface-variant": "#353534",
+                      "secondary": "#ff00ff",
+                      "outline": "#8e9379",
+                      "on-tertiary-fixed-variant": "#004f54",
+                      "secondary-fixed-dim": "#ffabf3",
+                      "on-error": "#690005",
+                      "surface-container": "#201f1f",
+                      "on-secondary-fixed-variant": "#810081",
+                      "primary-fixed-dim": "#abd600",
+                      "on-surface-variant": "#c4c9ac",
+                      "on-primary-container": "#556d00",
+                      "primary-fixed": "#c3f400",
+                      "surface-container-low": "#1c1b1b",
+                      "surface-container-highest": "#353534",
+                      "error-container": "#93000a",
+                      "on-secondary-container": "#500050",
+                      "on-primary-fixed-variant": "#3c4d00",
+                      "on-error-container": "#ffdad6",
+                      "background": "#131313",
+                      "tertiary-fixed": "#7df4ff",
+                      "surface": "#131313",
+                      "error": "#ffb4ab",
+                      "surface-tint": "#abd600",
+                      "tertiary-container": "#7df4ff",
+                      "primary": "#ffffff",
+                      "tertiary": "#ffffff",
+                      "on-tertiary": "#00363a",
+                      "surface-container-high": "#2a2a2a",
+                      "on-secondary-fixed": "#380038",
+                      "on-primary": "#283500",
+                      "on-surface": "#e5e2e1",
+                      "on-primary-fixed": "#161e00",
+                      "primary-container": "#ccff00",
+                      "inverse-on-surface": "#313030",
+                      "on-tertiary-container": "#006f77",
+                      "surface-bright": "#393939",
+                      "surface-container-lowest": "#0e0e0e",
+                      "secondary-container": "#ff00ff",
+                      "surface-dim": "#131313",
+                      "inverse-surface": "#e5e2e1",
+                      "tertiary-fixed-dim": "#00dbe9",
+                      "outline-variant": "#444933",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#e5e2e1",
+                      "inverse-primary": "#506600"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "40px",
+                      "stack-overlap": "-12px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Anton"
+                      ],
+                      "body-lg": [
+                              "Montserrat"
+                      ],
+                      "label-mono": [
+                              "Space Mono"
+                      ],
+                      "display-xl": [
+                              "Anton"
+                      ],
+                      "display-lg-mobile": [
+                              "Anton"
+                      ],
+                      "body-md": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Anton"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-mono": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-xl": [
+                              "80px",
+                              {
+                                      "lineHeight": "80px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "56px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Montserrat:ital,wght@0,400..700;1,400..700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .sticker-shadow { box-shadow: 6px 6px 0px 0px rgba(204,255,0,1); }
+        .sticker-shadow-secondary { box-shadow: 6px 6px 0px 0px rgba(255,0,255,1); }
+        .sticker-shadow-black { box-shadow: 6px 6px 0px 0px rgba(0,0,0,1); }
+        .sticker-shadow-black-lg { box-shadow: 12px 12px 0px 0px rgba(0,0,0,1); }
+        
+        .peel-effect {
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+        .peel-effect-hover:hover {
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+        }
+        
+        .bg-grain {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(204, 255, 0, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(204, 255, 0, 0.1) 1px, transparent 1px);
+        }
+
+        .torn-edge {
+            background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 5 Q 5 0 10 5 T 20 5 T 30 5 T 40 5 T 50 5 T 60 5 T 70 5 T 80 5 T 90 5 T 100 5' stroke='%23ccff00' stroke-width='2' fill='none' stroke-dasharray='5,5'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            height: 10px;
+            width: 100%;
+        }
+        .text-stroke-primary {
+            -webkit-text-stroke: 1px #ccff00;
+            color: transparent;
+        }
+        .text-stroke-black {
+            -webkit-text-stroke: 2px #000;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden relative">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 z-50 bg-background border-b-4 border-primary-container shadow-[4px_4px_0px_0px_rgba(204,255,0,1)] sticky top-0 hidden md:flex">
+<div class="font-display-lg text-display-lg-mobile tracking-tighter text-primary italic">URBAN_STREET</div>
+<nav class="flex gap-8">
+<a class="font-headline-md text-headline-md uppercase text-on-surface opacity-80 hover:bg-secondary hover:text-on-secondary transition-transform scale-105 px-2 py-1" href="#">Drops</a>
+<a class="font-headline-md text-headline-md uppercase text-on-surface opacity-80 hover:bg-secondary hover:text-on-secondary transition-transform scale-105 px-2 py-1" href="#">Lookbook</a>
+<a class="font-headline-md text-headline-md uppercase text-on-surface opacity-80 hover:bg-secondary hover:text-on-secondary transition-transform scale-105 px-2 py-1" href="#">Archive</a>
+</nav>
+<button class="bg-primary-container text-background font-label-mono text-label-mono uppercase px-6 py-3 border-2 border-primary sticker-shadow active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">JOIN_CREW</button>
+</header>
+<main class="w-full">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center justify-center bg-grain overflow-hidden px-margin-mobile md:px-margin-desktop py-24">
+<div class="absolute inset-0 bg-surface-container opacity-50 z-0"></div>
+<div class="relative z-10 w-full max-w-6xl flex flex-col md:flex-row items-center gap-12">
+<div class="flex-1 flex flex-col items-start gap-6 relative">
+<div class="absolute -top-12 -left-8 md:-left-16 rotate-[-5deg] z-20">
+<span class="bg-secondary text-on-secondary font-label-mono text-label-mono uppercase px-4 py-2 border-2 border-primary sticker-shadow-black">VIP INVITE</span>
+</div>
+<h1 class="font-display-xl text-display-lg-mobile md:text-display-xl uppercase text-primary leading-none mix-blend-difference relative z-10">
+                        Evelyn's <br/>
+<span class="text-primary-container underline decoration-8 underline-offset-8">Bash</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md bg-surface-container-high p-4 border-l-4 border-primary-container relative z-10 peel-effect">
+                        Get ready for the most exclusive underground streetwear event of the year. Limited capacity. High energy only.
+                    </p>
+<button class="mt-8 bg-primary text-background font-headline-md text-headline-md uppercase px-8 py-4 border-4 border-primary sticker-shadow-black hover:bg-secondary hover:text-on-secondary hover:border-secondary transition-colors active:translate-x-1 active:translate-y-1 active:shadow-none z-10 rotate-[2deg]">
+                        RSVP NOW
+                    </button>
+</div>
+<div class="flex-1 relative w-full h-[614px] md:h-[819px] flex items-center justify-center">
+<div class="absolute inset-0 border-4 border-primary-container sticker-shadow rotate-[3deg] z-0"></div>
+<div class="relative z-10 w-full h-full border-4 border-primary peel-effect overflow-hidden rotate-[-2deg]">
+<img class="w-full h-full object-cover filter contrast-125 saturate-50 mix-blend-luminosity" data-alt="A gritty urban street fashion portrait of a confident young woman wearing oversized neon and black streetwear, standing in a dimly lit concrete alleyway illuminated by stark high-contrast flash photography, emphasizing textures of fabric and concrete in a neo-brutalist sticker-peel aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbU8RpbgNa3bPgNMzEyC-qfY2czcPgzx31apUfi4LIh0hmdWm20h4fpUEK4wCghCi3gzPjo7YK47dYEptWcyJAAVGxKRqEzioNsYVVmU_fO2fEzxAVDXomeoRz9R3wLyn-3mZCwp_BbOQIeHRW3DaJY349WsODlGL7MvYUJqfmlGoof-yi7Jow8vlxU-vWJX-PAOdhv8qRuaT3R98ITHP81pRjy29WTbMCMyfCSSlxCdd4kX04Lmh-"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Hype Countdown Section -->
+<section class="py-20 px-margin-mobile md:px-margin-desktop bg-surface relative z-20 border-y-4 border-primary-container">
+<div class="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
+<h2 class="font-headline-md text-headline-md uppercase text-primary tracking-widest bg-black px-6 py-2 border-2 border-primary-container sticker-shadow rotate-[-2deg]">The Drop Begins In</h2>
+<div class="flex gap-4 md:gap-8 justify-center">
+<div class="bg-surface-bright border-4 border-primary-container p-6 sticker-shadow-black flex flex-col items-center min-w-[100px] md:min-w-[140px] rotate-[1deg]">
+<span class="font-display-xl text-primary-container leading-none">05</span>
+<span class="font-label-mono text-on-surface-variant uppercase mt-2">Days</span>
+</div>
+<div class="bg-surface-bright border-4 border-secondary p-6 sticker-shadow-black flex flex-col items-center min-w-[100px] md:min-w-[140px] rotate-[-1deg]">
+<span class="font-display-xl text-secondary leading-none">14</span>
+<span class="font-label-mono text-on-surface-variant uppercase mt-2">Hours</span>
+</div>
+<div class="bg-surface-bright border-4 border-primary-container p-6 sticker-shadow-black flex flex-col items-center min-w-[100px] md:min-w-[140px] rotate-[2deg]">
+<span class="font-display-xl text-primary-container leading-none">42</span>
+<span class="font-label-mono text-on-surface-variant uppercase mt-2">Mins</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Origin Story Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container relative z-10">
+<div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+<div class="flex-1 relative order-2 md:order-1">
+<div class="absolute inset-0 bg-secondary translate-x-4 translate-y-4 border-4 border-black z-0"></div>
+<div class="relative w-full aspect-video bg-black border-4 border-primary z-10 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-6xl text-primary-container opacity-50">play_circle</span>
+<div class="absolute inset-0 bg-grain mix-blend-overlay"></div>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-6 order-1 md:order-2">
+<h2 class="font-display-lg text-primary uppercase leading-tight">The <br/><span class="text-secondary text-stroke-black">Vision</span></h2>
+<p class="font-body-lg text-on-surface-variant border-l-4 border-secondary pl-6 py-2">
+                    This isn't just a party. It's a statement. Evelyn's Bash brings together the rawest elements of street culture, underground music, and exclusive fashion drops in one concrete space.
+                </p>
+<div class="flex gap-4 mt-4">
+<span class="bg-surface-bright px-4 py-2 font-label-mono text-primary-container border border-primary-container">NO RULES</span>
+<span class="bg-surface-bright px-4 py-2 font-label-mono text-secondary border border-secondary">JUST VIBES</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Timeline Section (Spray Paint Style) -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container relative z-10 border-t-4 border-secondary">
+<div class="max-w-6xl mx-auto flex flex-col gap-12">
+<div class="text-center relative">
+<h2 class="font-display-lg text-display-lg-mobile md:text-display-lg uppercase text-secondary">The Lineup</h2>
+<div class="torn-edge mt-4"></div>
+</div>
+<div class="flex flex-col gap-stack-overlap">
+<!-- Event 1 -->
+<div class="bg-surface-bright border-4 border-primary p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center sticker-shadow-black relative z-30 hover:scale-[1.02] transition-transform rotate-[-1deg]">
+<div class="bg-primary-container text-background font-headline-md text-headline-md px-4 py-2 border-2 border-black sticker-shadow-black whitespace-nowrap">
+                             20:00
+                         </div>
+<div class="flex-1">
+<h3 class="font-headline-md text-headline-md uppercase text-primary mb-2">Doors Open</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Live DJ set by DJ K-Spin. Grab a drink and find your spot.</p>
+</div>
+<div class="hidden md:block w-32 h-32 border-2 border-outline rotate-6 shrink-0 peel-effect overflow-hidden">
+<img class="w-full h-full object-cover grayscale contrast-150" data-alt="A close-up shot of a DJ mixing deck in a dark, atmospheric club setting with vibrant neon green and magenta lighting hitting the turntable, styled with high contrast and grain typical of underground street culture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiGouVWFGXrFXHNGxamU_ckuyK1gVnv004dyOOnwjPGqUHJOxckqEE25TldHkjfuRz6HuHPGz20oloWs5XWk7Du2SEy_R-JrHeWJsxRkhBy-WGdO0B7hkB0u15r_mGk-oQNGw7xk-96dQLcCv46lI1xaiiRugUMJV0sKrAgUZFtb8cyi5Ez7A09bIz3ClsIpMkbWKuGTVSfKzzkMwQHT1Gv1hHhOQgAJuyQv4wEIk1j7QsoXwR28dC"/>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="bg-surface-bright border-4 border-secondary p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center sticker-shadow-black relative z-20 ml-0 md:ml-12 hover:scale-[1.02] transition-transform rotate-[2deg]">
+<div class="bg-secondary text-background font-headline-md text-headline-md px-4 py-2 border-2 border-black sticker-shadow-black whitespace-nowrap">
+                             22:30
+                         </div>
+<div class="flex-1">
+<h3 class="font-headline-md text-headline-md uppercase text-primary mb-2">Exclusive Drop</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">First look at the new urban collection. Limited pieces available.</p>
+</div>
+<div class="hidden md:block w-32 h-32 border-2 border-outline -rotate-3 shrink-0 peel-effect overflow-hidden">
+<img class="w-full h-full object-cover grayscale contrast-150" data-alt="A stack of limited edition streetwear t-shirts with bold graphic prints, piled haphazardly on a raw concrete surface, lit by harsh overhead lighting creating stark shadows, embodying a neo-brutalist fashion aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkmfzQM7u51p6-mfhdF0Ec2dCCUJ3bq6ub9D89xYKRcPiUr8xStXsWsEkqIr0jUNuFuaZUxMHy0kyt7w9M151g9Uo6r_r8sC8x17GaGzXX5bqwnaFBxA8aaJu2DIulR8ew1JRrrF5wvADPLxTImfc2zhXplALC3m_JIDC5fd1wEIh66LBFIXJPZwfj696zcDIEulWatVL8KxLVj4I-tbiF3s0QqSGS2ZAzO93mKH1qjj6BimsseFRd"/>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="bg-surface-bright border-4 border-primary p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center sticker-shadow-black relative z-10 ml-0 md:ml-24 hover:scale-[1.02] transition-transform rotate-[-1deg]">
+<div class="bg-primary-container text-background font-headline-md text-headline-md px-4 py-2 border-2 border-black sticker-shadow-black whitespace-nowrap">
+                             01:00
+                         </div>
+<div class="flex-1">
+<h3 class="font-headline-md text-headline-md uppercase text-primary mb-2">Afterparty</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Secret location revealed to attendees only. Keep the energy high.</p>
+</div>
+<div class="hidden md:block w-32 h-32 border-2 border-outline rotate-2 shrink-0 peel-effect overflow-hidden bg-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-primary-container">lock</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Base Coordinates Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-grid relative z-10">
+<div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 bg-surface-container p-8 border-4 border-black sticker-shadow-black-lg">
+<div class="flex-1 flex flex-col gap-8 justify-center">
+<div class="inline-block bg-primary text-background font-headline-md px-6 py-2 border-2 border-black sticker-shadow-black self-start rotate-[-3deg]">
+<h2 class="uppercase">Base Coordinates</h2>
+</div>
+<div class="font-label-mono text-on-surface-variant space-y-4">
+<p class="text-primary-container text-xl border-l-2 border-primary-container pl-4">THE WAREHOUSE<br/>192 CONCRETE AVE<br/>DISTRICT 7</p>
+<p class="flex items-center gap-2"><span class="material-symbols-outlined">directions_subway</span> Access via Underground Line B</p>
+<p class="flex items-center gap-2"><span class="material-symbols-outlined">warning</span> No parking on site.</p>
+</div>
+</div>
+<div class="flex-1 min-h-[300px] bg-surface-bright border-4 border-primary-container flex items-center justify-center relative overflow-hidden peel-effect">
+<div class="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn,NY&amp;zoom=14&amp;size=600x400&amp;maptype=roadmap&amp;style=feature:all|element:geometry|color:0x242f3e&amp;style=feature:all|element:labels.text.stroke|color:0x242f3e&amp;style=feature:all|element:labels.text.fill|color:0x746855&amp;key=YOUR_API_KEY')] bg-cover bg-center opacity-30 grayscale mix-blend-luminosity"></div>
+<span class="material-symbols-outlined text-6xl text-primary-container relative z-10 animate-bounce">location_on</span>
+<div class="absolute inset-0 bg-primary-container mix-blend-overlay opacity-20"></div>
+</div>
+</div>
+</section>
+<!-- Hype Banner Section -->
+<section class="py-16 bg-primary-container border-y-8 border-black overflow-hidden whitespace-nowrap flex items-center">
+<div class="animate-[marquee_20s_linear_infinite] flex items-center gap-12">
+<span class="font-display-xl text-black italic uppercase leading-none">STREET CULTURE DEFINED.</span>
+<span class="font-display-xl text-black italic uppercase leading-none text-stroke-black">STREET CULTURE DEFINED.</span>
+<span class="font-display-xl text-black italic uppercase leading-none">STREET CULTURE DEFINED.</span>
+<span class="font-display-xl text-black italic uppercase leading-none text-stroke-black">STREET CULTURE DEFINED.</span>
+</div>
+<style>
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</section>
+<!-- The Archive (Gallery) Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface relative z-10 overflow-hidden">
+<div class="max-w-6xl mx-auto flex flex-col gap-16">
+<h2 class="font-display-lg text-center uppercase text-primary text-stroke-primary">The Archive</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+<div class="relative group rotate-[-4deg]">
+<div class="absolute inset-0 bg-secondary border-4 border-black sticker-shadow-black translate-x-2 translate-y-2 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform z-0"></div>
+<div class="relative aspect-[3/4] bg-surface-bright border-4 border-black z-10 peel-effect peel-effect-hover transition-all cursor-pointer overflow-hidden">
+<img alt="Gallery Image 1" class="w-full h-full object-cover grayscale contrast-150 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArKqpEpBw99diBgqjhH5tEvPMtCgN6yYRd5LOIXYTmWQT_ROS9SChpLlOPAXuCDgMGduYAqG2ViQu971ItV3-kXaBiGKVnaV9Ytzoj7LdUxLwkbA5798xr1Vc_oIMjt_A3ySuDtK8kjlzGvZn6LNzboDzkZiYhUay-J2ORVYkWRavZWrko2RHct2FqAUMLPlkVL10WBxJ40aoNw36R3Lfh90VgeCuykTRr9J2towc_WHI9TR9G9y8x"/>
+</div>
+</div>
+<div class="relative group rotate-[3deg] md:mt-12">
+<div class="absolute inset-0 bg-primary-container border-4 border-black sticker-shadow-black translate-x-2 translate-y-2 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform z-0"></div>
+<div class="relative aspect-[3/4] bg-surface-bright border-4 border-black z-10 peel-effect peel-effect-hover transition-all cursor-pointer overflow-hidden">
+<img alt="Gallery Image 2" class="w-full h-full object-cover grayscale contrast-150 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDdHbmQ9tthMNVH3PnOkjaQURD-YUP7poBPRzDG3Kf45bK_5c0DznNum3gflAd6WrPetWq7PJHDYuacZvgdxB47gAevz2lwdILvNpVHj7F2wHiuLthzeIpUXi7syX6wWEFrHC58xA18HXlAWMiE4KEPX_pixyOrvLoxi2tx5zPqK4eNjXPeiw1sTpL0HtpJGG0a7KvckF6a_Z8fbcCkJ7YuVkfDHfps1Xs-xzvKnxPdIWemzMKjlsC"/>
+</div>
+</div>
+<div class="relative group rotate-[-2deg]">
+<div class="absolute inset-0 bg-primary border-4 border-black sticker-shadow-black translate-x-2 translate-y-2 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform z-0"></div>
+<div class="relative aspect-[3/4] bg-surface-bright border-4 border-black z-10 peel-effect peel-effect-hover transition-all cursor-pointer overflow-hidden">
+<img alt="Gallery Image 3" class="w-full h-full object-cover grayscale contrast-150 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1iRmwea9B8zNIZsC56vD_btfaD5O1vnNcB8iq1-8ZZuBq0sGneEJcTBGDsiEiJCbW_OqGSRnQ3XW-uD5xbxyBQ5q7d8ayu4-ChpwTiVciC9OZxzKunAPeSodtp7w6M-4wCp9AEo8ync2t--hpu3zSLYIFOuE3vGIu-MyxwjNe-5p20IIZo--EAo9ouE0igHjhLTM2K4jcQZY_96t0jrxUz-hHQPm_FU5bnpFc6pTqd1Xsz94U-isD"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar for Mobile -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-2 bg-background/90 backdrop-blur-sm border-t-4 border-primary z-50 md:hidden pb-safe">
+<a class="flex flex-col items-center justify-center bg-primary-fixed text-background p-2 border-2 border-black shadow-[2px_2px_0px_0px_#000] rotate-1 w-16" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">home_max</span>
+<span class="font-label-mono text-[10px] uppercase">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 opacity-60 w-16" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">stadium</span>
+<span class="font-label-mono text-[10px] uppercase">Street</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 opacity-60 w-16" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">explore</span>
+<span class="font-label-mono text-[10px] uppercase">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 opacity-60 w-16" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">person_pin</span>
+<span class="font-label-mono text-[10px] uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

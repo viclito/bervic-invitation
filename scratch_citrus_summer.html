@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Citrus Summer Brunch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Be+Vietnam+Pro:wght@400&amp;family=Space+Grotesk:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "error": "#ba1a1a",
+                            "on-tertiary-fixed-variant": "#4c4638",
+                            "on-background": "#1a1c19",
+                            "tertiary-fixed-dim": "#cfc5b3",
+                            "surface-bright": "#fafaf4",
+                            "secondary": "#006e0a",
+                            "on-tertiary-container": "#443e30",
+                            "primary": "#904d00",
+                            "surface-tint": "#904d00",
+                            "surface-container-high": "#e8e8e3",
+                            "primary-container": "#ff8c00",
+                            "secondary-fixed-dim": "#4ce346",
+                            "on-secondary-fixed-variant": "#005306",
+                            "outline-variant": "#ddc1ae",
+                            "inverse-on-surface": "#f1f1ec",
+                            "on-secondary": "#ffffff",
+                            "inverse-primary": "#ffb77d",
+                            "surface-container-highest": "#e3e3de",
+                            "on-secondary-fixed": "#002201",
+                            "on-error": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "inverse-surface": "#2f312e",
+                            "tertiary-container": "#b2a997",
+                            "background": "#fafaf4",
+                            "on-error-container": "#93000a",
+                            "on-tertiary-fixed": "#201b0f",
+                            "surface-variant": "#e3e3de",
+                            "primary-fixed": "#ffdcc3",
+                            "on-primary-container": "#623200",
+                            "secondary-fixed": "#75ff68",
+                            "secondary-container": "#69fd5d",
+                            "surface-container": "#eeeee9",
+                            "on-primary-fixed-variant": "#6e3900",
+                            "on-surface-variant": "#564334",
+                            "on-primary": "#ffffff",
+                            "on-surface": "#1a1c19",
+                            "outline": "#897362",
+                            "tertiary": "#655e4e",
+                            "surface-container-low": "#f4f4ee",
+                            "surface-dim": "#dadad5",
+                            "surface": "#fafaf4",
+                            "primary-fixed-dim": "#ffb77d",
+                            "tertiary-fixed": "#ece1ce",
+                            "on-primary-fixed": "#2f1500",
+                            "error-container": "#ffdad6",
+                            "on-tertiary": "#ffffff",
+                            "on-secondary-container": "#00730b"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "margin-mobile": "16px",
+                            "unit": "8px",
+                            "margin-desktop": "48px",
+                            "gutter": "24px",
+                            "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                            "headline-lg-mobile": [
+                                    "Plus Jakarta Sans"
+                            ],
+                            "body-md": [
+                                    "Be Vietnam Pro"
+                            ],
+                            "label-sm": [
+                                    "Space Grotesk"
+                            ],
+                            "headline-lg": [
+                                    "Plus Jakarta Sans"
+                            ],
+                            "display-lg": [
+                                    "Plus Jakarta Sans"
+                            ]
+                    },
+                    "fontSize": {
+                            "headline-lg-mobile": [
+                                    "28px",
+                                    {
+                                            "lineHeight": "36px",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "body-md": [
+                                    "16px",
+                                    {
+                                            "lineHeight": "24px",
+                                            "fontWeight": "400"
+                                    }
+                            ],
+                            "label-sm": [
+                                    "12px",
+                                    {
+                                            "lineHeight": "16px",
+                                            "fontWeight": "600"
+                                    }
+                            ],
+                            "headline-lg": [
+                                    "32px",
+                                    {
+                                            "lineHeight": "40px",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "display-lg": [
+                                    "48px",
+                                    {
+                                            "lineHeight": "56px",
+                                            "letterSpacing": "-0.02em",
+                                            "fontWeight": "800"
+                                    }
+                            ]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .citrus-slice-bg {
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="none" stroke="%23ff8c00" stroke-width="2" opacity="0.1"/><circle cx="50" cy="50" r="35" fill="none" stroke="%23ff8c00" stroke-width="1" opacity="0.1"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="%23ff8c00" stroke-width="1" opacity="0.1"/></svg>');
+        }
+        .animate-spin-slow {
+            animation: spin 20s linear infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        .sticker-peel {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .sticker-peel:hover {
+            transform: scale(1.05) rotate(2deg) translateY(-5px);
+            box-shadow: 12px 12px 0px rgba(255, 140, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container relative">
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 border-b border-white/20 shadow-[0_8px_30px_rgb(255,140,0,0.08)] hidden md:block">
+<div class="flex justify-between items-center px-margin-desktop py-unit max-w-container-max mx-auto">
+<div class="font-display-lg text-display-lg text-primary dark:text-primary-fixed tracking-tight hover:scale-105 transition-transform duration-300">
+                Citrus Summer
+            </div>
+<div class="flex items-center gap-gutter">
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors font-label-sm text-label-sm" href="#hero">Home</a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors font-label-sm text-label-sm" href="#about">About</a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors font-label-sm text-label-sm" href="#timeline">Timeline</a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors font-label-sm text-label-sm" href="#venue">Venue</a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors font-label-sm text-label-sm" href="#gallery">Gallery</a>
+<a class="bg-primary text-on-primary px-6 py-2 rounded-full hover:scale-105 transition-transform duration-300 font-label-sm text-label-sm shadow-[0_4px_14px_rgba(255,140,0,0.4)]" href="#rsvp">RSVP</a>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(255,140,0,0.05)] z-50 rounded-t-xl pb-safe">
+<div class="flex justify-around items-center px-margin-mobile py-2">
+<a class="flex flex-col items-center gap-1 text-primary p-2" href="#hero">
+<span class="material-symbols-outlined text-2xl">home</span>
+<span class="font-label-sm text-[10px]">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors p-2" href="#timeline">
+<span class="material-symbols-outlined text-2xl">schedule</span>
+<span class="font-label-sm text-[10px]">Timeline</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors p-2" href="#gallery">
+<span class="material-symbols-outlined text-2xl">photo_library</span>
+<span class="font-label-sm text-[10px]">Gallery</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors p-2" href="#rsvp">
+<span class="material-symbols-outlined text-2xl">mail</span>
+<span class="font-label-sm text-[10px]">RSVP</span>
+</a>
+</div>
+</nav>
+<!-- Floating Interactive Citrus -->
+<a class="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 animate-float hover:scale-110 transition-transform duration-300 group" href="#rsvp">
+<div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(255,140,0,0.3)] border-2 border-white/50 relative overflow-hidden backdrop-blur-sm">
+<div class="absolute inset-0 citrus-slice-bg animate-spin-slow opacity-50 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined text-on-primary-container text-3xl z-10" style="font-variation-settings: 'FILL' 1;">restaurant_menu</span>
+</div>
+</a>
+<main class="pt-0 md:pt-24 pb-32">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center justify-center overflow-hidden px-margin-mobile md:px-margin-desktop py-20" id="hero">
+<!-- Decorative Elements -->
+<div class="absolute top-10 left-10 w-40 h-40 citrus-slice-bg animate-spin-slow opacity-30 md:opacity-50"></div>
+<div class="absolute bottom-20 right-20 w-64 h-64 citrus-slice-bg animate-spin-slow opacity-30 md:opacity-50" style="animation-duration: 30s;"></div>
+<div class="absolute top-1/3 right-10 w-20 h-20 rounded-full bg-secondary-container/20 blur-xl"></div>
+<div class="absolute bottom-1/4 left-1/4 w-32 h-32 rounded-full bg-primary-container/20 blur-2xl"></div>
+<div class="max-w-container-max mx-auto text-center relative z-10 flex flex-col items-center">
+<span class="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container/30 text-secondary border border-secondary/20 font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md">You're Invited</span>
+<h1 class="font-display-lg text-display-lg text-primary mb-6 leading-tight max-w-4xl">
+                    Evelyn's Citrus Summer Brunch
+                </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mb-12 text-lg">
+                    Join us for an effervescent morning of fresh squeezed joy, radiant company, and aesthetic delights. Let's celebrate the warmth of summer together.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<a class="bg-primary text-on-primary px-8 py-3 rounded-full hover:scale-105 transition-transform duration-300 font-label-sm text-label-sm shadow-[0_8px_24px_rgba(255,140,0,0.3)]" href="#rsvp">
+                        RSVP Now
+                    </a>
+<a class="border border-secondary/30 bg-surface/50 backdrop-blur-md text-secondary px-8 py-3 rounded-full hover:bg-secondary/5 transition-colors duration-300 font-label-sm text-label-sm" href="#about">
+                        Event Details
+                    </a>
+</div>
+</div>
+</section>
+<!-- Countdown Section -->
+<section class="py-12 bg-primary-container/5 relative overflow-hidden" id="countdown">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<h3 class="font-label-sm text-primary uppercase tracking-widest mb-8">Counting down the days</h3>
+<div class="flex justify-center gap-4 md:gap-8 flex-wrap">
+<div class="bg-surface rounded-2xl p-6 shadow-[0_8px_30px_rgb(255,140,0,0.08)] border border-primary/10 w-24 md:w-32">
+<div class="font-display-lg text-4xl md:text-5xl text-primary mb-2">14</div>
+<div class="font-label-sm text-on-surface-variant">Days</div>
+</div>
+<div class="bg-surface rounded-2xl p-6 shadow-[0_8px_30px_rgb(255,140,0,0.08)] border border-primary/10 w-24 md:w-32">
+<div class="font-display-lg text-4xl md:text-5xl text-primary mb-2">08</div>
+<div class="font-label-sm text-on-surface-variant">Hours</div>
+</div>
+<div class="bg-surface rounded-2xl p-6 shadow-[0_8px_30px_rgb(255,140,0,0.08)] border border-primary/10 w-24 md:w-32">
+<div class="font-display-lg text-4xl md:text-5xl text-primary mb-2">45</div>
+<div class="font-label-sm text-on-surface-variant">Mins</div>
+</div>
+</div>
+</div>
+</section>
+<!-- The Story Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop relative" id="about">
+<div class="max-w-container-max mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-6">Freshly Squeezed Joy</h2>
+<p class="font-body-md text-on-surface-variant mb-6 text-lg leading-relaxed">
+                            Summer is a state of mind, and this brunch is our canvas. We're bringing together our favorite people to celebrate the season with a menu inspired by sun-kissed citrus and vibrant flavors.
+                        </p>
+<p class="font-body-md text-on-surface-variant mb-8 text-lg leading-relaxed">
+                            Expect an elegant yet relaxed atmosphere where the mimosas flow freely, the conversation sparkles, and every detail is designed to bring a little sunshine to your day. Let's create memories that are as bright and refreshing as a summer breeze.
+                        </p>
+<a class="inline-flex items-center gap-2 text-primary hover:text-primary-container transition-colors font-label-sm" href="#timeline">
+                            View the itinerary <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="relative">
+<div class="absolute inset-0 bg-primary-container/20 rounded-[2rem] transform rotate-3 blur-xl"></div>
+<div class="relative bg-surface p-4 rounded-[2rem] shadow-xl border border-white/50 backdrop-blur-md">
+<div class="aspect-video bg-surface-container-high rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
+<img alt="Atmospheric video placeholder showing brunch preparation" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDAa-CQssAiTB1dYJ7m-aAuco9W43tzwq04LhshX-PFk8odwNjZNMLoMNqQfZ1E3-rQ6tw_cKSDVnNMGSOy6ZTJbdv08ouaq9yOfsvudo_QQsWEKN8mbX9brnV_AXpSNfGoXXtCsHYde4l9hzBopvBB0b24HIATmZBuZx0VrL3YYn6JtK7cPtOT68pHqSQD_EjLWPLufVnpQvLQZtgZLr_KJXXARsFB68s7AX2YkSJR6egWNKVEdUc"/>
+<div class="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center z-10 text-primary shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl ml-1">play_arrow</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+<section class="py-32 relative overflow-hidden flex items-center justify-center">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/40 to-secondary-container/30"></div>
+<div class="absolute inset-0 citrus-slice-bg animate-spin-slow opacity-20"></div>
+<div class="relative z-10 text-center px-margin-mobile">
+<h2 class="font-display-lg text-3xl md:text-5xl text-primary-fixed mb-4 max-w-4xl mx-auto drop-shadow-md">
+                "Savor the sunshine, celebrate the moment."
+            </h2>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container-lowest" id="timeline">
+<div class="max-w-3xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-4">The Itinerary</h2>
+<p class="font-body-md text-on-surface-variant">A vibrant flow for our day together</p>
+</div>
+<div class="relative border-l-2 border-primary/20 pl-8 ml-4 md:ml-0 space-y-12">
+<!-- Item 1 -->
+<div class="relative">
+<div class="absolute -left-[41px] top-1 w-8 h-8 rounded-full bg-primary-container flex items-center justify-center border-4 border-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-on-primary-container text-sm">local_cafe</span>
+</div>
+<h3 class="font-label-sm text-primary mb-1">10:30 AM</h3>
+<h4 class="font-headline-lg text-xl text-on-surface mb-2">Arrival &amp; Mimosas</h4>
+<p class="text-on-surface-variant font-body-md">Welcome! Start your morning with a freshly squeezed mimosa and light pastries while everyone gathers.</p>
+</div>
+<!-- Item 2 -->
+<div class="relative">
+<div class="absolute -left-[41px] top-1 w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center border-4 border-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-on-surface text-sm">restaurant</span>
+</div>
+<h3 class="font-label-sm text-primary mb-1">11:15 AM</h3>
+<h4 class="font-headline-lg text-xl text-on-surface mb-2">Brunch is Served</h4>
+<p class="text-on-surface-variant font-body-md">Take your seats for a multi-course brunch featuring seasonal, citrus-infused dishes.</p>
+</div>
+<!-- Item 3 -->
+<div class="relative">
+<div class="absolute -left-[41px] top-1 w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center border-4 border-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">celebration</span>
+</div>
+<h3 class="font-label-sm text-primary mb-1">1:00 PM</h3>
+<h4 class="font-headline-lg text-xl text-on-surface mb-2">Toasts &amp; Cake</h4>
+<p class="text-on-surface-variant font-body-md">A few words, plenty of laughs, and the cutting of the lemon zest celebration cake.</p>
+</div>
+<!-- Item 4 -->
+<div class="relative">
+<div class="absolute -left-[41px] top-1 w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center border-4 border-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-on-tertiary-container text-sm">music_note</span>
+</div>
+<h3 class="font-label-sm text-primary mb-1">2:00 PM</h3>
+<h4 class="font-headline-lg text-xl text-on-surface mb-2">Golden Hour Mingle</h4>
+<p class="text-on-surface-variant font-body-md">Relax in the botanical gardens with iced tea, lawn games, and gentle afternoon tunes.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Divider -->
+<div class="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent my-10 relative">
+<div class="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 citrus-slice-bg animate-spin-slow bg-surface rounded-full"></div>
+</div>
+<!-- Citrus Moments Gallery -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop overflow-hidden" id="gallery">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-4">Citrus Moments</h2>
+<p class="font-body-md text-on-surface-variant">A glimpse of the aesthetic</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Gallery Item 1 -->
+<div class="bg-surface p-4 rounded-lg shadow-md border border-outline-variant/30 transform rotate-[-2deg] sticker-peel">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-4">
+<img alt="Close up of sliced citrus fruits" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSsKGaMuuDxgIaWJElIBuO9LMUZvIAPe_TZ99NLrT_RmiQmid1eHwWPgN01lxQwP6NJiC-Z0o2fxeTfB2UNm8GRJ7BKObTwA5qfk8sstLqYLwKIeBWUMDCD_rhUS9cL7K_HA_pmRR1ErDPHpYJZ7XYRoxwuiWAEr79G9nDuarVao0TFxMAqgQ8DfUCMe0YH0-z7ve0o3TMXBcLY6t-jCqFa2t8heaoMmTBwOH7rrh25AUSXRk92Rbd"/>
+</div>
+<p class="font-label-sm text-center text-on-surface-variant">Fresh Details</p>
+</div>
+<!-- Gallery Item 2 -->
+<div class="bg-surface p-4 rounded-lg shadow-md border border-outline-variant/30 transform rotate-[3deg] sticker-peel translate-y-4">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-4">
+<img alt="A beautifully set table with orange flowers" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz6IHDKKBoX41WAxmwji2X4g83f4HXWVoYyu-l3u-Pvbnrv2UAHC4pBL9jm18v7h5q1FUf5Zj5wf7eVaN69naKDxDBtlWhUz7xoq7LPwp3cAQXXuAv-awYeD3s3Riq5eUYtMJ_mHT6sYdGIn1AkcOumL2IhTIwNehwF_L8q7HaeX-SnOUIPq2v-pZvYAr-spSZ3ONFlnDhtpPQOJNgT3owQQXOs4Ox4c-SljHVceYfAoh-VI_zEQxW"/>
+</div>
+<p class="font-label-sm text-center text-on-surface-variant">The Tablescape</p>
+</div>
+<!-- Gallery Item 3 -->
+<div class="bg-surface p-4 rounded-lg shadow-md border border-outline-variant/30 transform rotate-[-1deg] sticker-peel">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-4">
+<img alt="Two glasses of mimosa clinking" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGEXwHUm8LNh76mgGBWP6kijB-g6dNyXszqcLkwDF0nzOf9MEHGVi3-tGQqHS5zBRix1VD53kH6VOCC39mXdn7EgI2rIHXoIStSTXEocK4516r3sDNvO0kVS3n4g_broZDPn0XXAtTvvWqDIOwMyQYQHHZK9djCa4jfiZOVVEvyzeE9yuM6oJuR7POtSMbjk-oIVbYmgr9mvcC1jTp9yqi-XI-q7toGvAuKBAifA6farSWeqp2LiCi"/>
+</div>
+<p class="font-label-sm text-center text-on-surface-variant">Cheers!</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Venue Section -->
+<section class="py-20 px-margin-mobile md:px-margin-desktop relative bg-surface-container-low/50" id="venue">
+<div class="max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div class="relative order-2 md:order-1">
+<div class="absolute inset-0 bg-secondary/10 rounded-2xl transform rotate-3 scale-105 blur-lg"></div>
+<div class="w-full h-[500px] bg-cover bg-center rounded-2xl shadow-[0_8px_30px_rgb(0,110,10,0.08)] relative z-10 border border-white/50" data-alt="A bright, airy glasshouse cafe interior filled with lush green hanging plants, minimalist white tables set with vibrant orange and yellow citrus floral arrangements. The morning sunlight streams through tall glass panes, creating soft shadows and a warm, radiant, light-mode aesthetic. High-end glassmorphism style details are subtly present." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbHKejKdRUkXbCUxxcjo3sUqfciRib9IgPhlWMTI115yZLJev3rUMmMUtglPKEebM802jt0H4KNf8IxAuTQytYxSNFyu0tVwxxAdAoRxQ1_QYf46Ex_Yxxj7CpA0qZ20uqjKJd8WR214MBxDY5xHpBwRuwlaqei02_gHQ8EeKvK7ZTyDzcAVR_ATpjzKgiZFPnz5Tai16I72avsd0OKTYXB7aSuT2957Q-Ecp5zGpZQSfYa-hpB6gO')"></div>
+<!-- Map Marker -->
+<div class="absolute -bottom-6 -right-6 w-20 h-20 bg-surface rounded-full shadow-lg flex items-center justify-center z-20 border border-outline-variant/30 group">
+<span class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform">location_on</span>
+</div>
+</div>
+<div class="order-1 md:order-2">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-6">The Orangery</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            Nestled in the heart of the botanical gardens, The Orangery offers a luminous glasshouse setting perfect for a sun-drenched gathering. Expect a vibrant atmosphere where the scent of blooming citrus fills the air.
+                        </p>
+<ul class="space-y-6">
+<li class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-primary text-2xl">map</span>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider mb-1">Location</h4>
+<p class="text-on-surface-variant text-base">123 Sunlit Avenue, The Botanical Gardens</p>
+<a class="text-primary hover:underline text-sm mt-2 inline-block font-label-sm" href="#">Get Directions →</a>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-secondary text-2xl">event</span>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider mb-1">Date &amp; Time</h4>
+<p class="text-on-surface-variant text-base">Saturday, August 15th • 10:30 AM</p>
+<a class="text-primary hover:underline text-sm mt-2 inline-block font-label-sm" href="#">Add to Calendar →</a>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-container/20 flex items-center justify-center flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-tertiary text-2xl">local_parking</span>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider mb-1">Parking</h4>
+<p class="text-on-surface-variant text-base">Complimentary valet parking is available at the East Gate entrance.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest/50 backdrop-blur-sm w-full py-12 mt-20 border-t border-outline-variant/30 flex flex-col items-center justify-center gap-gutter px-margin-desktop text-center relative overflow-hidden">
+<div class="absolute -bottom-20 -left-20 w-64 h-64 citrus-slice-bg animate-spin-slow opacity-10" style="animation-duration: 40s;"></div>
+<div class="font-headline-lg text-headline-lg text-primary">
+            Citrus Summer
+        </div>
+<div class="flex gap-6">
+<a class="text-on-tertiary-fixed-variant hover:text-secondary font-label-sm text-label-sm hover:opacity-80 transition-opacity" href="#">Privacy Policy</a>
+<a class="text-on-tertiary-fixed-variant hover:text-secondary font-label-sm text-label-sm hover:opacity-80 transition-opacity" href="#">Terms of Service</a>
+<a class="text-on-tertiary-fixed-variant hover:text-secondary font-label-sm text-label-sm hover:opacity-80 transition-opacity" href="#">Press Kit</a>
+</div>
+<p class="text-secondary font-label-sm text-label-sm mt-4">
+            © 2024 Citrus Summer. Savor the sunshine responsibly.
+        </p>
+</footer>
+</body></html>

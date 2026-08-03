@@ -606,14 +606,24 @@ export default function PersonalizedEnvelopeCover({
           </h1>
         </div>
 
-        {/* Couple & Invitation Details */}
-        <p className="text-xs sm:text-sm font-serif mt-4 max-w-xs mx-auto leading-relaxed" style={{ color: envTheme.subTitleColor }}>
-          Together with their families, <br />
-          <strong className="font-serif text-2xl block mt-1 font-bold" style={{ color: envTheme.titleColor }}>
-            {partnerOne} &amp; {partnerTwo}
-          </strong>
-          request the pleasure of your company at their wedding celebration.
-        </p>
+        {/* Celebrant / Couple & Invitation Details */}
+        {(!partnerTwo || partnerTwo.trim() === "" || themeItem.category === "birthday") ? (
+          <p className="text-xs sm:text-sm font-serif mt-4 max-w-xs mx-auto leading-relaxed" style={{ color: envTheme.subTitleColor }}>
+            Warmly invites you to celebrate <br />
+            <strong className="font-serif text-2xl block mt-1 font-bold" style={{ color: envTheme.titleColor }}>
+              {partnerOne}'s Birthday
+            </strong>
+            at a special birthday celebration.
+          </p>
+        ) : (
+          <p className="text-xs sm:text-sm font-serif mt-4 max-w-xs mx-auto leading-relaxed" style={{ color: envTheme.subTitleColor }}>
+            Together with their families, <br />
+            <strong className="font-serif text-2xl block mt-1 font-bold" style={{ color: envTheme.titleColor }}>
+              {partnerOne} &amp; {partnerTwo}
+            </strong>
+            request the pleasure of your company at their wedding celebration.
+          </p>
+        )}
 
         <p className="text-[11px] font-semibold mt-3 font-mono tracking-wide" style={{ color: envTheme.subTitleColor }}>
           {weddingTime}

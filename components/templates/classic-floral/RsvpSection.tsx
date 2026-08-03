@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, XCircle, Heart, User, Phone, Mail, Users, MessageSquare, Diamond, Sparkles, Crown, Sun } from "lucide-react";
 
 interface RsvpSectionProps {
@@ -8,6 +9,8 @@ interface RsvpSectionProps {
   partnerTwo?: string;
   slug?: string;
   templateSlug?: string;
+  guestName?: string;
+  guestPhone?: string;
 }
 
 export default function RsvpSection({
@@ -15,11 +18,40 @@ export default function RsvpSection({
   partnerTwo = "Partner",
   slug,
   templateSlug,
+  guestName,
+  guestPhone,
 }: RsvpSectionProps) {
   const activeSlug = templateSlug || slug || "classic-floral";
+  const searchParams = useSearchParams();
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const queryName =
+    searchParams?.get("to") ||
+    searchParams?.get("guest") ||
+    searchParams?.get("name") ||
+    guestName ||
+    "";
+
+  const queryPhone =
+    searchParams?.get("phone") ||
+    searchParams?.get("tel") ||
+    searchParams?.get("mobile") ||
+    guestPhone ||
+    "";
+
+  const initialName = queryName ? decodeURIComponent(queryName) : "";
+  const initialPhone = queryPhone ? decodeURIComponent(queryPhone) : "";
+
+  const [name, setName] = useState(initialName);
+  const [phone, setPhone] = useState(initialPhone);
+
+  useEffect(() => {
+    if (initialName && !name) {
+      setName(initialName);
+    }
+    if (initialPhone && !phone) {
+      setPhone(initialPhone);
+    }
+  }, [initialName, initialPhone]);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"ATTENDING" | "DECLINED">("ATTENDING");
   const [plusOnes, setPlusOnes] = useState<number>(0);

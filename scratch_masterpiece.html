@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's Celebration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#cac7b1",
+                        "surface": "#fcf9f8",
+                        "on-secondary-fixed": "#2e1500",
+                        "tertiary-fixed": "#e5e2dd",
+                        "on-background": "#1b1c1c",
+                        "surface-container-low": "#f6f3f2",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e9e86b",
+                        "primary-container": "#797900",
+                        "on-surface-variant": "#484837",
+                        "inverse-surface": "#303030",
+                        "on-secondary-fixed-variant": "#6d3900",
+                        "secondary-container": "#ffa049",
+                        "primary-fixed-dim": "#cccc52",
+                        "surface-container": "#f0eded",
+                        "inverse-on-surface": "#f3f0f0",
+                        "tertiary-fixed-dim": "#c9c6c2",
+                        "secondary-fixed-dim": "#ffb77c",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#474743",
+                        "tertiary-container": "#767471",
+                        "primary": "#5f5f00",
+                        "on-surface": "#1b1c1c",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e1",
+                        "surface-container-high": "#eae7e7",
+                        "on-secondary-container": "#6e3a00",
+                        "tertiary": "#5d5c58",
+                        "secondary": "#904d00",
+                        "secondary-fixed": "#ffdcc2",
+                        "on-primary-container": "#fffbff",
+                        "on-tertiary-container": "#fcffe3",
+                        "inverse-primary": "#cccc52",
+                        "error-container": "#ffdad6",
+                        "background": "#fcf9f8",
+                        "surface-tint": "#626200",
+                        "on-primary-fixed": "#1d1d00",
+                        "outline": "#797865",
+                        "on-primary-fixed-variant": "#494900",
+                        "surface-bright": "#fcf9f8",
+                        "surface-variant": "#e4e2e1",
+                        "on-tertiary-fixed": "#1c1c19",
+                        "coral": "#ff7f50"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "unit": "8px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Literata"],
+                        "headline-sm": ["Literata"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Literata"],
+                        "display-lg-mobile": ["Literata"],
+                        "headline-md": ["Literata"],
+                        "display-lg": ["Literata"],
+                        "label-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #fdf9f4; }
+        .gold-shimmer-sweep {
+            background: linear-gradient(to right, #904d00 20%, #ffb77c 40%, #ffb77c 60%, #904d00 80%);
+            background-size: 200% auto;
+            color: #000;
+            background-clip: text;
+            text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+        .cinematic-zoom {
+            animation: zoomFade 2s ease-out forwards;
+            opacity: 0;
+            transform: scale(1.1);
+        }
+        @keyframes zoomFade {
+            to { opacity: 1; transform: scale(1); }
+        }
+        .neon-glow {
+            box-shadow: 0 0 10px rgba(144, 77, 0, 0.5), inset 0 0 10px rgba(144, 77, 0, 0.2);
+            border: 1px solid rgba(144, 77, 0, 0.3);
+        }
+        .polaroid {
+            background: white;
+            padding: 10px 10px 40px 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .polaroid:hover { transform: scale(1.05) rotate(0deg) !important; z-index: 10; }
+        .sparkle-twinkle::after {
+            content: '✨';
+            position: absolute;
+            animation: twinkle 1.5s infinite alternate;
+        }
+        @keyframes twinkle {
+            from { opacity: 0.2; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1.2); }
+        }
+        canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body class="font-body-md text-on-background antialiased relative overflow-x-hidden">
+<!-- Confetti Canvas -->
+<canvas id="confetti"></canvas>
+<!-- Shader Background -->
+<!-- STITCH_SHADER_START:ANIMATION_153 class="fixed inset-0 w-full h-full -z-10 opacity-30" -->
+<div class="fixed inset-0 w-full h-full -z-10 opacity-30" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_153" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_153');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    vec3 bgColor = vec3(0.988, 0.976, 0.953); // Warm Cream #fdf9f4
+    
+    // Subtle floating confetti pieces
+    float confetti = 0.0;
+    for(float i = 0.0; i < 15.0; i++) {
+        vec2 pos = vec2(random(vec2(i, 123.4)), fract(random(vec2(i, 567.8)) + u_time * 0.05));
+        float size = 0.005 + random(vec2(i)) * 0.01;
+        float dist = distance(uv, pos);
+        confetti += smoothstep(size, size * 0.5, dist) * 0.3;
+    }
+    
+    // Subtle floating balloon-like shapes (soft circles)
+    float balloons = 0.0;
+    for(float i = 0.0; i < 5.0; i++) {
+        float speed = 0.03 + random(vec2(i)) * 0.04;
+        vec2 pos = vec2(
+            0.1 + 0.8 * random(vec2(i, 99.0)) + 0.05 * sin(u_time * 0.5 + i),
+            fract(0.5 + random(vec2(i, 88.0)) + u_time * speed)
+        );
+        float size = 0.05 + random(vec2(i)) * 0.05;
+        float dist = distance(uv, pos);
+        balloons += smoothstep(size, size * 0.8, dist) * 0.05;
+    }
+
+    vec3 finalColor = mix(bgColor, vec3(0.8, 0.7, 0.5), balloons);
+    finalColor = mix(finalColor, vec3(1.0, 0.8, 0.4), confetti);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_153 -->
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md bg-surface dark:bg-surface-dim transition-all duration-300 ease-in-out">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center h-20">
+<div class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim italic">
+                Evelyn's Celebration
+            </div>
+<nav class="hidden md:flex gap-gutter">
+<a class="text-secondary dark:text-secondary-fixed-dim border-b border-secondary pb-1 font-body-md text-body-md" href="#about">About</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#timeline">Timeline</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#venue">Venue</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#gallery">Gallery</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md" href="#rsvp">RSVP</a>
+</nav>
+<a class="hidden md:inline-flex bg-primary text-on-primary px-6 py-2 rounded font-label-md hover:opacity-90 transition-opacity" href="#rsvp">RSVP Now</a>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center justify-center py-20 px-4 md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center w-full">
+<div class="col-span-1 md:col-span-6 z-10 space-y-6">
+<p class="font-label-md text-secondary uppercase tracking-widest">You are invited to celebrate</p>
+<h1 class="font-display-lg-mobile md:font-display-lg text-primary gold-shimmer-sweep leading-tight">Evelyn's <br/>Special Day</h1>
+<p class="font-body-lg text-tertiary max-w-md">Join us for an evening of joy, laughter, and unforgettable memories as we celebrate a milestone.</p>
+</div>
+<div class="col-span-1 md:col-span-6 relative flex justify-center mt-10 md:mt-0">
+<div class="relative w-full max-w-[500px] aspect-[4/5] cinematic-zoom">
+<img class="w-full h-full object-cover rounded-t-full shadow-lg" data-alt="A highly detailed portrait of a beautifully decorated birthday celebration setting, featuring a tiered cake surrounded by soft glowing candles and elegant floral arrangements in warm cream and olive tones. Cinematic lighting, soft focus background, luxurious and intimate atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPNnny-dlognAkhDvCNhFRNyGdojg7bnFj9koTHxsIkmDMy9nv5DW7U0sXvez0NdnLDBzJQ6PvCHZR9AS2jITAmqVVxSufalgrhBrSBTPIvD--MbXtkg9fIiOYoMjfDqBBXZB8eiJJDcdjhIXBxHAkPd9wImdF-x76N_PDM5xs7wjIwV8ruvkfZa4hLejyc3xLQlDdzHrJ6g90juloHzWGSTBzYafBH3TYgbA2plyz-2xVOzLfvtZ1"/>
+<!-- Botanical Frame Mockup (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none scale-105 opacity-80" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M5,50 C5,10 95,10 95,50 C95,90 5,90 5,50 Z" fill="none" stroke="#797865" stroke-dasharray="2 2" stroke-width="0.5"></path>
+<circle cx="50" cy="10" fill="#904d00" r="2"></circle>
+<circle cx="50" cy="90" fill="#904d00" r="2"></circle>
+<circle cx="10" cy="50" fill="#904d00" r="2"></circle>
+<circle cx="90" cy="50" fill="#904d00" r="2"></circle>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Wave Divider -->
+<div class="w-full text-surface-container-low">
+<svg class="w-full h-16 fill-current" preserveaspectratio="none" viewbox="0 0 1200 120">
+<path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+</svg>
+</div>
+<!-- Countdown Section -->
+<section class="bg-surface-container-low py-20 px-4">
+<div class="max-w-container-max mx-auto text-center">
+<h2 class="font-headline-md text-primary mb-12">The Countdown Begins</h2>
+<div class="flex flex-wrap justify-center gap-6 md:gap-12">
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 rounded-full flex items-center justify-center neon-glow bg-surface text-secondary font-headline-md">14</div>
+<span class="mt-3 font-label-sm text-tertiary uppercase">Days</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 rounded-full flex items-center justify-center neon-glow bg-surface text-secondary font-headline-md">08</div>
+<span class="mt-3 font-label-sm text-tertiary uppercase">Hours</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 rounded-full flex items-center justify-center neon-glow bg-surface text-secondary font-headline-md">45</div>
+<span class="mt-3 font-label-sm text-tertiary uppercase">Mins</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Highlight Section -->
+<section class="bg-coral py-24 relative overflow-hidden">
+<div class="max-w-container-max mx-auto px-4 md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+<div class="text-white space-y-6">
+<h2 class="font-display-lg-mobile md:font-display-lg leading-tight">A Night to <br/>Remember</h2>
+<p class="font-body-lg opacity-90 max-w-md">Expect an evening filled with culinary delights, artisanal cocktails, and music under the stars.</p>
+</div>
+<div class="relative">
+<img class="w-full aspect-[4/3] object-cover shadow-2xl" data-alt="A vibrant, high-contrast photo capturing a joyful moment of people dancing under string lights at an outdoor evening party. The setting is lush with greenery, and the mood is energetic and celebratory, matching a warm coral and olive color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZCkfapr3kHN4Z2HWJgMAu969WaZErlUGyVg0mTlWmloy-uhdFfRMiSSCNhMo0C-ymAjjw4hxDsngLL1kGZQcnTHrhrm63ss5ivqgcXiOtTcj8G6v_UY8--i2XPajDm5JADtmZbg6N9vPSeCkzBig52dT2B-1wtrydI05mNhiBPwfoOqJ5cxKc3HLl449etoHZfdJpxUI4ECa_Beg6zBU_E1QoKzLveaLhiBIdyzLbh-FVDEfdEIgm"/>
+<div class="absolute -bottom-6 -right-6 w-24 h-24 bg-primary rounded-full mix-blend-multiply opacity-50"></div>
+</div>
+</div>
+</section>
+<!-- Gallery Section -->
+<section class="py-24 max-w-container-max mx-auto px-4 md:px-margin-desktop" id="gallery">
+<div class="relative inline-block mb-12">
+<h2 class="font-headline-md text-primary">Memories &amp; Moments</h2>
+<span class="absolute -top-4 -right-8 text-2xl sparkle-twinkle"></span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+<!-- Polaroid 1 -->
+<div class="polaroid rotate-[-2deg] mx-auto w-full max-w-sm">
+<img class="w-full aspect-square object-cover bg-surface-variant" data-alt="A candid, nostalgic polaroid-style photograph of a laughing group of friends toasting with champagne glasses at a sunlit outdoor garden party. Soft natural lighting, warm tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-CHnc6isuaO6BcUDnVVjJfYt0sIuwluvudEeEmkaSasB5cKtOCEaaYcnuCGaUoNrLUYdQ9UW7QOHe8XSTTAFU14Dm3T-DVGMM9ypzgWv7KSF8-Oyn4SU59i8VEtFyJVTiITxYBGLFDc79h6qscWLlY3hKycCtB_OFAYezyxOC5N-WYQhu5OsnWsr-9A_1yNg5dZWX7qtqUnjGqregZmVCVIAn90Y6HT64P_OUPLhjTJEjROypjUTQ"/>
+<p class="font-label-sm text-center mt-4 text-tertiary">Summer '22</p>
+</div>
+<!-- Polaroid 2 -->
+<div class="polaroid rotate-[3deg] mx-auto w-full max-w-sm md:mt-12">
+<img class="w-full aspect-square object-cover bg-surface-variant" data-alt="A beautiful detail shot of an artisanal, rustic birthday cake decorated with fresh figs and olive branches, sitting on a wooden table. High quality editorial style food photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgpgUGapB_XqNzx8AlEjaxluFc98vsyFpVwKovkqm9Ape8Lr2r3BIGgyNTCn8j_4BcoxIgTezUJkTCGT409uz4KR50fp3Qw0CtYjXviTibQ2gBk2Ll17sYwInbC7YcgojYBx5qYSi79eshrWsPtFP1rxQUFxGoiwLIarj9hGwhh2BQogM9wLe7Aol3hgjQmhLmVRxAeg1OIfPmFihhJAPdRLp2Yoqlbky4mElULSXsa8hS9PMmxf5_"/>
+<p class="font-label-sm text-center mt-4 text-tertiary">Sweet details</p>
+</div>
+<!-- Polaroid 3 -->
+<div class="polaroid rotate-[-1deg] mx-auto w-full max-w-sm">
+<img class="w-full aspect-square object-cover bg-surface-variant" data-alt="A serene landscape photo of a Mediterranean villa garden at golden hour, featuring tall cypress trees and warm stone architecture. Relaxed, luxurious vacation mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87"/>
+<p class="font-label-sm text-center mt-4 text-tertiary">The Venue</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest border-t border-outline-variant/30 w-full py-12">
+<div class="max-w-container-max mx-auto px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-headline-sm text-headline-sm text-primary">
+                Evelyn's Celebration
+            </div>
+<div class="text-tertiary dark:text-tertiary-fixed-dim font-label-sm text-label-sm opacity-90 hover:opacity-100 transition-opacity">
+                © 2024 Crafted with Love for Evelyn's Special Day
+            </div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-secondary transition-colors" href="#">Privacy</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-secondary transition-colors" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<!-- Simple Confetti Script -->
+<script>
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let particles = [];
+            const colors = ['#904d00', '#ffb77c', '#ff7f50', '#e9e86b'];
+
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 2,
+                    dx: Math.random() * 4 - 2,
+                    dy: Math.random() * 4 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    if(p.y < canvas.height) active = true;
+                });
+                if(active) requestAnimationFrame(draw);
+                else canvas.style.display = 'none';
+            }
+            draw();
+        });
+    </script>
+</body></html>

@@ -52,5 +52,6 @@ export interface TemplateClassicFloralProps {
   socialLinks: SocialLinks;
   isCustomizer?: boolean;
   guestName?: string;
+  guestPhone?: string;
 }
 

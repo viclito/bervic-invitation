@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Evelyn's 1st Birthday</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#9ecfd5",
+                        "on-primary-fixed": "#002023",
+                        "on-surface-variant": "#404849",
+                        "outline-variant": "#c0c8c9",
+                        "on-background": "#151c26",
+                        "inverse-surface": "#2a313c",
+                        "surface": "#f8f9ff",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#7a5969",
+                        "surface-container-low": "#eff3ff",
+                        "on-surface": "#151c26",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#70797a",
+                        "surface-tint": "#36666b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#5c3e4d",
+                        "on-primary-fixed-variant": "#1b4e53",
+                        "secondary-container": "#ffd4e7",
+                        "on-error": "#ffffff",
+                        "primary-container": "#a7d8de",
+                        "surface-dim": "#d3dae9",
+                        "tertiary-fixed": "#eee4a6",
+                        "background": "#f8f9ff",
+                        "primary-fixed-dim": "#9ecfd5",
+                        "on-primary-container": "#2f5f65",
+                        "primary-fixed": "#baebf1",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#4e4719",
+                        "secondary": "#755565",
+                        "tertiary-fixed-dim": "#d2c88c",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#2c1421",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#dbd195",
+                        "on-tertiary-fixed": "#201c00",
+                        "on-tertiary-container": "#605929",
+                        "primary": "#36666b",
+                        "tertiary": "#665f2e",
+                        "surface-container": "#e7eefd",
+                        "inverse-on-surface": "#ebf1ff",
+                        "secondary-fixed-dim": "#e4bbce",
+                        "surface-container-highest": "#dce3f1",
+                        "surface-variant": "#dce3f1",
+                        "surface-container-high": "#e2e8f7",
+                        "secondary-fixed": "#ffd8e9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1140px",
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Quicksand"],
+                        "display-lg-mobile": ["Quicksand"],
+                        "headline-md": ["Quicksand"],
+                        "display-lg": ["Quicksand"],
+                        "body-lg": ["Quicksand"],
+                        "label-sm": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Cloud Clip Path */
+        .clip-cloud {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            transition: all 8s ease-in-out;
+            animation: morph 8s ease-in-out infinite both alternate;
+        }
+        @keyframes morph {
+            0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+            100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        }
+        
+        /* Bouncing Animation for Countdown */
+        .animate-bounce-soft {
+            animation: bounceSoft 2s infinite cubic-bezier(0.28, 0.84, 0.42, 1);
+        }
+        .animate-bounce-soft-delay-1 { animation: bounceSoft 2s infinite cubic-bezier(0.28, 0.84, 0.42, 1) 0.2s; }
+        .animate-bounce-soft-delay-2 { animation: bounceSoft 2s infinite cubic-bezier(0.28, 0.84, 0.42, 1) 0.4s; }
+        
+        @keyframes bounceSoft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .soft-shadow {
+            box-shadow: 0px 10px 30px rgba(167, 216, 222, 0.2);
+        }
+
+        /* Polaroid Gallery Styles */
+        .polaroid {
+            background: white;
+            padding: 12px 12px 40px 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .polaroid:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        
+        /* Wavy Divider */
+        .wavy-divider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+        .wavy-divider svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 50px;
+        }
+        .wavy-divider .shape-fill {
+            fill: #f8f9ff;
+        }
+        .wavy-divider-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            transform: rotate(180deg);
+        }
+        .wavy-divider-bottom svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 50px;
+        }
+        .wavy-divider-bottom .shape-fill {
+            fill: #f8f9ff;
+        }
+
+        body {
+            background-color: #f8f9ff;
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface text-primary dark:text-inverse-primary font-headline-md text-headline-md w-full top-0 sticky z-50 bg-surface-container-low dark:bg-surface-container-lowest shadow-[0px_10px_30px_rgba(167,216,222,0.2)]">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary dark:text-inverse-primary tracking-tight">
+                TinyOne
+            </div>
+<nav class="hidden md:flex space-x-8">
+<a class="text-primary dark:text-inverse-primary border-b-4 border-primary dark:border-inverse-primary pb-1 hover:scale-105 active:scale-95 transition-transform hover:text-primary dark:hover:text-inverse-primary transition-colors duration-300" href="#rsvp">RSVP</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:scale-105 active:scale-95 transition-transform hover:text-primary dark:hover:text-inverse-primary transition-colors duration-300" href="#gallery">Gallery</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:scale-105 active:scale-95 transition-transform hover:text-primary dark:hover:text-inverse-primary transition-colors duration-300" href="#registry">Registry</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:scale-105 active:scale-95 transition-transform hover:text-primary dark:hover:text-inverse-primary transition-colors duration-300" href="#our-story">Our Story</a>
+</nav>
+<button class="hidden md:flex items-center justify-center bg-primary text-on-primary font-body-md text-body-md px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform soft-shadow">
+                Sign In
+            </button>
+<!-- Mobile Menu Icon -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full">
+<!-- Hero Section -->
+<section class="relative pt-16 pb-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-low to-secondary-container opacity-50 rounded-b-[4rem] -z-10"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div class="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+<span class="inline-flex items-center px-4 py-2 bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm rounded-full uppercase tracking-wider soft-shadow">
+<span class="material-symbols-outlined mr-2 text-[18px]">celebration</span>
+                        Join the Party!
+                    </span>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">
+                        Evelyn is turning <br/><span class="text-secondary">One!</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">
+                        Our little sweetie is celebrating her first year of wonder. We can't wait to share this magical day with you.
+                    </p>
+<a class="inline-flex items-center justify-center bg-secondary text-on-secondary font-body-lg text-body-lg px-8 py-4 rounded-full hover:scale-105 active:scale-95 transition-transform soft-shadow shadow-secondary-container mt-4" href="#rsvp">
+                        RSVP Now
+                        <span class="material-symbols-outlined ml-2">favorite</span>
+</a>
+</div>
+<div class="relative flex justify-center items-center p-8">
+<div class="relative w-full max-w-md aspect-square">
+<div class="absolute inset-0 bg-primary-container clip-cloud scale-105 opacity-50 blur-lg"></div>
+<img alt="Evelyn" class="w-full h-full object-cover clip-cloud soft-shadow border-4 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpe710EgUA8jejL2m8yFPevpulHGGvyWeCBoXiLn8mjGTVP8cAzCiDPY6XOno0S5eARTmpX9rWsTv5-RG8X6g7nOYP_vVeHjwmBCJEqw7f34Yt1L0RonhUKuSkC-wHb70C-m77lvUsJoiG479dqkD8lPJVqxSMKlpieOyrxrM_mudqSS1uqfPKQmptWNn2FNy6HQn9E96gW4w_FUXTlMUuajKHSnOG6qkjHPbFas87r-tVUGrYXK-A"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Countdown Section -->
+<section class="py-16 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto text-center">
+<h2 class="font-headline-md text-headline-md text-primary mb-12">The Celebration Begins In...</h2>
+<div class="flex justify-center items-center gap-6 md:gap-12">
+<div class="flex flex-col items-center animate-bounce-soft">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-primary-container flex items-center justify-center soft-shadow mb-4 border-4 border-surface">
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-primary-container">14</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant uppercase tracking-wider">Days</span>
+</div>
+<span class="font-display-lg text-display-lg text-outline-variant -mt-10">:</span>
+<div class="flex flex-col items-center animate-bounce-soft-delay-1">
+<div class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-secondary-container flex items-center justify-center soft-shadow mb-4 border-4 border-surface">
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-secondary-container">08</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant uppercase tracking-wider">Hours</span>
+</div>
+<span class="font-display-lg text-display-lg text-outline-variant -mt-10 hidden md:block">:</span>
+<div class="flex flex-col items-center animate-bounce-soft-delay-2 hidden md:flex">
+<div class="w-28 h-28 rounded-full bg-tertiary-container flex items-center justify-center soft-shadow mb-4 border-4 border-surface">
+<span class="font-display-lg text-display-lg text-on-tertiary-container">45</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant uppercase tracking-wider">Mins</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Highlight Banner -->
+<section class="relative py-24 bg-gradient-to-r from-primary-container via-surface-container to-secondary-container overflow-hidden">
+<div class="wavy-divider">
+<svg data-name="Layer 1" preserveaspectratio="none" viewbox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+<path class="shape-fill" d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+</svg>
+</div>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center relative z-10">
+<span class="material-symbols-outlined text-secondary text-6xl mb-6 opacity-80" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary italic max-w-3xl mx-auto leading-tight">
+                    "One tiny year, a lifetime of love."
+                </h2>
+</div>
+<div class="wavy-divider-bottom">
+<svg data-name="Layer 1" preserveaspectratio="none" viewbox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
+<path class="shape-fill" d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+</svg>
+</div>
+</section>
+<!-- Our Story Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface" id="our-story">
+<div class="max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+<div class="order-2 md:order-1 relative">
+<!-- Video Placeholder -->
+<div class="aspect-[4/3] bg-surface-container-highest clip-cloud relative flex items-center justify-center soft-shadow border-4 border-surface group overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container to-secondary-container opacity-60"></div>
+<span class="material-symbols-outlined text-white text-6xl z-10 group-hover:scale-110 transition-transform cursor-pointer drop-shadow-md" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<span class="absolute bottom-6 font-headline-md text-white z-10 drop-shadow-md">Our First Year Video</span>
+</div>
+</div>
+<div class="order-1 md:order-2 space-y-6">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">Evelyn's First Year</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                            From her first tiny smile to her wobbly first steps, this past year has been a beautiful whirlwind. We've loved watching her personality blossom.
+                        </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            She loves peek-a-boo, mashed sweet potatoes, and her favorite plush bunny. Join us as we look back on 365 days of pure joy and wonder!
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Celebration Timeline Section -->
+<section class="py-24 bg-surface-container-low px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-16">The Big Day</h2>
+<div class="relative max-w-4xl mx-auto">
+<!-- Vertical Line -->
+<div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-outline-variant rounded-full hidden md:block"></div>
+<div class="space-y-12">
+<!-- Event 1 -->
+<div class="flex flex-col md:flex-row items-center justify-between w-full relative">
+<div class="w-full md:w-5/12 text-center md:text-right mb-4 md:mb-0">
+<h3 class="font-headline-md text-headline-md text-secondary">2:00 PM</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Arrival &amp; Sweet Treats</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 bg-primary-container rounded-full border-4 border-surface z-10 soft-shadow hidden md:flex">
+<span class="material-symbols-outlined text-on-primary-container text-sm">hail</span>
+</div>
+<div class="w-full md:w-5/12 bg-surface p-6 rounded-2xl soft-shadow text-center md:text-left">
+<p class="font-body-md text-body-md text-on-surface">Welcome! Grab a drink and let the kids explore the play area.</p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="flex flex-col md:flex-row items-center justify-between w-full relative">
+<div class="w-full md:w-5/12 bg-surface p-6 rounded-2xl soft-shadow text-center md:text-right order-3 md:order-1">
+<p class="font-body-md text-body-md text-on-surface">Time for giggles! We have a special entertainer joining us.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 bg-secondary-container rounded-full border-4 border-surface z-10 soft-shadow hidden md:flex order-2">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">toys</span>
+</div>
+<div class="w-full md:w-5/12 text-center md:text-left mb-4 md:mb-0 order-1 md:order-3">
+<h3 class="font-headline-md text-headline-md text-primary">3:00 PM</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Games &amp; Magic</p>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="flex flex-col md:flex-row items-center justify-between w-full relative">
+<div class="w-full md:w-5/12 text-center md:text-right mb-4 md:mb-0">
+<h3 class="font-headline-md text-headline-md text-tertiary">4:00 PM</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Cake Cutting</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 bg-tertiary-container rounded-full border-4 border-surface z-10 soft-shadow hidden md:flex">
+<span class="material-symbols-outlined text-on-tertiary-container text-sm">cake</span>
+</div>
+<div class="w-full md:w-5/12 bg-surface p-6 rounded-2xl soft-shadow text-center md:text-left">
+<p class="font-body-md text-body-md text-on-surface">Sing Happy Birthday and watch Evelyn smash her first cake!</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Party HQ Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface">
+<div class="max-w-container-max mx-auto">
+<div class="bg-surface-container-highest rounded-[3rem] p-8 md:p-16 soft-shadow relative overflow-hidden">
+<!-- Deco circles -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-primary-container rounded-full opacity-50 blur-2xl"></div>
+<div class="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary-container rounded-full opacity-50 blur-2xl"></div>
+<div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div class="space-y-6 text-center md:text-left">
+<span class="material-symbols-outlined text-primary text-5xl mb-2">location_on</span>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">Party HQ</h2>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Sunshine Park Pavilion</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant">123 Meadow Lane<br/>Sunnyville, CA 90210</p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                                Parking is available near the south entrance. Look for the big bundle of pink and teal balloons!
+                            </p>
+<button class="inline-flex items-center justify-center bg-primary text-on-primary font-body-md text-body-md px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform soft-shadow mt-4">
+                                Get Directions <span class="material-symbols-outlined ml-2 text-sm">open_in_new</span>
+</button>
+</div>
+<div class="w-full h-80 bg-surface-variant rounded-[2rem] border-4 border-white soft-shadow flex items-center justify-center">
+<div class="text-center text-outline">
+<span class="material-symbols-outlined text-4xl mb-2">map</span>
+<p class="font-body-md">Google Map Placeholder</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Gallery Section -->
+<section class="py-24 bg-surface-container px-margin-mobile md:px-margin-desktop" id="gallery">
+<div class="max-w-container-max mx-auto text-center">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Sweet Moments</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-16 max-w-2xl mx-auto">A peek into Evelyn's world of giggles and snuggles.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 px-4 md:px-8">
+<!-- Photo 1 -->
+<div class="polaroid -rotate-3 hover:z-20 cursor-pointer">
+<div class="bg-surface-variant aspect-square mb-4 overflow-hidden">
+<img alt="Baby smiling" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWm7Yc6PDowZdcXKTMz7D0wfPgnJ7vM_k9Z1MP_SH3XPt7edMg_qOj_A4CsY1y8vWssWIarJw-Z1Wilze7httykt5Fo_pD94Fnhnbka5Ko-moJS8zXl7q6ZVwaXbNPftr8ydvE0j4yu8Cf70ZqZTGSrmM4ovVOkgFD9wiZnZJBF9Y8PeN7q39TZCBtraUSvcE9GSB_C4VA_GvQQUGO80g9iDd1Ak-YgqWX3olqK4izL-JFOpnE75Yi"/>
+</div>
+<p class="font-label-sm text-on-surface-variant italic">First Smiles - 2 Months</p>
+</div>
+<!-- Photo 2 -->
+<div class="polaroid rotate-2 hover:z-20 cursor-pointer md:mt-8">
+<div class="bg-surface-variant aspect-square mb-4 overflow-hidden">
+<img alt="Baby crawling" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOFKB8R9Y6Ss2l1cC15_HHbtsndt4Tg8TsXksD2xVl_jagbI8JRqWU7MZS8J-gurq4N-vrqKR800k3-0cqCqn2J2V_zQ3eQwjmA8bS9mmNOU7nXjbvyR-wvhmxX2ARQYNcJr2zapC7wwGieGk0YGVHqMwbmNBvRkBC5IjCYXmVlTWHI5T0VqpYqsS5Xaq5N2oLj_jgiCUPr2AT2u54JjQjyT_SJgmhoQSu9XHmmBwpml5JYRhKguVW"/>
+</div>
+<p class="font-label-sm text-on-surface-variant italic">On the Move - 7 Months</p>
+</div>
+<!-- Photo 3 -->
+<div class="polaroid -rotate-2 hover:z-20 cursor-pointer">
+<div class="bg-surface-variant aspect-square mb-4 overflow-hidden">
+<img alt="Baby laughing" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeHiZdA5QfYEQAh-5pLXHm8wXeJb4eWT2jt9cry8wWzCP_LNyFoG53BLpBH-MIoNEWoVog4WKzQLpqAAI7V01H8_nzOH77HYf6gavyQtD_fAXkmoQocsvirTlKsQ7WpMSHYtfeCo-fgSJ6Iu_XypBA_7wS5ngfBqsYJXg_G4WSODsyjRhx_236TGKFMF3cStQu_Y3GfxbLMLmUPCvuQKmdZ8RhhVG5nTTHviyELB2VToJQvcBOXSHc"/>
+</div>
+<p class="font-label-sm text-on-surface-variant italic">Bath Time Fun - 10 Months</p>
+</div>
+</div>
+</div>
+</section>
+<!-- RSVP Form Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container-highest rounded-t-[4rem] relative overflow-hidden" id="rsvp">
+<!-- Decorative elements -->
+<div class="absolute top-0 left-0 w-64 h-64 bg-primary-container rounded-full mix-blend-multiply filter blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
+<div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary-container rounded-full mix-blend-multiply filter blur-3xl opacity-30 translate-x-1/3 translate-y-1/3"></div>
+<div class="max-w-3xl mx-auto relative z-10 bg-surface rounded-xl p-8 md:p-12 soft-shadow border border-surface-variant">
+<div class="text-center mb-10">
+<span class="material-symbols-outlined text-secondary text-5xl mb-4" style="font-variation-settings: 'FILL' 1;">mail</span>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-2">Will You Join Us?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Please let us know by September 1st.</p>
+</div>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block font-body-md text-body-md text-on-surface mb-2 pl-2">Guest Name</label>
+<input class="w-full bg-surface-bright border-2 border-surface-variant rounded-full px-6 py-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors" placeholder="Jane Doe" type="text"/>
+</div>
+<div>
+<label class="block font-body-md text-body-md text-on-surface mb-2 pl-2">Number of Guests</label>
+<select class="w-full bg-surface-bright border-2 border-surface-variant rounded-full px-6 py-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 transition-colors appearance-none">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4+</option>
+</select>
+</div>
+</div>
+<div>
+<label class="block font-body-md text-body-md text-on-surface mb-4 pl-2">Are you attending?</label>
+<div class="flex gap-4">
+<label class="flex-1 cursor-pointer">
+<input checked="" class="peer sr-only" name="attending" type="radio"/>
+<div class="w-full text-center py-4 rounded-full border-2 border-surface-variant peer-checked:bg-primary-container peer-checked:border-primary peer-checked:text-on-primary-container font-body-md text-body-md transition-all soft-shadow">
+                                    Joyfully Accept
+                                </div>
+</label>
+<label class="flex-1 cursor-pointer">
+<input class="peer sr-only" name="attending" type="radio"/>
+<div class="w-full text-center py-4 rounded-full border-2 border-surface-variant peer-checked:bg-surface-variant peer-checked:border-outline peer-checked:text-on-surface-variant font-body-md text-body-md transition-all">
+                                    Regretfully Decline
+                                </div>
+</label>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-headline-md text-headline-md py-4 rounded-full hover:scale-[1.02] active:scale-[0.98] transition-transform soft-shadow mt-8" type="submit">
+                        Send RSVP
+                    </button>
+</form>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-body-md text-body-md w-full rounded-t-lg bg-secondary-container dark:bg-on-secondary-fixed-variant flex flex-col md:flex-row justify-between items-center px-margin-desktop py-12 space-y-6 md:space-y-0 relative z-10">
+<div class="font-headline-md text-headline-md text-secondary dark:text-secondary-fixed-dim">
+            TinyOne
+        </div>
+<div class="flex flex-col md:flex-row items-center gap-6">
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:underline transition-all opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:underline transition-all opacity-80 hover:opacity-100" href="#">Contact Us</a>
+<a class="text-on-secondary-container dark:text-secondary-fixed-dim hover:underline transition-all opacity-80 hover:opacity-100" href="#">Help Center</a>
+</div>
+<div class="opacity-80">
+            © 2024 Tiny &amp; Sweet Birthday Celebrations
+        </div>
+</footer>
+</body></html>

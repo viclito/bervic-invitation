@@ -24,12 +24,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const nameHeader = invitation.partnerTwo
+    ? `${invitation.partnerOne} & ${invitation.partnerTwo}`
+    : `${invitation.partnerOne}`;
+
   return {
-    title: `${invitation.partnerOne} & ${invitation.partnerTwo}'s Wedding Invitation | Bervic`,
-    description: `Together with their families, ${invitation.partnerOne} & ${invitation.partnerTwo} invite you to celebrate their wedding on ${invitation.weddingTime}.`,
+    title: `${nameHeader}'s Celebration Invitation | Bervic`,
+    description: invitation.inviteLine || `Join us in celebrating with ${nameHeader} on ${invitation.weddingTime}.`,
     openGraph: {
-      title: `${invitation.partnerOne} & ${invitation.partnerTwo}'s Wedding Invitation`,
-      description: `Celebrate with ${invitation.partnerOne} & ${invitation.partnerTwo} on their special day.`,
+      title: `${nameHeader}'s Celebration Invitation`,
+      description: `Celebrate with ${nameHeader} on their special day.`,
       images: [{ url: invitation.coupleImage || "/images/templates/couple-photo.jpg" }],
     },
   };
@@ -38,7 +42,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicInvitationPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sParams = (await searchParams) || {};
-  const guestName = (sParams.to || sParams.guest) as string | undefined;
+  const guestName = (sParams.to || sParams.guest || sParams.name) as string | undefined;
+  const guestPhone = (sParams.phone || sParams.tel || sParams.mobile) as string | undefined;
 
   // Run automatic cleanup for expired invitations
   await cleanupExpiredInvitations();
@@ -86,6 +91,7 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     contactAddress: invitation.contactAddress,
     socialLinks: invitation.socialLinksJson ? JSON.parse(invitation.socialLinksJson) : {},
     guestName,
+    guestPhone,
   };
 
   return <DynamicTemplateCard {...props} />;
