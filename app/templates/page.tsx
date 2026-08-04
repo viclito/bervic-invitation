@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,6 +10,7 @@ import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
 import { Search, ExternalLink, Edit3, Crown, Palette } from "lucide-react";
 
 export default function TemplateGalleryPage() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -115,8 +117,8 @@ export default function TemplateGalleryPage() {
                 className="flex flex-col group transition-all duration-300"
               >
                 {/* ── Card Graphic Container ── */}
-                <Link
-                  href={`/templates/customize/${tpl.slug}?from=templates`}
+                <div
+                  onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
                   className="relative aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
                   style={{
                     boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
@@ -130,30 +132,38 @@ export default function TemplateGalleryPage() {
                     className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-20"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Link
-                      href={`/templates/${tpl.slug}`}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/templates/${tpl.slug}`);
+                      }}
                       className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
                       title="Live Preview Demo"
                     >
                       <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-                    </Link>
-                    <Link
-                      href={`/templates/customize/${tpl.slug}?from=templates`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/templates/customize/${tpl.slug}?from=templates`);
+                      }}
                       className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#F8F3EA] text-[#7A1F2B] border border-[#D9A441]/50 flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
                       title="Customize Template"
                     >
                       <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A1F2B]" />
-                    </Link>
+                    </button>
                   </div>
-                </Link>
+                </div>
 
                 {/* ── Card Title Below Graphic ── */}
-                <Link
-                  href={`/templates/customize/${tpl.slug}?from=templates`}
-                  className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 group-hover:text-[#7A1F2B] transition-colors"
+                <div
+                  onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
+                  className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 cursor-pointer group-hover:text-[#7A1F2B] transition-colors"
                 >
                   {tpl.title}
-                </Link>
+                </div>
               </div>
             ))}
           </div>
