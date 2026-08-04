@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,11 +11,7 @@ import {
   ExternalLink,
   Edit3,
   MapPin,
-  Calendar,
   Clock,
-  Heart,
-  CheckCircle2,
-  Share2,
 } from "lucide-react";
 
 // Curated Showcase Templates with rich mockup content
@@ -32,8 +28,6 @@ const showcaseTemplates = [
     partnerTwo: "Alexander",
     date: "Saturday, 28th Nov 2026",
     venue: "The Grand Palace, Bangalore",
-    themeBg: "bg-[#061b0e]",
-    accentColor: "#D9A441",
     demoSlug: "sophia-alexander",
     schedule: [
       { time: "16:30", event: "Ganesh Puja & Swagat" },
@@ -53,8 +47,6 @@ const showcaseTemplates = [
     partnerTwo: "Rahul",
     date: "Sunday, 14th Dec 2026",
     venue: "Umaid Bhawan Palace, Jodhpur",
-    themeBg: "bg-[#1a0812]",
-    accentColor: "#E6C280",
     demoSlug: "priya-rahul",
     schedule: [
       { time: "17:00", event: "Baraat Procession" },
@@ -74,8 +66,6 @@ const showcaseTemplates = [
     partnerTwo: "Meera",
     date: "Friday, 18th Sept 2026",
     venue: "Taj Lake Palace, Udaipur",
-    themeBg: "bg-[#1b1c1c]",
-    accentColor: "#D9A441",
     demoSlug: "mary-viclito",
     schedule: [
       { time: "11:00", event: "Haldi & Mehendi Rituals" },
@@ -95,8 +85,6 @@ const showcaseTemplates = [
     partnerTwo: "Terance",
     date: "Saturday, 10th Oct 2026",
     venue: "Alila Diwa, Goa",
-    themeBg: "bg-[#2b1810]",
-    accentColor: "#F4A261",
     demoSlug: "terance-ancy",
     schedule: [
       { time: "16:00", event: "Beachside Vows & Exchange" },
@@ -116,8 +104,6 @@ const showcaseTemplates = [
     partnerTwo: "Karan",
     date: "Thursday, 31st Dec 2026",
     venue: "Raffles, Udaipur",
-    themeBg: "bg-[#090a10]",
-    accentColor: "#E6C280",
     demoSlug: "sophia-alexander",
     schedule: [
       { time: "19:00", event: "Red Carpet Welcome" },
@@ -137,8 +123,6 @@ const showcaseTemplates = [
     partnerTwo: "Vikram",
     date: "Sunday, 22nd Nov 2026",
     venue: "JW Marriott, Mumbai",
-    themeBg: "bg-[#2a1b20]",
-    accentColor: "#E8A8A8",
     demoSlug: "mary-viclito",
     schedule: [
       { time: "10:30", event: "Traditional Muhurtham" },
@@ -158,8 +142,6 @@ const showcaseTemplates = [
     partnerTwo: "Aditya",
     date: "Saturday, 12th Dec 2026",
     venue: "The Oberoi, New Delhi",
-    themeBg: "bg-[#131410]",
-    accentColor: "#D4AF37",
     demoSlug: "priya-rahul",
     schedule: [
       { time: "18:30", event: "Jazz Cocktail Hour" },
@@ -195,56 +177,56 @@ export default function PopularTemplatesShowcase() {
   const activeTemplate = showcaseTemplates[activeIndex];
 
   return (
-    <section className="py-24 md:py-32 bg-[#12100E] text-[#F8F3EA] relative overflow-hidden select-none border-t border-b border-[#D9A441]/20">
-      {/* Background Ambient Radial Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-radial from-[#D9A441]/15 via-[#7A1F2B]/10 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-[#D9A441]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-[#7A1F2B]/15 rounded-full blur-3xl pointer-events-none" />
+    <section className="py-20 md:py-28 bg-gradient-to-b from-[#F8F3EA] via-[#F3E8D7] to-[#F8F3EA] text-[#221C17] relative overflow-hidden select-none border-t border-b border-[#D9A441]/30">
+      {/* Background Subtle Ambient Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-radial from-[#D9A441]/20 via-[#7A1F2B]/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-[#D9A441]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-[#7A1F2B]/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Heading matching reference design */}
+        {/* Section Heading matching website's royal theme */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center max-w-3xl mx-auto mb-14 md:mb-20"
+          className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D9A441]/20 text-[#D9A441] border border-[#D9A441]/40 text-xs font-semibold uppercase tracking-widest mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] border border-[#D9A441]/40 text-xs font-bold uppercase tracking-widest mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#8B6519]" />
             <span>FEATURED COLLECTION</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#F8F3EA] leading-tight">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#221C17] leading-tight">
             Most Popular{" "}
-            <span className="font-accent italic text-[#D9A441] font-normal text-4xl sm:text-6xl md:text-7xl block sm:inline mt-1 sm:mt-0">
+            <span className="font-accent italic text-[#7A1F2B] font-normal text-4xl sm:text-6xl md:text-7xl block sm:inline mt-1 sm:mt-0">
               Invitation Templates
             </span>
           </h2>
 
-          <p className="mt-4 text-sm sm:text-base md:text-lg text-[#F8F3EA]/75 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base md:text-lg text-[#221C17]/80 max-w-xl mx-auto leading-relaxed">
             Discover beautifully designed interactive wedding & event invitation websites with 1-click WhatsApp RSVP, map directions, and video facades.
           </p>
         </motion.div>
 
         {/* 3D Coverflow Perspective Container */}
-        <div className="relative h-[540px] sm:h-[620px] md:h-[660px] flex items-center justify-center perspective-[1200px] my-6">
+        <div className="relative h-[540px] sm:h-[620px] md:h-[660px] flex items-center justify-center perspective-[1200px] my-4">
           {/* Navigation Arrow Left */}
           <button
             onClick={handlePrev}
             aria-label="Previous Template"
-            className="absolute left-2 sm:left-6 md:left-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#221C17]/80 hover:bg-[#7A1F2B] text-[#F8F3EA] border border-[#D9A441]/40 flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
+            className="absolute left-2 sm:left-6 md:left-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#7A1F2B] hover:bg-[#9B2C3B] text-[#F8F3EA] border-2 border-[#D9A441] flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
           >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
+            <ChevronLeft className="w-6 h-6 text-[#D9A441] group-hover:-translate-x-0.5 transition-transform" />
           </button>
 
           {/* Navigation Arrow Right */}
           <button
             onClick={handleNext}
             aria-label="Next Template"
-            className="absolute right-2 sm:right-6 md:right-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#221C17]/80 hover:bg-[#7A1F2B] text-[#F8F3EA] border border-[#D9A441]/40 flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
+            className="absolute right-2 sm:right-6 md:right-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#7A1F2B] hover:bg-[#9B2C3B] text-[#F8F3EA] border-2 border-[#D9A441] flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
           >
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-[#D9A441] group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           {/* 3D Coverflow Track */}
@@ -293,10 +275,10 @@ export default function PopularTemplatesShowcase() {
                     zIndex,
                     transformStyle: "preserve-3d",
                   }}
-                  className={`absolute cursor-pointer w-[270px] sm:w-[320px] md:w-[340px] h-[480px] sm:h-[560px] md:h-[590px] rounded-[40px] p-3 shadow-2xl border transition-shadow duration-500 ${
+                  className={`absolute cursor-pointer w-[270px] sm:w-[320px] md:w-[340px] h-[480px] sm:h-[560px] md:h-[590px] rounded-[40px] p-3 transition-shadow duration-500 ${
                     isActive
-                      ? "border-[#D9A441] shadow-[0_20px_60px_rgba(217,164,65,0.3)] bg-[#1A1815]"
-                      : "border-[#D9A441]/30 hover:border-[#D9A441]/60 bg-[#141210]/90"
+                      ? "border-2 border-[#D9A441] shadow-[0_25px_60px_rgba(122,31,43,0.35)] bg-[#1A1815]"
+                      : "border border-[#D9A441]/40 hover:border-[#D9A441] shadow-xl bg-[#141210]/95"
                   }`}
                 >
                   {/* Outer Mobile Phone Mockup Frame */}
@@ -330,7 +312,7 @@ export default function PopularTemplatesShowcase() {
                         </div>
                       </div>
 
-                      {/* Schedule Timeline Section (matching reference image) */}
+                      {/* Schedule Timeline Section */}
                       <div className="bg-[#1A1815] border border-[#D9A441]/25 rounded-2xl p-3 mb-3 shadow-inner">
                         <div className="text-center mb-2">
                           <span className="text-[9px] font-bold uppercase tracking-widest text-[#D9A441] flex items-center justify-center gap-1">
@@ -393,16 +375,16 @@ export default function PopularTemplatesShowcase() {
             transition={{ duration: 0.35 }}
             className="text-center max-w-xl mx-auto mt-6"
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7A1F2B]/30 border border-[#D9A441]/30 text-xs font-bold text-[#D9A441] mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7A1F2B]/10 border border-[#7A1F2B]/30 text-xs font-bold text-[#7A1F2B] mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-[#7A1F2B]" />
               <span>{activeTemplate.category}</span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#F8F3EA]">
+            <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
               {activeTemplate.title}
             </h3>
 
-            <p className="text-xs sm:text-sm text-[#F8F3EA]/70 mt-1">
+            <p className="text-xs sm:text-sm text-[#221C17]/80 mt-1">
               {activeTemplate.tagline} • Includes 1-Click WhatsApp Broadcast & Venue Map Link
             </p>
 
@@ -419,10 +401,10 @@ export default function PopularTemplatesShowcase() {
               <Link
                 href={`/invitations/${activeTemplate.demoSlug}`}
                 target="_blank"
-                className="inline-flex items-center gap-2 px-5 sm:px-6 py-3.5 rounded-2xl bg-[#221C17] text-[#F8F3EA] border border-[#D9A441]/40 text-xs sm:text-sm font-bold hover:bg-[#D9A441] hover:text-[#12100E] transition-all shadow-md"
+                className="inline-flex items-center gap-2 px-5 sm:px-6 py-3.5 rounded-2xl bg-[#EFE7D8] text-[#221C17] border border-[#D9A441]/40 text-xs sm:text-sm font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all shadow-md group"
               >
                 <span>Live Preview Demo</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#D9A441] group-hover:text-[#12100E]" />
+                <ExternalLink className="w-3.5 h-3.5 text-[#7A1F2B] group-hover:text-[#D9A441]" />
               </Link>
             </div>
           </motion.div>
@@ -440,8 +422,8 @@ export default function PopularTemplatesShowcase() {
               aria-label={`Go to template ${idx + 1}`}
               className={`transition-all duration-300 rounded-full ${
                 idx === activeIndex
-                  ? "w-8 h-2.5 bg-[#D9A441] shadow-[0_0_12px_rgba(217,164,65,0.6)]"
-                  : "w-2.5 h-2.5 bg-white/20 hover:bg-white/40"
+                  ? "w-8 h-2.5 bg-[#7A1F2B] shadow-[0_0_12px_rgba(122,31,43,0.4)]"
+                  : "w-2.5 h-2.5 bg-[#221C17]/20 hover:bg-[#221C17]/40"
               }`}
             />
           ))}
