@@ -25,11 +25,16 @@ export default function PersonalizedEnvelopeCover({
   const [isOpening, setIsOpening] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // In the customizer/editor, skip the envelope entirely so designers can
+  // see the actual invitation content without having to click through it.
+  if (isCustomizer) return null;
+
   const activeGuestName = guestName ? decodeURIComponent(guestName) : "Honored Guest";
 
   const themeItem =
     templatesRegistry.find((t) => t.slug === templateSlug) ||
     templatesRegistry[0];
+
 
   // Tailored Envelope Styling tokens for each template design
   const getEnvelopeTheme = () => {
