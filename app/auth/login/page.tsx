@@ -24,8 +24,9 @@ function LoginForm() {
     setErrorMsg("");
 
     try {
+      const cleanEmail = email.toLowerCase().trim();
       const res = await signIn("credentials", {
-        email,
+        email: cleanEmail,
         password,
         redirect: false,
       });

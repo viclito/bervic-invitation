@@ -25,16 +25,16 @@ export async function POST(req: Request) {
       await prisma.user.upsert({
         where: { email: cleanEmail },
         update: {
-          name,
+          name: name.trim(),
           password: hashedPassword,
-          phone: phone || null,
+          phone: phone ? phone.trim() : null,
         },
         create: {
           id: userId,
-          name,
+          name: name.trim(),
           email: cleanEmail,
           password: hashedPassword,
-          phone: phone || null,
+          phone: phone ? phone.trim() : null,
           plan: "NONE",
           allowedTemplatesCount: 0,
           allowedCardsCount: 0,
@@ -54,15 +54,40 @@ export async function POST(req: Request) {
            VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW())
            ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "password" = EXCLUDED."password", "phone" = EXCLUDED."phone", "updatedAt" = NOW()`,
           userId,
-          name,
+          name.trim(),
           cleanEmail,
           hashedPassword,
-          phone || null
+          phone ? phone.trim() : null
         );
         userCreated = true;
       } catch (sqlErr: any) {
         console.error("Raw SQL user insert error:", sqlErr?.message);
       }
+    }
+
+    // Step 3: Check case-insensitive existing user fallback
+    if (!userCreated) {
+      try {
+        const existing = await prisma.user.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
+        });
+        if (existing) {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { name: name.trim(), password: hashedPassword, phone: phone ? phone.trim() : null },
+          });
+          userCreated = true;
+        }
+      } catch (findErr: any) {
+        console.error("Find existing user error:", findErr?.message);
+      }
+    }
+
+    if (!userCreated) {
+      return NextResponse.json(
+        { error: "Failed to create user account in database. Please check your network and try again." },
+        { status: 500 }
+      );
     }
 
     // Generate & send OTP code

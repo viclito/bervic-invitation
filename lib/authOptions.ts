@@ -24,13 +24,29 @@ export const authOptions: NextAuthOptions = {
         const cleanEmail = credentials.email.toLowerCase().trim();
 
         let user: any = null;
+
+        // 1. Try Prisma case-insensitive findFirst
         try {
-          user = await prisma.user.findUnique({
-            where: { email: cleanEmail },
+          user = await prisma.user.findFirst({
+            where: {
+              email: {
+                equals: cleanEmail,
+                mode: "insensitive",
+              },
+            },
           });
         } catch {}
 
-        // Fallback to raw SQL query if Prisma lookup failed
+        // 2. Try Prisma findUnique
+        if (!user) {
+          try {
+            user = await prisma.user.findUnique({
+              where: { email: cleanEmail },
+            });
+          } catch {}
+        }
+
+        // 3. Fallback to raw SQL query if Prisma lookup failed
         if (!user) {
           try {
             const raw: any = await prisma.$queryRawUnsafe(
@@ -43,13 +59,17 @@ export const authOptions: NextAuthOptions = {
           } catch {}
         }
 
-        if (!user || !user.password) {
-          throw new Error("No user found with this email");
+        if (!user) {
+          throw new Error("No user found with this email. Please check your spelling or register for a free account below.");
+        }
+
+        if (!user.password) {
+          throw new Error("This account was created with Google. Please click 'Continue with Google' to sign in.");
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid password. Please check your password and try again.");
         }
 
         return {
@@ -72,8 +92,8 @@ export const authOptions: NextAuthOptions = {
 
         let dbUser: any = null;
         try {
-          dbUser = await prisma.user.findUnique({
-            where: { email: cleanEmail },
+          dbUser = await prisma.user.findFirst({
+            where: { email: { equals: cleanEmail, mode: "insensitive" } },
             select: { id: true },
           });
         } catch {}
@@ -126,8 +146,8 @@ export const authOptions: NextAuthOptions = {
         let dbUser: any = null;
 
         try {
-          dbUser = await prisma.user.findUnique({
-            where: { email: cleanEmail },
+          dbUser = await prisma.user.findFirst({
+            where: { email: { equals: cleanEmail, mode: "insensitive" } },
             select: { id: true },
           });
         } catch {}
