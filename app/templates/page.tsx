@@ -1,20 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
-import { Search, Sparkles, ExternalLink, Edit3, Crown } from "lucide-react";
+import { Search, ExternalLink, Edit3, Crown, Palette } from "lucide-react";
 
 export default function TemplateGalleryPage() {
-  const { data: session } = useSession();
-  const router = useRouter();
-
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,61 +31,72 @@ export default function TemplateGalleryPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
+    <div className="min-h-screen flex flex-col" style={{ background: "#F5EEE0" }}>
       <Navbar />
 
-      {/* Gallery Header */}
-      <section className="pt-36 md:pt-40 pb-12 bg-gradient-to-b from-[#F8F3EA] via-[#F4EBDB] to-[#F8F3EA] text-center border-b border-[#D9A441]/20">
-        <div className="max-w-[1000px] mx-auto px-4 sm:px-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] border border-[#D9A441]/40 text-xs font-semibold uppercase tracking-widest mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>DESIGN LIBRARY</span>
-          </div>
+      {/* ── Hero Header ── */}
+      <section className="pt-36 pb-10 text-center px-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#C9A84C]/60 bg-white/60 text-[#7A6520] text-[11px] font-semibold uppercase tracking-widest mb-6 shadow-sm">
+          <Palette className="w-3.5 h-3.5" />
+          <span>Design Library</span>
+        </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#221C17]">
-            Select Your <span className="font-accent text-[#D9A441]">Invitation Template</span>
-          </h1>
-          <p className="mt-4 text-base sm:text-lg text-[#221C17]/75 max-w-xl mx-auto">
-            Choose a design, customize couple names, photos, timings, and map locations, and save to your account.
-          </p>
+        <h1 className="text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight text-[#1A1410] leading-tight">
+          Select Your{" "}
+          <span
+            style={{
+              fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+              color: "#C9A84C",
+              fontStyle: "italic",
+              fontWeight: 700,
+            }}
+          >
+            Invitation Template
+          </span>
+        </h1>
+        <p className="mt-3 text-sm sm:text-base text-[#1A1410]/65 max-w-md mx-auto leading-relaxed">
+          Choose from our curated collection, personalize details, and create stunning
+          invitations for any occasion.
+        </p>
 
-          {/* Search Bar */}
-          <div className="mt-8 max-w-md mx-auto relative">
-            <Search className="w-5 h-5 text-[#7A1F2B] absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search templates (e.g. Royal, Floral, Puja)..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-full bg-[#F8F3EA] border-2 border-[#D9A441]/40 text-sm focus:outline-none focus:border-[#7A1F2B] shadow-sm"
-            />
-          </div>
+        {/* Search Bar */}
+        <div className="mt-7 max-w-sm mx-auto relative">
+          <Search className="w-4 h-4 text-[#8B7345] absolute left-4 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search templates..."
+            className="w-full pl-10 pr-4 py-3 rounded-full bg-white border border-[#D9C88A]/50 text-sm text-[#1A1410] placeholder-[#A89060] focus:outline-none focus:border-[#C9A84C] shadow-sm"
+          />
+        </div>
 
-          {/* Category Filter Pills */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
-                  selectedCategory === cat.id
-                    ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
-                    : "bg-[#EFE7D8] text-[#221C17]/70 hover:text-[#221C17] border border-[#D9A441]/30"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+        {/* Category Filter Pills */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all border ${
+                selectedCategory === cat.id
+                  ? "bg-[#7A1F2B] text-white border-[#7A1F2B] shadow-sm"
+                  : "bg-white text-[#1A1410]/70 border-[#D9C88A]/50 hover:border-[#C9A84C] hover:text-[#1A1410]"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Templates Grid */}
-      <main className="flex-1 max-w-[1200px] mx-auto px-4 sm:px-6 py-16 w-full">
+      {/* ── Templates Grid ── */}
+      <main className="flex-1 max-w-[1380px] mx-auto px-4 sm:px-6 pb-20 w-full">
         {filteredTemplates.length === 0 ? (
-          <div className="text-center py-20 bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-8">
-            <h3 className="text-xl font-bold text-[#221C17]">No templates found</h3>
-            <p className="text-sm text-[#221C17]/60 mt-1">Try clearing your search query or selecting a different category filter.</p>
+          <div className="text-center py-20 bg-white border border-[#D9C88A]/30 rounded-2xl p-8 shadow-sm">
+            <h3 className="text-xl font-bold text-[#1A1410]">No templates found</h3>
+            <p className="text-sm text-[#1A1410]/60 mt-1">
+              Try clearing your search query or selecting a different category filter.
+            </p>
             <button
               onClick={() => {
                 setSelectedCategory("all");
@@ -103,42 +108,77 @@ export default function TemplateGalleryPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {filteredTemplates.map((tpl) => (
               <div
                 key={tpl.id}
-                className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl overflow-hidden card-shadow flex flex-col justify-between hover:border-[#D9A441] transition-all group"
+                className="bg-white rounded-2xl overflow-hidden flex flex-col group transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
+                  border: "1px solid rgba(217,200,138,0.35)",
+                }}
               >
-                {/* Template Card Graphic Header */}
-                <div className="relative h-[240px] w-full overflow-hidden">
+                {/* Preview Area */}
+                <div className="relative h-[190px] w-full overflow-hidden flex-shrink-0">
                   <TemplateCardGraphic template={tpl} />
-                </div>
 
-                {/* Template Body */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-[#221C17] mb-2">{tpl.title}</h3>
-                    <p className="text-xs sm:text-sm text-[#221C17]/70 leading-relaxed mb-6">
-                      {tpl.description}
-                    </p>
-                  </div>
+                  {/* Category badge – top-left */}
+                  <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/90 text-[#1A1410]/70 border border-black/10 backdrop-blur-sm shadow-sm">
+                    {tpl.categoryLabel}
+                  </span>
 
-                  {/* Actions */}
-                  <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#D9A441]/20">
+                  {/* Premium / Free badge – top-right */}
+                  {tpl.isPremium ? (
+                    <span className="absolute top-2.5 right-2.5 flex items-center gap-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[#D9A441] text-[#1A1410] shadow-sm">
+                      <Crown className="w-2.5 h-2.5" />
+                      Premium
+                    </span>
+                  ) : (
+                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                      Free
+                    </span>
+                  )}
+
+                  {/* Bottom bar: BERVIC SUITE | LIVE DEMO */}
+                  <div className="absolute bottom-0 inset-x-0 flex items-center justify-between px-3 py-1.5 bg-white/85 backdrop-blur-sm border-t border-black/5">
+                    <span className="text-[8px] font-bold tracking-widest text-[#1A1410]/35 uppercase">
+                      Bervic Suite
+                    </span>
                     <Link
                       href={`/templates/${tpl.slug}`}
-                      className="py-2.5 px-3 rounded-full border border-[#D9A441] text-[#221C17] text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1.5"
+                      className="text-[8px] font-bold tracking-widest text-[#7A1F2B]/60 uppercase hover:text-[#7A1F2B] transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-[#7A1F2B]" />
-                      <span>Preview</span>
+                      Live Demo →
                     </Link>
+                  </div>
+                </div>
 
+                {/* Card Body */}
+                <div className="p-3.5 flex flex-col flex-1">
+                  <h3 className="text-[13px] font-bold text-[#1A1410] leading-snug mb-1 group-hover:text-[#7A1F2B] transition-colors">
+                    {tpl.title}
+                  </h3>
+                  <p className="text-[11px] text-[#1A1410]/55 leading-relaxed mb-3 line-clamp-2 flex-1">
+                    {tpl.description}
+                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 mt-auto">
+                    <Link
+                      href={`/templates/${tpl.slug}`}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-[#D9C88A]/60 text-[10px] font-semibold text-[#1A1410]/70 bg-white hover:border-[#C9A84C] hover:text-[#1A1410] transition-all"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Preview
+                    </Link>
                     <Link
                       href={`/templates/customize/${tpl.slug}?from=templates`}
-                      className="btn-maroon py-2.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-semibold text-white transition-all hover:opacity-90"
+                      style={{ background: "#7A1F2B" }}
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-[#D9A441]" />
-                      <span>Customize</span>
+                      <Edit3 className="w-3 h-3" />
+                      Customize
                     </Link>
                   </div>
                 </div>
