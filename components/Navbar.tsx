@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, X, Sparkles, User, LogOut } from "lucide-react";
+import { Menu, X, Sparkles, User, LogOut, LogIn } from "lucide-react";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -88,8 +88,8 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Desktop CTA Action Buttons */}
+        <div className="hidden md:flex items-center gap-3">
           {status === "authenticated" ? (
             <div className="flex items-center gap-3">
               {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
@@ -124,30 +124,73 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/templates"
-              className="btn-maroon px-5 py-2.5 text-sm font-semibold flex items-center gap-2 shadow-md"
-            >
-              <Sparkles className="w-4 h-4 text-[#D9A441]" />
-              <span>Get Started Free</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/auth/login"
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border ${
+                  isLightNav
+                    ? "border-[#7A1F2B]/40 text-[#7A1F2B] hover:bg-[#7A1F2B] hover:text-[#F8F3EA]"
+                    : "border-[#D9A441]/60 text-[#F8F3EA] hover:bg-[#D9A441] hover:text-[#221C17]"
+                }`}
+              >
+                <LogIn className="w-4 h-4 text-[#D9A441]" />
+                <span>Login</span>
+              </Link>
+              <Link
+                href="/templates"
+                className="btn-maroon px-5 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md"
+              >
+                <Sparkles className="w-4 h-4 text-[#D9A441]" />
+                <span>Get Started Free</span>
+              </Link>
+            </div>
           )}
         </div>
 
-        {/* Mobile Hamburger Toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className={`md:hidden p-2 rounded-lg focus:outline-none transition-colors ${
-            isLightNav ? "text-[#221C17]" : "text-[#F8F3EA]"
-          }`}
-          aria-label="Toggle Navigation Menu"
-        >
-          {mobileMenuOpen ? (
-            <X className="w-6 h-6 text-[#7A1F2B]" />
+        {/* Mobile Action Controls & Hamburger Toggle */}
+        <div className="md:hidden flex items-center gap-2">
+          {/* Quick Direct Mobile Login / Dashboard Button */}
+          {status === "authenticated" ? (
+            <Link
+              href="/dashboard"
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 shadow-sm shrink-0 ${
+                isLightNav
+                  ? "bg-[#7A1F2B]/10 border border-[#7A1F2B]/30 text-[#7A1F2B]"
+                  : "bg-[#F8F3EA]/20 border border-[#D9A441]/40 text-[#F8F3EA]"
+              }`}
+            >
+              <User className="w-3.5 h-3.5 text-[#D9A441]" />
+              <span>Dashboard</span>
+            </Link>
           ) : (
-            <Menu className="w-6 h-6" />
+            <Link
+              href="/auth/login"
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 shadow-sm shrink-0 border ${
+                isLightNav
+                  ? "border-[#7A1F2B]/40 text-[#7A1F2B] bg-[#7A1F2B]/5"
+                  : "border-[#D9A441]/60 text-[#F8F3EA] bg-[#F8F3EA]/10"
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5 text-[#D9A441]" />
+              <span>Login</span>
+            </Link>
           )}
-        </button>
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={`p-2 rounded-lg focus:outline-none transition-colors ${
+              isLightNav ? "text-[#221C17]" : "text-[#F8F3EA]"
+            }`}
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6 text-[#7A1F2B]" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Slide-in Drawer */}
@@ -157,9 +200,10 @@ export default function Navbar() {
             <Link
               href="/templates"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2 border-b border-[#D9A441]/10"
+              className="py-2 border-b border-[#D9A441]/10 flex items-center justify-between"
             >
-              Templates
+              <span>Templates</span>
+              <span className="text-xs font-bold text-[#7A1F2B] bg-[#7A1F2B]/10 px-2.5 py-0.5 rounded-full">New</span>
             </Link>
             <Link
               href="/#how-it-works"
@@ -184,23 +228,55 @@ export default function Navbar() {
             </Link>
 
             {status === "authenticated" ? (
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-maroon py-3 text-center text-sm font-semibold flex items-center justify-center gap-2 mt-2"
-              >
-                <User className="w-4 h-4 text-[#D9A441]" />
-                <span>My Dashboard</span>
-              </Link>
+              <div className="flex flex-col gap-2 pt-2">
+                {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2.5 rounded-xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md border border-[#D9A441]/40"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 fill-current" />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-maroon py-3 text-center text-sm font-semibold flex items-center justify-center gap-2"
+                >
+                  <User className="w-4 h-4 text-[#D9A441]" />
+                  <span>My Dashboard</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    signOut({ callbackUrl: "/" });
+                  }}
+                  className="py-2.5 text-center text-xs font-bold text-[#7A1F2B] hover:underline flex items-center justify-center gap-1.5"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             ) : (
-              <Link
-                href="/templates"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-maroon py-3 text-center text-sm font-semibold flex items-center justify-center gap-2 mt-2"
-              >
-                <Sparkles className="w-4 h-4 text-[#D9A441]" />
-                <span>Get Started Free</span>
-              </Link>
+              <div className="flex flex-col gap-2 pt-2">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-3 rounded-xl border-2 border-[#7A1F2B]/30 text-[#7A1F2B] bg-[#7A1F2B]/5 hover:bg-[#7A1F2B] hover:text-[#F8F3EA] text-center text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+                >
+                  <LogIn className="w-4 h-4 text-[#D9A441]" />
+                  <span>Login to Account</span>
+                </Link>
+                <Link
+                  href="/templates"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-maroon w-full py-3 text-center text-sm font-semibold flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-[#D9A441]" />
+                  <span>Get Started Free</span>
+                </Link>
+              </div>
             )}
           </nav>
         </div>
