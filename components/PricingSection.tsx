@@ -5,6 +5,7 @@ export default function PricingSection() {
   const plans = [
     {
       name: "Basic Pass",
+      originalPrice: "₹900",
       price: "₹299",
       period: "6 Months",
       desc: "Perfect for couples looking for 1 luxury wedding invitation & Instagram card.",
@@ -22,6 +23,7 @@ export default function PricingSection() {
     },
     {
       name: "Pro Annual Pass",
+      originalPrice: "₹2,000",
       price: "₹999",
       period: "1 Full Year",
       desc: "Ideal for grand wedding celebrations with multiple function templates & card suites.",
@@ -82,7 +84,10 @@ export default function PricingSection() {
                   {plan.desc}
                 </p>
 
-                <div className="my-6 flex items-baseline gap-1">
+                <div className="my-6 flex items-baseline gap-2">
+                  <span className="line-through text-lg font-semibold opacity-50 text-stone-500">
+                    {plan.originalPrice}
+                  </span>
                   <span className="text-4xl font-extrabold tracking-tight">{plan.price}</span>
                   <span className={`text-xs ${plan.popular ? "text-[#F8F3EA]/60" : "text-[#221C17]/60"}`}>
                     / {plan.period}

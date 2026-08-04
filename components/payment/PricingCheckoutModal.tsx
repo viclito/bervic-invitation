@@ -152,7 +152,8 @@ export default function PricingCheckoutModal({
                 6 Months Plan
               </span>
               <h3 className="text-2xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
-              <div className="flex items-baseline gap-1 mt-2 mb-4">
+              <div className="flex items-baseline gap-2 mt-2 mb-4">
+                <span className="line-through text-sm text-[#221C17]/40 font-semibold">₹900</span>
                 <span className="text-3xl font-bold text-[#7A1F2B]">₹299</span>
                 <span className="text-xs text-[#221C17]/60 font-medium">/ 6 Months</span>
               </div>
@@ -210,7 +211,8 @@ export default function PricingCheckoutModal({
                 1 Year Annual Pass
               </span>
               <h3 className="text-2xl font-serif font-bold text-[#221C17]">Pro Annual Pass</h3>
-              <div className="flex items-baseline gap-1 mt-2 mb-4">
+              <div className="flex items-baseline gap-2 mt-2 mb-4">
+                <span className="line-through text-sm text-[#221C17]/40 font-semibold">₹2,000</span>
                 <span className="text-3xl font-bold text-[#7A1F2B]">₹999</span>
                 <span className="text-xs text-[#221C17]/60 font-medium">/ 1 Full Year</span>
               </div>
