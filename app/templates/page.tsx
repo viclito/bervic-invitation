@@ -108,68 +108,46 @@ export default function TemplateGalleryPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {filteredTemplates.map((tpl) => (
               <div
                 key={tpl.id}
-                className="bg-white rounded-2xl overflow-hidden flex flex-col group transition-all duration-300 hover:-translate-y-1"
-                style={{
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
-                  border: "1px solid rgba(217,200,138,0.35)",
-                }}
+                className="flex flex-col group transition-all duration-300"
               >
-                {/* Preview Area */}
-                <div className="relative h-[190px] w-full overflow-hidden flex-shrink-0">
+                {/* ── Card Graphic Container ── */}
+                <div
+                  className="relative aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0"
+                  style={{
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+                    border: "1px solid rgba(217,200,138,0.4)",
+                  }}
+                >
                   <TemplateCardGraphic template={tpl} />
 
-                  {/* Category badge – top-left */}
-                  <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/90 text-[#1A1410]/70 border border-black/10 backdrop-blur-sm shadow-sm">
-                    {tpl.categoryLabel}
-                  </span>
-
-                  {/* Bottom bar: BERVIC SUITE | LIVE DEMO */}
-                  <div className="absolute bottom-0 inset-x-0 flex items-center justify-between px-3 py-1.5 bg-white/85 backdrop-blur-sm border-t border-black/5">
-                    <span className="text-[8px] font-bold tracking-widest text-[#1A1410]/35 uppercase">
-                      Bervic Suite
-                    </span>
+                  {/* Bottom-Right Overlay Quick Action Buttons */}
+                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-20">
                     <Link
                       href={`/templates/${tpl.slug}`}
-                      className="text-[8px] font-bold tracking-widest text-[#7A1F2B]/60 uppercase hover:text-[#7A1F2B] transition-colors"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
+                      title="Live Preview Demo"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      Live Demo →
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-3.5 flex flex-col flex-1">
-                  <h3 className="text-[13px] font-bold text-[#1A1410] leading-snug mb-1 group-hover:text-[#7A1F2B] transition-colors">
-                    {tpl.title}
-                  </h3>
-                  <p className="text-[11px] text-[#1A1410]/55 leading-relaxed mb-3 line-clamp-2 flex-1">
-                    {tpl.description}
-                  </p>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 mt-auto">
-                    <Link
-                      href={`/templates/${tpl.slug}`}
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-[#D9C88A]/60 text-[10px] font-semibold text-[#1A1410]/70 bg-white hover:border-[#C9A84C] hover:text-[#1A1410] transition-all"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      Preview
+                      <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </Link>
                     <Link
                       href={`/templates/customize/${tpl.slug}?from=templates`}
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-semibold text-white transition-all hover:opacity-90"
-                      style={{ background: "#7A1F2B" }}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#F8F3EA] text-[#7A1F2B] border border-[#D9A441]/50 flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
+                      title="Customize Template"
                     >
-                      <Edit3 className="w-3 h-3" />
-                      Customize
+                      <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A1F2B]" />
                     </Link>
                   </div>
                 </div>
+
+                {/* ── Card Title Below Graphic ── */}
+                <h3 className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 group-hover:text-[#7A1F2B] transition-colors">
+                  {tpl.title}
+                </h3>
               </div>
             ))}
           </div>
