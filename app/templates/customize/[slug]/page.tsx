@@ -606,6 +606,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     type="text"
                     value={formData.partnerOne}
                     onChange={(e) => handleInputChange("partnerOne", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder={isBirthday ? "Celebrant Name" : "Your Name"}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
@@ -619,6 +620,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     type="text"
                     value={formData.partnerTwo}
                     onChange={(e) => handleInputChange("partnerTwo", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder={isBirthday ? "Optional Subtitle/Name" : "Partner's Name"}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
@@ -634,6 +636,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     type="text"
                     value={formData.coupleInitials}
                     onChange={(e) => handleInputChange("coupleInitials", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder="Y | P"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
@@ -647,6 +650,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     type="text"
                     value={formData.tagline}
                     onChange={(e) => handleInputChange("tagline", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder="TOGETHER WITH THEIR FAMILIES"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                   />
@@ -661,6 +665,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   type="text"
                   value={formData.inviteLine}
                   onChange={(e) => handleInputChange("inviteLine", e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder="invite you to celebrate their wedding"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                 />
@@ -709,6 +714,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   type="text"
                   value={formData.weddingTime}
                   onChange={(e) => handleInputChange("weddingTime", e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder="Saturday, 28th November 2026 at 10:30 AM IST"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                 />
@@ -722,6 +728,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   type="text"
                   value={formData.venuePlace}
                   onChange={(e) => handleInputChange("venuePlace", e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder="Your Venue Name, Your City, State"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                 />
@@ -814,6 +821,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                         type="text"
                         value={ev.icon}
                         onChange={(e) => handleEventChange(idx, "icon", e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         className="w-full px-2 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs text-center font-bold"
                       />
                     </div>
@@ -823,6 +831,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                         type="text"
                         value={ev.title}
                         onChange={(e) => handleEventChange(idx, "title", e.target.value)}
+                        onFocus={(e) => e.target.select()}
                         className="w-full px-3 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold"
                       />
                     </div>
@@ -844,6 +853,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                           type="text"
                           value={ev.date}
                           onChange={(e) => handleEventChange(idx, "date", e.target.value)}
+                          onFocus={(e) => e.target.select()}
                           placeholder="Nov 28, 2026"
                           className="flex-1 min-w-0 px-2.5 py-1.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
                         />
@@ -898,12 +908,14 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={tl.icon}
                       onChange={(e) => handleTimelineChange(idx, "icon", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       className="w-10 px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs text-center shrink-0 font-bold"
                     />
                     <input
                       type="text"
                       value={tl.title}
                       onChange={(e) => handleTimelineChange(idx, "title", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="Title"
                       className="flex-1 px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
                     />
@@ -931,6 +943,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                           type="text"
                           value={tl.date || (datePickerVal ? formatEventDate(datePickerVal) : "")}
                           onChange={(e) => handleTimelineChange(idx, "date", e.target.value)}
+                          onFocus={(e) => e.target.select()}
                           placeholder="Nov 28, 2026"
                           className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
                         />
@@ -948,6 +961,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                           type="text"
                           value={tl.time}
                           onChange={(e) => handleTimelineChange(idx, "time", e.target.value)}
+                          onFocus={(e) => e.target.select()}
                           placeholder="07:00 PM"
                           className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
                         />
@@ -1002,6 +1016,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="url"
                       value={formData.loveStoryVideoUrl}
                       onChange={(e) => handleInputChange("loveStoryVideoUrl", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/50 text-xs font-semibold text-[#7A1F2B] focus:outline-none focus:border-[#7A1F2B]"
                     />
@@ -1018,6 +1033,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       rows={4}
                       value={formData.loveStoryText}
                       onChange={(e) => handleInputChange("loveStoryText", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="Enter your love story narrative here..."
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                     />
@@ -1070,6 +1086,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={loc.name}
                       onChange={(e) => handleLocationChange(idx, "name", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="Marriage Ceremony Venue"
                       className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
                     />
@@ -1081,6 +1098,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={loc.venueLabel}
                       onChange={(e) => handleLocationChange(idx, "venueLabel", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="Your Ceremony Hall"
                       className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
                     />
@@ -1100,6 +1118,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={loc.address}
                       onChange={(e) => handleLocationChange(idx, "address", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="Address line, City, State"
                       className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
                     />
@@ -1111,6 +1130,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       type="text"
                       value={loc.mapLink}
                       onChange={(e) => handleLocationChange(idx, "mapLink", e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       placeholder="https://maps.google.com"
                       className="w-full px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs"
                     />
@@ -1189,6 +1209,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   type="text"
                   value={formData.contactPhone}
                   onChange={(e) => handleInputChange("contactPhone", e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder="+91 98765 43210"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                 />
@@ -1202,6 +1223,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   type="text"
                   value={formData.contactAddress}
                   onChange={(e) => handleInputChange("contactAddress", e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder="Your City, State, Country"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
                 />
