@@ -51,10 +51,8 @@ export default function RegisterPage() {
         <div className="w-full max-w-md bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow relative overflow-hidden">
           {/* Top Header */}
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-full bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center mx-auto mb-3 shadow-md">
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2C11.5 5 9.5 7.5 7 9C9.5 10.5 11.5 13 12 16C12.5 13 14.5 10.5 17 9C14.5 7.5 12.5 5 12 2Z" />
-              </svg>
+            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto mb-3">
+              <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-[#221C17]">Create Your Account</h1>
             <p className="text-sm text-[#221C17]/70 mt-1 font-medium">

@@ -12,82 +12,72 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
-    // Bulletproof multi-step insertion: Guarantee User row exists in PostgreSQL
-    let userCreated = false;
-
-    // Step 1: Standard Prisma Create/Update
+    // 1. Check if user already exists (case-insensitive)
+    let userRecord: any = null;
     try {
-      await prisma.user.upsert({
-        where: { email: cleanEmail },
-        update: {
-          name: name.trim(),
-          password: hashedPassword,
-          phone: phone ? phone.trim() : null,
-        },
-        create: {
-          id: userId,
-          name: name.trim(),
-          email: cleanEmail,
-          password: hashedPassword,
-          phone: phone ? phone.trim() : null,
-          plan: "NONE",
-          allowedTemplatesCount: 0,
-          allowedCardsCount: 0,
-          role: "USER",
-        },
+      userRecord = await prisma.user.findFirst({
+        where: { email: { equals: cleanEmail, mode: "insensitive" } },
       });
-      userCreated = true;
-    } catch (prismaErr: any) {
-      console.warn("Prisma user creation warning, attempting raw SQL insert:", prismaErr?.message);
-    }
+    } catch {}
 
-    // Step 2: Direct Raw SQL Insert fallback if Prisma creation failed
-    if (!userCreated) {
+    if (userRecord) {
+      // Update existing user with new password, name, phone
       try {
-        await prisma.$executeRawUnsafe(
-          `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
-           VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW())
-           ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "password" = EXCLUDED."password", "phone" = EXCLUDED."phone", "updatedAt" = NOW()`,
-          userId,
-          name.trim(),
-          cleanEmail,
-          hashedPassword,
-          phone ? phone.trim() : null
-        );
-        userCreated = true;
-      } catch (sqlErr: any) {
-        console.error("Raw SQL user insert error:", sqlErr?.message);
-      }
-    }
-
-    // Step 3: Check case-insensitive existing user fallback
-    if (!userCreated) {
-      try {
-        const existing = await prisma.user.findFirst({
-          where: { email: { equals: cleanEmail, mode: "insensitive" } },
+        userRecord = await prisma.user.update({
+          where: { id: userRecord.id },
+          data: {
+            name: name.trim(),
+            password: hashedPassword,
+            phone: phone ? phone.trim() : null,
+          },
         });
-        if (existing) {
-          await prisma.user.update({
-            where: { id: existing.id },
-            data: { name: name.trim(), password: hashedPassword, phone: phone ? phone.trim() : null },
-          });
-          userCreated = true;
-        }
-      } catch (findErr: any) {
-        console.error("Find existing user error:", findErr?.message);
+      } catch {
+        // Fallback SQL
+        await prisma.$executeRawUnsafe(
+          `UPDATE "User" SET "name" = $1, "password" = $2, "phone" = $3, "updatedAt" = NOW() WHERE LOWER("email") = $4`,
+          name.trim(),
+          hashedPassword,
+          phone ? phone.trim() : null,
+          cleanEmail
+        );
       }
-    }
-
-    if (!userCreated) {
-      return NextResponse.json(
-        { error: "Failed to create user account in database. Please check your network and try again." },
-        { status: 500 }
-      );
+    } else {
+      // Create new user in PostgreSQL
+      try {
+        userRecord = await prisma.user.create({
+          data: {
+            id: userId,
+            name: name.trim(),
+            email: cleanEmail,
+            password: hashedPassword,
+            phone: phone ? phone.trim() : null,
+            plan: "NONE",
+            allowedTemplatesCount: 0,
+            allowedCardsCount: 0,
+            role: "USER",
+          },
+        });
+      } catch (createErr: any) {
+        console.warn("Prisma user creation warning, executing raw SQL insert:", createErr?.message);
+        try {
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "User" ("id", "name", "email", "password", "phone", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
+             VALUES ($1, $2, $3, $4, $5, 'NONE', 0, 0, 'USER', NOW(), NOW())
+             ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "password" = EXCLUDED."password", "phone" = EXCLUDED."phone", "updatedAt" = NOW()`,
+            userId,
+            name.trim(),
+            cleanEmail,
+            hashedPassword,
+            phone ? phone.trim() : null
+          );
+          userRecord = { id: userId, email: cleanEmail };
+        } catch (rawErr: any) {
+          console.error("Raw SQL user insert error:", rawErr?.message);
+        }
+      }
     }
 
     // Generate & send OTP code

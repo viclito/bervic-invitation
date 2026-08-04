@@ -74,8 +74,8 @@ function VerifyOtpContent() {
 
   return (
     <div className="w-full max-w-md bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow relative overflow-hidden text-center">
-      <div className="w-14 h-14 rounded-full bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center mx-auto mb-4 shadow-md">
-        <KeyRound className="w-7 h-7" />
+      <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto mb-4">
+        <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
       </div>
 
       <h1 className="text-3xl font-bold text-[#221C17]">Enter Verification Code</h1>

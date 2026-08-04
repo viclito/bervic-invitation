@@ -57,6 +57,14 @@ export const metadata: Metadata = {
       "Create stunning digital invitations for weddings, birthdays, religious functions & all celebrations.",
     images: ["/images/category-wedding.jpg"],
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -12,15 +12,8 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="md:col-span-1 space-y-4">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-full bg-[#7A1F2B] flex items-center justify-center text-[#D9A441] shadow-md">
-                <svg
-                  className="w-4 h-4 fill-current"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 2C11.5 5 9.5 7.5 7 9C9.5 10.5 11.5 13 12 16C12.5 13 14.5 10.5 17 9C14.5 7.5 12.5 5 12 2Z" />
-                  <path d="M12 15C8.5 15 5.5 17.5 4 21C6.5 21.5 9.5 22 12 22C14.5 22 17.5 21.5 20 21C18.5 17.5 15.5 15 12 15Z" />
-                </svg>
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 shadow-md border border-[#D9A441]/40 group-hover:scale-105 transition-transform duration-300">
+                <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-bold text-[#F8F3EA] tracking-tight">Bervic</span>
             </Link>

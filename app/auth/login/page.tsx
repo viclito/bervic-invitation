@@ -51,8 +51,8 @@ function LoginForm() {
   return (
     <div className="max-w-md w-full bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow space-y-6">
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-full bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center mx-auto shadow-md">
-          <Sparkles className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto">
+          <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-[#221C17]">Welcome Back</h1>
         <p className="text-xs text-[#221C17]/70">
