@@ -127,18 +127,6 @@ export default function TemplateGalleryPage() {
                     {tpl.categoryLabel}
                   </span>
 
-                  {/* Premium / Free badge – top-right */}
-                  {tpl.isPremium ? (
-                    <span className="absolute top-2.5 right-2.5 flex items-center gap-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[#D9A441] text-[#1A1410] shadow-sm">
-                      <Crown className="w-2.5 h-2.5" />
-                      Premium
-                    </span>
-                  ) : (
-                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
-                      Free
-                    </span>
-                  )}
-
                   {/* Bottom bar: BERVIC SUITE | LIVE DEMO */}
                   <div className="absolute bottom-0 inset-x-0 flex items-center justify-between px-3 py-1.5 bg-white/85 backdrop-blur-sm border-t border-black/5">
                     <span className="text-[8px] font-bold tracking-widest text-[#1A1410]/35 uppercase">

@@ -177,31 +177,11 @@ export default function TemplateCardGraphic({ template }: Props) {
       // High-End Graphic Card Fallback matching exact theme colors & layout
       return (
         <div
-          className={`w-full h-full bg-gradient-to-br ${bgGrad} relative overflow-hidden flex flex-col justify-between p-5 border border-[#D9A441]/30`}
+          className={`w-full h-full bg-gradient-to-br ${bgGrad} relative overflow-hidden flex flex-col items-center justify-center p-5 border border-[#D9A441]/30`}
           style={{ backgroundColor: template.themeColor }}
         >
-          {/* Header Banner Badge */}
-          <div className="flex items-center justify-between z-10">
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border bg-black/20 text-[#D9A441] border-[#D9A441]/40"
-            >
-              {template.categoryLabel}
-            </span>
-
-            {isPremium ? (
-              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#D9A441] text-[#221C17] flex items-center gap-1 shadow-sm">
-                <Crown className="w-3 h-3" />
-                <span>PREMIUM</span>
-              </span>
-            ) : (
-              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#5B8C69] text-white">
-                FREE
-              </span>
-            )}
-          </div>
-
           {/* Central Template Design Mockup Layout */}
-          <div className="relative z-10 text-center my-auto flex flex-col items-center">
+          <div className="relative z-10 text-center flex flex-col items-center">
             <div className="w-8 h-8 rounded-full bg-[#D9A441]/20 border border-[#D9A441]/50 flex items-center justify-center mb-2">
               <Sparkles className="w-4 h-4 text-[#D9A441]" />
             </div>
@@ -221,12 +201,6 @@ export default function TemplateCardGraphic({ template }: Props) {
             <span className="text-[10px] font-mono text-[#D9A441] opacity-90">
               {styleTag}
             </span>
-          </div>
-
-          {/* Footer Card Info */}
-          <div className="relative z-10 flex items-center justify-between text-[9px] opacity-75 border-t border-[#D9A441]/20 pt-2 font-mono">
-            <span>BERVIC SUITE</span>
-            <span>LIVE DEMO</span>
           </div>
         </div>
       );
