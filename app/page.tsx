@@ -6,8 +6,8 @@ import Footer from "@/components/Footer";
 // Reusable Skeleton Component for Lazy Loaded Sections
 function SectionSkeleton({ height = "h-[400px]" }: { height?: string }) {
   return (
-    <div className={`w-full ${height} bg-[#F8F3EA] flex items-center justify-center p-8`}>
-      <div className="w-full max-w-[1200px] h-full rounded-3xl border border-[#D9A441]/20 bg-[#F4EBDB]/40 animate-pulse flex items-center justify-center">
+    <div className={`w-full ${height} bg-[#12100E] flex items-center justify-center p-8`}>
+      <div className="w-full max-w-[1200px] h-full rounded-3xl border border-[#D9A441]/20 bg-[#1A1815]/40 animate-pulse flex items-center justify-center">
         <div className="w-10 h-10 rounded-full border-2 border-[#D9A441] border-t-transparent animate-spin" />
       </div>
     </div>
@@ -15,6 +15,10 @@ function SectionSkeleton({ height = "h-[400px]" }: { height?: string }) {
 }
 
 // Below the Fold Sections — Dynamic Imports with Skeletons
+const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTemplatesShowcase"), {
+  loading: () => <SectionSkeleton height="h-[750px]" />,
+});
+
 const AboutSection = dynamic(() => import("@/components/AboutSection"), {
   loading: () => <SectionSkeleton height="h-[600px]" />,
 });
@@ -54,6 +58,9 @@ export default function Home() {
 
       {/* Hero Section (Loaded immediately, priority) */}
       <Hero />
+
+      {/* 3D Coverflow Popular Invitation Templates Showcase */}
+      <PopularTemplatesShowcase />
 
       {/* Lazy-Loaded Below the Fold Sections */}
       <AboutSection />
