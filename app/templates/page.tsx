@@ -115,8 +115,9 @@ export default function TemplateGalleryPage() {
                 className="flex flex-col group transition-all duration-300"
               >
                 {/* ── Card Graphic Container ── */}
-                <div
-                  className="relative aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0"
+                <Link
+                  href={`/templates/customize/${tpl.slug}?from=templates`}
+                  className="relative aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
                   style={{
                     boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
                     border: "1px solid rgba(217,200,138,0.4)",
@@ -125,12 +126,14 @@ export default function TemplateGalleryPage() {
                   <TemplateCardGraphic template={tpl} />
 
                   {/* Bottom-Right Overlay Quick Action Buttons */}
-                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-20">
+                  <div
+                    className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Link
                       href={`/templates/${tpl.slug}`}
                       className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
                       title="Live Preview Demo"
-                      onClick={(e) => e.stopPropagation()}
                     >
                       <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </Link>
@@ -142,12 +145,15 @@ export default function TemplateGalleryPage() {
                       <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A1F2B]" />
                     </Link>
                   </div>
-                </div>
+                </Link>
 
                 {/* ── Card Title Below Graphic ── */}
-                <h3 className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 group-hover:text-[#7A1F2B] transition-colors">
+                <Link
+                  href={`/templates/customize/${tpl.slug}?from=templates`}
+                  className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 group-hover:text-[#7A1F2B] transition-colors"
+                >
                   {tpl.title}
-                </h3>
+                </Link>
               </div>
             ))}
           </div>
