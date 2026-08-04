@@ -399,7 +399,7 @@ export default function PopularTemplatesShowcase() {
               </Link>
 
               <Link
-                href={`/invitations/${activeTemplate.demoSlug}`}
+                href={`/templates/${activeTemplate.slug}`}
                 target="_blank"
                 className="inline-flex items-center gap-2 px-5 sm:px-6 py-3.5 rounded-2xl bg-[#EFE7D8] text-[#221C17] border border-[#D9A441]/40 text-xs sm:text-sm font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all shadow-md group"
               >
