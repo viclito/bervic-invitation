@@ -8,6 +8,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
+import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
 import { Search, Sparkles, ExternalLink, Edit3, Crown } from "lucide-react";
 
 export default function TemplateGalleryPage() {
@@ -108,39 +109,9 @@ export default function TemplateGalleryPage() {
                 key={tpl.id}
                 className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl overflow-hidden card-shadow flex flex-col justify-between hover:border-[#D9A441] transition-all group"
               >
-                {/* Template Image Header */}
-                <div className="relative h-[240px] w-full overflow-hidden bg-[#221C17]">
-                  <Image
-                    src={tpl.previewImage}
-                    alt={tpl.title}
-                    fill
-                    loading="lazy"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#221C17]/70 via-transparent to-transparent" />
-
-                  {/* Badges */}
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${tpl.badgeColor} backdrop-blur-md`}>
-                      {tpl.categoryLabel}
-                    </span>
-
-                    {tpl.isPremium ? (
-                      <span className="px-3 py-1 rounded-full bg-[#D9A441] text-[#221C17] text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-md">
-                        <Crown className="w-3.5 h-3.5" />
-                        <span>PREMIUM</span>
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 rounded-full bg-[#5B8C69] text-[#F8F3EA] text-xs font-bold uppercase tracking-wider shadow-md">
-                        FREE
-                      </span>
-                    )}
-                  </div>
-
-                  <span className="absolute bottom-3 left-4 text-xs font-accent italic text-[#D9A441]">
-                    {tpl.styleTag}
-                  </span>
+                {/* Template Card Graphic Header */}
+                <div className="relative h-[240px] w-full overflow-hidden">
+                  <TemplateCardGraphic template={tpl} />
                 </div>
 
                 {/* Template Body */}
