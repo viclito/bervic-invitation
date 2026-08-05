@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
-import { Search, ExternalLink, Edit3, Crown, Palette } from "lucide-react";
+import { Search, ExternalLink, Edit3, Crown, Palette, Sparkles } from "lucide-react";
 
-export default function TemplateGalleryPage() {
+function TemplateGalleryContent() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const searchParams = useSearchParams();
+
+  const categoryParam = searchParams.get("category");
+  const viewedParam = searchParams.get("viewed");
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || "all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedSlug, setHighlightedSlug] = useState<string | null>(viewedParam);
 
   const categories = [
     { id: "all", label: "All Templates" },
@@ -21,6 +27,23 @@ export default function TemplateGalleryPage() {
     { id: "religious", label: "Religious & Pujas" },
     { id: "anniversary", label: "Anniversaries" },
   ];
+
+  // Auto-select category and scroll to last viewed template
+  useEffect(() => {
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+    if (viewedParam) {
+      setHighlightedSlug(viewedParam);
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`template-card-${viewedParam}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [categoryParam, viewedParam]);
 
   const filteredTemplates = templatesRegistry.filter((tpl) => {
     const matchesCategory =
@@ -111,59 +134,83 @@ export default function TemplateGalleryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {filteredTemplates.map((tpl) => (
-              <div
-                key={tpl.id}
-                className="flex flex-col group transition-all duration-300 bg-white rounded-2xl p-2 sm:p-3 border border-[#D9C88A]/40 shadow-sm hover:shadow-md hover:border-[#D9A441]"
-              >
-                {/* ── Card Graphic Container (Clicking goes to Live Preview) ── */}
+            {filteredTemplates.map((tpl) => {
+              const isViewed = highlightedSlug === tpl.slug;
+              return (
                 <div
-                  onClick={() => router.push(`/templates/${tpl.slug}`)}
-                  className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
-                  style={{
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-                    border: "1px solid rgba(217,200,138,0.4)",
-                  }}
-                  title="Click to view live preview"
+                  key={tpl.id}
+                  id={`template-card-${tpl.slug}`}
+                  className={`flex flex-col group transition-all duration-300 bg-white rounded-2xl p-2 sm:p-3 border relative ${
+                    isViewed
+                      ? "border-2 border-[#7A1F2B] ring-4 ring-[#7A1F2B]/20 shadow-lg scale-[1.02]"
+                      : "border-[#D9C88A]/40 shadow-sm hover:shadow-md hover:border-[#D9A441]"
+                  }`}
                 >
-                  <TemplateCardGraphic template={tpl} />
-                </div>
+                  {/* Highlight Badge for Recently Viewed Template */}
+                  {isViewed && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-[#D9A441] flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 fill-current text-[#D9A441]" />
+                      <span>Last Viewed</span>
+                    </div>
+                  )}
 
-                {/* ── Card Title Below Graphic ── */}
-                <div
-                  onClick={() => router.push(`/templates/${tpl.slug}`)}
-                  className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 cursor-pointer group-hover:text-[#7A1F2B] transition-colors"
-                >
-                  {tpl.title}
-                </div>
-
-                {/* ── Text Format Action Buttons Below Image ── */}
-                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mt-3 pt-2 border-t border-[#D9C88A]/30">
-                  <button
-                    type="button"
+                  {/* ── Card Graphic Container (Clicking goes to Live Preview) ── */}
+                  <div
                     onClick={() => router.push(`/templates/${tpl.slug}`)}
-                    className="py-1.5 px-2 rounded-xl border border-[#D9A441]/60 bg-[#F8F3EA] text-[#221C17] text-[11px] sm:text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1 shadow-sm"
+                    className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
+                    style={{
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+                      border: "1px solid rgba(217,200,138,0.4)",
+                    }}
+                    title="Click to view live preview"
                   >
-                    <ExternalLink className="w-3 h-3 text-[#7A1F2B]" />
-                    <span>Preview</span>
-                  </button>
+                    <TemplateCardGraphic template={tpl} />
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
-                    className="btn-maroon py-1.5 px-2 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-sm"
+                  {/* ── Card Title Below Graphic ── */}
+                  <div
+                    onClick={() => router.push(`/templates/${tpl.slug}`)}
+                    className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 cursor-pointer group-hover:text-[#7A1F2B] transition-colors"
                   >
-                    <Edit3 className="w-3 h-3 text-[#D9A441]" />
-                    <span>Customize</span>
-                  </button>
+                    {tpl.title}
+                  </div>
+
+                  {/* ── Text Format Action Buttons Below Image ── */}
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mt-3 pt-2 border-t border-[#D9C88A]/30">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/templates/${tpl.slug}`)}
+                      className="py-1.5 px-2 rounded-xl border border-[#D9A441]/60 bg-[#F8F3EA] text-[#221C17] text-[11px] sm:text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <ExternalLink className="w-3 h-3 text-[#7A1F2B]" />
+                      <span>Preview</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
+                      className="btn-maroon py-1.5 px-2 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <Edit3 className="w-3 h-3 text-[#D9A441]" />
+                      <span>Customize</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
 
       <Footer />
     </div>
+  );
+}
+
+export default function TemplateGalleryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5EEE0]" />}>
+      <TemplateGalleryContent />
+    </Suspense>
   );
 }

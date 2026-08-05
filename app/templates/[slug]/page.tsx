@@ -24,19 +24,22 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
       ? sampleBirthdayData
       : sampleWeddingData;
 
+  const categoryParam = targetTemplate?.category || "all";
+
   return (
     <div className="relative min-h-screen">
       {/* Live Preview Full Invitation Screen */}
       <DynamicTemplateCard {...initialData} templateSlug={slug} />
 
       {/* Floating Sticky Bottom CTA Bar to Customize */}
-      <div className="fixed bottom-6 inset-x-4 max-w-md mx-auto z-50 bg-[#221C17]/95 backdrop-blur-md border-2 border-[#D9A441] text-[#F8F3EA] p-3 rounded-full shadow-2xl flex items-center justify-between gap-3">
+      <div className="fixed bottom-6 inset-x-4 max-w-lg mx-auto z-50 bg-[#221C17]/95 backdrop-blur-md border-2 border-[#D9A441] text-[#F8F3EA] p-3 rounded-full shadow-2xl flex items-center justify-between gap-2 sm:gap-3">
         <Link
-          href="/templates"
-          className="p-2.5 rounded-full bg-[#EFE7D8]/20 text-[#D9A441] hover:bg-[#D9A441]/30 transition-colors shrink-0"
-          title="Back to All Templates"
+          href={`/templates?category=${categoryParam}&viewed=${slug}`}
+          className="px-3 py-2 rounded-full bg-[#EFE7D8]/20 text-[#D9A441] hover:bg-[#D9A441]/30 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold"
+          title={`Back to ${targetTemplate?.categoryLabel || "Gallery"}`}
         >
           <ArrowLeft className="w-4 h-4" />
+          <span className="text-[11px] font-bold">Back</span>
         </Link>
 
         <div className="flex flex-col text-left leading-tight truncate">
@@ -51,7 +54,7 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
 
         <Link
           href={`/templates/customize/${slug}?from=templates`}
-          className="btn-maroon px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all text-[#F8F3EA]"
+          className="btn-maroon px-4 sm:px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all text-[#F8F3EA]"
         >
           <Edit3 className="w-4 h-4 text-[#D9A441]" />
           <span>Make It Yours ✨</span>
