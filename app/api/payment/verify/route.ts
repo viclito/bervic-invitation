@@ -57,10 +57,18 @@ export async function POST(req: Request) {
     const addCards = selectedPlan === "BASIC_299" ? 2 : 6;
     const amount = selectedPlan === "BASIC_299" ? 299 : 999;
 
-    // Calculate plan expiration date: strictly 6 or 12 months from date of purchase (now)
+    // Calculate expiration date: take whichever is longer between existing remaining validity and new purchase validity
     const now = new Date();
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + validityMonths);
+    const newPlanExpiresAt = new Date(now);
+    newPlanExpiresAt.setMonth(newPlanExpiresAt.getMonth() + validityMonths);
+
+    let finalExpiresAt = newPlanExpiresAt;
+    if (user.planExpiresAt) {
+      const existingExpiry = new Date(user.planExpiresAt);
+      if (existingExpiry > now && existingExpiry > newPlanExpiresAt) {
+        finalExpiresAt = existingExpiry;
+      }
+    }
 
     // Calculate new total accumulated template & card quotas
     const newAllowedTemplates = (user.allowedTemplatesCount || 0) + addTemplates;
@@ -105,7 +113,7 @@ export async function POST(req: Request) {
           allowedTemplates: addTemplates,
           allowedCards: addCards,
           startsAt: now,
-          expiresAt,
+          expiresAt: finalExpiresAt,
           razorpayOrderId: razorpay_order_id || `order_test_${Date.now()}`,
           razorpayPaymentId: razorpay_payment_id || `pay_test_${Date.now()}`,
         },
@@ -119,7 +127,7 @@ export async function POST(req: Request) {
       where: { id: user.id },
       data: {
         plan: targetPlan,
-        planExpiresAt: expiresAt,
+        planExpiresAt: finalExpiresAt,
         allowedTemplatesCount: newAllowedTemplates,
         allowedCardsCount: newAllowedCards,
       },
