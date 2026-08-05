@@ -500,9 +500,18 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
       }
 
       const savedSlug = data.invitation?.slug || "";
+      const newInvId = data.invitation?.id;
+
       setSavedInvitationSlug(savedSlug);
       setCustomSlug(savedSlug);
       setIsSavedInProfile(true);
+
+      if (newInvId) {
+        invitationIdRef.current = newInvId;
+        savedSlugRef.current = savedSlug;
+        router.replace(`/templates/customize/${templateSlug}?id=${newInvId}&from=dashboard`);
+      }
+
       setSavedSuccessModal(true);
     } catch (err: any) {
       setErrorMsg(err?.message || "Error saving invitation to database");
