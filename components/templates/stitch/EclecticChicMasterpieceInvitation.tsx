@@ -268,7 +268,7 @@ export default function EclecticChicMasterpieceInvitation(
               <img
                 alt={`${celebrantName} Editorial Portrait`}
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt"
+                src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt"}
               />
             </div>
           </div>

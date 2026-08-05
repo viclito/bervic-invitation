@@ -222,8 +222,8 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
                 className="relative h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#d0c5af]/40 group"
               >
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5ZBSVi6ZFGGktCxO8BRSXhu4U_4g5eh4s4t2thzsReW256sU1bXFNlbu9M0XKep96SLVXvh0Obp7rj4WfjrHL7zEVTI27XdiswLNS3LvIbjpjKXYfJnaaQij1Epe28Fpdv9Gu7alUAKuJpjlHWeEe7FWv19XGZR45bp725IFe5AHHO_2Zb-T-zOrcXKIOVxYHGr1JT9LFIahbGWE8FJI2mE-2_mrsU2Glqp2WrXsIzTRfJ0sd0FUN"
-                  alt="Reception Editorial Details"
+                  src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuA5ZBSVi6ZFGGktCxO8BRSXhu4U_4g5eh4s4t2thzsReW256sU1bXFNlbu9M0XKep96SLVXvh0Obp7rj4WfjrHL7zEVTI27XdiswLNS3LvIbjpjKXYfJnaaQij1Epe28Fpdv9Gu7alUAKuJpjlHWeEe7FWv19XGZR45bp725IFe5AHHO_2Zb-T-zOrcXKIOVxYHGr1JT9LFIahbGWE8FJI2mE-2_mrsU2Glqp2WrXsIzTRfJ0sd0FUN"}
+                  alt="Reception Details"
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-[#685d4a]/10 group-hover:bg-transparent transition-colors duration-500" />

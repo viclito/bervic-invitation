@@ -191,8 +191,8 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
               >
                 <div className="w-full h-full border border-[#d4af37] overflow-hidden">
                   <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQN0JQjHjBr_Dr7kqsqaL8i75h9t4ORDdRbNpnJChk5hRppIoYCkOpmE_NC6YoaMss4471FGAwh5SfLQfPScHxfiHZhcUq03khn9InXOGCLdASTOO8fpA-oVYvkGUf33m380ek_HqRPbAGNm_D_syQkgNSx91Tu8aUld7fHOxJYrsGEyNei7Mrlyvu-3oI57EcPy6ecaBtoTuuryKhSQzs-QnVIaUR5sncLnsYZtOeKmzZDlCEvOur"
-                    alt="Art Deco Interior Detail"
+                    src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuAQN0JQjHjBr_Dr7kqsqaL8i75h9t4ORDdRbNpnJChk5hRppIoYCkOpmE_NC6YoaMss4471FGAwh5SfLQfPScHxfiHZhcUq03khn9InXOGCLdASTOO8fpA-oVYvkGUf33m380ek_HqRPbAGNm_D_syQkgNSx91Tu8aUld7fHOxJYrsGEyNei7Mrlyvu-3oI57EcPy6ecaBtoTuuryKhSQzs-QnVIaUR5sncLnsYZtOeKmzZDlCEvOur"}
+                    alt="Art Deco Detail"
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                   />
                 </div>

@@ -158,10 +158,36 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const [customSlug, setCustomSlug] = useState("");
   const [activeTab, setActiveTab] = useState<"edit" | "preview" | "split">("split");
   const [saving, setSaving] = useState(false);
+  const [isSavedInProfile, setIsSavedInProfile] = useState<boolean>(Boolean(invitationId));
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [savedSuccessModal, setSavedSuccessModal] = useState(false);
   const [savedInvitationSlug, setSavedInvitationSlug] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const triggerAutoSave = (updatedData: typeof formData) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`bervic_draft_${templateSlug}`, JSON.stringify(updatedData));
+    }
+    if (invitationId || savedInvitationSlug) {
+      setAutoSaveStatus("saving");
+      fetch("/api/invitations/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitationId: invitationId || undefined,
+          templateSlug,
+          customSlug: customSlug.trim() || undefined,
+          ...updatedData,
+        }),
+      })
+        .then(() => {
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus(null), 2000);
+        })
+        .catch(() => setAutoSaveStatus(null));
+    }
+  };
 
   // If editing an existing saved invitation, load it from DB
   useEffect(() => {
@@ -172,6 +198,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
           if (data.invitations) {
             const found = data.invitations.find((inv: any) => inv.id === invitationId);
             if (found) {
+              setIsSavedInProfile(true);
               setCustomSlug(found.slug || "");
               if (found.weddingDate) {
                 const d = new Date(found.weddingDate);
@@ -419,6 +446,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
       const savedSlug = data.invitation?.slug || "";
       setSavedInvitationSlug(savedSlug);
       setCustomSlug(savedSlug);
+      setIsSavedInProfile(true);
       setSavedSuccessModal(true);
     } catch (err: any) {
       setErrorMsg(err?.message || "Error saving invitation to database");
@@ -529,16 +557,40 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               <span className="hidden sm:inline">Dashboard</span>
             </Link>
 
-            {/* Save to Profile Action Button */}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="btn-maroon px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold flex items-center gap-1 sm:gap-1.5 shadow-md disabled:opacity-50 shrink-0"
-            >
-              <Save className="w-3.5 h-3.5 text-[#D9A441]" />
-              <span>{saving ? "Saving..." : "Save to Profile"}</span>
-            </button>
+            {/* Auto Save Status Indicator */}
+            {autoSaveStatus && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE7D8] text-[11px] font-bold text-[#7A1F2B] border border-[#D9A441]/30">
+                {autoSaveStatus === "saving" ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Auto-saved</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Select This Template / Selected in Profile Button */}
+            {isSavedInProfile ? (
+              <div className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 text-xs font-extrabold flex items-center gap-1.5 shadow-sm shrink-0">
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Selected in Profile</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-maroon px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md disabled:opacity-50 shrink-0 hover:scale-105 transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                <span>{saving ? "Selecting Template..." : "Select This Template ✨"}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -52,27 +52,32 @@ export default function TinySweetInvitation(
     return () => clearInterval(interval);
   }, [props.weddingDate]);
 
-  // Gallery items matching exact Stitch screen a4e94bff76894b0fad47837a9a571cc1
+  const defaultGalleryList = [
+    {
+      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDWm7Yc6PDowZdcXKTMz7D0wfPgnJ7vM_k9Z1MP_SH3XPt7edMg_qOj_A4CsY1y8vWssWIarJw-Z1Wilze7httykt5Fo_pD94Fnhnbka5Ko-moJS8zXl7q6ZVwaXbNPftr8ydvE0j4yu8Cf70ZqZTGSrmM4ovVOkgFD9wiZnZJBF9Y8PeN7q39TZCBtraUSvcE9GSB_C4VA_GvQQUGO80g9iDd1Ak-YgqWX3olqK4izL-JFOpnE75Yi",
+      caption: "First Smiles",
+      rotate: "-rotate-3",
+    },
+    {
+      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOFKB8R9Y6Ss2l1cC15_HHbtsndt4Tg8TsXksD2xVl_jagbI8JRqWU7MZS8J-gurq4N-vrqKR800k3-0cqCqn2J2V_zQ3eQwjmA8bS9mmNOU7nXjbvyR-wvhmxX2ARQYNcJr2zapC7wwGieGk0YGVHqMwbmNBvRkBC5IjCYXmVlTWHI5T0VqpYqsS5Xaq5N2oLj_jgiCUPr2AT2u54JjQjyT_SJgmhoQSu9XHmmBwpml5JYRhKguVW",
+      caption: "On the Move",
+      rotate: "rotate-2 md:mt-8",
+    },
+    {
+      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAeHiZdA5QfYEQAh-5pLXHm8wXeJb4eWT2jt9cry8wWzCP_LNyFoG53BLpBH-MIoNEWoVog4WKzQLpqAAI7V01H8_nzOH77HYf6gavyQtD_fAXkmoQocsvirTlKsQ7WpMSHYtfeCo-fgSJ6Iu_XypBA_7wS5ngfBqsYJXg_G4WSODsyjRhx_236TGKFMF3cStQu_Y3GfxbLMLmUPCvuQKmdZ8RhhVG5nTTHviyELB2VToJQvcBOXSHc",
+      caption: "Special Moments",
+      rotate: "-rotate-2",
+    },
+  ];
+
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
-      ? props.galleryImages
-      : [
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDWm7Yc6PDowZdcXKTMz7D0wfPgnJ7vM_k9Z1MP_SH3XPt7edMg_qOj_A4CsY1y8vWssWIarJw-Z1Wilze7httykt5Fo_pD94Fnhnbka5Ko-moJS8zXl7q6ZVwaXbNPftr8ydvE0j4yu8Cf70ZqZTGSrmM4ovVOkgFD9wiZnZJBF9Y8PeN7q39TZCBtraUSvcE9GSB_C4VA_GvQQUGO80g9iDd1Ak-YgqWX3olqK4izL-JFOpnE75Yi",
-            caption: "First Smiles - 2 Months",
-            rotate: "-rotate-3",
-          },
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOFKB8R9Y6Ss2l1cC15_HHbtsndt4Tg8TsXksD2xVl_jagbI8JRqWU7MZS8J-gurq4N-vrqKR800k3-0cqCqn2J2V_zQ3eQwjmA8bS9mmNOU7nXjbvyR-wvhmxX2ARQYNcJr2zapC7wwGieGk0YGVHqMwbmNBvRkBC5IjCYXmVlTWHI5T0VqpYqsS5Xaq5N2oLj_jgiCUPr2AT2u54JjQjyT_SJgmhoQSu9XHmmBwpml5JYRhKguVW",
-            caption: "On the Move - 7 Months",
-            rotate: "rotate-2 md:mt-8",
-          },
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAeHiZdA5QfYEQAh-5pLXHm8wXeJb4eWT2jt9cry8wWzCP_LNyFoG53BLpBH-MIoNEWoVog4WKzQLpqAAI7V01H8_nzOH77HYf6gavyQtD_fAXkmoQocsvirTlKsQ7WpMSHYtfeCo-fgSJ6Iu_XypBA_7wS5ngfBqsYJXg_G4WSODsyjRhx_236TGKFMF3cStQu_Y3GfxbLMLmUPCvuQKmdZ8RhhVG5nTTHviyELB2VToJQvcBOXSHc",
-            caption: "Bath Time Fun - 10 Months",
-            rotate: "-rotate-2",
-          },
-        ];
+    props.galleryImages && props.galleryImages.length > 0
+      ? props.galleryImages.slice(0, 6).map((imgUrl, idx) => ({
+          url: typeof imgUrl === "string" ? imgUrl : (imgUrl as any)?.url || defaultGalleryList[idx % 3].url,
+          caption: `Moment ${idx + 1}`,
+          rotate: idx % 3 === 0 ? "-rotate-3" : idx % 3 === 1 ? "rotate-2 md:mt-8" : "-rotate-2",
+        }))
+      : defaultGalleryList;
 
   // Big Day timeline items
   const timelineSteps =
@@ -312,7 +317,7 @@ export default function TinySweetInvitation(
                 <img
                   alt={celebrantName}
                   className="w-full h-full object-cover clip-cloud soft-shadow border-4 border-white"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpe710EgUA8jejL2m8yFPevpulHGGvyWeCBoXiLn8mjGTVP8cAzCiDPY6XOno0S5eARTmpX9rWsTv5-RG8X6g7nOYP_vVeHjwmBCJEqw7f34Yt1L0RonhUKuSkC-wHb70C-m77lvUsJoiG479dqkD8lPJVqxSMKlpieOyrxrM_mudqSS1uqfPKQmptWNn2FNy6HQn9E96gW4w_FUXTlMUuajKHSnOG6qkjHPbFas87r-tVUGrYXK-A"
+                  src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBpe710EgUA8jejL2m8yFPevpulHGGvyWeCBoXiLn8mjGTVP8cAzCiDPY6XOno0S5eARTmpX9rWsTv5-RG8X6g7nOYP_vVeHjwmBCJEqw7f34Yt1L0RonhUKuSkC-wHb70C-m77lvUsJoiG479dqkD8lPJVqxSMKlpieOyrxrM_mudqSS1uqfPKQmptWNn2FNy6HQn9E96gW4w_FUXTlMUuajKHSnOG6qkjHPbFas87r-tVUGrYXK-A"}
                 />
               </div>
             </div>
