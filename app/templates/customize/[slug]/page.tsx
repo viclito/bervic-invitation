@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, Suspense } from "react";
+import { useState, useEffect, useRef, use, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -165,28 +165,79 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const [savedInvitationSlug, setSavedInvitationSlug] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const triggerAutoSave = (updatedData: typeof formData) => {
+  // Refs for zero-lag background auto-save without stale closures
+  const invitationIdRef = useRef(invitationId);
+  const savedSlugRef = useRef(savedInvitationSlug);
+  const customSlugRef = useRef(customSlug);
+  const formDataRef = useRef(formData);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    invitationIdRef.current = invitationId;
+  }, [invitationId]);
+
+  useEffect(() => {
+    savedSlugRef.current = savedInvitationSlug;
+  }, [savedInvitationSlug]);
+
+  useEffect(() => {
+    customSlugRef.current = customSlug;
+  }, [customSlug]);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  const performAutoSave = async (dataToSave = formDataRef.current) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(`bervic_draft_${templateSlug}`, JSON.stringify(updatedData));
+      localStorage.setItem(`bervic_draft_${templateSlug}`, JSON.stringify(dataToSave));
     }
-    if (invitationId || savedInvitationSlug) {
-      setAutoSaveStatus("saving");
-      fetch("/api/invitations/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invitationId: invitationId || undefined,
-          templateSlug,
-          customSlug: customSlug.trim() || undefined,
-          ...updatedData,
-        }),
-      })
-        .then(() => {
-          setAutoSaveStatus("saved");
-          setTimeout(() => setAutoSaveStatus(null), 2000);
-        })
-        .catch(() => setAutoSaveStatus(null));
+
+    setAutoSaveStatus("saving");
+
+    const targetInvId = invitationIdRef.current || undefined;
+    const targetSlug = savedSlugRef.current || customSlugRef.current.trim() || undefined;
+
+    if (status === "authenticated") {
+      try {
+        const res = await fetch("/api/invitations/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            invitationId: targetInvId,
+            templateSlug,
+            customSlug: targetSlug,
+            ...dataToSave,
+          }),
+        });
+
+        const resData = await res.json();
+        if (res.ok && resData.invitation?.slug) {
+          savedSlugRef.current = resData.invitation.slug;
+          setSavedInvitationSlug(resData.invitation.slug);
+          setIsSavedInProfile(true);
+        }
+
+        setAutoSaveStatus("saved");
+        setTimeout(() => setAutoSaveStatus(null), 2500);
+      } catch (err) {
+        console.error("Auto-save sync error:", err);
+        setAutoSaveStatus("saved");
+        setTimeout(() => setAutoSaveStatus(null), 2500);
+      }
+    } else {
+      setAutoSaveStatus("saved");
+      setTimeout(() => setAutoSaveStatus(null), 2500);
     }
+  };
+
+  const triggerAutoSave = (dataToSave = formDataRef.current) => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave(dataToSave);
+    }, 400);
   };
 
   // If editing an existing saved invitation, load it from DB
@@ -238,10 +289,15 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   }, [invitationId, status]);
 
   const handleInputChange = (field: keyof TemplateClassicFloralProps, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+      formDataRef.current = updated;
+      triggerAutoSave(updated);
+      return updated;
+    });
   };
 
   // Date and Time picker handlers for Main Wedding Date
