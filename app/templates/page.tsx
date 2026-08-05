@@ -114,55 +114,48 @@ export default function TemplateGalleryPage() {
             {filteredTemplates.map((tpl) => (
               <div
                 key={tpl.id}
-                className="flex flex-col group transition-all duration-300"
+                className="flex flex-col group transition-all duration-300 bg-white rounded-2xl p-2 sm:p-3 border border-[#D9C88A]/40 shadow-sm hover:shadow-md hover:border-[#D9A441]"
               >
-                {/* ── Card Graphic Container ── */}
+                {/* ── Card Graphic Container (Clicking goes to Live Preview) ── */}
                 <div
-                  onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
-                  className="relative aspect-square w-full rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
+                  onClick={() => router.push(`/templates/${tpl.slug}`)}
+                  className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
                   style={{
                     boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
                     border: "1px solid rgba(217,200,138,0.4)",
                   }}
+                  title="Click to view live preview"
                 >
                   <TemplateCardGraphic template={tpl} />
-
-                  {/* Bottom-Right Overlay Quick Action Buttons */}
-                  <div
-                    className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 z-20"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/templates/${tpl.slug}`);
-                      }}
-                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
-                      title="Live Preview Demo"
-                    >
-                      <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/templates/customize/${tpl.slug}?from=templates`);
-                      }}
-                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#F8F3EA] text-[#7A1F2B] border border-[#D9A441]/50 flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all"
-                      title="Customize Template"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A1F2B]" />
-                    </button>
-                  </div>
                 </div>
 
                 {/* ── Card Title Below Graphic ── */}
                 <div
-                  onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
+                  onClick={() => router.push(`/templates/${tpl.slug}`)}
                   className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 cursor-pointer group-hover:text-[#7A1F2B] transition-colors"
                 >
                   {tpl.title}
+                </div>
+
+                {/* ── Text Format Action Buttons Below Image ── */}
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mt-3 pt-2 border-t border-[#D9C88A]/30">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/templates/${tpl.slug}`)}
+                    className="py-1.5 px-2 rounded-xl border border-[#D9A441]/60 bg-[#F8F3EA] text-[#221C17] text-[11px] sm:text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <ExternalLink className="w-3 h-3 text-[#7A1F2B]" />
+                    <span>Preview</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
+                    className="btn-maroon py-1.5 px-2 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <Edit3 className="w-3 h-3 text-[#D9A441]" />
+                    <span>Customize</span>
+                  </button>
                 </div>
               </div>
             ))}
