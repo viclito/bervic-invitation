@@ -137,18 +137,12 @@ export async function GET(req: Request) {
     let allowedCards = 0;
 
     if (isSubscribed) {
-      if (user.plan === "BASIC_299") {
-        allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : 1;
-        allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : 2;
-        // Fix legacy 99 mock values for regular BASIC_299 subscribers
-        if (allowedTemplates === 99) allowedTemplates = 1;
-        if (allowedCards === 99) allowedCards = 2;
-      } else if (user.plan === "PRO_999") {
-        allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : 4;
-        allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : 6;
-        if (allowedTemplates === 99) allowedTemplates = 4;
-        if (allowedCards === 99) allowedCards = 6;
-      }
+      allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : (user.plan === "BASIC_299" ? 1 : 4);
+      allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : (user.plan === "BASIC_299" ? 2 : 6);
+
+      // Fix legacy mock 99 values for non-admin users
+      if (allowedTemplates === 99) allowedTemplates = user.plan === "BASIC_299" ? 1 : 4;
+      if (allowedCards === 99) allowedCards = user.plan === "BASIC_299" ? 2 : 6;
     }
 
     const remainingTemplateSlots = Math.max(0, allowedTemplates - usedTemplatesCount);

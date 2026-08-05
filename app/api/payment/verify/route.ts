@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         name: true,
         email: true,
         plan: true,
+        planExpiresAt: true,
         allowedTemplatesCount: true,
         allowedCardsCount: true,
       },
@@ -56,9 +57,20 @@ export async function POST(req: Request) {
     const addCards = selectedPlan === "BASIC_299" ? 2 : 6;
     const amount = selectedPlan === "BASIC_299" ? 299 : 999;
 
+    // Calculate cumulative expiration date: extend existing active plan or set new expiry from today
     const now = new Date();
-    const expiresAt = new Date();
+    const currentExpiry = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
+    const baseDate = currentExpiry && currentExpiry > now ? currentExpiry : now;
+
+    const expiresAt = new Date(baseDate);
     expiresAt.setMonth(expiresAt.getMonth() + validityMonths);
+
+    // Calculate new total accumulated template & card quotas
+    const newAllowedTemplates = (user.allowedTemplatesCount || 0) + addTemplates;
+    const newAllowedCards = (user.allowedCardsCount || 0) + addCards;
+
+    // Determine target plan: keep PRO_999 if user was already on PRO_999
+    const targetPlan = user.plan === "PRO_999" ? "PRO_999" : selectedPlan;
 
     // Record Payment
     if (razorpay_order_id) {
@@ -105,14 +117,14 @@ export async function POST(req: Request) {
       console.warn("Subscription record error:", subErr?.message);
     }
 
-    // Update User plan & allowed quotas with explicit selection
+    // Update User plan & cumulative allowed quotas
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        plan: selectedPlan,
+        plan: targetPlan,
         planExpiresAt: expiresAt,
-        allowedTemplatesCount: Math.max(user.allowedTemplatesCount || 0, addTemplates),
-        allowedCardsCount: Math.max(user.allowedCardsCount || 0, addCards),
+        allowedTemplatesCount: newAllowedTemplates,
+        allowedCardsCount: newAllowedCards,
       },
       select: {
         plan: true,
