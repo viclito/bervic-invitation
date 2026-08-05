@@ -630,9 +630,21 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               </div>
             )}
 
+            {/* Manual Save Button */}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-extrabold flex items-center gap-1.5 shadow-sm hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all disabled:opacity-50 shrink-0"
+              title="Click to manually save all changes"
+            >
+              <Save className="w-3.5 h-3.5 text-[#7A1F2B]" />
+              <span>{saving ? "Saving..." : "Save Changes"}</span>
+            </button>
+
             {/* Select This Template / Selected in Profile Button */}
             {isSavedInProfile ? (
-              <div className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 text-xs font-extrabold flex items-center gap-1.5 shadow-sm shrink-0">
+              <div className="hidden sm:flex px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 text-xs font-extrabold items-center gap-1.5 shadow-sm shrink-0">
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Selected in Profile</span>
               </div>
