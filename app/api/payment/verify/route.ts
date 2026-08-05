@@ -57,12 +57,9 @@ export async function POST(req: Request) {
     const addCards = selectedPlan === "BASIC_299" ? 2 : 6;
     const amount = selectedPlan === "BASIC_299" ? 299 : 999;
 
-    // Calculate cumulative expiration date: extend existing active plan or set new expiry from today
+    // Calculate plan expiration date: strictly 6 or 12 months from date of purchase (now)
     const now = new Date();
-    const currentExpiry = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
-    const baseDate = currentExpiry && currentExpiry > now ? currentExpiry : now;
-
-    const expiresAt = new Date(baseDate);
+    const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + validityMonths);
 
     // Calculate new total accumulated template & card quotas
