@@ -18,6 +18,7 @@ model User {
   plan                  String           @default("NONE") // NONE, BASIC_599, PRO_1799, CINEMATIC_2000
   planExpiresAt         DateTime?
   allowedTemplatesCount Int              @default(0)
+  allowedCinematicCount Int              @default(0)
   allowedCardsCount     Int              @default(0)
   role                  String           @default("USER") // USER, ADMIN
   createdAt             DateTime         @default(now())

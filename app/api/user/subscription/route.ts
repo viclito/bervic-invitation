@@ -72,10 +72,13 @@ export async function GET(req: Request) {
         plan: isAdmin ? "CINEMATIC_2000" : "NONE",
         isActive: isAdmin,
         allowedTemplatesCount: isAdmin ? 99 : 0,
+        allowedCinematicCount: isAdmin ? 99 : 0,
         allowedCardsCount: isAdmin ? 99 : 0,
         usedTemplatesCount: 0,
+        usedCinematicCount: 0,
         usedCardsCount: 0,
         remainingTemplateSlots: isAdmin ? 99 : 0,
+        remainingCinematicSlots: isAdmin ? 99 : 0,
         remainingCardSlots: isAdmin ? 99 : 0,
         userInvitations: [],
         savedCards: [],
@@ -83,7 +86,9 @@ export async function GET(req: Request) {
     }
 
     const now = new Date();
-    const usedTemplatesCount = (user.invitations || []).length;
+    const allInvs = user.invitations || [];
+    const usedCinematicCount = allInvs.filter((inv: any) => inv.templateSlug === "scroll-scrubber").length;
+    const usedTemplatesCount = allInvs.filter((inv: any) => inv.templateSlug !== "scroll-scrubber").length;
     const usedCardsCount = (user.cards || []).length;
 
     // Admin always gets full pass
@@ -93,10 +98,13 @@ export async function GET(req: Request) {
         planExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         isActive: true,
         allowedTemplatesCount: 99,
+        allowedCinematicCount: 99,
         allowedCardsCount: 99,
         usedTemplatesCount,
+        usedCinematicCount,
         usedCardsCount,
         remainingTemplateSlots: 99,
+        remainingCinematicSlots: 99,
         remainingCardSlots: 99,
         userInvitations: user.invitations || [],
         savedCards: user.cards || [],
@@ -108,12 +116,11 @@ export async function GET(req: Request) {
     const hasActiveSubscription = (user.subscriptions || []).some(
       (sub: any) => new Date(sub.expiresAt) > now
     );
-    const hasAdminGrantedQuotas = (user.allowedTemplatesCount || 0) > 0 || (user.allowedCardsCount || 0) > 0;
+    const dbCinematicCount = (user as any).allowedCinematicCount || 0;
+    const hasAdminGrantedQuotas = (user.allowedTemplatesCount || 0) > 0 || dbCinematicCount > 0 || (user.allowedCardsCount || 0) > 0;
 
     const isSubscribed =
-      user.plan !== "NONE" &&
-      user.planExpiresAt &&
-      new Date(user.planExpiresAt) > now &&
+      ((user.plan && user.plan !== "NONE" && user.planExpiresAt && new Date(user.planExpiresAt) > now) || dbCinematicCount > 0) &&
       (hasSuccessfulPayment || hasActiveSubscription || hasAdminGrantedQuotas);
 
     // If user has not paid and has no subscription, clean up mock free quotas
@@ -128,6 +135,10 @@ export async function GET(req: Request) {
             allowedCardsCount: 0,
           },
         });
+        await prisma.$executeRawUnsafe(
+          `UPDATE "User" SET "allowedCinematicCount" = 0 WHERE "id" = $1;`,
+          user.id
+        );
       } catch {
         // Ignore cleanup warning
       }
@@ -136,32 +147,41 @@ export async function GET(req: Request) {
     }
 
     let allowedTemplates = 0;
+    let allowedCinematic = 0;
     let allowedCards = 0;
 
     if (isSubscribed) {
-      const defaultTemplates = user.plan === "CINEMATIC_2000" ? 1 : user.plan === "PRO_1799" ? 4 : 1;
-      const defaultCards = user.plan === "CINEMATIC_2000" ? 10 : user.plan === "PRO_1799" ? 6 : 2;
+      const defaultTemplates = user.plan === "PRO_1799" ? 4 : user.plan === "BASIC_599" ? 1 : 0;
+      const defaultCinematic = dbCinematicCount > 0 ? dbCinematicCount : (user.plan === "CINEMATIC_2000" ? 1 : 0);
+      const defaultCards = (dbCinematicCount > 0 ? dbCinematicCount * 10 : 0) + (user.plan === "PRO_1799" ? 6 : user.plan === "BASIC_599" ? 2 : 0);
 
       allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : defaultTemplates;
+      allowedCinematic = dbCinematicCount > 0 ? dbCinematicCount : defaultCinematic;
       allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : defaultCards;
 
       // Fix legacy mock 99 values for non-admin users
       if (allowedTemplates === 99) allowedTemplates = defaultTemplates;
+      if (allowedCinematic === 99) allowedCinematic = defaultCinematic;
       if (allowedCards === 99) allowedCards = defaultCards;
     }
 
     const remainingTemplateSlots = Math.max(0, allowedTemplates - usedTemplatesCount);
+    const remainingCinematicSlots = Math.max(0, allowedCinematic - usedCinematicCount);
     const remainingCardSlots = Math.max(0, allowedCards - usedCardsCount);
 
     return NextResponse.json({
       plan: isSubscribed ? user.plan : "NONE",
+      hasCinematicPass: dbCinematicCount > 0,
       planExpiresAt: isSubscribed ? user.planExpiresAt : null,
       isActive: isSubscribed,
       allowedTemplatesCount: allowedTemplates,
+      allowedCinematicCount: allowedCinematic,
       allowedCardsCount: allowedCards,
       usedTemplatesCount,
+      usedCinematicCount,
       usedCardsCount,
       remainingTemplateSlots,
+      remainingCinematicSlots,
       remainingCardSlots,
       userInvitations: user.invitations || [],
       savedCards: user.cards || [],

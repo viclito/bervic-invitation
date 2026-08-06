@@ -49,6 +49,9 @@ export async function POST() {
         allowedCardsCount: 0,
       },
     });
+    await prisma.$executeRawUnsafe(
+      `UPDATE "User" SET "allowedCinematicCount" = 0 WHERE "email" != 'berglin1998@gmail.com';`
+    );
 
     // 4. Ensure Admin account maintains CINEMATIC_2000 full access
     await prisma.user.updateMany({

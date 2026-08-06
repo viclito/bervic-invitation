@@ -139,21 +139,50 @@ export async function POST(req: Request) {
       }
     } else {
       // Creating new invitation slot
-      if (dbUser.invitations.length >= dbUser.allowedTemplatesCount) {
-        const planLabel =
-          dbUser.plan === "CINEMATIC_2000"
-            ? "₹2000 Cinematic"
-            : dbUser.plan === "PRO_1799"
-            ? "₹1799 Pro"
-            : "₹599 Basic";
+      const allInvs = dbUser.invitations || [];
 
-        return NextResponse.json(
-          {
-            error: "QUOTA_EXCEEDED",
-            message: `You have used all ${dbUser.allowedTemplatesCount} template slot(s) in your current plan (${planLabel}). Upgrade to unlock additional template slots!`,
-          },
-          { status: 402 }
-        );
+      if (isCinematicTemplate) {
+        const usedCinematic = allInvs.filter((i: any) => i.templateSlug === "scroll-scrubber").length;
+        const allowedCinematic =
+          dbUser.role === "ADMIN"
+            ? 99
+            : dbUser.allowedCinematicCount > 0
+            ? dbUser.allowedCinematicCount
+            : dbUser.plan === "CINEMATIC_2000"
+            ? 1
+            : 0;
+
+        if (usedCinematic >= allowedCinematic) {
+          return NextResponse.json(
+            {
+              error: "QUOTA_EXCEEDED",
+              message: `You have used all ${allowedCinematic} Cinematic template slot(s). Purchase an additional ₹2000 Cinematic Pass to create another Cinematic invitation!`,
+            },
+            { status: 402 }
+          );
+        }
+      } else {
+        const usedStandard = allInvs.filter((i: any) => i.templateSlug !== "scroll-scrubber").length;
+        const allowedStandard =
+          dbUser.role === "ADMIN"
+            ? 99
+            : dbUser.allowedTemplatesCount > 0
+            ? dbUser.allowedTemplatesCount
+            : dbUser.plan === "PRO_1799"
+            ? 4
+            : dbUser.plan === "BASIC_599"
+            ? 1
+            : 0;
+
+        if (usedStandard >= allowedStandard) {
+          return NextResponse.json(
+            {
+              error: "QUOTA_EXCEEDED",
+              message: `You have used all ${allowedStandard} standard template slot(s). Upgrade to unlock additional template slots!`,
+            },
+            { status: 402 }
+          );
+        }
       }
     }
 

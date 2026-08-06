@@ -20,6 +20,9 @@ export async function ensureDbSchema() {
       `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "allowedTemplatesCount" INTEGER DEFAULT 0;`
     );
     await prisma.$executeRawUnsafe(
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "allowedCinematicCount" INTEGER DEFAULT 0;`
+    );
+    await prisma.$executeRawUnsafe(
       `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "allowedCardsCount" INTEGER DEFAULT 0;`
     );
     schemaEnsured = true;

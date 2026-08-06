@@ -77,14 +77,21 @@ export async function POST(req: Request) {
     }
 
     // Calculate new total accumulated template & card quotas
-    const newAllowedTemplates = (user.allowedTemplatesCount || 0) + addTemplates;
-    const newAllowedCards = (user.allowedCardsCount || 0) + addCards;
+    const addStandard = selectedPlan === "CINEMATIC_2000" ? 0 : addTemplates;
+    const addCinematic = selectedPlan === "CINEMATIC_2000" ? 1 : 0;
 
-    // Determine target plan according to hierarchy (NONE < BASIC_599 < PRO_1799 < CINEMATIC_2000)
-    const planHierarchy = { NONE: 0, BASIC_599: 1, PRO_1799: 2, CINEMATIC_2000: 3 };
-    const currentRank = planHierarchy[user.plan as keyof typeof planHierarchy] || 0;
-    const selectedRank = planHierarchy[selectedPlan] || 0;
-    const targetPlan = selectedRank > currentRank ? selectedPlan : user.plan || selectedPlan;
+    const newAllowedTemplates = ((user as any).allowedTemplatesCount || 0) + addStandard;
+    const newAllowedCinematic = ((user as any).allowedCinematicCount || 0) + addCinematic;
+    const newAllowedCards = ((user as any).allowedCardsCount || 0) + addCards;
+
+    // Determine target standard plan (BASIC_599 or PRO_1799). CINEMATIC_2000 is tracked separately and does not replace 599/1799 standard plan.
+    let targetPlan = user.plan || "NONE";
+    if (selectedPlan === "BASIC_599" || selectedPlan === "PRO_1799") {
+      const planHierarchy = { NONE: 0, BASIC_599: 1, PRO_1799: 2, CINEMATIC_2000: 0 };
+      const currentRank = planHierarchy[user.plan as keyof typeof planHierarchy] || 0;
+      const selectedRank = planHierarchy[selectedPlan] || 0;
+      targetPlan = selectedRank > currentRank ? selectedPlan : user.plan || selectedPlan;
+    }
 
     // Record Payment
     if (razorpay_order_id) {
@@ -147,6 +154,12 @@ export async function POST(req: Request) {
         allowedCardsCount: true,
       },
     });
+
+    await prisma.$executeRawUnsafe(
+      `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
+      newAllowedCinematic,
+      user.id
+    );
 
     return NextResponse.json({
       success: true,

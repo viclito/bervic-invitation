@@ -138,6 +138,7 @@ export async function GET() {
             plan: true,
             planExpiresAt: true,
             allowedTemplatesCount: true,
+            allowedCinematicCount: true,
             allowedCardsCount: true,
             createdAt: true,
           },
@@ -217,24 +218,19 @@ export async function GET() {
 
       // Allowed quotas
       let allowedTemplates = user.allowedTemplatesCount || 0;
+      let allowedCinematic = user.allowedCinematicCount || 0;
       let allowedCards = user.allowedCardsCount || 0;
 
       if (!isUserAdmin) {
         if (user.plan === "BASIC_599") {
           allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 1;
           allowedCards = allowedCards > 0 ? allowedCards : 2;
-          if (allowedTemplates === 99) allowedTemplates = 1;
-          if (allowedCards === 99) allowedCards = 2;
         } else if (user.plan === "PRO_1799") {
           allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 4;
           allowedCards = allowedCards > 0 ? allowedCards : 6;
-          if (allowedTemplates === 99) allowedTemplates = 4;
-          if (allowedCards === 99) allowedCards = 6;
         } else if (user.plan === "CINEMATIC_2000") {
-          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 1;
+          allowedCinematic = allowedCinematic > 0 ? allowedCinematic : 1;
           allowedCards = allowedCards > 0 ? allowedCards : 10;
-          if (allowedTemplates === 99) allowedTemplates = 1;
-          if (allowedCards === 99) allowedCards = 10;
         }
       }
 
@@ -244,9 +240,10 @@ export async function GET() {
         email: user.email || "N/A",
         phone: user.phone || "N/A",
         role: isUserAdmin ? "ADMIN" : "USER",
-        plan: isUserAdmin ? "PRO_1799" : user.plan || "NONE",
+        plan: isUserAdmin ? "CINEMATIC_2000" : user.plan || "NONE",
         planExpiresAt: user.planExpiresAt,
         allowedTemplatesCount: isUserAdmin ? 99 : allowedTemplates,
+        allowedCinematicCount: isUserAdmin ? 99 : allowedCinematic,
         usedTemplatesCount,
         allowedCardsCount: isUserAdmin ? 99 : allowedCards,
         usedCardsCount,

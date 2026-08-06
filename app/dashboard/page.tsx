@@ -65,10 +65,13 @@ interface SubscriptionData {
   planExpiresAt: string | null;
   isActive: boolean;
   allowedTemplatesCount: number;
+  allowedCinematicCount?: number;
   allowedCardsCount: number;
   usedTemplatesCount: number;
+  usedCinematicCount?: number;
   usedCardsCount: number;
   remainingTemplateSlots: number;
+  remainingCinematicSlots?: number;
   remainingCardSlots: number;
   savedCards: SavedCard[];
 }
@@ -179,18 +182,23 @@ export default function DashboardPage() {
                 <span className="px-3 py-0.5 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-bold uppercase tracking-wider">
                   Private Dashboard
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] text-[11px] font-bold border border-[#D9A441]/30 flex items-center gap-1">
-                  <Crown className="w-3 h-3 text-[#D9A441]" />
-                  <span>
-                    {subData.plan === "CINEMATIC_2000"
-                      ? "Cinematic Pass (₹2000)"
-                      : subData.plan === "PRO_1799"
-                      ? "Pro Pass (₹1799)"
-                      : subData.plan === "BASIC_599"
-                      ? "Basic Pass (₹599)"
-                      : "Free Preview"}
+                {subData.plan && subData.plan !== "NONE" && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] text-[11px] font-bold border border-[#D9A441]/30 flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-[#D9A441]" />
+                    <span>{subData.plan === "PRO_1799" ? "Pro Pass (₹1799)" : "Basic Pass (₹599)"}</span>
                   </span>
-                </span>
+                )}
+                {(subData.allowedCinematicCount || 0) > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#0D0D0D] text-[#F7E7C4] text-[11px] font-bold border border-[#D9A441] flex items-center gap-1 shadow-sm">
+                    <Sparkles className="w-3 h-3 text-[#D9A441]" />
+                    <span>Cinematic Pass (₹2000)</span>
+                  </span>
+                )}
+                {subData.plan === "NONE" && !(subData.allowedCinematicCount || 0) && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-700 text-[11px] font-bold border border-gray-300">
+                    Free Preview Mode
+                  </span>
+                )}
               </div>
 
               <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#221C17]">
@@ -455,19 +463,25 @@ export default function DashboardPage() {
             <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-8 shadow-md relative overflow-hidden">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[#D9A441]/20">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-3 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-sm">
-                      <Crown className="w-3.5 h-3.5 text-[#D9A441]" />
-                      <span>
-                        {subData.plan === "CINEMATIC_2000"
-                          ? "Cinematic Masterpiece Pass (₹2000)"
-                          : subData.plan === "PRO_1799"
-                          ? "Pro Annual Pass (₹1799)"
-                          : subData.plan === "BASIC_599"
-                          ? "Basic Pass (₹599)"
-                          : "Free Preview Mode"}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {subData.plan && subData.plan !== "NONE" && (
+                      <span className="px-3 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                        <Crown className="w-3.5 h-3.5 text-[#D9A441]" />
+                        <span>
+                          {subData.plan === "PRO_1799"
+                            ? "Pro Annual Pass (₹1799)"
+                            : "Basic Pass (₹599)"}
+                        </span>
                       </span>
-                    </span>
+                    )}
+
+                    {(subData.allowedCinematicCount || 0) > 0 && (
+                      <span className="px-3 py-1 rounded-full bg-[#0D0D0D] text-[#F7E7C4] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441] flex items-center gap-1 shadow-sm">
+                        <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                        <span>Premium Cinematic Pass (₹2000)</span>
+                      </span>
+                    )}
+
                     {subData.isActive ? (
                       <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-300 flex items-center gap-1">
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -482,25 +496,30 @@ export default function DashboardPage() {
 
                   <h2 className="text-2xl font-serif font-bold text-[#221C17]">Subscription & Quota Details</h2>
                   <p className="text-xs text-[#221C17]/70 mt-1">
-                    {subData.isActive && subData.planExpiresAt ? (
+                    {subData.isActive ? (
                       <>
-                        Amount Paid:{" "}
+                        Active Passes Owned:{" "}
                         <strong className="text-[#7A1F2B]">
-                          {subData.plan === "CINEMATIC_2000"
-                            ? "₹2000"
-                            : subData.plan === "PRO_1799"
-                            ? "₹1799"
-                            : "₹599"}
+                          {[
+                            subData.plan === "PRO_1799" ? "Standard Pro Pass (₹1799)" : subData.plan === "BASIC_599" ? "Standard Basic Pass (₹599)" : null,
+                            (subData.allowedCinematicCount || 0) > 0 ? `Premium Cinematic Pass (₹2000 x ${subData.allowedCinematicCount})` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" + ")}
                         </strong>{" "}
-                        • Valid until{" "}
-                        <strong>
-                          {new Date(subData.planExpiresAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </strong>{" "}
-                        ({daysRemaining} days remaining)
+                        {subData.planExpiresAt && (
+                          <>
+                            • Valid until{" "}
+                            <strong>
+                              {new Date(subData.planExpiresAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </strong>{" "}
+                            ({daysRemaining} days remaining)
+                          </>
+                        )}
                       </>
                     ) : (
                       <>Subscribe to ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) to unlock 1-click customization, saving, and WhatsApp invitations.</>
@@ -517,14 +536,14 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              {/* Progress Meters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
-                {/* Template Slots Meter */}
-                <div className="bg-[#EFE7D8] p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+              {/* Progress Meters: 4 Box Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-8">
+                {/* Box 1: Standard Wedding Template Slots */}
+                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
                   <div>
                     <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">Wedding Template Slots</span>
                     <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-2xl font-bold text-[#7A1F2B]">
+                      <span className="text-xl font-bold text-[#7A1F2B]">
                         {subData.usedTemplatesCount} of {subData.allowedTemplatesCount} Used
                       </span>
                       <span className="text-xs font-extrabold text-[#8B6519]">
@@ -533,7 +552,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Visual Progress Bar */}
-                    <div className="w-full h-2.5 bg-black/10 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#7A1F2B] rounded-full transition-all duration-500"
                         style={{
@@ -547,16 +566,57 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-[10px] text-[#221C17]/60 mt-3">
-                    Selected template slots are locked to your chosen design with unlimited edits.
+                    Standard wedding templates (₹599 / ₹1799 passes).
                   </p>
                 </div>
 
-                {/* Instagram Cards Meter */}
-                <div className="bg-[#EFE7D8] p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+                {/* Box 2: Premium Wedding Template Slots (NEW) */}
+                <div className="bg-[#0C0C0C] text-[#FDF6F3] p-4 sm:p-5 rounded-2xl border-2 border-[#D9A441] shadow-[0_4px_20px_rgba(217,164,65,0.25)] flex flex-col justify-between relative overflow-hidden">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-[#D9A441] font-bold tracking-wider flex items-center gap-1 uppercase">
+                        <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                        <span>Premium Wedding Template Slots</span>
+                      </span>
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#D9A441]/20 text-[#D9A441] border border-[#D9A441]/40">
+                        ₹2000 PASS
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline justify-between mb-2">
+                      <span className="text-xl font-bold text-[#F7E7C4]">
+                        {subData.usedCinematicCount || 0} of {subData.allowedCinematicCount || 0} Used
+                      </span>
+                      <span className="text-xs font-extrabold text-[#D9A441] font-mono">
+                        {subData.remainingCinematicSlots || 0} slots left
+                      </span>
+                    </div>
+
+                    {/* Visual Progress Bar */}
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (subData.allowedCinematicCount || 0) > 0
+                              ? Math.min(100, ((subData.usedCinematicCount || 0) / (subData.allowedCinematicCount || 1)) * 100)
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-[#FDF6F3]/60 mt-3">
+                    480-Frame Apple-Style Video Scroll sequence (₹2000 pass).
+                  </p>
+                </div>
+
+                {/* Box 3: Instagram Announcement Cards */}
+                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
                   <div>
                     <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">Instagram Announcement Cards</span>
                     <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-2xl font-bold text-[#7A1F2B]">
+                      <span className="text-xl font-bold text-[#7A1F2B]">
                         {subData.usedCardsCount} of {subData.allowedCardsCount} Used
                       </span>
                       <span className="text-xs font-extrabold text-[#8B6519]">
@@ -564,7 +624,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
 
-                    <div className="w-full h-2.5 bg-black/10 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#D9A441] rounded-full transition-all duration-500"
                         style={{
@@ -578,25 +638,25 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-[10px] text-[#221C17]/60 mt-3">
-                    Credits are deducted ONLY when a new card is downloaded for the first time.
+                    Customizable announcement cards for social media.
                   </p>
                 </div>
 
-                {/* WhatsApp Invites Meter */}
-                <div className="bg-[#EFE7D8] p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+                {/* Box 4: WhatsApp Guest Invitations */}
+                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
                   <div>
                     <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">WhatsApp Guest Invitations</span>
                     <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-2xl font-bold text-emerald-700">Unlimited</span>
+                      <span className="text-xl font-bold text-emerald-700">Unlimited</span>
                       <span className="text-xs font-extrabold text-emerald-800">Personalized</span>
                     </div>
 
-                    <div className="w-full h-2.5 bg-emerald-200 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-emerald-200 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-500 rounded-full w-full" />
                     </div>
                   </div>
                   <p className="text-[10px] text-[#221C17]/60 mt-3">
-                    Includes personalized guest names and 1-click RSVP tracking.
+                    Includes guest name personalization &amp; RSVP tracking.
                   </p>
                 </div>
               </div>
