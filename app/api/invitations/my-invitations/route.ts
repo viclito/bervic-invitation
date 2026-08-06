@@ -3,12 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
   try {
+    await ensureDbSchema();
     // Run cleanup asynchronously without blocking the user response
     cleanupExpiredInvitations().catch((err) => {
       console.warn("Background invitation cleanup warning:", err?.message);

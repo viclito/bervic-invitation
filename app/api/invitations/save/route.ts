@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
 
 export async function POST(req: Request) {
   try {
+    await ensureDbSchema();
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user || !session.user.email) {
@@ -15,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     // Ensure database user exists
-    let dbUser = await prisma.user.findUnique({
+    let dbUser: any = await prisma.user.findUnique({
       where: { email: session.user.email.toLowerCase() },
       select: {
         id: true,
@@ -26,7 +28,13 @@ export async function POST(req: Request) {
         planExpiresAt: true,
         allowedTemplatesCount: true,
         allowedCardsCount: true,
-        invitations: true,
+        invitations: {
+          select: {
+            id: true,
+            templateSlug: true,
+            slug: true,
+          },
+        },
       },
     });
 
@@ -47,7 +55,13 @@ export async function POST(req: Request) {
           planExpiresAt: true,
           allowedTemplatesCount: true,
           allowedCardsCount: true,
-          invitations: true,
+          invitations: {
+            select: {
+              id: true,
+              templateSlug: true,
+              slug: true,
+            },
+          },
         },
       });
     }

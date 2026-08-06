@@ -123,6 +123,9 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const targetTemplate = templatesRegistry.find((t) => t.slug === templateSlug);
   const isBirthday = targetTemplate?.category === "birthday";
   const isDualPartnerPhotoTemplate = templateSlug === "scroll-scrubber" || templateSlug === "premium-scroll" || targetTemplate?.hasDualPartnerPhotos === true;
+  const showEvents = targetTemplate?.hasEvents !== false;
+  const showDayTimeline = targetTemplate?.hasDayTimeline !== false;
+  const showLoveStory = targetTemplate?.hasLoveStory !== false;
   const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
 
   // Auth Protection
@@ -1037,174 +1040,178 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               ))}
             </div>
 
-            {/* Step 5: Timeline Day */}
-            <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
-              <div className="flex items-center justify-between border-b border-[#D9A441]/20 pb-3">
-                <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#D9A441]" />
-                  <span>5. Day Timeline ({formData.timelineDay.length})</span>
-                </h3>
-                <button
-                  type="button"
-                  onClick={addTimelineItem}
-                  className="text-xs text-[#7A1F2B] font-bold flex items-center gap-1 hover:underline"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Timeline Item</span>
-                </button>
-              </div>
-
-              {formData.timelineDay.map((tl, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-[#EFE7D8]/60 border border-[#D9A441]/30 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={tl.icon}
-                      onChange={(e) => handleTimelineChange(idx, "icon", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      className="w-10 px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs text-center shrink-0 font-bold"
-                    />
-                    <input
-                      type="text"
-                      value={tl.title}
-                      onChange={(e) => handleTimelineChange(idx, "title", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      placeholder="Title"
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeTimelineItem(idx)}
-                      className="text-[#7A1F2B] opacity-60 hover:opacity-100 transition-opacity"
-                      title="Remove Timeline Item"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">📅 Date</label>
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="date"
-                          value={parseDateToIsoString(tl.date, datePickerVal)}
-                          onChange={(e) => handleTimelinePickerDateChange(idx, e.target.value)}
-                          className="w-28 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
-                        />
-                        <input
-                          type="text"
-                          value={tl.date || (datePickerVal ? formatEventDate(datePickerVal) : "")}
-                          onChange={(e) => handleTimelineChange(idx, "date", e.target.value)}
-                          onFocus={(e) => e.target.select()}
-                          placeholder="Nov 28, 2026"
-                          className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">⏰ Time</label>
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="time"
-                          onChange={(e) => handleTimelinePickerTimeChange(idx, e.target.value)}
-                          className="w-20 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
-                        />
-                        <input
-                          type="text"
-                          value={tl.time}
-                          onChange={(e) => handleTimelineChange(idx, "time", e.target.value)}
-                          onFocus={(e) => e.target.select()}
-                          placeholder="07:00 PM"
-                          className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Step 6: Love Story & Video Glimpse */}
-            <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
-              <div className="flex items-center justify-between border-b border-[#D9A441]/20 pb-3">
-                <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2">
-                  <Video className="w-4 h-4 text-[#D9A441]" />
-                  <span>6. Love Story & Video Section</span>
-                </h3>
-                {/* Toggle / Delete Access Control */}
-                <button
-                  type="button"
-                  onClick={() => handleInputChange("showVideoSection", !(formData.showVideoSection ?? true))}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${
-                    (formData.showVideoSection ?? true)
-                      ? "bg-[#7A1F2B] text-[#F8F3EA] border-[#7A1F2B] shadow-sm"
-                      : "bg-[#EFE7D8] text-[#221C17]/60 border-[#D9A441]/40 hover:text-[#7A1F2B]"
-                  }`}
-                >
-                  <Video className="w-3.5 h-3.5" />
-                  <span>{(formData.showVideoSection ?? true) ? "Video Enabled" : "Video Disabled (Deleted)"}</span>
-                </button>
-              </div>
-
-              {(formData.showVideoSection ?? true) ? (
-                <div className="space-y-4">
-                  {/* YouTube Guide Box */}
-                  <div className="p-4 rounded-2xl bg-[#EFE7D8]/80 border border-[#D9A441]/40 text-xs text-[#221C17]/80 space-y-2">
-                    <h4 className="font-bold text-[#7A1F2B] flex items-center gap-1.5">
-                      <span>💡 How to Add Your YouTube Wedding Video</span>
-                    </h4>
-                    <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed text-[#221C17]/75 font-medium">
-                      <li>Upload your wedding teaser or glimpse video to <strong>YouTube</strong> (Set visibility to <em>Public</em> or <em>Unlisted</em>).</li>
-                      <li>In YouTube Studio under <strong>Advanced Settings</strong>, ensure <strong>"Allow embedding"</strong> is turned <strong>ON</strong>.</li>
-                      <li>Copy the YouTube video link from your browser address bar or share button (e.g. <code>https://www.youtube.com/watch?v=...</code> or <code>https://youtu.be/...</code>) and paste it below!</li>
-                    </ol>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#7A1F2B] mb-1">
-                      Paste YouTube Video Link
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.loveStoryVideoUrl}
-                      onChange={(e) => handleInputChange("loveStoryVideoUrl", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/50 text-xs font-semibold text-[#7A1F2B] focus:outline-none focus:border-[#7A1F2B]"
-                    />
-                    <span className="text-[10px] text-[#221C17]/60 block mt-1">
-                      Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
-                      Love Story Narrative Text
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={formData.loveStoryText}
-                      onChange={(e) => handleInputChange("loveStoryText", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      placeholder="Enter your love story narrative here..."
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-[#EFE7D8]/40 border border-dashed border-[#D9A441]/40 text-center text-xs text-[#221C17]/60">
-                  <p>The Video Section is currently <strong>disabled / deleted</strong> from your invitation card.</p>
+            {/* Step 5: Timeline Day (Only rendered if template supports it) */}
+            {showDayTimeline && (
+              <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D9A441]/20 pb-3">
+                  <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#D9A441]" />
+                    <span>5. Day Timeline ({formData.timelineDay.length})</span>
+                  </h3>
                   <button
                     type="button"
-                    onClick={() => handleInputChange("showVideoSection", true)}
-                    className="mt-2 text-xs font-bold text-[#7A1F2B] underline hover:text-[#D9A441]"
+                    onClick={addTimelineItem}
+                    className="text-xs text-[#7A1F2B] font-bold flex items-center gap-1 hover:underline"
                   >
-                    Click to Enable Video Section
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Timeline Item</span>
                   </button>
                 </div>
-              )}
-            </div>
+
+                {formData.timelineDay.map((tl, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-[#EFE7D8]/60 border border-[#D9A441]/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={tl.icon}
+                        onChange={(e) => handleTimelineChange(idx, "icon", e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        className="w-10 px-2 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs text-center shrink-0 font-bold"
+                      />
+                      <input
+                        type="text"
+                        value={tl.title}
+                        onChange={(e) => handleTimelineChange(idx, "title", e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="Title"
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeTimelineItem(idx)}
+                        className="text-[#7A1F2B] opacity-60 hover:opacity-100 transition-opacity"
+                        title="Remove Timeline Item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">📅 Date</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="date"
+                            value={parseDateToIsoString(tl.date, datePickerVal)}
+                            onChange={(e) => handleTimelinePickerDateChange(idx, e.target.value)}
+                            className="w-28 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                          />
+                          <input
+                            type="text"
+                            value={tl.date || (datePickerVal ? formatEventDate(datePickerVal) : "")}
+                            onChange={(e) => handleTimelineChange(idx, "date", e.target.value)}
+                            onFocus={(e) => e.target.select()}
+                            placeholder="Nov 28, 2026"
+                            className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#7A1F2B] mb-0.5 truncate">⏰ Time</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="time"
+                            onChange={(e) => handleTimelinePickerTimeChange(idx, e.target.value)}
+                            className="w-20 shrink-0 px-2 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                          />
+                          <input
+                            type="text"
+                            value={tl.time}
+                            onChange={(e) => handleTimelineChange(idx, "time", e.target.value)}
+                            onFocus={(e) => e.target.select()}
+                            placeholder="07:00 PM"
+                            className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#F8F3EA] border text-xs font-semibold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 6: Love Story & Video Glimpse (Only rendered if template supports it) */}
+            {showLoveStory && (
+              <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D9A441]/20 pb-3">
+                  <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2">
+                    <Video className="w-4 h-4 text-[#D9A441]" />
+                    <span>6. Love Story & Video Section</span>
+                  </h3>
+                  {/* Toggle / Delete Access Control */}
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange("showVideoSection", !(formData.showVideoSection ?? true))}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                      (formData.showVideoSection ?? true)
+                        ? "bg-[#7A1F2B] text-[#F8F3EA] border-[#7A1F2B] shadow-sm"
+                        : "bg-[#EFE7D8] text-[#221C17]/60 border-[#D9A441]/40 hover:text-[#7A1F2B]"
+                    }`}
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>{(formData.showVideoSection ?? true) ? "Video Enabled" : "Video Disabled (Deleted)"}</span>
+                  </button>
+                </div>
+
+                {(formData.showVideoSection ?? true) ? (
+                  <div className="space-y-4">
+                    {/* YouTube Guide Box */}
+                    <div className="p-4 rounded-2xl bg-[#EFE7D8]/80 border border-[#D9A441]/40 text-xs text-[#221C17]/80 space-y-2">
+                      <h4 className="font-bold text-[#7A1F2B] flex items-center gap-1.5">
+                        <span>💡 How to Add Your YouTube Wedding Video</span>
+                      </h4>
+                      <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed text-[#221C17]/75 font-medium">
+                        <li>Upload your wedding teaser or glimpse video to <strong>YouTube</strong> (Set visibility to <em>Public</em> or <em>Unlisted</em>).</li>
+                        <li>In YouTube Studio under <strong>Advanced Settings</strong>, ensure <strong>"Allow embedding"</strong> is turned <strong>ON</strong>.</li>
+                        <li>Copy the YouTube video link from your browser address bar or share button (e.g. <code>https://www.youtube.com/watch?v=...</code> or <code>https://youtu.be/...</code>) and paste it below!</li>
+                      </ol>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#7A1F2B] mb-1">
+                        Paste YouTube Video Link
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.loveStoryVideoUrl}
+                        onChange={(e) => handleInputChange("loveStoryVideoUrl", e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/50 text-xs font-semibold text-[#7A1F2B] focus:outline-none focus:border-[#7A1F2B]"
+                      />
+                      <span className="text-[10px] text-[#221C17]/60 block mt-1">
+                        Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
+                        Love Story Narrative Text
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={formData.loveStoryText}
+                        onChange={(e) => handleInputChange("loveStoryText", e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="Enter your love story narrative here..."
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-[#EFE7D8]/40 border border-dashed border-[#D9A441]/40 text-center text-xs text-[#221C17]/60">
+                    <p>The Video Section is currently <strong>disabled / deleted</strong> from your invitation card.</p>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange("showVideoSection", true)}
+                      className="mt-2 text-xs font-bold text-[#7A1F2B] underline hover:text-[#D9A441]"
+                    >
+                      Click to Enable Video Section
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Step 7: Venues & Map Locations */}
             <div className="bg-[#F8F3EA] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow space-y-6">

@@ -130,6 +130,25 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPurchases = async () => {
+    if (!confirm("Are you sure you want to reset ALL user purchases, subscriptions, and revenue records to zero? This will reset all non-admin users to Free status.")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/reset-purchases", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reset failed");
+      setSuccessToast(data.message || "Purchases & revenue reset to zero!");
+      fetchAdminData();
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err?.message || "Failed to reset purchases");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-[#F8F3EA] flex items-center justify-center">
@@ -209,11 +228,20 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={handleResetPurchases}
+              disabled={loading}
+              className="px-3.5 py-2.5 rounded-xl bg-[#7A1F2B]/10 text-[#7A1F2B] text-xs font-extrabold hover:bg-[#7A1F2B]/20 border border-[#7A1F2B]/30 flex items-center gap-1.5 transition-all shadow-sm"
+              title="Reset all non-admin user purchases and revenue to zero"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#7A1F2B]" />
+              <span>Reset Purchases to ₹0</span>
+            </button>
             <button
               onClick={fetchAdminData}
               disabled={loading}
-              className="px-4 py-2.5 rounded-xl bg-[#EFE7D8] text-[#221C17] text-xs font-bold hover:bg-[#D9A441]/20 border border-[#D9A441]/40 flex items-center gap-2 transition-all"
+              className="px-3.5 py-2.5 rounded-xl bg-[#EFE7D8] text-[#221C17] text-xs font-bold hover:bg-[#D9A441]/20 border border-[#D9A441]/40 flex items-center gap-1.5 transition-all"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-[#7A1F2B] ${loading ? "animate-spin" : ""}`} />
               <span>Refresh Stats</span>
@@ -565,7 +593,7 @@ export default function AdminPage() {
                     <option value="">Keep current plan ({selectedUser.plan})</option>
                     <option value="BASIC_599">Set Plan to BASIC ₹599 (1 Template + 2 Cards)</option>
                     <option value="PRO_1799">Set Plan to PRO ₹1799 (4 Templates + 6 Cards)</option>
-                    <option value="CINEMATIC_2000">Set Plan to CINEMATIC ₹2000 (5 Templates + 10 Cards)</option>
+                    <option value="CINEMATIC_2000">Set Plan to CINEMATIC ₹2000 (1 Premium Template + 10 Cards)</option>
                     <option value="NONE">Reset Plan to Free User</option>
                   </select>
                 </div>

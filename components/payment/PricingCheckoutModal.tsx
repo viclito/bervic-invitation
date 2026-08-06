@@ -279,11 +279,7 @@ export default function PricingCheckoutModal({
               <ul className="space-y-2 text-[11px] text-[#FDF6F3]/90">
                 <li className="flex items-start gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>Includes 480-Frame Scroll Template</strong></span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>5 Total Template Slots</strong></span>
+                  <span><strong>1 Exclusive Cinematic Template Slot</strong></span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <Check className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />

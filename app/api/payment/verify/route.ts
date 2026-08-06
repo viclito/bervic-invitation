@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         : "BASIC_599";
 
     const validityMonths = selectedPlan === "BASIC_599" ? 6 : 12;
-    const addTemplates = selectedPlan === "BASIC_599" ? 1 : selectedPlan === "PRO_1799" ? 4 : 5;
+    const addTemplates = selectedPlan === "BASIC_599" ? 1 : selectedPlan === "PRO_1799" ? 4 : 1;
     const addCards = selectedPlan === "BASIC_599" ? 2 : selectedPlan === "PRO_1799" ? 6 : 10;
     const amount = selectedPlan === "BASIC_599" ? 599 : selectedPlan === "PRO_1799" ? 1799 : 2000;
 

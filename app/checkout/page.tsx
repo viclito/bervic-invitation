@@ -331,11 +331,7 @@ function CheckoutContent() {
               <ul className="space-y-2.5 text-xs text-[#FDF6F3]/90">
                 <li className="flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>Includes Exclusive 480-Frame Scroll Template</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>5 Total Invitation Template Slots</strong></span>
+                  <span><strong>1 Exclusive 480-Frame Cinematic Scroll Template Slot</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />

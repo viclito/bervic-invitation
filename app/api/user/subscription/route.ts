@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
+    await ensureDbSchema();
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
     const userEmail = session?.user?.email?.toLowerCase().trim();
@@ -137,7 +139,7 @@ export async function GET(req: Request) {
     let allowedCards = 0;
 
     if (isSubscribed) {
-      const defaultTemplates = user.plan === "CINEMATIC_2000" ? 5 : user.plan === "PRO_1799" ? 4 : 1;
+      const defaultTemplates = user.plan === "CINEMATIC_2000" ? 1 : user.plan === "PRO_1799" ? 4 : 1;
       const defaultCards = user.plan === "CINEMATIC_2000" ? 10 : user.plan === "PRO_1799" ? 6 : 2;
 
       allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : defaultTemplates;

@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       if (currentTemplates >= 99) currentTemplates = 4;
       if (currentCards >= 99) currentCards = 6;
     } else if (targetPlan === "CINEMATIC_2000") {
-      if (currentTemplates >= 99) currentTemplates = 5;
+      if (currentTemplates >= 99) currentTemplates = 1;
       if (currentCards >= 99) currentCards = 10;
     } else {
       if (currentTemplates >= 99) currentTemplates = 0;

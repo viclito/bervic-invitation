@@ -18,6 +18,9 @@ export interface TemplateRegistryItem {
   fontStyle: "serif" | "sans";
   layoutVariant: string;
   hasDualPartnerPhotos?: boolean;
+  hasLoveStory?: boolean;
+  hasDayTimeline?: boolean;
+  hasEvents?: boolean;
   isCinematicExclusive?: boolean;
   price?: number;
 }
@@ -42,6 +45,8 @@ export const templatesRegistry: TemplateRegistryItem[] = [
     fontStyle: "serif",
     layoutVariant: "scroll-scrubber",
     hasDualPartnerPhotos: true,
+    hasLoveStory: false,
+    hasDayTimeline: false,
     isCinematicExclusive: true,
     price: 2000,
   },

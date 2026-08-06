@@ -13,7 +13,7 @@ export default function FAQSection() {
     },
     {
       q: "How does template locking work?",
-      a: "Once you select a template for a slot included in your plan (1 template slot for ₹599, 4 slots for ₹1799, 5 slots for ₹2000), that slot is locked to that chosen template design. However, you can edit all details (names, dates, photos, venue maps, timelines) of your selected template as many times as you like!",
+      a: "Once you select a template for a slot included in your plan (1 template slot for ₹599, 4 slots for ₹1799, 1 exclusive template slot for ₹2000), that slot is locked to that chosen template design. However, you can edit all details (names, dates, photos, venue maps, timelines) of your selected template as many times as you like!",
     },
     {
       q: "Do my invitations or assets expire after the wedding date?",

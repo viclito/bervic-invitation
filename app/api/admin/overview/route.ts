@@ -231,9 +231,9 @@ export async function GET() {
           if (allowedTemplates === 99) allowedTemplates = 4;
           if (allowedCards === 99) allowedCards = 6;
         } else if (user.plan === "CINEMATIC_2000") {
-          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 5;
+          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 1;
           allowedCards = allowedCards > 0 ? allowedCards : 10;
-          if (allowedTemplates === 99) allowedTemplates = 5;
+          if (allowedTemplates === 99) allowedTemplates = 1;
           if (allowedCards === 99) allowedCards = 10;
         }
       }

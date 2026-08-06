@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Volume2,
   VolumeX,
+  Phone,
 } from "lucide-react";
 
 const TOTAL_SCENE1_FRAMES = 240;
@@ -58,6 +59,8 @@ export interface ScrollScrubberCanvasProps {
   locations?: LocationItem[];
   galleryImages?: string[];
   guestName?: string;
+  contactPhone?: string;
+  contactAddress?: string;
   onExploreClick?: () => void;
   bgAudioUrl?: string;
 }
@@ -74,6 +77,8 @@ export default function ScrollScrubberCanvas({
   coupleImage,
   partnerTwoImage,
   guestName = "Honored Guest",
+  contactPhone,
+  contactAddress,
   events = [
     {
       time: "03:30 PM",
@@ -784,7 +789,7 @@ export default function ScrollScrubberCanvas({
             {/* Top Section: Couple Names & Wedding Date */}
             <div className="flex flex-col items-center text-center max-w-2xl w-full">
               <span className="text-[11px] sm:text-xs uppercase tracking-[0.38em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] mb-1">
-                Together with their families
+                {tagline || "TOGETHER WITH THEIR FAMILIES"}
               </span>
 
               <h1 className="text-4xl sm:text-6xl md:text-7xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] leading-tight">
@@ -792,11 +797,11 @@ export default function ScrollScrubberCanvas({
               </h1>
 
               <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] text-[#D9A441] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                {weddingDate} • {weddingTime}
+                {weddingTime || weddingDate}
               </p>
 
               <p className="text-xs sm:text-sm text-[#F7E7C4] italic font-light max-w-md mx-auto mt-2.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] leading-relaxed">
-                &quot;Request the honor of your presence as two hearts unite in eternal love &amp; grace&quot;
+                &quot;{inviteLine || "invite you to celebrate their wedding"}&quot;
               </p>
             </div>
 
@@ -1191,6 +1196,38 @@ export default function ScrollScrubberCanvas({
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D9A441]/15 border border-[#D9A441]/40 text-xs text-[#D9A441] font-mono font-semibold backdrop-blur-md shadow-[0_0_15px_rgba(217,164,65,0.25)]">
                 <Heart className="w-4 h-4 text-[#D9A441] fill-current animate-bounce" />
                 <span>{blessingCount} Blessings Sent by Loved Ones</span>
+              </div>
+
+              {/* Dynamic Contact Information & Footer Details */}
+              <div className="mt-6 text-center space-y-1.5 max-w-md mx-auto pointer-events-auto">
+                <h4 className="text-[#F7E7C4] text-lg font-accent italic">
+                  {partnerOne} &amp; {partnerTwo}
+                </h4>
+                <p className="text-[11px] text-[#D9A441] font-mono tracking-widest uppercase">
+                  {weddingTime || weddingDate}
+                </p>
+
+                {(contactPhone || contactAddress) && (
+                  <div className="pt-2 flex flex-col items-center gap-1.5">
+                    {contactPhone && (
+                      <a
+                        href={`tel:${contactPhone}`}
+                        className="text-xs text-[#D9A441] font-mono font-bold flex items-center gap-2 bg-[#0C0C0C]/90 px-4 py-1.5 rounded-full border border-[#D9A441]/40 shadow-md hover:scale-105 transition-transform"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-[#D9A441]" />
+                        <span>For Inquiries &amp; Help: {contactPhone}</span>
+                      </a>
+                    )}
+                    {contactAddress && (
+                      <p className="text-[11px] text-[#F8F3EA]/70 italic">
+                        {contactAddress}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <p className="text-[10px] text-[#F8F3EA]/40 uppercase tracking-widest pt-3 font-mono">
+                  Crafted with elegance &amp; love • Powered by Bervic Invitations
+                </p>
               </div>
             </div>
           </div>

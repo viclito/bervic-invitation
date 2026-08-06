@@ -74,7 +74,7 @@ export default function CinematicShowcaseSection() {
               
               {/* Frame Image / Live Background Preview */}
               <img
-                src="/frames/scene1/frame_000.webp"
+                src="/frames/scene1/frame-0004.webp"
                 alt="480-Frame Scroll Sequence Preview"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
               />

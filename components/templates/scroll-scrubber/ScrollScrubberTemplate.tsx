@@ -46,6 +46,8 @@ export interface ScrollScrubberTemplateProps {
   galleryImages?: string[];
   guestName?: string;
   guestPhone?: string;
+  contactPhone?: string;
+  contactAddress?: string;
 }
 
 export default function ScrollScrubberTemplate({
@@ -58,6 +60,8 @@ export default function ScrollScrubberTemplate({
   weddingTime = "4:00 PM Onwards",
   coupleImage = "/images/templates/groom-bride-1.jpg",
   partnerTwoImage = "/images/templates/groom-bride-2.jpg",
+  contactPhone,
+  contactAddress,
   events = [
     {
       time: "03:30 PM",
@@ -172,6 +176,8 @@ export default function ScrollScrubberTemplate({
         locations={locations}
         galleryImages={galleryImages}
         guestName={guestName}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
         onExploreClick={scrollToRsvp}
       />
 
@@ -373,8 +379,28 @@ export default function ScrollScrubberTemplate({
             {partnerOne} &amp; {partnerTwo}
           </h3>
           <p className="text-[#D9A441] tracking-widest uppercase font-mono text-[11px]">
-            {weddingDate} • {weddingTime}
+            {weddingTime || weddingDate}
           </p>
+
+          {(contactPhone || contactAddress) && (
+            <div className="pt-2 flex flex-col items-center gap-1.5">
+              {contactPhone && (
+                <a
+                  href={`tel:${contactPhone}`}
+                  className="text-xs text-[#D9A441] font-mono font-bold flex items-center justify-center gap-2 bg-[#121212] px-4 py-1.5 rounded-full border border-[#D9A441]/40 shadow-sm hover:scale-105 transition-transform"
+                >
+                  <Phone className="w-3.5 h-3.5 text-[#D9A441]" />
+                  <span>RSVP &amp; Inquiries: {contactPhone}</span>
+                </a>
+              )}
+              {contactAddress && (
+                <p className="text-[11px] text-[#F8F3EA]/70 italic">
+                  {contactAddress}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="w-16 h-[1px] bg-[#D9A441]/40 mx-auto" />
           <p className="font-light">
             Crafted with elegance &amp; love • Powered by Bervic Invitations
