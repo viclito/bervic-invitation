@@ -48,6 +48,7 @@ export async function GET(req: Request) {
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
+          allowedCinematicCount: true,
           allowedCardsCount: true,
           invitations: {
             select: { id: true, templateSlug: true, partnerOne: true, partnerTwo: true, slug: true },
@@ -111,12 +112,39 @@ export async function GET(req: Request) {
       });
     }
 
+    // Auto-calculate cinematic pass count from actual paid payments or subscriptions if DB column was missed
+    const paidCinematicPayments = (user.payments || []).filter(
+      (p: any) => p.plan === "CINEMATIC_2000" || p.amount >= 2000
+    ).length;
+    const paidCinematicSubs = (user.subscriptions || []).filter(
+      (s: any) => s.plan === "CINEMATIC_2000" || s.amount >= 2000
+    ).length;
+    const countFromHistory = Math.max(paidCinematicPayments, paidCinematicSubs);
+
+    let rawDbCinematicCount = (user as any).allowedCinematicCount || 0;
+    if (rawDbCinematicCount === 0 && countFromHistory > 0) {
+      rawDbCinematicCount = countFromHistory;
+      // Auto-heal the DB record
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { allowedCinematicCount: countFromHistory },
+        });
+      } catch {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
+          countFromHistory,
+          user.id
+        );
+      }
+    }
+    const dbCinematicCount = rawDbCinematicCount;
+
     // Check if user has real paid payments or active subscriptions
     const hasSuccessfulPayment = (user.payments || []).length > 0;
     const hasActiveSubscription = (user.subscriptions || []).some(
       (sub: any) => new Date(sub.expiresAt) > now
     );
-    const dbCinematicCount = (user as any).allowedCinematicCount || 0;
     const hasAdminGrantedQuotas = (user.allowedTemplatesCount || 0) > 0 || dbCinematicCount > 0 || (user.allowedCardsCount || 0) > 0;
 
     const isSubscribed =

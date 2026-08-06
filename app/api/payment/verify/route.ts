@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
+    await ensureDbSchema();
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
     const userEmail = session?.user?.email?.toLowerCase().trim();
@@ -30,6 +32,7 @@ export async function POST(req: Request) {
         plan: true,
         planExpiresAt: true,
         allowedTemplatesCount: true,
+        allowedCinematicCount: true,
         allowedCardsCount: true,
       },
     });
@@ -138,28 +141,50 @@ export async function POST(req: Request) {
       console.warn("Subscription record error:", subErr?.message);
     }
 
-    // Update User plan & cumulative allowed quotas
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        plan: targetPlan,
-        planExpiresAt: finalExpiresAt,
-        allowedTemplatesCount: newAllowedTemplates,
-        allowedCardsCount: newAllowedCards,
-      },
-      select: {
-        plan: true,
-        planExpiresAt: true,
-        allowedTemplatesCount: true,
-        allowedCardsCount: true,
-      },
-    });
-
-    await prisma.$executeRawUnsafe(
-      `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
-      newAllowedCinematic,
-      user.id
-    );
+    // Update User plan & cumulative allowed quotas (both ORM data and raw fallback for safety)
+    let updatedUser: any = null;
+    try {
+      updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          plan: targetPlan,
+          planExpiresAt: finalExpiresAt,
+          allowedTemplatesCount: newAllowedTemplates,
+          allowedCinematicCount: newAllowedCinematic,
+          allowedCardsCount: newAllowedCards,
+        },
+        select: {
+          plan: true,
+          planExpiresAt: true,
+          allowedTemplatesCount: true,
+          allowedCinematicCount: true,
+          allowedCardsCount: true,
+        },
+      });
+    } catch {
+      // Fallback update if ORM types are stale
+      updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          plan: targetPlan,
+          planExpiresAt: finalExpiresAt,
+          allowedTemplatesCount: newAllowedTemplates,
+          allowedCardsCount: newAllowedCards,
+        },
+        select: {
+          plan: true,
+          planExpiresAt: true,
+          allowedTemplatesCount: true,
+          allowedCardsCount: true,
+        },
+      });
+      await prisma.$executeRawUnsafe(
+        `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
+        newAllowedCinematic,
+        user.id
+      );
+      (updatedUser as any).allowedCinematicCount = newAllowedCinematic;
+    }
 
     return NextResponse.json({
       success: true,
