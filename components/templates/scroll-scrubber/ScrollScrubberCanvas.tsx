@@ -571,11 +571,17 @@ export default function ScrollScrubberCanvas({
     const timelineStart = 0.200; // Y = 1400px
     const timelineEnd = 0.357;   // Y = 2500px
 
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || "ontouchstart" in window);
+
     if (p < timelineStart || p > timelineEnd) {
       return {
         opacity: 0,
         transform: "translate3d(0, 30px, 0)",
         willChange: "opacity, transform",
+        WebkitBackfaceVisibility: "hidden" as const,
+        backfaceVisibility: "hidden" as const,
       };
     }
 
@@ -586,29 +592,40 @@ export default function ScrollScrubberCanvas({
 
     let opacity = 0;
     let translateX = 0;
+    let translateY = 0;
     const isEven = idx % 2 === 0;
-    const startDir = isEven ? -60 : 60; // Left (-60px) or Right (+60px)
+    const startDir = isEven ? -60 : 60; // Left (-60px) or Right (+60px) for desktop
 
     if (p < itemStart) {
       opacity = 0;
       translateX = startDir;
+      translateY = 25;
     } else if (p >= itemStart && p < itemPeak) {
       const progress = (p - itemStart) / (itemPeak - itemStart);
       opacity = progress;
       translateX = (1 - progress) * startDir;
+      translateY = (1 - progress) * 25;
     } else if (p >= itemPeak && p < sectionFadeOutStart) {
       opacity = 1;
       translateX = 0;
+      translateY = 0;
     } else {
       const fadeProgress = (p - sectionFadeOutStart) / (timelineEnd - sectionFadeOutStart);
       opacity = Math.max(0, 1 - fadeProgress);
       translateX = 0;
+      translateY = 0;
     }
+
+    const transformStr = isMobile
+      ? `translate3d(0, ${translateY}px, 0)`
+      : `translate3d(${translateX}px, 0, 0)`;
 
     return {
       opacity,
-      transform: `translate3d(${translateX}px, 0, 0)`,
+      transform: transformStr,
       willChange: "opacity, transform",
+      WebkitBackfaceVisibility: "hidden" as const,
+      backfaceVisibility: "hidden" as const,
     };
   };
 
@@ -760,7 +777,7 @@ export default function ScrollScrubberCanvas({
           
           {/* OVERLAY BLOCK 1: HERO / TOP CENTER NAMES */}
           <div
-            className="absolute top-8 sm:top-12 left-0 w-full flex flex-col items-center justify-center text-center px-4 transition-all duration-300 ease-out"
+            className="absolute top-8 sm:top-12 left-0 w-full flex flex-col items-center justify-center text-center px-4 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleHero}
           >
             {/* Top Tagline Sub-header */}
@@ -785,18 +802,18 @@ export default function ScrollScrubberCanvas({
 
             <div className="mt-5 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.25em] text-[#F7E7C4]/90 bg-[#070707]/70 px-4 py-1.5 rounded-full border border-[#D9A441]/35 backdrop-blur-md shadow-[0_4px_15px_rgba(0,0,0,0.8)]">
               <span>Scroll Down to View Story</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#D9A441] animate-bounce" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#D9A441] sm:animate-bounce" />
             </div>
           </div>
 
           {/* OVERLAY BLOCK 2: MEET THE COUPLE (Seamless, No Outer Box) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleStory}
           >
             <div className="max-w-2xl w-full flex flex-col items-center text-center">
               <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
-                <Heart className="w-5.5 h-5.5 text-[#D9A441] fill-current animate-pulse" />
+                <Heart className="w-5.5 h-5.5 text-[#D9A441] fill-current sm:animate-pulse" />
               </div>
 
               <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
@@ -813,7 +830,7 @@ export default function ScrollScrubberCanvas({
                   <img
                     src={groomImage || coupleImage || "/images/templates/groom-bride-1.jpg"}
                     alt={`${partnerOne} - Groom`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 text-left">
@@ -831,7 +848,7 @@ export default function ScrollScrubberCanvas({
                   <img
                     src={brideImage || partnerTwoImage || "/images/templates/groom-bride-2.jpg"}
                     alt={`${partnerTwo} - Bride`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 text-left">
@@ -853,7 +870,7 @@ export default function ScrollScrubberCanvas({
 
           {/* OVERLAY BLOCK 3: ORDER OF EVENTS TIMELINE (Seamless, No Outer Box, Alternating Left/Right) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleTimeline}
           >
             <div className="max-w-3xl w-full flex flex-col items-center text-center">
@@ -924,12 +941,12 @@ export default function ScrollScrubberCanvas({
 
           {/* OVERLAY BLOCK 4: VENUES & LOCATIONS (Seamless, No Outer Box) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleLocations}
           >
             <div className="max-w-3xl w-full flex flex-col items-center text-center">
               <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
-                <MapPin className="w-5.5 h-5.5 text-[#D9A441] animate-pulse" />
+                <MapPin className="w-5.5 h-5.5 text-[#D9A441] sm:animate-pulse" />
               </div>
 
               <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
@@ -944,7 +961,7 @@ export default function ScrollScrubberCanvas({
                 {locations.map((loc, idx) => (
                   <div
                     key={idx}
-                    className="p-5 sm:p-6 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441]"
+                    className="p-5 sm:p-6 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left sm:transition-all sm:duration-300 sm:hover:scale-[1.02] sm:hover:border-[#D9A441]"
                   >
                     <div>
                       {loc.title && (
@@ -985,12 +1002,12 @@ export default function ScrollScrubberCanvas({
 
           {/* OVERLAY BLOCK 5: PRE-WEDDING GALLERY (Seamless, Starts at Y = 3550px) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleGallery}
           >
             <div className="max-w-4xl w-full flex flex-col items-center text-center">
               <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
-                <Sparkles className="w-5.5 h-5.5 text-[#D9A441] animate-pulse" />
+                <Sparkles className="w-5.5 h-5.5 text-[#D9A441] sm:animate-pulse" />
               </div>
 
               <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
@@ -1003,11 +1020,11 @@ export default function ScrollScrubberCanvas({
               {/* Catchy Asymmetric Editorial Bento Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto">
                 {/* 1. Large Featured Hero Card (Spans 2 Columns on Desktop) */}
-                <div className="sm:col-span-2 group relative h-56 sm:h-72 rounded-3xl overflow-hidden border border-[#D9A441]/50 shadow-[0_15px_40px_rgba(0,0,0,0.9)] bg-[#141414] transition-all duration-500 hover:scale-[1.02] hover:border-[#D9A441]">
+                <div className="sm:col-span-2 group relative h-56 sm:h-72 rounded-3xl overflow-hidden border border-[#D9A441]/50 shadow-[0_15px_40px_rgba(0,0,0,0.9)] bg-[#141414] sm:transition-all sm:duration-500 sm:hover:scale-[1.02] sm:hover:border-[#D9A441]">
                   <img
                     src={galleryImages[0] || "/images/templates/gallery-1.jpg"}
                     alt="Golden Hour Walk"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-[#070707]/20 to-transparent" />
                   <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#070707]/70 border border-[#D9A441]/40 text-[#D9A441] text-[10px] uppercase font-mono tracking-widest backdrop-blur-sm shadow-md">
@@ -1026,11 +1043,11 @@ export default function ScrollScrubberCanvas({
                 {/* Right Column: 2 Stacked Cards */}
                 <div className="sm:col-span-1 flex flex-col gap-3.5 sm:gap-4">
                   {/* 2. Top Right Card */}
-                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] transition-all duration-500 hover:scale-[1.03] hover:border-[#D9A441]">
+                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] sm:transition-all sm:duration-500 sm:hover:scale-[1.03] sm:hover:border-[#D9A441]">
                     <img
                       src={galleryImages[1] || "/images/templates/gallery-2.jpg"}
                       alt="Under the Canopy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/85 via-transparent to-transparent" />
                     <div className="absolute bottom-2.5 left-3 text-left">
@@ -1041,11 +1058,11 @@ export default function ScrollScrubberCanvas({
                   </div>
 
                   {/* 3. Bottom Right Card */}
-                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] transition-all duration-500 hover:scale-[1.03] hover:border-[#D9A441]">
+                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] sm:transition-all sm:duration-500 sm:hover:scale-[1.03] sm:hover:border-[#D9A441]">
                     <img
                       src={galleryImages[2] || "/images/templates/gallery-3.jpg"}
                       alt="Eternal Vows"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/85 via-transparent to-transparent" />
                     <div className="absolute bottom-2.5 left-3 text-left">
@@ -1061,12 +1078,12 @@ export default function ScrollScrubberCanvas({
 
           {/* OVERLAY BLOCK 6: R.S.V.P. CONFIRMATION (Seamless, Starts at Y = 4500px) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleRsvp}
           >
             <div className="max-w-2xl w-full flex flex-col items-center text-center">
               <div className="w-12 h-12 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_25px_rgba(217,164,65,0.35)]">
-                <Sparkles className="w-6 h-6 text-[#D9A441] animate-pulse" />
+                <Sparkles className="w-6 h-6 text-[#D9A441] sm:animate-pulse" />
               </div>
 
               <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
@@ -1098,7 +1115,7 @@ export default function ScrollScrubberCanvas({
 
           {/* OVERLAY BLOCK 7: FANTASTIC GRAND FINALE - BLESSINGS & COUNTDOWN (Seamless, Starts at Y = 6100px) */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 sm:transition-all sm:duration-300 sm:ease-out"
             style={styleFinale}
           >
             <div className="max-w-3xl w-full flex flex-col items-center text-center">
