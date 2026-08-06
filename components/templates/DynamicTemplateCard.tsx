@@ -45,6 +45,7 @@ import UrbanStreetwearBashInvitation from "./stitch/UrbanStreetwearBashInvitatio
 import ArtDecoGrandeurInvitation from "./stitch/ArtDecoGrandeurInvitation";
 import FreshCitrusSummerInvitation from "./stitch/FreshCitrusSummerInvitation";
 import EclecticChicMasterpieceInvitation from "./stitch/EclecticChicMasterpieceInvitation";
+import ScrollScrubberTemplate from "./scroll-scrubber/ScrollScrubberTemplate";
 import Navbar from "./classic-floral/Navbar";
 import Hero from "./classic-floral/Hero";
 import CountdownTimer from "./classic-floral/CountdownTimer";
@@ -240,6 +241,10 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
 
   if (currentSlug === "eclectic-chic-masterpiece") {
     return <EclecticChicMasterpieceInvitation {...props} />;
+  }
+
+  if (currentSlug === "scroll-scrubber" || currentSlug === "premium-scroll" || currentSlug === "terance-ancy") {
+    return <ScrollScrubberTemplate {...props} />;
   }
 
   const themeItem: TemplateRegistryItem =

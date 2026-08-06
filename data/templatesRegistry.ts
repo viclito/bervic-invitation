@@ -21,6 +21,25 @@ export interface TemplateRegistryItem {
 
 export const templatesRegistry: TemplateRegistryItem[] = [
   {
+    id: "480",
+    slug: "scroll-scrubber",
+    title: "Cinematic 480-Frame Scroll Sequence",
+    category: "wedding",
+    categoryLabel: "Wedding",
+    styleTag: "480-Frame Apple-Style Scroll & Royal Gold",
+    description: "Cinematic video image sequence scrubbed smoothly on scroll with black & gold overlay storytelling.",
+    previewImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=85",
+    isPremium: true,
+    badgeColor: "bg-[#D9A441]/20 text-[#D9A441] border-[#D9A441]/50",
+    themeColor: "#0B0B0B",
+    bgGrad: "from-[#0B0B0B] via-[#070707] to-[#0B0B0B]",
+    textColor: "#FDF6F3",
+    accentColor: "#D9A441",
+    secondaryAccent: "#F7E7C4",
+    fontStyle: "serif",
+    layoutVariant: "scroll-scrubber",
+  },
+  {
     id: "1",
     slug: "olive-ochre",
     title: "Olive & Ochre Invitation",
