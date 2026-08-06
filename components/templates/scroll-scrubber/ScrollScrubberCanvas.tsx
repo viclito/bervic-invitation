@@ -17,15 +17,15 @@ const TOTAL_SCENE1_FRAMES = 240;
 const TOTAL_SCENE2_FRAMES = 240;
 const TOTAL_FRAMES = TOTAL_SCENE1_FRAMES + TOTAL_SCENE2_FRAMES;
 
-// Helper to build 480 frame image URLs
+// Helper to build 480 frame image URLs (WebP format for 80% compression)
 const FRAME_PATHS: string[] = [
   ...Array.from({ length: TOTAL_SCENE1_FRAMES }, (_, i) => {
     const frameNum = String(i + 1).padStart(4, "0");
-    return `/frames/scene1/frame-${frameNum}.jpg`;
+    return `/frames/scene1/frame-${frameNum}.webp`;
   }),
   ...Array.from({ length: TOTAL_SCENE2_FRAMES }, (_, i) => {
     const frameNum = String(i + 1).padStart(4, "0");
-    return `/frames/scene2/frame-${frameNum}.jpg`;
+    return `/frames/scene2/frame-${frameNum}.webp`;
   }),
 ];
 
@@ -196,15 +196,16 @@ export default function ScrollScrubberCanvas({
     drawFrame(roundedIndex);
   }, [drawFrame]);
 
-  // Dual-stage progressive preloader
+  // Progressive keyframe priority preloader
   useEffect(() => {
     let isCancelled = false;
 
-    // Load Scene 1 first (Priority load)
     let scene1Count = 0;
     let totalCount = 0;
 
     const loadFrame = (index: number): Promise<void> => {
+      if (imagesRef.current[index]) return Promise.resolve();
+
       return new Promise((resolve) => {
         const img = new Image();
         img.src = FRAME_PATHS[index];
@@ -220,8 +221,8 @@ export default function ScrollScrubberCanvas({
             scene1Count++;
             setLoadedScene1Count(scene1Count);
 
-            // Unlock early playback once scene1 is mostly loaded (e.g. 90% or 216 frames)
-            if (scene1Count >= Math.floor(TOTAL_SCENE1_FRAMES * 0.9)) {
+            // Unlock playback early once keyframes (or 50+ frames) are ready
+            if (scene1Count >= 40) {
               setIsScene1Ready(true);
             }
           }
@@ -234,13 +235,12 @@ export default function ScrollScrubberCanvas({
 
         img.onerror = () => {
           if (isCancelled) return resolve();
-          // Fallback image if frame load fails
           totalCount++;
           setLoadedTotalCount(totalCount);
           if (index < TOTAL_SCENE1_FRAMES) {
             scene1Count++;
             setLoadedScene1Count(scene1Count);
-            if (scene1Count >= Math.floor(TOTAL_SCENE1_FRAMES * 0.9)) {
+            if (scene1Count >= 40) {
               setIsScene1Ready(true);
             }
           }
@@ -249,48 +249,53 @@ export default function ScrollScrubberCanvas({
       });
     };
 
-    // Stage 1: Load Scene 1 in parallel batches
-    const loadScene1 = async () => {
-      const batchSize = 12;
-      for (let i = 0; i < TOTAL_SCENE1_FRAMES; i += batchSize) {
+    // Stage 1: Keyframe priority load (every 4th frame for Scene 1)
+    const loadKeyframes = async () => {
+      const keyframeIndices: number[] = [];
+      for (let i = 0; i < TOTAL_SCENE1_FRAMES; i += 4) {
+        keyframeIndices.push(i);
+      }
+
+      const batchSize = 16;
+      for (let i = 0; i < keyframeIndices.length; i += batchSize) {
         if (isCancelled) break;
-        const batch = [];
-        for (let j = i; j < Math.min(i + batchSize, TOTAL_SCENE1_FRAMES); j++) {
-          batch.push(loadFrame(j));
-        }
+        const batch = keyframeIndices
+          .slice(i, i + batchSize)
+          .map((idx) => loadFrame(idx));
         await Promise.all(batch);
       }
+
       if (!isCancelled) {
         setIsScene1Ready(true);
-        // Stage 2: Lazy load Scene 2 in background
-        loadScene2();
+        // Stage 2: Fill in remaining frames in background
+        loadRemainingFrames();
       }
     };
 
-    const loadScene2 = async () => {
-      const batchSize = 12;
-      for (
-        let i = TOTAL_SCENE1_FRAMES;
-        i < TOTAL_FRAMES;
-        i += batchSize
-      ) {
-        if (isCancelled) break;
-        const batch = [];
-        for (
-          let j = i;
-          j < Math.min(i + batchSize, TOTAL_FRAMES);
-          j++
-        ) {
-          batch.push(loadFrame(j));
+    // Stage 2: Fill in all remaining frames (Scene 1 intermediate + Scene 2)
+    const loadRemainingFrames = async () => {
+      const remainingIndices: number[] = [];
+      for (let i = 0; i < TOTAL_FRAMES; i++) {
+        if (!imagesRef.current[i]) {
+          remainingIndices.push(i);
         }
+      }
+
+      const batchSize = 12;
+      for (let i = 0; i < remainingIndices.length; i += batchSize) {
+        if (isCancelled) break;
+        const batch = remainingIndices
+          .slice(i, i + batchSize)
+          .map((idx) => loadFrame(idx));
         await Promise.all(batch);
       }
+
       if (!isCancelled) {
         setIsFullyLoaded(true);
       }
     };
 
-    loadScene1();
+    loadKeyframes();
 
     return () => {
       isCancelled = true;
