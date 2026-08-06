@@ -17,6 +17,7 @@ export interface TemplateRegistryItem {
   secondaryAccent: string;
   fontStyle: "serif" | "sans";
   layoutVariant: string;
+  hasDualPartnerPhotos?: boolean;
 }
 
 export const templatesRegistry: TemplateRegistryItem[] = [
@@ -38,6 +39,7 @@ export const templatesRegistry: TemplateRegistryItem[] = [
     secondaryAccent: "#F7E7C4",
     fontStyle: "serif",
     layoutVariant: "scroll-scrubber",
+    hasDualPartnerPhotos: true,
   },
   {
     id: "1",

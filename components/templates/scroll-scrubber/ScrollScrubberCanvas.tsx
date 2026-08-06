@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
   Clock,
   MapPin,
   Heart,
@@ -29,14 +28,14 @@ const FRAME_PATHS: string[] = [
   }),
 ];
 
-interface EventItem {
+export interface EventItem {
   time: string;
   title: string;
   location?: string;
   description?: string;
 }
 
-interface LocationItem {
+export interface LocationItem {
   title?: string;
   name: string;
   address: string;
@@ -51,25 +50,34 @@ export interface ScrollScrubberCanvasProps {
   inviteLine?: string;
   weddingDate?: string;
   weddingTime?: string;
+  groomImage?: string;
+  brideImage?: string;
+  coupleImage?: string;
+  partnerTwoImage?: string;
   events?: EventItem[];
   locations?: LocationItem[];
+  galleryImages?: string[];
   onExploreClick?: () => void;
   bgAudioUrl?: string;
 }
 
 export default function ScrollScrubberCanvas({
-  partnerOne = "Terance",
-  partnerTwo = "Ancy",
+  partnerOne = "Your Name",
+  partnerTwo = "Partner Name",
   tagline = "THE WEDDING OF",
   inviteLine = "Together with their families, invite you to celebrate their union of love",
   weddingDate = "December 18, 2026",
   weddingTime = "4:00 PM Onwards",
+  groomImage,
+  brideImage,
+  coupleImage,
+  partnerTwoImage,
   events = [
     {
       time: "03:30 PM",
       title: "Guest Arrival & Welcome Drinks",
       location: "Grand Foyer, St. Patrick's",
-      description: "Welcome flute of champagne & harp performance",
+      description: "Welcome champagne & classical harp performance",
     },
     {
       time: "04:30 PM",
@@ -100,6 +108,12 @@ export default function ScrollScrubberCanvas({
       mapUrl: "https://maps.google.com",
     },
   ],
+  galleryImages = [
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+  ],
   onExploreClick,
   bgAudioUrl,
 }: ScrollScrubberCanvasProps) {
@@ -122,8 +136,14 @@ export default function ScrollScrubberCanvas({
   // Smooth frame scrubbing animation refs
   const currentFrameRef = useRef<number>(0);
   const targetFrameRef = useRef<number>(0);
+
+  // Eased progress ref to eliminate text box flickering during scroll
+  const smoothProgressRef = useRef<number>(0);
+  const targetProgressRef = useRef<number>(0);
+
   const rafIdRef = useRef<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [blessingCount, setBlessingCount] = useState(148);
 
   // Draw frame with object-fit: cover matrix calculation
   const drawFrame = useCallback((frameIndex: number) => {
@@ -135,7 +155,6 @@ export default function ScrollScrubberCanvas({
     // Retrieve image or nearest loaded fallback frame
     let img = imagesRef.current[frameIndex];
     if (!img || !img.complete || img.naturalWidth === 0) {
-      // Find closest loaded frame
       for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
         const prevIdx = frameIndex - offset;
         const nextIdx = frameIndex + offset;
@@ -188,7 +207,6 @@ export default function ScrollScrubberCanvas({
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
 
-    // Draw current frame immediately
     const roundedIndex = Math.min(
       Math.max(Math.round(currentFrameRef.current), 0),
       TOTAL_FRAMES - 1
@@ -221,7 +239,6 @@ export default function ScrollScrubberCanvas({
             scene1Count++;
             setLoadedScene1Count(scene1Count);
 
-            // Unlock playback early once keyframes (or 50+ frames) are ready
             if (scene1Count >= 40) {
               setIsScene1Ready(true);
             }
@@ -267,12 +284,11 @@ export default function ScrollScrubberCanvas({
 
       if (!isCancelled) {
         setIsScene1Ready(true);
-        // Stage 2: Fill in remaining frames in background
         loadRemainingFrames();
       }
     };
 
-    // Stage 2: Fill in all remaining frames (Scene 1 intermediate + Scene 2)
+    // Stage 2: Fill remaining frames
     const loadRemainingFrames = async () => {
       const remainingIndices: number[] = [];
       for (let i = 0; i < TOTAL_FRAMES; i++) {
@@ -309,48 +325,116 @@ export default function ScrollScrubberCanvas({
     return () => window.removeEventListener("resize", updateCanvasDimensions);
   }, [updateCanvasDimensions]);
 
-  // Lerp Animation & Scroll Listener loop
+  // Console logging helper for scroll metrics
+  const lastLoggedFrameRef = useRef<number>(-1);
+
+  // Smooth Lerp Loop & Scroll Listener (Flicker-Free with Console Logging)
   useEffect(() => {
     if (!isScene1Ready) return;
 
-    // Draw initial frame
     updateCanvasDimensions();
+
+    const getActiveSectionName = (p: number) => {
+      if (p >= 0.0 && p <= 0.128) return "1. Hero Title (Terance & Ancy)";
+      if (p >= 0.064 && p <= 0.20) return "2. Meet the Couple (Vanish at Y:1000px - 1400px)";
+      if (p >= 0.20 && p <= 0.357) return "3. Order of Events Timeline (Vanish at Y:2100px - 2500px)";
+      if (p >= 0.350 && p <= 0.514) return "4. The Venues (Vanish at Y:3200px - 3600px)";
+      if (p >= 0.507 && p <= 0.643) return "5. Pre-Wedding Gallery (Vanish at Y:4100px - 4500px)";
+      if (p >= 0.643 && p <= 0.871) return "6. R.S.V.P. Confirmation (Starts Vanishing at Y:5800px)";
+      if (p >= 0.871 && p <= 1.000) return "7. Send Your Blessings & Live Countdown (Grand Finale at Y:6100px)";
+      return "Scrubbing Transition";
+    };
+
+    const getScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
+      if (!node) return window;
+      let parent = node.parentElement;
+      while (parent && parent !== document.body) {
+        const overflowY = window.getComputedStyle(parent).overflowY;
+        if (overflowY === "auto" || overflowY === "scroll") {
+          return parent;
+        }
+        parent = parent.parentElement;
+      }
+      return window;
+    };
+
+    const targetScrollParent = getScrollParent(containerRef.current);
 
     const handleScroll = () => {
       if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const totalScrollable = rect.height - window.innerHeight;
 
-      if (totalScrollable <= 0) return;
+      let progress = 0;
 
-      const scrolled = -rect.top;
-      const progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
+      if (targetScrollParent === window) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const totalScrollable = rect.height - window.innerHeight;
 
-      setScrollProgress(progress);
+        if (totalScrollable <= 0) return;
+
+        const scrolled = -rect.top;
+        progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
+      } else {
+        const parent = targetScrollParent as HTMLElement;
+        const totalScrollable = containerRef.current.offsetHeight - parent.clientHeight;
+
+        if (totalScrollable <= 0) return;
+
+        const scrolled = parent.scrollTop;
+        progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
+      }
+
+      targetProgressRef.current = progress;
       targetFrameRef.current = progress * (TOTAL_FRAMES - 1);
+
+      // Console Log Scroll Metrics
+      const currentFrameRounded = Math.round(targetFrameRef.current);
+      if (Math.abs(currentFrameRounded - lastLoggedFrameRef.current) >= 8) {
+        lastLoggedFrameRef.current = currentFrameRounded;
+        const scrollY =
+          targetScrollParent === window
+            ? Math.round(window.scrollY)
+            : Math.round((targetScrollParent as HTMLElement).scrollTop);
+        const sectionName = getActiveSectionName(progress);
+        console.log(
+          `%c[ScrollScrubber]%c Scroll Y: ${scrollY}px | Progress: ${(progress * 100).toFixed(1)}% | Frame: ${currentFrameRounded} / ${TOTAL_FRAMES - 1} | Section: ${sectionName}`,
+          "color: #D9A441; font-weight: bold;",
+          "color: #F8F3EA;"
+        );
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    if (targetScrollParent !== window) {
+      targetScrollParent.addEventListener("scroll", handleScroll, { passive: true });
+    }
     handleScroll();
 
-    // Continuous requestAnimationFrame lerp loop
     const lerp = (start: number, end: number, factor: number) =>
       start + (end - start) * factor;
 
     const tick = () => {
-      const diff = Math.abs(targetFrameRef.current - currentFrameRef.current);
-      if (diff > 0.005) {
+      // Smooth frame interpolation
+      const frameDiff = Math.abs(targetFrameRef.current - currentFrameRef.current);
+      if (frameDiff > 0.005) {
         currentFrameRef.current = lerp(
           currentFrameRef.current,
           targetFrameRef.current,
           0.14
         );
-        const roundedIndex = Math.min(
-          Math.max(Math.round(currentFrameRef.current), 0),
-          TOTAL_FRAMES - 1
-        );
-        drawFrame(roundedIndex);
+        drawFrame(Math.round(currentFrameRef.current));
       }
+
+      // Smooth opacity & transform progress interpolation
+      const progDiff = Math.abs(targetProgressRef.current - smoothProgressRef.current);
+      if (progDiff > 0.0005) {
+        smoothProgressRef.current = lerp(
+          smoothProgressRef.current,
+          targetProgressRef.current,
+          0.14
+        );
+        setScrollProgress(smoothProgressRef.current);
+      }
+
       rafIdRef.current = requestAnimationFrame(tick);
     };
 
@@ -358,6 +442,9 @@ export default function ScrollScrubberCanvas({
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      if (targetScrollParent !== window) {
+        targetScrollParent.removeEventListener("scroll", handleScroll);
+      }
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
       }
@@ -386,40 +473,135 @@ export default function ScrollScrubberCanvas({
     }
   };
 
-  // Range interpolation helper for overlay section fades & Y drift
-  const calculateRangeStyle = (start: number, end: number) => {
+  // Flicker-free smooth interpolation helper with custom rising translateY & exact thresholds
+  const calculateRangeStyle = (
+    start: number,
+    end: number,
+    options?: { fadeInRatio?: number; fadeOutRatio?: number; isHero?: boolean; startRiseY?: number }
+  ) => {
     const p = scrollProgress;
     if (p < start || p > end) {
-      return { opacity: 0, translateY: 28, pointerEvents: "none" as const };
+      return {
+        opacity: 0,
+        transform: "translate3d(0, 40px, 0)",
+        pointerEvents: "none" as const,
+        willChange: "opacity, transform",
+      };
     }
 
     const duration = end - start;
-    const fadeInEnd = start + duration * 0.22;
-    const fadeOutStart = start + duration * 0.78;
+    const fadeInRatio = options?.fadeInRatio ?? 0.22;
+    const fadeOutRatio = options?.fadeOutRatio ?? 0.78;
 
     let opacity = 1;
-    if (p < fadeInEnd) {
-      opacity = (p - start) / (fadeInEnd - start);
-    } else if (p > fadeOutStart) {
-      opacity = 1 - (p - fadeOutStart) / (end - fadeOutStart);
+
+    if (options?.isHero) {
+      // Hero Section: 100% visible at Y: 0px up to fadeOutStart, then vanishes cleanly
+      const fadeOutStart = start + duration * fadeOutRatio;
+      if (p > fadeOutStart) {
+        opacity = 1 - (p - fadeOutStart) / (end - fadeOutStart);
+      }
+    } else {
+      const fadeInEnd = start + duration * fadeInRatio;
+      const fadeOutStart = start + duration * fadeOutRatio;
+
+      if (p < fadeInEnd) {
+        opacity = (p - start) / (fadeInEnd - start);
+      } else if (p > fadeOutStart) {
+        opacity = 1 - (p - fadeOutStart) / (end - fadeOutStart);
+      }
     }
 
     opacity = Math.max(0, Math.min(1, opacity));
+
     const rangeProgress = (p - start) / duration;
-    const translateY = (1 - rangeProgress) * 24 - 12;
+    let translateY = 0;
+
+    if (options?.isHero) {
+      translateY = (1 - opacity) * -20;
+    } else {
+      const startRise = options?.startRiseY ?? 65;
+      if (rangeProgress < fadeInRatio) {
+        const riseProgress = rangeProgress / fadeInRatio;
+        translateY = (1 - riseProgress) * startRise;
+      } else if (rangeProgress > fadeOutRatio) {
+        const fadeProgress = (rangeProgress - fadeOutRatio) / (1 - fadeOutRatio);
+        translateY = fadeProgress * -25;
+      } else {
+        translateY = 0;
+      }
+    }
 
     return {
       opacity,
-      translateY,
-      pointerEvents: opacity > 0.25 ? ("auto" as const) : ("none" as const),
+      transform: `translate3d(0, ${translateY}px, 0)`,
+      pointerEvents: opacity > 0.3 ? ("auto" as const) : ("none" as const),
+      willChange: "opacity, transform",
     };
   };
 
-  const styleHero = calculateRangeStyle(0.0, 0.18);
-  const styleStory = calculateRangeStyle(0.2, 0.38);
-  const styleTimeline = calculateRangeStyle(0.4, 0.58);
-  const styleLocations = calculateRangeStyle(0.6, 0.78);
-  const styleRsvp = calculateRangeStyle(0.8, 0.98);
+  // Helper to calculate one-by-one staggered slide-in for timeline event items (starts vanishing at Y: 2100px)
+  const calculateEventItemStyle = (idx: number, totalEvents: number) => {
+    const p = scrollProgress;
+    const timelineStart = 0.200; // Y = 1400px
+    const timelineEnd = 0.357;   // Y = 2500px
+
+    if (p < timelineStart || p > timelineEnd) {
+      return {
+        opacity: 0,
+        transform: "translate3d(0, 30px, 0)",
+        willChange: "opacity, transform",
+      };
+    }
+
+    // Stagger each event so all events hit 100% opacity at Y = 1600px (progress 0.228)
+    const itemStart = timelineStart + 0.002 + idx * 0.009;
+    const itemPeak = itemStart + 0.008; // Item 2 hits 100% at progress 0.228 (Y = 1600px)
+    const sectionFadeOutStart = 0.300;  // Y = 2100px (starts vanishing exactly at Y: 2100px!)
+
+    let opacity = 0;
+    let translateX = 0;
+    const isEven = idx % 2 === 0;
+    const startDir = isEven ? -60 : 60; // Left (-60px) or Right (+60px)
+
+    if (p < itemStart) {
+      opacity = 0;
+      translateX = startDir;
+    } else if (p >= itemStart && p < itemPeak) {
+      const progress = (p - itemStart) / (itemPeak - itemStart);
+      opacity = progress;
+      translateX = (1 - progress) * startDir;
+    } else if (p >= itemPeak && p < sectionFadeOutStart) {
+      opacity = 1;
+      translateX = 0;
+    } else {
+      const fadeProgress = (p - sectionFadeOutStart) / (timelineEnd - sectionFadeOutStart);
+      opacity = Math.max(0, 1 - fadeProgress);
+      translateX = 0;
+    }
+
+    return {
+      opacity,
+      transform: `translate3d(${translateX}px, 0, 0)`,
+      willChange: "opacity, transform",
+    };
+  };
+
+  // Section Ranges configured for exact pixel milestones:
+  // 1. Hero ("Terance & Ancy"): Y 0px - 900px (progress 0.000 - 0.128)
+  // 2. Meet the Couple: Y 450px - 1400px (progress 0.064 - 0.200) — starts rising at Y 450px, starts vanishing at Y 1000px
+  // 3. Order of Events: Y 1400px - 2500px (progress 0.200 - 0.357) — comes onto screen at Y 1400px, 100% opacity at Y 1600px, starts vanishing at Y 2100px
+  // 4. The Venues: Y 2450px - 3600px (progress 0.350 - 0.514) — comes onto screen at Y 2450px, 100% opacity at Y 2700px, starts vanishing at Y 3200px
+  // 5. Pre-Wedding Gallery: Y 3550px - 4500px (progress 0.507 - 0.643) — comes onto screen at Y 3550px, starts vanishing at Y 4100px
+  // 6. R.S.V.P. Confirmation: Y 4500px - 6100px (progress 0.643 - 0.871) — comes onto screen at Y 4500px, starts vanishing at Y 5800px!
+  // 7. Send Your Blessings & Live Countdown (Grand Finale): Y 6100px - 7000px (progress 0.871 - 1.000) — comes onto screen at Y 6100px!
+  const styleHero = calculateRangeStyle(0.0, 0.128, { isHero: true, fadeOutRatio: 0.55 });
+  const styleStory = calculateRangeStyle(0.064, 0.20, { fadeInRatio: 0.368, fadeOutRatio: 0.581, startRiseY: 550 });
+  const styleTimeline = calculateRangeStyle(0.20, 0.357, { fadeInRatio: 0.18, fadeOutRatio: 0.637, startRiseY: 550 });
+  const styleLocations = calculateRangeStyle(0.35, 0.514, { fadeInRatio: 0.217, fadeOutRatio: 0.652, startRiseY: 550 });
+  const styleGallery = calculateRangeStyle(0.507, 0.643, { fadeInRatio: 0.316, fadeOutRatio: 0.578, startRiseY: 550 });
+  const styleRsvp = calculateRangeStyle(0.643, 0.871, { fadeInRatio: 0.188, fadeOutRatio: 0.8125, startRiseY: 550 });
+  const styleFinale = calculateRangeStyle(0.871, 1.000, { fadeInRatio: 0.278, fadeOutRatio: 1.00, startRiseY: 550 });
 
   return (
     <div
@@ -435,7 +617,6 @@ export default function ScrollScrubberCanvas({
             exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#070707] text-[#D9A441] px-6 text-center"
           >
-            {/* Elegant Monogram */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -453,7 +634,6 @@ export default function ScrollScrubberCanvas({
               </p>
             </motion.div>
 
-            {/* Progress Bar Container */}
             <div className="w-64 max-w-full">
               <div className="flex justify-between text-xs text-[#D9A441]/90 mb-2 tracking-widest font-mono">
                 <span>LOADING SCENE 1</span>
@@ -474,16 +654,15 @@ export default function ScrollScrubberCanvas({
         )}
       </AnimatePresence>
 
-      {/* 2. Pinned Full-Viewport Canvas */}
+      {/* 2. Pinned Full-Viewport Canvas Container */}
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden z-0">
         <canvas
           ref={canvasRef}
-          className="w-full h-full object-cover block filter brightness-[0.88] contrast-[1.04]"
+          className="w-full h-full object-cover block filter brightness-[0.92] contrast-[1.04]"
         />
 
-        {/* Cinematic Vignette & Ambient Radial Glows */}
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(7,7,7,0.75)_100%)]" />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#070707]/60 via-transparent to-[#070707]/80" />
+        {/* Top Vignette Shadow specifically for crystal clear text readability */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#070707]/80 via-transparent to-[#070707]/80 z-10" />
 
         {/* Audio Floating Toggle Button */}
         {bgAudioUrl && (
@@ -500,7 +679,7 @@ export default function ScrollScrubberCanvas({
           </button>
         )}
 
-        {/* Scroll Progress Gold Line (Bottom Viewport Accent) */}
+        {/* Scroll Progress Gold Line */}
         <div className="absolute bottom-0 left-0 w-full h-[3px] bg-white/10 z-30">
           <div
             className="h-full bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] transition-all duration-75 shadow-[0_0_10px_#D9A441]"
@@ -508,231 +687,426 @@ export default function ScrollScrubberCanvas({
           />
         </div>
 
-        {/* Background Scene 2 loading indicator subtle badge */}
         {!isFullyLoaded && isScene1Ready && (
           <div className="fixed bottom-4 left-6 z-40 flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#D9A441]/70 bg-[#0B0B0B]/80 px-3 py-1 rounded-full border border-[#D9A441]/20 backdrop-blur-sm pointer-events-none">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D9A441] animate-ping" />
             Optimizing Scene 2 ({Math.round((loadedTotalCount / TOTAL_FRAMES) * 100)}%)
           </div>
         )}
-      </div>
 
-      {/* 3. Layered Content Overlays (Synchronized to Scroll Progress) */}
-      <div className="sticky top-0 left-0 w-full h-screen pointer-events-none z-20 flex items-center justify-center p-4 sm:p-8">
-        {/* OVERLAY BLOCK 1: HERO / COUPLE ANNOUNCEMENT (0.00 - 0.18) */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 transition-all duration-300 ease-out"
-          style={{
-            opacity: styleHero.opacity,
-            transform: `translateY(${styleHero.translateY}px)`,
-            pointerEvents: styleHero.pointerEvents,
-          }}
-        >
-          <div className="max-w-2xl bg-[#070707]/75 backdrop-blur-md border border-[#D9A441]/30 p-8 sm:p-12 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-[#D9A441] to-transparent" />
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-[#D9A441] to-transparent" />
+        {/* Live Scroll Metrics HUD Badge */}
+        <div className="fixed bottom-4 right-6 z-40 hidden sm:flex items-center gap-2 text-[11px] font-mono text-[#D9A441] bg-[#070707]/80 px-3 py-1.5 rounded-xl border border-[#D9A441]/30 backdrop-blur-md pointer-events-none shadow-lg">
+          <span>Y: {Math.round(scrollProgress * 7000)}px</span>
+          <span className="text-[#D9A441]/40">•</span>
+          <span>{Math.round(scrollProgress * 100)}%</span>
+          <span className="text-[#D9A441]/40">•</span>
+          <span>Frame: {Math.round(scrollProgress * 479)}/479</span>
+        </div>
 
-            <span className="inline-block text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold mb-4 px-4 py-1 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/20">
-              {tagline}
+        {/* 3. Layered Content Overlays (Inside the single sticky viewport box) */}
+        <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-8">
+          
+          {/* OVERLAY BLOCK 1: HERO / TOP CENTER NAMES */}
+          <div
+            className="absolute top-8 sm:top-12 left-0 w-full flex flex-col items-center justify-center text-center px-4 transition-all duration-300 ease-out"
+            style={styleHero}
+          >
+            {/* Top Tagline Sub-header */}
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.38em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] mb-1">
+              Together with their families
             </span>
 
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-accent italic text-[#FDF6F3] tracking-tight leading-tight my-4">
-              {partnerOne}{" "}
-              <span className="text-[#D9A441] font-normal">&amp;</span>{" "}
-              {partnerTwo}
+            {/* Top Title: Terance & Ancy in Gold Serif */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] leading-tight">
+              {partnerOne} <span className="text-[#D9A441] font-normal">&amp;</span> {partnerTwo}
             </h1>
 
-            <p className="text-sm sm:text-base text-[#F8F3EA]/80 font-light max-w-lg mx-auto italic mb-6">
-              &quot;{inviteLine}&quot;
+            {/* Subtitle: Date & Time directly underneath */}
+            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] text-[#D9A441] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              {weddingDate} • {weddingTime}
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B0B0B]/80 border border-[#D9A441]/30 text-xs sm:text-sm text-[#F7E7C4]">
-                <Calendar className="w-4 h-4 text-[#D9A441]" />
-                <span>{weddingDate}</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B0B0B]/80 border border-[#D9A441]/30 text-xs sm:text-sm text-[#F7E7C4]">
-                <Clock className="w-4 h-4 text-[#D9A441]" />
-                <span>{weddingTime}</span>
-              </div>
-            </div>
-
-            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-[#D9A441] animate-bounce">
-              <span>Scroll to Begin Story</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-
-        {/* OVERLAY BLOCK 2: OUR LOVE STORY (0.20 - 0.38) */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 transition-all duration-300 ease-out"
-          style={{
-            opacity: styleStory.opacity,
-            transform: `translateY(${styleStory.translateY}px)`,
-            pointerEvents: styleStory.pointerEvents,
-          }}
-        >
-          <div className="max-w-xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/30 p-8 sm:p-10 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.85)] relative">
-            <div className="w-12 h-12 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-6 h-6 text-[#D9A441] fill-current" />
-            </div>
-
-            <span className="text-xs uppercase tracking-[0.3em] text-[#D9A441]">
-              Chapter One
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-accent italic text-[#FDF6F3] mt-2 mb-4">
-              Our Journey of Love
-            </h2>
-
-            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#D9A441] to-transparent mx-auto mb-6" />
-
-            <p className="text-sm sm:text-base text-[#F8F3EA]/85 leading-relaxed font-light mb-6">
-              From our first quiet conversation to thousands of shared laughs,
-              every step of our journey has led us to this sacred moment. We
-              invite you to stand with us as we vow our forever.
+            {/* Catchy Romantic Invitation Quote */}
+            <p className="text-xs sm:text-sm text-[#F7E7C4] italic font-light max-w-md mx-auto mt-2.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] leading-relaxed">
+              &quot;Request the honor of your presence as two hearts unite in eternal love &amp; grace&quot;
             </p>
 
-            <blockquote className="italic font-accent text-lg text-[#D9A441] border-l-2 border-[#D9A441] pl-4 py-1 text-left bg-[#D9A441]/5 rounded-r-xl">
-              &quot;In your hands, my heart has found its eternal home.&quot;
-            </blockquote>
+            <div className="mt-5 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.25em] text-[#F7E7C4]/90 bg-[#070707]/70 px-4 py-1.5 rounded-full border border-[#D9A441]/35 backdrop-blur-md shadow-[0_4px_15px_rgba(0,0,0,0.8)]">
+              <span>Scroll Down to View Story</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#D9A441] animate-bounce" />
+            </div>
           </div>
-        </div>
 
-        {/* OVERLAY BLOCK 3: ORDER OF EVENTS TIMELINE (0.40 - 0.58) */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
-          style={{
-            opacity: styleTimeline.opacity,
-            transform: `translateY(${styleTimeline.translateY}px)`,
-            pointerEvents: styleTimeline.pointerEvents,
-          }}
-        >
-          <div className="max-w-2xl w-full bg-[#070707]/85 backdrop-blur-md border border-[#D9A441]/30 p-6 sm:p-10 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.85)]">
-            <span className="text-xs uppercase tracking-[0.3em] text-[#D9A441] font-medium">
-              Schedule of Celebration
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-accent italic text-[#FDF6F3] mt-1 mb-6">
-              Order of Events
-            </h2>
+          {/* OVERLAY BLOCK 2: MEET THE COUPLE (Seamless, No Outer Box) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleStory}
+          >
+            <div className="max-w-2xl w-full flex flex-col items-center text-center">
+              <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
+                <Heart className="w-5.5 h-5.5 text-[#D9A441] fill-current animate-pulse" />
+              </div>
 
-            <div className="space-y-4 text-left">
-              {events.map((evt, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 p-4 rounded-2xl bg-[#0B0B0B]/70 border border-[#D9A441]/20 hover:border-[#D9A441]/50 transition-colors"
-                >
-                  <div className="px-3 py-1.5 rounded-xl bg-[#D9A441]/10 border border-[#D9A441]/40 text-[#D9A441] text-xs font-mono font-semibold whitespace-nowrap">
-                    {evt.time}
-                  </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-[#FDF6F3]">
-                      {evt.title}
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                The Blessed Union
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6">
+                Meet the Couple
+              </h2>
+
+              {/* Groom & Bride Photos Grid */}
+              <div className="grid grid-cols-2 gap-5 max-w-lg mx-auto mb-5 w-full">
+                {/* Groom Photo */}
+                <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
+                  <img
+                    src={groomImage || coupleImage || "/images/templates/groom-bride-1.jpg"}
+                    alt={`${partnerOne} - Groom`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 text-left">
+                    <span className="text-[10px] uppercase tracking-widest text-[#D9A441] font-semibold">
+                      Groom
+                    </span>
+                    <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
+                      {partnerOne}
                     </h3>
-                    <p className="text-xs text-[#D9A441] flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{evt.location}</span>
-                    </p>
-                    {evt.description && (
-                      <p className="text-xs text-[#F8F3EA]/70 mt-1 font-light">
-                        {evt.description}
-                      </p>
-                    )}
                   </div>
                 </div>
-              ))}
+
+                {/* Bride Photo */}
+                <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
+                  <img
+                    src={brideImage || partnerTwoImage || "/images/templates/groom-bride-2.jpg"}
+                    alt={`${partnerTwo} - Bride`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 text-left">
+                    <span className="text-[10px] uppercase tracking-widest text-[#D9A441] font-semibold">
+                      Bride
+                    </span>
+                    <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
+                      {partnerTwo}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-[#F7E7C4] italic font-light max-w-md mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                &quot;Two souls with but a single thought, two hearts that beat as one.&quot;
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* OVERLAY BLOCK 4: VENUES & LOCATIONS (0.60 - 0.78) */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
-          style={{
-            opacity: styleLocations.opacity,
-            transform: `translateY(${styleLocations.translateY}px)`,
-            pointerEvents: styleLocations.pointerEvents,
-          }}
-        >
-          <div className="max-w-2xl w-full bg-[#070707]/85 backdrop-blur-md border border-[#D9A441]/30 p-6 sm:p-10 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.85)]">
-            <span className="text-xs uppercase tracking-[0.3em] text-[#D9A441] font-medium">
-              Where &amp; When
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-accent italic text-[#FDF6F3] mt-1 mb-6">
-              The Venues
-            </h2>
+          {/* OVERLAY BLOCK 3: ORDER OF EVENTS TIMELINE (Seamless, No Outer Box, Alternating Left/Right) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleTimeline}
+          >
+            <div className="max-w-3xl w-full flex flex-col items-center text-center">
+              <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
+                <Clock className="w-5.5 h-5.5 text-[#D9A441] animate-pulse" />
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {locations.map((loc, idx) => (
-                <div
-                  key={idx}
-                  className="p-5 rounded-2xl bg-[#0B0B0B]/80 border border-[#D9A441]/30 flex flex-col justify-between text-left"
-                >
-                  <div>
-                    <span className="text-[11px] uppercase tracking-wider text-[#D9A441] font-medium">
-                      {loc.title}
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                Schedule of Celebration
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6 sm:mb-8">
+                Order of Events
+              </h2>
+
+              {/* Alternating Left-Right Timeline Grid */}
+              <div className="relative w-full max-w-2xl mx-auto space-y-4 sm:space-y-5">
+                {/* Central Vertical Gold Dashed Line */}
+                <div className="absolute left-1/2 top-4 bottom-4 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-[#D9A441]/40 to-transparent border-r border-dashed border-[#D9A441]/40 hidden sm:block pointer-events-none" />
+
+                {events.map((evt, idx) => {
+                  const isEven = idx % 2 === 0;
+                  const itemStyle = calculateEventItemStyle(idx, events.length);
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center w-full ${
+                        isEven
+                          ? "sm:justify-start justify-center"
+                          : "sm:justify-end justify-center"
+                      }`}
+                    >
+                      <div
+                        className={`w-full sm:w-[48%] p-4 sm:p-5 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441] ${
+                          isEven ? "sm:mr-auto" : "sm:ml-auto"
+                        }`}
+                        style={itemStyle}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="px-3 py-1 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-mono font-bold tracking-wider">
+                            {evt.time}
+                          </span>
+                          <Sparkles className="w-3.5 h-3.5 text-[#D9A441]/70" />
+                        </div>
+
+                        <h3 className="text-base sm:text-lg font-bold text-[#FDF6F3] mt-1">
+                          {evt.title}
+                        </h3>
+
+                        {evt.location && (
+                          <p className="text-xs text-[#D9A441] flex items-center gap-1 mt-1 font-medium">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{evt.location}</span>
+                          </p>
+                        )}
+
+                        {evt.description && (
+                          <p className="text-xs text-[#F8F3EA]/80 mt-1.5 font-light leading-relaxed">
+                            {evt.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* OVERLAY BLOCK 4: VENUES & LOCATIONS (Seamless, No Outer Box) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleLocations}
+          >
+            <div className="max-w-3xl w-full flex flex-col items-center text-center">
+              <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
+                <MapPin className="w-5.5 h-5.5 text-[#D9A441] animate-pulse" />
+              </div>
+
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                Where &amp; When
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6 sm:mb-8">
+                The Venues
+              </h2>
+
+              {/* Venue Cards Grid (Seamless, No Outer Box) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl mx-auto">
+                {locations.map((loc, idx) => (
+                  <div
+                    key={idx}
+                    className="p-5 sm:p-6 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441]"
+                  >
+                    <div>
+                      {loc.title && (
+                        <span className="text-[11px] uppercase tracking-widest text-[#D9A441] font-semibold">
+                          {loc.title}
+                        </span>
+                      )}
+                      <h3 className="text-xl font-bold text-[#FDF6F3] mt-1">
+                        {loc.name}
+                      </h3>
+                      <p className="text-xs text-[#F8F3EA]/80 mt-2 font-light leading-relaxed">
+                        {loc.address}
+                      </p>
+                      {loc.time && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#D9A441] font-mono font-semibold">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{loc.time}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {loc.mapUrl && (
+                      <a
+                        href={loc.mapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-5 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-semibold hover:bg-[#D9A441] hover:text-[#0B0B0B] transition-all shadow-[0_0_12px_rgba(217,164,65,0.2)]"
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>Get Directions</span>
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* OVERLAY BLOCK 5: PRE-WEDDING GALLERY (Seamless, Starts at Y = 3550px) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleGallery}
+          >
+            <div className="max-w-4xl w-full flex flex-col items-center text-center">
+              <div className="w-11 h-11 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(217,164,65,0.3)]">
+                <Sparkles className="w-5.5 h-5.5 text-[#D9A441] animate-pulse" />
+              </div>
+
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                Moments of Love
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6 sm:mb-8">
+                Pre-Wedding Gallery
+              </h2>
+
+              {/* Catchy Asymmetric Editorial Bento Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto">
+                {/* 1. Large Featured Hero Card (Spans 2 Columns on Desktop) */}
+                <div className="sm:col-span-2 group relative h-56 sm:h-72 rounded-3xl overflow-hidden border border-[#D9A441]/50 shadow-[0_15px_40px_rgba(0,0,0,0.9)] bg-[#141414] transition-all duration-500 hover:scale-[1.02] hover:border-[#D9A441]">
+                  <img
+                    src={galleryImages[0] || "/images/templates/gallery-1.jpg"}
+                    alt="Golden Hour Walk"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-[#070707]/20 to-transparent" />
+                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#070707]/70 border border-[#D9A441]/40 text-[#D9A441] text-[10px] uppercase font-mono tracking-widest backdrop-blur-sm shadow-md">
+                    Featured Moment
+                  </div>
+                  <div className="absolute bottom-3.5 left-4 text-left">
+                    <span className="text-xs uppercase tracking-widest text-[#D9A441] font-semibold">
+                      Golden Hour Walk
                     </span>
-                    <h3 className="text-lg font-bold text-[#FDF6F3] mt-1">
-                      {loc.name}
-                    </h3>
-                    <p className="text-xs text-[#F8F3EA]/75 mt-2 font-light leading-relaxed">
-                      {loc.address}
+                    <p className="text-sm font-accent italic text-[#FDF6F3] mt-0.5">
+                      Hand in hand under the autumn glow
                     </p>
-                    <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#D9A441]">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{loc.time}</span>
+                  </div>
+                </div>
+
+                {/* Right Column: 2 Stacked Cards */}
+                <div className="sm:col-span-1 flex flex-col gap-3.5 sm:gap-4">
+                  {/* 2. Top Right Card */}
+                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] transition-all duration-500 hover:scale-[1.03] hover:border-[#D9A441]">
+                    <img
+                      src={galleryImages[1] || "/images/templates/gallery-2.jpg"}
+                      alt="Under the Canopy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/85 via-transparent to-transparent" />
+                    <div className="absolute bottom-2.5 left-3 text-left">
+                      <span className="text-[10px] uppercase tracking-wider text-[#D9A441] font-semibold">
+                        Under the Canopy
+                      </span>
                     </div>
                   </div>
 
-                  {loc.mapUrl && (
-                    <a
-                      href={loc.mapUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-semibold hover:bg-[#D9A441] hover:text-[#0B0B0B] transition-all"
-                    >
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>Get Directions</span>
-                    </a>
-                  )}
+                  {/* 3. Bottom Right Card */}
+                  <div className="group relative h-28 sm:h-34 rounded-2xl overflow-hidden border border-[#D9A441]/40 shadow-[0_10px_30px_rgba(0,0,0,0.85)] bg-[#141414] transition-all duration-500 hover:scale-[1.03] hover:border-[#D9A441]">
+                    <img
+                      src={galleryImages[2] || "/images/templates/gallery-3.jpg"}
+                      alt="Eternal Vows"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/85 via-transparent to-transparent" />
+                    <div className="absolute bottom-2.5 left-3 text-left">
+                      <span className="text-[10px] uppercase tracking-wider text-[#D9A441] font-semibold">
+                        Eternal Vows
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* OVERLAY BLOCK 5: RSVP & CALLOUT (0.80 - 0.98) */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 transition-all duration-300 ease-out"
-          style={{
-            opacity: styleRsvp.opacity,
-            transform: `translateY(${styleRsvp.translateY}px)`,
-            pointerEvents: styleRsvp.pointerEvents,
-          }}
-        >
-          <div className="max-w-lg bg-[#070707]/90 backdrop-blur-md border border-[#D9A441]/40 p-8 sm:p-12 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative">
-            <div className="w-16 h-16 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-[#D9A441]" />
+          {/* OVERLAY BLOCK 6: R.S.V.P. CONFIRMATION (Seamless, Starts at Y = 4500px) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleRsvp}
+          >
+            <div className="max-w-2xl w-full flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-2 shadow-[0_0_25px_rgba(217,164,65,0.35)]">
+                <Sparkles className="w-6 h-6 text-[#D9A441] animate-pulse" />
+              </div>
+
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                Kindly Respond
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-3">
+                R.S.V.P. Confirmation
+              </h2>
+
+              <p className="text-xs sm:text-sm text-[#F8F3EA]/90 font-light mb-6 max-w-md mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] leading-relaxed">
+                Your presence will complete our celebration of holy matrimony. Please confirm your attendance with us.
+              </p>
+
+              {/* RSVP Action Card */}
+              <div className="w-full max-w-md p-6 rounded-3xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/40 shadow-[0_15px_40px_rgba(0,0,0,0.9)] flex flex-col gap-3">
+                <button
+                  onClick={onExploreClick}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#0B0B0B] font-bold text-sm tracking-widest uppercase shadow-[0_0_25px_rgba(217,164,65,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  Confirm Attendance Now
+                </button>
+
+                <p className="text-[11px] text-[#D9A441]/85 uppercase tracking-widest font-mono">
+                  Response Requested Before Nov 18, 2026
+                </p>
+              </div>
             </div>
+          </div>
 
-            <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold">
-              Kindly Respond
-            </span>
-            <h2 className="text-4xl sm:text-5xl font-accent italic text-[#FDF6F3] mt-2 mb-4">
-              Celebrate With Us
-            </h2>
+          {/* OVERLAY BLOCK 7: FANTASTIC GRAND FINALE - BLESSINGS & COUNTDOWN (Seamless, Starts at Y = 6100px) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 transition-all duration-300 ease-out"
+            style={styleFinale}
+          >
+            <div className="max-w-3xl w-full flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(217,164,65,0.35)]">
+                <Heart className="w-7 h-7 text-[#D9A441] fill-current animate-pulse" />
+              </div>
 
-            <p className="text-sm text-[#F8F3EA]/80 font-light mb-8 max-w-sm mx-auto">
-              Your presence will make our celebration complete. Please confirm
-              your attendance below.
-            </p>
+              <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                With Love &amp; Gratitude
+              </span>
+              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6">
+                Send Your Blessings
+              </h2>
 
-            <button
-              onClick={onExploreClick}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#0B0B0B] font-bold text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(217,164,65,0.4)] hover:scale-[1.02] transition-transform cursor-pointer"
-            >
-              Fill RSVP Form
-            </button>
+              {/* Live Wedding Countdown Pill Cards */}
+              <div className="grid grid-cols-4 gap-2.5 sm:gap-4 max-w-md w-full mb-6">
+                {[
+                  { label: "DAYS", value: "134" },
+                  { label: "HOURS", value: "18" },
+                  { label: "MINS", value: "42" },
+                  { label: "SECS", value: "09" },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 sm:p-4 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/40 shadow-[0_10px_25px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center"
+                  >
+                    <span className="text-xl sm:text-3xl font-mono font-bold text-[#F7E7C4] leading-none">
+                      {item.value}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] uppercase font-mono tracking-widest text-[#D9A441] mt-1">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* One-Tap Quick Blessing Chips */}
+              <div className="w-full max-w-xl flex flex-wrap justify-center gap-2 mb-6">
+                {[
+                  "🥂 Wishing you endless joy & love!",
+                  "✨ So happy for both of you!",
+                  "❤️ Can't wait to celebrate!",
+                  "🍾 A match made in heaven!",
+                ].map((blessing, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setBlessingCount((prev) => prev + 1)}
+                    className="px-3.5 py-2 rounded-full bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/30 text-xs text-[#F8F3EA]/90 hover:border-[#D9A441] hover:text-[#D9A441] transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.8)] cursor-pointer"
+                  >
+                    {blessing}
+                  </button>
+                ))}
+              </div>
+
+              {/* Blessing Counter Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D9A441]/15 border border-[#D9A441]/40 text-xs text-[#D9A441] font-mono font-semibold backdrop-blur-md shadow-[0_0_15px_rgba(217,164,65,0.25)]">
+                <Heart className="w-4 h-4 text-[#D9A441] fill-current animate-bounce" />
+                <span>{blessingCount} Blessings Sent by Loved Ones</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

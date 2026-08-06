@@ -2,17 +2,17 @@ import { Metadata } from "next";
 import ScrollScrubberTemplate from "@/components/templates/scroll-scrubber/ScrollScrubberTemplate";
 
 export const metadata: Metadata = {
-  title: "Terance & Ancy | Premium Scroll Wedding Invitation",
+  title: "Your Name & Partner Name | Premium Scroll Wedding Invitation",
   description:
-    "Experience a luxury 480-frame scroll-scrubbing wedding invitation for Terance & Ancy.",
+    "Experience a luxury 480-frame scroll-scrubbing wedding invitation for Your Name & Partner Name.",
 };
 
 export default function ScrollScrubberPage() {
   return (
     <ScrollScrubberTemplate
       templateSlug="scroll-scrubber"
-      partnerOne="Terance"
-      partnerTwo="Ancy"
+      partnerOne="Your Name"
+      partnerTwo="Partner Name"
       tagline="TOGETHER WITH THEIR FAMILIES"
       inviteLine="Request the honor of your presence as they exchange sacred vows of love"
       weddingDate="December 18, 2026"

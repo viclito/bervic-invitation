@@ -39,6 +39,8 @@ export interface ScrollScrubberTemplateProps {
   inviteLine?: string;
   weddingDate?: string;
   weddingTime?: string;
+  coupleImage?: string;
+  partnerTwoImage?: string;
   events?: EventItem[];
   locations?: LocationItem[];
   galleryImages?: string[];
@@ -48,12 +50,14 @@ export interface ScrollScrubberTemplateProps {
 
 export default function ScrollScrubberTemplate({
   templateSlug = "scroll-scrubber",
-  partnerOne = "Terance",
-  partnerTwo = "Ancy",
+  partnerOne = "Your Name",
+  partnerTwo = "Partner Name",
   tagline = "TOGETHER WITH THEIR FAMILIES",
   inviteLine = "Request the honor of your presence at the celebration of their holy matrimony",
   weddingDate = "December 18, 2026",
   weddingTime = "4:00 PM Onwards",
+  coupleImage = "/images/templates/groom-bride-1.jpg",
+  partnerTwoImage = "/images/templates/groom-bride-2.jpg",
   events = [
     {
       time: "03:30 PM",
@@ -91,10 +95,10 @@ export default function ScrollScrubberTemplate({
     },
   ],
   galleryImages = [
+    "/images/templates/groom-bride-1.jpg",
+    "/images/templates/groom-bride-2.jpg",
     "/images/templates/gallery-1.jpg",
     "/images/templates/gallery-2.jpg",
-    "/images/templates/gallery-3.jpg",
-    "/images/templates/gallery-4.jpg",
   ],
   guestName = "",
   guestPhone = "",
@@ -154,7 +158,7 @@ export default function ScrollScrubberTemplate({
 
   return (
     <main className="w-full bg-[#070707] text-[#F8F3EA] min-h-screen selection:bg-[#D9A441] selection:text-[#070707]">
-      {/* 1. Scroll-Scrubbing Canvas Section (480 Frames + Overlays) */}
+      {/* 1. Scroll-Scrubbing Canvas Section (480 Frames + Top-Aligned Text Overlay) */}
       <ScrollScrubberCanvas
         partnerOne={partnerOne}
         partnerTwo={partnerTwo}
@@ -162,55 +166,15 @@ export default function ScrollScrubberTemplate({
         inviteLine={inviteLine}
         weddingDate={weddingDate}
         weddingTime={weddingTime}
+        groomImage={coupleImage}
+        brideImage={partnerTwoImage}
         events={events}
         locations={locations}
+        galleryImages={galleryImages}
         onExploreClick={scrollToRsvp}
       />
 
-      {/* 2. Photo Gallery & Moments Section */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-[#070707] via-[#0B0B0B] to-[#070707] border-t border-[#D9A441]/20">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="w-12 h-12 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/40 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-6 h-6 text-[#D9A441]" />
-          </div>
-
-          <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold">
-            Capturing Forever
-          </span>
-          <h2 className="text-4xl sm:text-6xl font-accent italic text-[#FDF6F3] mt-2 mb-4">
-            Pre-Wedding Gallery
-          </h2>
-
-          <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#D9A441] to-transparent mx-auto mb-12" />
-
-          {/* Photo Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {galleryImages.map((imgSrc, idx) => (
-              <div
-                key={idx}
-                className="group relative h-80 rounded-2xl overflow-hidden border border-[#D9A441]/30 shadow-lg bg-[#141414]"
-              >
-                <Image
-                  src={imgSrc}
-                  alt={`${partnerOne} & ${partnerTwo} gallery ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 filter contrast-[1.05]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070707] via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-[#F7E7C4] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="font-accent italic">
-                    {partnerOne} &amp; {partnerTwo}
-                  </span>
-                  <Heart className="w-4 h-4 text-[#D9A441] fill-current" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Interactive Luxury RSVP Form */}
+      {/* 2. Interactive Luxury RSVP Form */}
       <section
         ref={rsvpSectionRef}
         id="rsvp"
@@ -401,7 +365,7 @@ export default function ScrollScrubberTemplate({
         </div>
       </section>
 
-      {/* 4. Luxury Dark Footer */}
+      {/* 5. Luxury Dark Footer */}
       <footer className="py-12 px-6 bg-[#070707] border-t border-[#D9A441]/20 text-center text-xs text-[#F8F3EA]/50">
         <div className="max-w-md mx-auto space-y-3">
           <h3 className="text-2xl font-accent italic text-[#FDF6F3]">

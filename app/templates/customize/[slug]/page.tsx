@@ -122,6 +122,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   const targetTemplate = templatesRegistry.find((t) => t.slug === templateSlug);
   const isBirthday = targetTemplate?.category === "birthday";
+  const isDualPartnerPhotoTemplate = templateSlug === "scroll-scrubber" || templateSlug === "premium-scroll" || targetTemplate?.hasDualPartnerPhotos === true;
   const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
 
   // Auth Protection
@@ -269,7 +270,8 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 weddingDate: found.weddingDate || "2026-11-28T10:30:00.000Z",
                 weddingTime: found.weddingTime || "Saturday, 28th November 2026 at 10:30 AM IST",
                 heroImage: found.heroImage || "/images/templates/floral-hero.jpg",
-                coupleImage: found.coupleImage || "/images/templates/couple-photo.jpg",
+                coupleImage: found.coupleImage || "/images/templates/groom-bride-1.jpg",
+                partnerTwoImage: found.partnerTwoImage || "/images/templates/groom-bride-2.jpg",
                 venuePlace: found.venuePlace || "Your Venue Name, Your City, State",
                 events: found.eventsJson ? JSON.parse(found.eventsJson) : sampleWeddingData.events,
                 timelineDay: found.timelineDayJson ? JSON.parse(found.timelineDayJson) : sampleWeddingData.timelineDay,
@@ -871,19 +873,41 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 <span>3. Main Photos & Image Uploads (Cloudinary)</span>
               </h3>
 
-              <CloudinaryUploader
-                label="Hero Background Banner Photo"
-                value={formData.heroImage}
-                onChange={(url) => handleInputChange("heroImage", url)}
-                placeholder="/images/templates/floral-hero.jpg"
-              />
+              {/* Hero Background Banner Photo - Hide for canvas video sequence templates */}
+              {templateSlug !== "scroll-scrubber" && (
+                <CloudinaryUploader
+                  label="Hero Background Banner Photo"
+                  value={formData.heroImage}
+                  onChange={(url) => handleInputChange("heroImage", url)}
+                  placeholder="/images/templates/floral-hero.jpg"
+                />
+              )}
 
-              <CloudinaryUploader
-                label="Couple Portrait Photo"
-                value={formData.coupleImage}
-                onChange={(url) => handleInputChange("coupleImage", url)}
-                placeholder="/images/templates/couple-photo.jpg"
-              />
+              {/* Couple / Partner Photos Uploader */}
+              {isDualPartnerPhotoTemplate ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <CloudinaryUploader
+                    label={`${isBirthday ? "Celebrant Photo" : "Partner One (Groom) Photo"}`}
+                    value={formData.coupleImage}
+                    onChange={(url) => handleInputChange("coupleImage", url)}
+                    placeholder="/images/templates/groom-bride-1.jpg"
+                  />
+
+                  <CloudinaryUploader
+                    label={`${isBirthday ? "Secondary Photo" : "Partner Two (Bride) Photo"}`}
+                    value={formData.partnerTwoImage || ""}
+                    onChange={(url) => handleInputChange("partnerTwoImage", url)}
+                    placeholder="/images/templates/groom-bride-2.jpg"
+                  />
+                </div>
+              ) : (
+                <CloudinaryUploader
+                  label={`${isBirthday ? "Celebrant Photo" : "Couple Portrait Photo"}`}
+                  value={formData.coupleImage}
+                  onChange={(url) => handleInputChange("coupleImage", url)}
+                  placeholder="/images/templates/couple-photo.jpg"
+                />
+              )}
 
               {/* Moments Gallery Uploaders (Up to 6 Photos) */}
               <div className="pt-4 border-t border-[#D9A441]/20 space-y-3">

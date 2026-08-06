@@ -39,6 +39,7 @@ export interface TemplateClassicFloralProps {
   weddingTime: string;
   heroImage: string;
   coupleImage: string;
+  partnerTwoImage?: string;
   venuePlace: string;
   events: WeddingEvent[];
   timelineDay: TimelineStep[];

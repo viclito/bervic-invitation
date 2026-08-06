@@ -73,6 +73,7 @@ model UserInvitation {
   weddingTime       String
   heroImage         String
   coupleImage       String
+  partnerTwoImage   String?
   venuePlace        String
   eventsJson        String   @db.Text
   timelineDayJson   String   @db.Text

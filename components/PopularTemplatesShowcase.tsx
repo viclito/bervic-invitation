@@ -17,6 +17,24 @@ import {
 // Curated Showcase Templates with rich mockup content
 const showcaseTemplates = [
   {
+    id: "scroll-scrubber",
+    slug: "scroll-scrubber",
+    title: "Terrence & Ancy 480-Frame Scroll Suite",
+    category: "Cinematic 480-Frame Sequence",
+    tagline: "Apple-Style Scroll Scrubbing & Black Gold Elegance",
+    image: "/images/templates/groom-bride-1.jpg",
+    partnerOne: "Terrence",
+    partnerTwo: "Ancy",
+    date: "Monday, 28th Dec 2026",
+    venue: "St. Patrick's Cathedral & Palace Ballroom",
+    demoSlug: "scroll-scrubber",
+    schedule: [
+      { time: "15:30", event: "Welcome Champagne & Music" },
+      { time: "16:30", event: "Holy Matrimony Vows" },
+      { time: "19:00", event: "Royal Gala Dinner & Dancing" },
+    ],
+  },
+  {
     id: "veridian-garden",
     slug: "veridian-garden",
     title: "Veridian Garden Suite",
