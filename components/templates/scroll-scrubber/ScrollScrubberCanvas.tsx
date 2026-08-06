@@ -57,6 +57,7 @@ export interface ScrollScrubberCanvasProps {
   events?: EventItem[];
   locations?: LocationItem[];
   galleryImages?: string[];
+  guestName?: string;
   onExploreClick?: () => void;
   bgAudioUrl?: string;
 }
@@ -72,6 +73,7 @@ export default function ScrollScrubberCanvas({
   brideImage,
   coupleImage,
   partnerTwoImage,
+  guestName = "Honored Guest",
   events = [
     {
       time: "03:30 PM",
@@ -133,9 +135,10 @@ export default function ScrollScrubberCanvas({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
-  // Smooth frame scrubbing animation refs
-  const currentFrameRef = useRef<number>(0);
-  const targetFrameRef = useRef<number>(0);
+  // Smooth frame scrubbing animation refs (Starts at frame 3 to eliminate initial black background)
+  const INITIAL_FRAME_INDEX = 3;
+  const currentFrameRef = useRef<number>(INITIAL_FRAME_INDEX);
+  const targetFrameRef = useRef<number>(INITIAL_FRAME_INDEX);
 
   // Eased progress ref to eliminate text box flickering during scroll
   const smoothProgressRef = useRef<number>(0);
@@ -198,26 +201,34 @@ export default function ScrollScrubberCanvas({
   }, []);
 
   // Update canvas size to match viewport high-DPI resolution
+  // Includes height guard to prevent mobile address bar collapse flickering
   const updateCanvasDimensions = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    const newWidth = Math.round(rect.width * dpr);
+    const newHeight = Math.round(rect.height * dpr);
+
+    // Skip canvas buffer wipe/resize if width hasn't changed (eliminates mobile URL bar collapse flickering)
+    if (canvas.width === newWidth && Math.abs(canvas.height - newHeight) < 140) {
+      return;
+    }
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
 
     const roundedIndex = Math.min(
-      Math.max(Math.round(currentFrameRef.current), 0),
+      Math.max(Math.round(currentFrameRef.current), INITIAL_FRAME_INDEX),
       TOTAL_FRAMES - 1
     );
     drawFrame(roundedIndex);
   }, [drawFrame]);
 
-  // Progressive keyframe priority preloader
+  // Progressive keyframe priority preloader (Preloads Scene 1 & Scene 2 with Royal Guest Card)
   useEffect(() => {
     let isCancelled = false;
-
     let scene1Count = 0;
     let totalCount = 0;
 
@@ -238,13 +249,10 @@ export default function ScrollScrubberCanvas({
           if (index < TOTAL_SCENE1_FRAMES) {
             scene1Count++;
             setLoadedScene1Count(scene1Count);
-
-            if (scene1Count >= 40) {
-              setIsScene1Ready(true);
-            }
           }
 
           if (totalCount === TOTAL_FRAMES) {
+            setIsScene1Ready(true);
             setIsFullyLoaded(true);
           }
           resolve();
@@ -257,66 +265,69 @@ export default function ScrollScrubberCanvas({
           if (index < TOTAL_SCENE1_FRAMES) {
             scene1Count++;
             setLoadedScene1Count(scene1Count);
-            if (scene1Count >= 40) {
-              setIsScene1Ready(true);
-            }
+          }
+          if (totalCount === TOTAL_FRAMES) {
+            setIsScene1Ready(true);
+            setIsFullyLoaded(true);
           }
           resolve();
         };
       });
     };
 
-    // Stage 1: Keyframe priority load (every 4th frame for Scene 1)
-    const loadKeyframes = async () => {
-      const keyframeIndices: number[] = [];
-      for (let i = 0; i < TOTAL_SCENE1_FRAMES; i += 4) {
-        keyframeIndices.push(i);
-      }
-
+    // Parallel batch preloader for all 480 frames
+    const loadAllFrames = async () => {
       const batchSize = 16;
-      for (let i = 0; i < keyframeIndices.length; i += batchSize) {
+      for (let i = 0; i < TOTAL_FRAMES; i += batchSize) {
         if (isCancelled) break;
-        const batch = keyframeIndices
-          .slice(i, i + batchSize)
-          .map((idx) => loadFrame(idx));
+        const batch = Array.from(
+          { length: Math.min(batchSize, TOTAL_FRAMES - i) },
+          (_, k) => loadFrame(i + k)
+        );
         await Promise.all(batch);
       }
 
       if (!isCancelled) {
         setIsScene1Ready(true);
-        loadRemainingFrames();
-      }
-    };
-
-    // Stage 2: Fill remaining frames
-    const loadRemainingFrames = async () => {
-      const remainingIndices: number[] = [];
-      for (let i = 0; i < TOTAL_FRAMES; i++) {
-        if (!imagesRef.current[i]) {
-          remainingIndices.push(i);
-        }
-      }
-
-      const batchSize = 12;
-      for (let i = 0; i < remainingIndices.length; i += batchSize) {
-        if (isCancelled) break;
-        const batch = remainingIndices
-          .slice(i, i + batchSize)
-          .map((idx) => loadFrame(idx));
-        await Promise.all(batch);
-      }
-
-      if (!isCancelled) {
         setIsFullyLoaded(true);
       }
     };
 
-    loadKeyframes();
+    loadAllFrames();
 
     return () => {
       isCancelled = true;
     };
   }, []);
+
+  // Auto-scroll to Y: 3px upon preloader completion / unveil
+  useEffect(() => {
+    if (!isFullyLoaded) return;
+
+    const timer = setTimeout(() => {
+      const getScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
+        if (!node) return window;
+        let parent = node.parentElement;
+        while (parent && parent !== document.body) {
+          const overflowY = window.getComputedStyle(parent).overflowY;
+          if (overflowY === "auto" || overflowY === "scroll") {
+            return parent;
+          }
+          parent = parent.parentElement;
+        }
+        return window;
+      };
+
+      const scrollTarget = getScrollParent(containerRef.current);
+      if (scrollTarget === window) {
+        window.scrollTo({ top: 3, behavior: "auto" });
+      } else {
+        (scrollTarget as HTMLElement).scrollTop = 3;
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [isFullyLoaded]);
 
   // Handle Resize
   useEffect(() => {
@@ -384,7 +395,8 @@ export default function ScrollScrubberCanvas({
       }
 
       targetProgressRef.current = progress;
-      targetFrameRef.current = progress * (TOTAL_FRAMES - 1);
+      targetFrameRef.current =
+        INITIAL_FRAME_INDEX + progress * (TOTAL_FRAMES - 1 - INITIAL_FRAME_INDEX);
 
       // Console Log Scroll Metrics
       const currentFrameRounded = Math.round(targetFrameRef.current);
@@ -413,13 +425,18 @@ export default function ScrollScrubberCanvas({
       start + (end - start) * factor;
 
     const tick = () => {
+      const isMobile =
+        typeof window !== "undefined" &&
+        (window.innerWidth < 768 || "ontouchstart" in window);
+      const lerpFactor = isMobile ? 0.28 : 0.16;
+
       // Smooth frame interpolation
       const frameDiff = Math.abs(targetFrameRef.current - currentFrameRef.current);
       if (frameDiff > 0.005) {
         currentFrameRef.current = lerp(
           currentFrameRef.current,
           targetFrameRef.current,
-          0.14
+          lerpFactor
         );
         drawFrame(Math.round(currentFrameRef.current));
       }
@@ -430,7 +447,7 @@ export default function ScrollScrubberCanvas({
         smoothProgressRef.current = lerp(
           smoothProgressRef.current,
           targetProgressRef.current,
-          0.14
+          lerpFactor
         );
         setScrollProgress(smoothProgressRef.current);
       }
@@ -537,6 +554,8 @@ export default function ScrollScrubberCanvas({
       transform: `translate3d(0, ${translateY}px, 0)`,
       pointerEvents: opacity > 0.3 ? ("auto" as const) : ("none" as const),
       willChange: "opacity, transform",
+      WebkitBackfaceVisibility: "hidden" as const,
+      backfaceVisibility: "hidden" as const,
     };
   };
 
@@ -609,47 +628,74 @@ export default function ScrollScrubberCanvas({
       className="relative w-full bg-[#0B0B0B] text-[#FDF6F3] font-sans overflow-clip"
       style={{ height: "800vh" }}
     >
-      {/* 1. Minimal Elegant Gold Preloader */}
+      {/* 1. Royal Guest Preloader Screen (Displays formal invitation card while loading all 480 frames) */}
       <AnimatePresence>
-        {!isScene1Ready && (
+        {!isFullyLoaded && (
           <motion.div
+            key="wedding-preloader"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#070707] text-[#D9A441] px-6 text-center"
+            exit={{ opacity: 0, scale: 1.03, transition: { duration: 0.8, ease: "easeInOut" } }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#070707] text-[#F8F3EA] px-4 sm:px-6 text-center select-none overflow-y-auto"
           >
+            {/* Background Ambient Gold Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#D9A441]/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Royal Guest Invitation Card Box */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="mb-8 flex flex-col items-center"
+              className="max-w-md w-full bg-[#0F0F0F]/90 backdrop-blur-xl border border-[#D9A441]/40 p-6 sm:p-9 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col items-center text-center relative z-10 my-auto"
             >
-              <div className="w-16 h-16 rounded-full border border-[#D9A441]/40 flex items-center justify-center mb-4 bg-[#D9A441]/5 shadow-[0_0_25px_rgba(217,164,65,0.2)]">
-                <Sparkles className="w-7 h-7 text-[#D9A441] animate-pulse" />
+              {/* Animated Heart Emblem */}
+              <div className="w-14 h-14 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/50 flex items-center justify-center mb-4 shadow-[0_0_25px_rgba(217,164,65,0.35)]">
+                <Heart className="w-7 h-7 text-[#D9A441] fill-current animate-pulse" />
               </div>
-              <h2 className="text-3xl sm:text-4xl font-accent italic text-[#F8F3EA] tracking-wide">
+
+              {/* 1. Header */}
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold mb-1">
+                A Special Invitation For
+              </span>
+
+              {/* 2. Guest Name */}
+              <h3 className="text-xl sm:text-2xl font-accent italic text-[#FDF6F3] mb-3">
+                {guestName || "Honored Guest"}
+              </h3>
+
+              <div className="w-20 h-[1px] bg-gradient-to-r from-transparent via-[#D9A441]/60 to-transparent mb-4" />
+
+              {/* 3. Formal Invitation Quote */}
+              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[#D9A441]/90 font-medium mb-1">
+                {tagline || "Together with their families,"}
+              </p>
+
+              <h2 className="text-3xl sm:text-4xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide my-1">
                 {partnerOne} <span className="text-[#D9A441] font-normal">&amp;</span> {partnerTwo}
               </h2>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#D9A441]/80 mt-2 font-medium">
-                Wedding Invitation Sequence
+
+              <p className="text-xs sm:text-sm text-[#F8F3EA]/85 font-light italic mt-1 mb-5 leading-relaxed max-w-xs">
+                {inviteLine || "request the pleasure of your company at their wedding celebration."}
               </p>
+
+              {/* 4. Date & Time */}
+              <div className="px-4 py-2 rounded-full bg-[#D9A441]/10 border border-[#D9A441]/35 text-[11px] sm:text-xs text-[#D9A441] font-semibold tracking-wider uppercase mb-6 shadow-inner">
+                {weddingTime || `${weddingDate} • 4:00 PM Onwards`}
+              </div>
+
+              {/* 5. Progress Bar & Unveil Percentage */}
+              <div className="w-full space-y-2">
+                <div className="flex justify-between text-[10px] sm:text-xs text-[#D9A441] tracking-wider font-mono">
+                  <span>PREPARING CINEMATIC EXPERIENCE</span>
+                  <span>{Math.round((loadedTotalCount / TOTAL_FRAMES) * 100)}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-[#1A1A1A] rounded-full overflow-hidden relative border border-[#D9A441]/30">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-[#D9A441]/60 via-[#F7E7C4] to-[#D9A441] shadow-[0_0_12px_#D9A441]"
+                    style={{ width: `${Math.round((loadedTotalCount / TOTAL_FRAMES) * 100)}%` }}
+                  />
+                </div>
+              </div>
             </motion.div>
-
-            <div className="w-64 max-w-full">
-              <div className="flex justify-between text-xs text-[#D9A441]/90 mb-2 tracking-widest font-mono">
-                <span>LOADING SCENE 1</span>
-                <span>{scene1ProgressPercent}%</span>
-              </div>
-              <div className="h-[2px] w-full bg-[#1F1D1A] rounded-full overflow-hidden relative">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-[#D9A441]/60 via-[#F7E7C4] to-[#D9A441] shadow-[0_0_12px_#D9A441]"
-                  style={{ width: `${scene1ProgressPercent}%` }}
-                />
-              </div>
-            </div>
-
-            <p className="text-[11px] text-[#F8F3EA]/40 mt-6 tracking-wider font-light">
-              Crafting a cinematic experience...
-            </p>
           </motion.div>
         )}
       </AnimatePresence>

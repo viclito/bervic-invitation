@@ -171,6 +171,7 @@ export default function ScrollScrubberTemplate({
         events={events}
         locations={locations}
         galleryImages={galleryImages}
+        guestName={guestName}
         onExploreClick={scrollToRsvp}
       />
 
