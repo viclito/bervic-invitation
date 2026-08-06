@@ -775,34 +775,50 @@ export default function ScrollScrubberCanvas({
         {/* 3. Layered Content Overlays (Inside the single sticky viewport box) */}
         <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-8">
           
-          {/* OVERLAY BLOCK 1: HERO / TOP CENTER NAMES */}
+          {/* OVERLAY BLOCK 1: HERO / TOP CENTER NAMES & BOTTOM GUEST WELCOME CARD */}
           <div
-            className="absolute top-8 sm:top-12 left-0 w-full flex flex-col items-center justify-center text-center px-4 sm:transition-all sm:duration-300 sm:ease-out"
+            className="absolute inset-0 flex flex-col items-center justify-between py-6 sm:py-10 px-4 text-center sm:transition-all sm:duration-300 sm:ease-out"
             style={styleHero}
           >
-            {/* Top Tagline Sub-header */}
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.38em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] mb-1">
-              Together with their families
-            </span>
+            {/* Top Section: Couple Names & Wedding Date */}
+            <div className="flex flex-col items-center text-center max-w-2xl w-full">
+              <span className="text-[11px] sm:text-xs uppercase tracking-[0.38em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] mb-1">
+                Together with their families
+              </span>
 
-            {/* Top Title: Terance & Ancy in Gold Serif */}
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] leading-tight">
-              {partnerOne} <span className="text-[#D9A441] font-normal">&amp;</span> {partnerTwo}
-            </h1>
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] leading-tight">
+                {partnerOne} <span className="text-[#D9A441] font-normal">&amp;</span> {partnerTwo}
+              </h1>
 
-            {/* Subtitle: Date & Time directly underneath */}
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] text-[#D9A441] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-              {weddingDate} • {weddingTime}
-            </p>
+              <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] text-[#D9A441] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                {weddingDate} • {weddingTime}
+              </p>
 
-            {/* Catchy Romantic Invitation Quote */}
-            <p className="text-xs sm:text-sm text-[#F7E7C4] italic font-light max-w-md mx-auto mt-2.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] leading-relaxed">
-              &quot;Request the honor of your presence as two hearts unite in eternal love &amp; grace&quot;
-            </p>
+              <p className="text-xs sm:text-sm text-[#F7E7C4] italic font-light max-w-md mx-auto mt-2.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] leading-relaxed">
+                &quot;Request the honor of your presence as two hearts unite in eternal love &amp; grace&quot;
+              </p>
+            </div>
 
-            <div className="mt-5 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.25em] text-[#F7E7C4]/90 bg-[#070707]/70 px-4 py-1.5 rounded-full border border-[#D9A441]/35 backdrop-blur-md shadow-[0_4px_15px_rgba(0,0,0,0.8)]">
-              <span>Scroll Down to View Story</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#D9A441] sm:animate-bounce" />
+            {/* Bottom Section: Catchy Royal Guest Welcoming Card (Fills lower empty space) */}
+            <div className="max-w-lg w-full p-4 sm:p-5 rounded-3xl bg-[#0C0C0C]/90 sm:bg-[#070707]/75 border border-[#D9A441]/40 sm:backdrop-blur-md shadow-[0_15px_40px_rgba(0,0,0,0.85)] flex flex-col items-center text-center pointer-events-auto my-auto">
+              <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.35em] text-[#D9A441] font-semibold mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                <span>Warmly Welcoming You</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-accent italic text-[#FDF6F3] mb-1">
+                Welcome, {guestName || "Honored Guest"}
+              </h3>
+
+              <p className="text-xs sm:text-sm text-[#F7E7C4]/90 font-light italic leading-relaxed max-w-md">
+                &quot;With joyful hearts &amp; deepest gratitude, we invite you to step into our story and celebrate our forever union.&quot;
+              </p>
+
+              <div className="mt-3.5 inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-[#F7E7C4] bg-[#D9A441]/20 px-4 py-1.5 rounded-full border border-[#D9A441]/45 shadow-[0_0_15px_rgba(217,164,65,0.25)]">
+                <span>Scroll Down to View Story</span>
+                <ChevronDown className="w-3.5 h-3.5 text-[#D9A441] sm:animate-bounce" />
+              </div>
             </div>
           </div>
 
