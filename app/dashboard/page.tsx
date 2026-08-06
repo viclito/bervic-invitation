@@ -168,7 +168,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#FDF6F0] flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-32 pb-16">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-36 sm:pt-40 pb-16">
         {/* Sleek Dashboard Top Bar Header */}
         <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 mb-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -459,13 +459,14 @@ export default function DashboardPage() {
 
         {/* TAB 2: SUBSCRIPTION & QUOTA */}
         {activeTab === "subscription" && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-8 shadow-md relative overflow-hidden">
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              {/* Card Top Header */}
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[#D9A441]/20">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
                     {subData.plan && subData.plan !== "NONE" && (
-                      <span className="px-3 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                      <span className="px-3.5 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-sm">
                         <Crown className="w-3.5 h-3.5 text-[#D9A441]" />
                         <span>
                           {subData.plan === "PRO_1799"
@@ -476,9 +477,13 @@ export default function DashboardPage() {
                     )}
 
                     {(subData.allowedCinematicCount || 0) > 0 && (
-                      <span className="px-3 py-1 rounded-full bg-[#0D0D0D] text-[#F7E7C4] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441] flex items-center gap-1 shadow-sm">
+                      <span className="px-3.5 py-1 rounded-full bg-[#0D0D0D] text-[#F7E7C4] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441] flex items-center gap-1.5 shadow-md">
                         <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
-                        <span>Premium Cinematic Pass (₹2000)</span>
+                        <span>
+                          {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                            ? "Admin Full Access (₹2000)"
+                            : `Premium Cinematic Pass (₹2000 x ${subData.allowedCinematicCount})`}
+                        </span>
                       </span>
                     )}
 
@@ -494,15 +499,25 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  <h2 className="text-2xl font-serif font-bold text-[#221C17]">Subscription & Quota Details</h2>
-                  <p className="text-xs text-[#221C17]/70 mt-1">
+                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
+                    Subscription & Quota Details
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#221C17]/70 mt-1.5">
                     {subData.isActive ? (
                       <>
-                        Active Passes Owned:{" "}
+                        Active Passes:{" "}
                         <strong className="text-[#7A1F2B]">
                           {[
-                            subData.plan === "PRO_1799" ? "Standard Pro Pass (₹1799)" : subData.plan === "BASIC_599" ? "Standard Basic Pass (₹599)" : null,
-                            (subData.allowedCinematicCount || 0) > 0 ? `Premium Cinematic Pass (₹2000 x ${subData.allowedCinematicCount})` : null,
+                            subData.plan === "PRO_1799"
+                              ? "Standard Pro Pass (₹1799)"
+                              : subData.plan === "BASIC_599"
+                              ? "Standard Basic Pass (₹599)"
+                              : null,
+                            (subData.allowedCinematicCount || 0) > 0
+                              ? session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                                ? "Premium Cinematic Pass (₹2000 • Unlimited)"
+                                : `Premium Cinematic Pass (₹2000 x ${subData.allowedCinematicCount})`
+                              : null,
                           ]
                             .filter(Boolean)
                             .join(" + ")}
@@ -529,35 +544,48 @@ export default function DashboardPage() {
 
                 <Link
                   href="/checkout"
-                  className="btn-gold px-6 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-[#7A1F2B] shrink-0"
+                  className="btn-gold px-6 py-3.5 rounded-2xl text-xs font-extrabold flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-[#7A1F2B] shrink-0"
                 >
                   <Zap className="w-4 h-4 text-[#7A1F2B]" />
                   <span>{subData.isActive ? "Upgrade / Buy Additional Pass" : "Choose Subscription Plan"}</span>
                 </Link>
               </div>
 
-              {/* Progress Meters: 4 Box Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-8">
+              {/* Progress Meters: 2x2 Grid with Ample Width & Zero Text Overlap */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 my-8">
                 {/* Box 1: Standard Wedding Template Slots */}
-                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+                <div className="bg-[#FAF7F2] p-6 rounded-3xl border-2 border-[#D9A441]/40 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group">
                   <div>
-                    <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">Wedding Template Slots</span>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-xl font-bold text-[#7A1F2B]">
-                        {subData.usedTemplatesCount} of {subData.allowedTemplatesCount} Used
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#7A1F2B] flex items-center gap-1.5">
+                        <Crown className="w-4 h-4 text-[#D9A441]" />
+                        <span>Wedding Template Slots</span>
+                      </span>
+                      <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] border border-[#7A1F2B]/20">
+                        STANDARD PASS
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline justify-between mb-3">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                          ? `${subData.usedTemplatesCount} Active Created`
+                          : `${subData.usedTemplatesCount} of ${subData.allowedTemplatesCount} Used`}
                       </span>
                       <span className="text-xs font-extrabold text-[#8B6519]">
-                        {subData.remainingTemplateSlots} slots left
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited Access" : `${subData.remainingTemplateSlots} slots left`}
                       </span>
                     </div>
 
                     {/* Visual Progress Bar */}
-                    <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
+                    <div className="w-full h-3 bg-black/10 rounded-full overflow-hidden mb-2">
                       <div
                         className="h-full bg-[#7A1F2B] rounded-full transition-all duration-500"
                         style={{
                           width: `${
-                            subData.allowedTemplatesCount > 0
+                            session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                              ? 100
+                              : subData.allowedTemplatesCount > 0
                               ? Math.min(100, (subData.usedTemplatesCount / subData.allowedTemplatesCount) * 100)
                               : 0
                           }%`,
@@ -565,40 +593,48 @@ export default function DashboardPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-[#221C17]/60 mt-3">
+                  <p className="text-xs text-[#221C17]/60 mt-3 pt-3 border-t border-[#D9A441]/20">
                     Standard wedding templates (₹599 / ₹1799 passes).
                   </p>
                 </div>
 
-                {/* Box 2: Premium Wedding Template Slots (NEW) */}
-                <div className="bg-[#0C0C0C] text-[#FDF6F3] p-4 sm:p-5 rounded-2xl border-2 border-[#D9A441] shadow-[0_4px_20px_rgba(217,164,65,0.25)] flex flex-col justify-between relative overflow-hidden">
+                {/* Box 2: Premium Wedding Template Slots (CINEMATIC ₹2000) */}
+                <div className="bg-gradient-to-br from-[#0F0F0F] via-[#1B1814] to-[#0A0A0A] border-2 border-[#D9A441] shadow-[0_8px_30px_rgba(217,164,65,0.3)] text-[#FDF6F3] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-[#F7E7C4] transition-all">
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-[#D9A441] font-bold tracking-wider flex items-center gap-1 uppercase">
-                        <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
-                        <span>Premium Wedding Template Slots</span>
-                      </span>
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#D9A441]/20 text-[#D9A441] border border-[#D9A441]/40">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-[#D9A441]/20 border border-[#D9A441] flex items-center justify-center shrink-0">
+                          <Sparkles className="w-4 h-4 text-[#D9A441]" />
+                        </div>
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-[#D9A441]">
+                          Premium Wedding Template Slots
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#D9A441] text-[#070707] uppercase tracking-widest shrink-0 shadow-sm">
                         ₹2000 PASS
                       </span>
                     </div>
 
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-xl font-bold text-[#F7E7C4]">
-                        {subData.usedCinematicCount || 0} of {subData.allowedCinematicCount || 0} Used
+                    <div className="flex items-baseline justify-between mb-3">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#F7E7C4]">
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                          ? `${subData.usedCinematicCount || 0} Active Created`
+                          : `${subData.usedCinematicCount || 0} of ${subData.allowedCinematicCount || 0} Used`}
                       </span>
                       <span className="text-xs font-extrabold text-[#D9A441] font-mono">
-                        {subData.remainingCinematicSlots || 0} slots left
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited Access" : `${subData.remainingCinematicSlots || 0} slots left`}
                       </span>
                     </div>
 
                     {/* Visual Progress Bar */}
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden mb-2">
                       <div
-                        className="h-full bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(217,164,65,0.8)]"
                         style={{
                           width: `${
-                            (subData.allowedCinematicCount || 0) > 0
+                            session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                              ? 100
+                              : (subData.allowedCinematicCount || 0) > 0
                               ? Math.min(100, ((subData.usedCinematicCount || 0) / (subData.allowedCinematicCount || 1)) * 100)
                               : 0
                           }%`,
@@ -606,30 +642,43 @@ export default function DashboardPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-[#FDF6F3]/60 mt-3">
+                  <p className="text-xs text-[#FDF6F3]/70 mt-3 pt-3 border-t border-[#D9A441]/30">
                     480-Frame Apple-Style Video Scroll sequence (₹2000 pass).
                   </p>
                 </div>
 
                 {/* Box 3: Instagram Announcement Cards */}
-                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+                <div className="bg-[#FAF7F2] p-6 rounded-3xl border-2 border-[#D9A441]/40 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group">
                   <div>
-                    <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">Instagram Announcement Cards</span>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-xl font-bold text-[#7A1F2B]">
-                        {subData.usedCardsCount} of {subData.allowedCardsCount} Used
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#7A1F2B] flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-[#D9A441]" />
+                        <span>Instagram Announcement Cards</span>
                       </span>
-                      <span className="text-xs font-extrabold text-[#8B6519]">
-                        {subData.remainingCardSlots} credits left
+                      <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#8B6519] border border-[#D9A441]/30">
+                        CARD CREDITS
                       </span>
                     </div>
 
-                    <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
+                    <div className="flex items-baseline justify-between mb-3">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                          ? `${subData.usedCardsCount} Cards Generated`
+                          : `${subData.usedCardsCount} of ${subData.allowedCardsCount} Used`}
+                      </span>
+                      <span className="text-xs font-extrabold text-[#8B6519]">
+                        {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited Access" : `${subData.remainingCardSlots} credits left`}
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-black/10 rounded-full overflow-hidden mb-2">
                       <div
                         className="h-full bg-[#D9A441] rounded-full transition-all duration-500"
                         style={{
                           width: `${
-                            subData.allowedCardsCount > 0
+                            session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
+                              ? 100
+                              : subData.allowedCardsCount > 0
                               ? Math.min(100, (subData.usedCardsCount / subData.allowedCardsCount) * 100)
                               : 0
                           }%`,
@@ -637,26 +686,39 @@ export default function DashboardPage() {
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-[#221C17]/60 mt-3">
+                  <p className="text-xs text-[#221C17]/60 mt-3 pt-3 border-t border-[#D9A441]/20">
                     Customizable announcement cards for social media.
                   </p>
                 </div>
 
                 {/* Box 4: WhatsApp Guest Invitations */}
-                <div className="bg-[#EFE7D8] p-4 sm:p-5 rounded-2xl border border-[#D9A441]/30 flex flex-col justify-between">
+                <div className="bg-gradient-to-br from-[#062C1B] via-[#0B3C26] to-[#041F13] text-[#E8F8F0] border-2 border-emerald-500/40 rounded-3xl p-6 flex flex-col justify-between shadow-lg hover:border-emerald-400 transition-all">
                   <div>
-                    <span className="text-xs text-[#221C17]/70 font-semibold block mb-1">WhatsApp Guest Invitations</span>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-xl font-bold text-emerald-700">Unlimited</span>
-                      <span className="text-xs font-extrabold text-emerald-800">Personalized</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span>WhatsApp Guest Invitations</span>
+                      </span>
+                      <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        PERSONALIZED RSVPS
+                      </span>
                     </div>
 
-                    <div className="w-full h-2 bg-emerald-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full w-full" />
+                    <div className="flex items-baseline justify-between mb-3">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-emerald-300">
+                        Unlimited Invites
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-400">
+                        Full Access
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-emerald-950/60 rounded-full overflow-hidden mb-2">
+                      <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full w-full shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
                     </div>
                   </div>
-                  <p className="text-[10px] text-[#221C17]/60 mt-3">
-                    Includes guest name personalization &amp; RSVP tracking.
+                  <p className="text-xs text-[#E8F8F0]/70 mt-3 pt-3 border-t border-emerald-500/20">
+                    Includes guest name personalization &amp; 1-click RSVP tracking.
                   </p>
                 </div>
               </div>
