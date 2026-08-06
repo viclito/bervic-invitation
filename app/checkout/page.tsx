@@ -15,6 +15,7 @@ function CheckoutContent() {
   const initialPlan = searchParams.get("plan") || "BASIC_599";
   const isRequired = searchParams.get("required") === "true";
   const templateSlug = searchParams.get("template") || "";
+  const isCinematicRequired = templateSlug === "scroll-scrubber" || initialPlan === "CINEMATIC_2000";
 
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -131,7 +132,7 @@ function CheckoutContent() {
     <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17] font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-[1100px] w-full mx-auto px-4 sm:px-6 pt-36 pb-20">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 pt-36 pb-20">
         {/* Banner Alert if redirected because payment required */}
         {isRequired && (
           <div className="mb-8 p-4 bg-[#7A1F2B]/10 border-2 border-[#7A1F2B]/30 rounded-2xl flex items-center justify-between gap-4 text-[#7A1F2B]">
@@ -144,6 +145,28 @@ function CheckoutContent() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Cinematic Template Special Banner */}
+        {isCinematicRequired && (
+          <div className="mb-10 max-w-4xl mx-auto p-5 rounded-2xl bg-[#0D0D0D] border-2 border-[#D9A441] text-[#FDF6F3] shadow-[0_10px_30px_rgba(217,164,65,0.3)] flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+            <div className="flex items-center gap-3 text-center sm:text-left">
+              <div className="w-10 h-10 rounded-full bg-[#D9A441]/20 border border-[#D9A441] flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-[#D9A441]" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-[#F7E7C4] flex items-center gap-1.5 justify-center sm:justify-start">
+                  <span>🎬 CINEMATIC SCROLL TEMPLATE SELECTED</span>
+                </h4>
+                <p className="text-xs text-[#FDF6F3]/80 mt-0.5">
+                  You selected the <strong>Cinematic 480-Frame Scroll Sequence</strong> template. This exclusive template requires the <strong>₹2000 Cinematic Masterpiece Pass</strong>.
+                </p>
+              </div>
+            </div>
+            <span className="px-3.5 py-1.5 rounded-full bg-[#D9A441] text-[#070707] text-xs font-extrabold shrink-0 uppercase tracking-wider">
+              ₹2000 Pass Required
+            </span>
           </div>
         )}
 
@@ -186,16 +209,18 @@ function CheckoutContent() {
         )}
 
         {/* 3 Plan Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
           {/* Plan 1: BASIC ₹599 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-6 sm:p-7 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group relative">
+          <div className={`bg-[#FAF7F2] border-2 rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all relative ${isCinematicRequired ? "border-gray-300 opacity-40 grayscale select-none" : "border-[#D9A441]/40 hover:border-[#7A1F2B] shadow-md"}`}>
             <div>
-              <span className="px-3.5 py-1.5 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#7A1F2B]/20 inline-block mb-4">
-                6 Months Validity
+              <span className={`px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-4 ${isCinematicRequired ? "bg-gray-200 text-gray-700 border border-gray-300" : "bg-[#7A1F2B]/10 text-[#7A1F2B] border border-[#7A1F2B]/20"}`}>
+                {isCinematicRequired ? "🔒 Standard Templates Only" : "6 Months Validity"}
               </span>
 
               <h3 className="text-xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
-              <p className="text-xs text-[#221C17]/60 mt-1">Perfect for couples wanting 1 luxury invitation & Instagram card.</p>
+              <p className="text-xs text-[#221C17]/60 mt-1">
+                {isCinematicRequired ? "Standard templates only. Does not support Cinematic Scroll template." : "Perfect for couples wanting 1 luxury invitation & Instagram card."}
+              </p>
 
               <div className="flex items-baseline gap-1 my-5">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#7A1F2B]">₹599</span>
@@ -211,29 +236,23 @@ function CheckoutContent() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Unlimited Edits</strong> to your chosen template</span>
+                  <span><strong>Unlimited Edits</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
                   <span><strong>2 Instagram Announcement Cards</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Invite Unlimited Guests via WhatsApp</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Active for 6 Full Months</strong></span>
                 </li>
               </ul>
             </div>
 
             <button
               onClick={() => handlePay("BASIC_599")}
-              disabled={loadingPlan !== null}
-              className="mt-8 w-full py-3.5 rounded-2xl bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              disabled={loadingPlan !== null || isCinematicRequired}
+              className={`mt-8 w-full py-3.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCinematicRequired ? "bg-gray-200 text-gray-600 border border-gray-300 cursor-not-allowed" : "bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 hover:bg-[#7A1F2B] hover:text-[#F8F3EA] shadow-sm disabled:opacity-50"}`}
             >
-              {loadingPlan === "BASIC_599" ? (
+              {isCinematicRequired ? (
+                <span>Requires ₹2000 Cinematic Pass</span>
+              ) : loadingPlan === "BASIC_599" ? (
                 <span>Processing...</span>
               ) : (
                 <>
@@ -245,19 +264,23 @@ function CheckoutContent() {
           </div>
 
           {/* Plan 2: PRO ₹1799 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#7A1F2B] rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-xl relative group">
-            <span className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1">
-              <Crown className="w-3 h-3 text-[#D9A441]" />
-              <span>Most Popular</span>
-            </span>
+          <div className={`bg-[#FAF7F2] border-2 rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative ${isCinematicRequired ? "border-gray-300 opacity-40 grayscale select-none" : "border-[#7A1F2B] shadow-xl"}`}>
+            {!isCinematicRequired && (
+              <span className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1">
+                <Crown className="w-3 h-3 text-[#D9A441]" />
+                <span>Most Popular</span>
+              </span>
+            )}
 
             <div>
-              <span className="px-3.5 py-1.5 rounded-full bg-[#D9A441]/20 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/40 inline-block mb-4">
-                1 Year Annual Suite
+              <span className={`px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-4 ${isCinematicRequired ? "bg-gray-200 text-gray-700 border border-gray-300" : "bg-[#D9A441]/20 text-[#7A1F2B] border border-[#D9A441]/40"}`}>
+                {isCinematicRequired ? "🔒 Standard Templates Only" : "1 Year Annual Suite"}
               </span>
 
               <h3 className="text-xl font-serif font-bold text-[#221C17]">Pro Annual Pass</h3>
-              <p className="text-xs text-[#221C17]/60 mt-1">Ideal for grand wedding celebrations with multiple functions.</p>
+              <p className="text-xs text-[#221C17]/60 mt-1">
+                {isCinematicRequired ? "Standard templates only. Does not support Cinematic Scroll template." : "Ideal for grand wedding celebrations with multiple functions."}
+              </p>
 
               <div className="flex items-baseline gap-1 my-5">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#7A1F2B]">₹1799</span>
@@ -273,15 +296,7 @@ function CheckoutContent() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Unlimited Edits</strong> to all templates anytime</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>6 Instagram Announcement Cards</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Invite Unlimited Guests via WhatsApp</strong></span>
+                  <span><strong>Unlimited Edits</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
@@ -292,10 +307,12 @@ function CheckoutContent() {
 
             <button
               onClick={() => handlePay("PRO_1799")}
-              disabled={loadingPlan !== null}
-              className="mt-8 w-full py-3.5 rounded-2xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#601822] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              disabled={loadingPlan !== null || isCinematicRequired}
+              className={`mt-8 w-full py-3.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${isCinematicRequired ? "bg-gray-200 text-gray-600 border border-gray-300 cursor-not-allowed" : "bg-[#7A1F2B] text-[#F8F3EA] hover:bg-[#601822] shadow-lg disabled:opacity-50"}`}
             >
-              {loadingPlan === "PRO_1799" ? (
+              {isCinematicRequired ? (
+                <span>Requires ₹2000 Cinematic Pass</span>
+              ) : loadingPlan === "PRO_1799" ? (
                 <span>Processing...</span>
               ) : (
                 <>
@@ -307,15 +324,15 @@ function CheckoutContent() {
           </div>
 
           {/* Plan 3: CINEMATIC ₹2000 EXCLUSIVE */}
-          <div className="bg-[#0D0D0D] border-2 border-[#D9A441] text-[#FDF6F3] rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-2xl relative group">
-            <span className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-[#D9A441] text-[#070707] text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1">
+          <div className={`bg-[#0D0D0D] text-[#FDF6F3] rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative group ${isCinematicRequired ? "border-4 border-[#D9A441] ring-8 ring-[#D9A441]/40 scale-[1.04] shadow-[0_0_60px_rgba(217,164,65,0.6)] z-10" : "border-2 border-[#D9A441] shadow-2xl"}`}>
+            <span className={`absolute -top-3.5 right-6 px-3.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 ${isCinematicRequired ? "bg-[#D9A441] text-[#070707] animate-bounce" : "bg-[#D9A441] text-[#070707]"}`}>
               <Sparkles className="w-3 h-3 text-[#070707]" />
-              <span>Cinematic Exclusive</span>
+              <span>{isCinematicRequired ? "⭐ REQUIRED FOR THIS TEMPLATE" : "Cinematic Exclusive"}</span>
             </span>
 
             <div>
               <span className="px-3.5 py-1.5 rounded-full bg-[#D9A441]/20 text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/50 inline-block mb-4">
-                Exclusive Masterpiece
+                {isCinematicRequired ? "🎬 REQUIRED FOR CINEMATIC TEMPLATE" : "Exclusive Masterpiece"}
               </span>
 
               <h3 className="text-xl font-serif font-bold text-[#F7E7C4]">Cinematic Pass</h3>
@@ -331,19 +348,11 @@ function CheckoutContent() {
               <ul className="space-y-2.5 text-xs text-[#FDF6F3]/90">
                 <li className="flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>1 Exclusive 480-Frame Cinematic Scroll Template Slot</strong></span>
+                  <span><strong>1 Exclusive 480-Frame Cinematic Scroll Template</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
                   <span><strong>10 High-Res Instagram Announcement Cards</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>Invite Unlimited Guests via WhatsApp</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#D9A441] shrink-0 mt-0.5" />
-                  <span><strong>Active for 1 Full Year (12 Months)</strong></span>
                 </li>
               </ul>
             </div>
@@ -351,14 +360,14 @@ function CheckoutContent() {
             <button
               onClick={() => handlePay("CINEMATIC_2000")}
               disabled={loadingPlan !== null}
-              className="mt-8 w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] text-xs font-bold hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(217,164,65,0.4)] disabled:opacity-50"
+              className={`mt-8 w-full py-4 rounded-2xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(217,164,65,0.5)] cursor-pointer ${isCinematicRequired ? "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-105 animate-pulse" : "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-[1.02]"}`}
             >
               {loadingPlan === "CINEMATIC_2000" ? (
                 <span>Processing...</span>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-[#070707]" />
-                  <span>Pay ₹2000 & Unlock Cinematic</span>
+                  <span>Pay ₹2000 & Unlock Cinematic Template</span>
                 </>
               )}
             </button>

@@ -9,6 +9,8 @@ interface PricingCheckoutModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   reason?: string;
+  templateSlug?: string;
+  preselectedPlan?: string;
 }
 
 export default function PricingCheckoutModal({
@@ -16,9 +18,13 @@ export default function PricingCheckoutModal({
   onClose,
   onSuccess,
   reason = "Choose a plan to customize, save, export, and publish your luxury digital invitations.",
+  templateSlug = "",
+  preselectedPlan = "",
 }: PricingCheckoutModalProps) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isCinematicRequired = templateSlug === "scroll-scrubber" || preselectedPlan === "CINEMATIC_2000";
 
   useEffect(() => {
     // Dynamically load Razorpay Checkout SDK
@@ -108,60 +114,72 @@ export default function PricingCheckoutModal({
         },
       };
 
-      const razorpayWindow = (window as any).Razorpay;
-      if (razorpayWindow) {
-        const rzp = new razorpayWindow(options);
-        rzp.open();
-      } else {
-        throw new Error("Razorpay SDK failed to load. Please refresh.");
-      }
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (err: any) {
-      console.error("Checkout Error:", err);
-      setErrorMsg(err.message || "Failed to start payment.");
+      console.error("Payment order error:", err);
+      setErrorMsg(err.message || "Failed to initiate payment.");
       setLoadingPlan(null);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in" data-lenis-prevent>
-      <div data-lenis-prevent className="bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-[#221C17] overscroll-contain">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+      <div className="bg-[#F8F3EA] border-2 border-[#D9A441] rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl relative my-8">
         {/* Header */}
-        <div className="p-6 border-b border-[#D9A441]/20 bg-[#EFE7D8] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md">
-              <Crown className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-serif font-bold text-[#221C17]">Unlock Bervic Invitation Suite</h2>
-              <p className="text-xs text-[#221C17]/70 font-medium mt-0.5">{reason}</p>
-            </div>
-          </div>
-
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-black/10 text-[#221C17]/70 transition-colors">
+        <div className="p-6 sm:p-8 bg-[#FAF7F2] border-b border-[#D9A441]/20 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 rounded-full bg-[#EFE7D8] text-[#221C17] hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all"
+          >
             <X className="w-5 h-5" />
           </button>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-wider mb-2">
+            <Crown className="w-3.5 h-3.5" />
+            <span>Unlock Subscription Access</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
+            Choose Your Official Bervic Pass
+          </h2>
+          <p className="text-xs text-[#221C17]/70 mt-1 max-w-xl">
+            {isCinematicRequired
+              ? "🎬 Cinematic Scroll Template Selected: This 480-frame Apple-style template requires the ₹2000 Cinematic Masterpiece Pass."
+              : reason}
+          </p>
         </div>
 
-        {/* Error Alert if any */}
         {errorMsg && (
-          <div className="mx-6 mt-4 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800 text-xs font-semibold">
+          <div className="p-3 bg-red-100 border-b border-red-300 text-red-800 text-xs font-semibold text-center">
             {errorMsg}
           </div>
         )}
 
-        {/* Content: 3 Plan Pricing Cards */}
-        <div data-lenis-prevent className="p-6 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-5 overscroll-contain">
+        {/* Plan Cards Grid */}
+        <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
           {/* Plan 1: BASIC ₹599 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-5 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group relative">
+          <div
+            className={`bg-[#FAF7F2] border-2 rounded-3xl p-5 flex flex-col justify-between relative ${
+              isCinematicRequired
+                ? "border-gray-300 opacity-40 grayscale select-none"
+                : "border-[#D9A441]/40 hover:border-[#7A1F2B] shadow-md"
+            }`}
+          >
             <div>
-              <span className="px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#7A1F2B]/20 inline-block mb-3">
-                6 Months Plan
+              <span
+                className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-3 ${
+                  isCinematicRequired
+                    ? "bg-gray-200 text-gray-700 border border-gray-300"
+                    : "bg-[#7A1F2B]/10 text-[#7A1F2B] border border-[#7A1F2B]/20"
+                }`}
+              >
+                {isCinematicRequired ? "🔒 Standard Only" : "6 Months Pass"}
               </span>
               <h3 className="text-xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
-                <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹1,499</span>
+                <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹1,299</span>
                 <span className="text-2xl font-bold text-[#7A1F2B]">₹599</span>
-                <span className="text-[11px] text-[#221C17]/60 font-medium">/ 6 Mos</span>
+                <span className="text-[11px] text-[#221C17]/60 font-medium">/ 6 Months</span>
               </div>
 
               <hr className="border-t border-[#D9A441]/20 mb-3" />
@@ -173,7 +191,7 @@ export default function PricingCheckoutModal({
                 </li>
                 <li className="flex items-start gap-1.5">
                   <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Unlimited Edits</strong> anytime</span>
+                  <span><strong>Unlimited Edits</strong></span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
@@ -188,10 +206,16 @@ export default function PricingCheckoutModal({
 
             <button
               onClick={() => handleCheckout("BASIC_599")}
-              disabled={loadingPlan !== null}
-              className="mt-6 w-full py-2.5 rounded-xl bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+              disabled={loadingPlan !== null || isCinematicRequired}
+              className={`mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                isCinematicRequired
+                  ? "bg-gray-200 text-gray-600 border border-gray-300 cursor-not-allowed"
+                  : "bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 hover:bg-[#7A1F2B] hover:text-[#F8F3EA] shadow-sm disabled:opacity-50"
+              }`}
             >
-              {loadingPlan === "BASIC_599" ? (
+              {isCinematicRequired ? (
+                <span>Requires ₹2000 Pass</span>
+              ) : loadingPlan === "BASIC_599" ? (
                 <span>Processing...</span>
               ) : (
                 <>
@@ -203,14 +227,28 @@ export default function PricingCheckoutModal({
           </div>
 
           {/* Plan 2: PRO ₹1799 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#7A1F2B] rounded-3xl p-5 flex flex-col justify-between shadow-xl relative group">
-            <span className="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md">
-              Most Popular
-            </span>
+          <div
+            className={`bg-[#FAF7F2] border-2 rounded-3xl p-5 flex flex-col justify-between relative ${
+              isCinematicRequired
+                ? "border-gray-300 opacity-40 grayscale select-none"
+                : "border-[#7A1F2B] shadow-xl"
+            }`}
+          >
+            {!isCinematicRequired && (
+              <span className="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md">
+                Most Popular
+              </span>
+            )}
 
             <div>
-              <span className="px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/40 inline-block mb-3">
-                1 Year Annual Pass
+              <span
+                className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-3 ${
+                  isCinematicRequired
+                    ? "bg-gray-200 text-gray-700 border border-gray-300"
+                    : "bg-[#D9A441]/20 text-[#7A1F2B] border border-[#D9A441]/40"
+                }`}
+              >
+                {isCinematicRequired ? "🔒 Standard Only" : "1 Year Annual Pass"}
               </span>
               <h3 className="text-xl font-serif font-bold text-[#221C17]">Pro Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
@@ -243,10 +281,16 @@ export default function PricingCheckoutModal({
 
             <button
               onClick={() => handleCheckout("PRO_1799")}
-              disabled={loadingPlan !== null}
-              className="mt-6 w-full py-2.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#601822] transition-all flex items-center justify-center gap-1.5 shadow-lg disabled:opacity-50"
+              disabled={loadingPlan !== null || isCinematicRequired}
+              className={`mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                isCinematicRequired
+                  ? "bg-gray-200 text-gray-600 border border-gray-300 cursor-not-allowed"
+                  : "bg-[#7A1F2B] text-[#F8F3EA] hover:bg-[#601822] shadow-lg disabled:opacity-50"
+              }`}
             >
-              {loadingPlan === "PRO_1799" ? (
+              {isCinematicRequired ? (
+                <span>Requires ₹2000 Pass</span>
+              ) : loadingPlan === "PRO_1799" ? (
                 <span>Processing...</span>
               ) : (
                 <>
@@ -258,14 +302,24 @@ export default function PricingCheckoutModal({
           </div>
 
           {/* Plan 3: CINEMATIC ₹2000 EXCLUSIVE */}
-          <div className="bg-[#0D0D0D] border-2 border-[#D9A441] text-[#FDF6F3] rounded-3xl p-5 flex flex-col justify-between shadow-2xl relative group">
-            <span className="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-[#D9A441] text-[#070707] text-[9px] font-extrabold uppercase tracking-widest shadow-md">
-              Cinematic Exclusive
+          <div
+            className={`bg-[#0D0D0D] text-[#FDF6F3] rounded-3xl p-5 flex flex-col justify-between relative group ${
+              isCinematicRequired
+                ? "border-4 border-[#D9A441] ring-4 ring-[#D9A441]/50 scale-[1.03] shadow-[0_0_40px_rgba(217,164,65,0.6)] z-10"
+                : "border-2 border-[#D9A441] shadow-2xl"
+            }`}
+          >
+            <span
+              className={`absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md ${
+                isCinematicRequired ? "bg-[#D9A441] text-[#070707] animate-bounce" : "bg-[#D9A441] text-[#070707]"
+              }`}
+            >
+              {isCinematicRequired ? "⭐ REQUIRED FOR THIS TEMPLATE" : "Cinematic Exclusive"}
             </span>
 
             <div>
               <span className="px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/50 inline-block mb-3">
-                Exclusive Masterpiece
+                {isCinematicRequired ? "🎬 CINEMATIC REQUIRED" : "Exclusive Masterpiece"}
               </span>
               <h3 className="text-xl font-serif font-bold text-[#F7E7C4]">Cinematic Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
@@ -295,14 +349,18 @@ export default function PricingCheckoutModal({
             <button
               onClick={() => handleCheckout("CINEMATIC_2000")}
               disabled={loadingPlan !== null}
-              className="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] text-xs font-bold hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+              className={`mt-6 w-full py-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
+                isCinematicRequired
+                  ? "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-105 animate-pulse"
+                  : "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-[1.02]"
+              }`}
             >
               {loadingPlan === "CINEMATIC_2000" ? (
                 <span>Processing...</span>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-[#070707]" />
-                  <span>Choose Cinematic (₹2000)</span>
+                  <span>Pay ₹2000 & Unlock Cinematic</span>
                 </>
               )}
             </button>
@@ -317,7 +375,11 @@ export default function PricingCheckoutModal({
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/checkout?required=true" onClick={onClose} className="text-[#7A1F2B] font-bold underline flex items-center gap-1">
+            <Link
+              href={`/checkout?required=true${templateSlug ? `&template=${templateSlug}` : ""}`}
+              onClick={onClose}
+              className="text-[#7A1F2B] font-bold underline flex items-center gap-1"
+            >
               <span>Full Checkout Page →</span>
             </Link>
             <button onClick={onClose} className="hover:text-[#7A1F2B] font-semibold underline">
