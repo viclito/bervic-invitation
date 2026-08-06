@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         plan: true,
         planExpiresAt: true,
         allowedTemplatesCount: true,
+        allowedCinematicCount: true,
         allowedCardsCount: true,
         invitations: {
           select: {
@@ -34,6 +35,12 @@ export async function POST(req: Request) {
             templateSlug: true,
             slug: true,
           },
+        },
+        payments: {
+          where: { status: "SUCCESS" },
+        },
+        subscriptions: {
+          where: { status: "ACTIVE" },
         },
       },
     });
@@ -54,6 +61,7 @@ export async function POST(req: Request) {
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
+          allowedCinematicCount: true,
           allowedCardsCount: true,
           invitations: {
             select: {
@@ -61,6 +69,12 @@ export async function POST(req: Request) {
               templateSlug: true,
               slug: true,
             },
+          },
+          payments: {
+            where: { status: "SUCCESS" },
+          },
+          subscriptions: {
+            where: { status: "ACTIVE" },
           },
         },
       });
@@ -95,9 +109,40 @@ export async function POST(req: Request) {
       customSlug,
     } = body;
 
+    // Auto-calculate cinematic pass count from actual paid payments or subscriptions if DB column was missed
+    const paidCinematicPayments = (dbUser.payments || []).filter(
+      (p: any) => p.plan === "CINEMATIC_2000" || p.amount >= 2000
+    ).length;
+    const paidCinematicSubs = (dbUser.subscriptions || []).filter(
+      (s: any) => s.plan === "CINEMATIC_2000" || s.amount >= 2000
+    ).length;
+    const countFromHistory = Math.max(paidCinematicPayments, paidCinematicSubs);
+
+    let rawDbCinematicCount = (dbUser as any).allowedCinematicCount || 0;
+    if (rawDbCinematicCount === 0 && countFromHistory > 0) {
+      rawDbCinematicCount = countFromHistory;
+      try {
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { allowedCinematicCount: countFromHistory },
+        });
+      } catch {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
+          countFromHistory,
+          dbUser.id
+        );
+      }
+    }
+    const dbCinematicCount = rawDbCinematicCount;
+
     // 1. Subscription Active Check
     const now = new Date();
-    const isSubscribed = !!(dbUser.planExpiresAt && new Date(dbUser.planExpiresAt) > now);
+    const isSubscribed =
+      !!(dbUser.planExpiresAt && new Date(dbUser.planExpiresAt) > now) ||
+      dbCinematicCount > 0 ||
+      (dbUser.payments || []).length > 0 ||
+      (dbUser.subscriptions || []).length > 0;
 
     if (!isSubscribed) {
       return NextResponse.json(
@@ -111,7 +156,9 @@ export async function POST(req: Request) {
 
     // 2. Cinematic Template Exclusive Tier Check
     const isCinematicTemplate = templateSlug === "scroll-scrubber";
-    if (isCinematicTemplate && dbUser.role !== "ADMIN" && dbUser.plan !== "CINEMATIC_2000") {
+    const hasCinematicPass = dbUser.plan === "CINEMATIC_2000" || dbCinematicCount > 0;
+
+    if (isCinematicTemplate && dbUser.role !== "ADMIN" && !hasCinematicPass) {
       return NextResponse.json(
         {
           error: "CINEMATIC_PLAN_REQUIRED",
@@ -144,13 +191,13 @@ export async function POST(req: Request) {
       if (isCinematicTemplate) {
         const usedCinematic = allInvs.filter((i: any) => i.templateSlug === "scroll-scrubber").length;
         const allowedCinematic =
-          dbUser.role === "ADMIN"
-            ? 99
-            : dbUser.allowedCinematicCount > 0
-            ? dbUser.allowedCinematicCount
-            : dbUser.plan === "CINEMATIC_2000"
-            ? 1
-            : 0;
+          dbUser.role !== "ADMIN"
+            ? dbCinematicCount > 0
+              ? dbCinematicCount
+              : dbUser.plan === "CINEMATIC_2000"
+              ? 1
+              : 0
+            : 99;
 
         if (usedCinematic >= allowedCinematic) {
           return NextResponse.json(
