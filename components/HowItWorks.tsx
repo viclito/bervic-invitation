@@ -46,11 +46,11 @@ export default function HowItWorks() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
             Create digital wedding invitations at just{" "}
             <span className="text-[#E11D48] font-accent italic font-normal">
-              ₹299 & manage guests
+              ₹599 & manage guests
             </span>
           </h2>
           <p className="mt-3 text-sm sm:text-base text-stone-400 font-medium tracking-wide">
-            Keep the tradition · Enjoy the convenience · Starting at just ₹299
+            Keep the tradition · Enjoy the convenience · Starting at just ₹599
           </p>
         </motion.div>
 

@@ -18,8 +18,13 @@ export async function POST() {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    // Refresh card limit (Set allowedCardsCount to 6 for Pro or 1 for Basic, or +6 for test mode)
-    const newAllowedCardsCount = user.plan === "BASIC_299" ? 1 : 6;
+    // Refresh card limit
+    const newAllowedCardsCount =
+      user.plan === "CINEMATIC_2000"
+        ? 10
+        : user.plan === "PRO_1799"
+        ? 6
+        : 2;
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {

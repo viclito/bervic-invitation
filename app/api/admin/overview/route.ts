@@ -59,7 +59,7 @@ export async function GET() {
         name: session.user.name || "berglin viclito",
         email: "berglin1998@gmail.com",
         phone: "+91 90421 27115",
-        plan: "PRO_999",
+        plan: "PRO_1799",
         allowedTemplatesCount: 99,
         allowedCardsCount: 99,
         createdAt: new Date(),
@@ -198,8 +198,9 @@ export async function GET() {
       // Calculate revenue for user
       let userRevenue = revenueMap[user.id] || 0;
       if (userRevenue === 0 && !isUserAdmin) {
-        if (user.plan === "BASIC_299") userRevenue = 299;
-        if (user.plan === "PRO_999") userRevenue = 999;
+        if (user.plan === "BASIC_599") userRevenue = 599;
+        if (user.plan === "PRO_1799") userRevenue = 1799;
+        if (user.plan === "CINEMATIC_2000") userRevenue = 2000;
       }
 
       const hasActiveSub =
@@ -219,16 +220,21 @@ export async function GET() {
       let allowedCards = user.allowedCardsCount || 0;
 
       if (!isUserAdmin) {
-        if (user.plan === "BASIC_299") {
+        if (user.plan === "BASIC_599") {
           allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 1;
           allowedCards = allowedCards > 0 ? allowedCards : 2;
           if (allowedTemplates === 99) allowedTemplates = 1;
           if (allowedCards === 99) allowedCards = 2;
-        } else if (user.plan === "PRO_999") {
+        } else if (user.plan === "PRO_1799") {
           allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 4;
           allowedCards = allowedCards > 0 ? allowedCards : 6;
           if (allowedTemplates === 99) allowedTemplates = 4;
           if (allowedCards === 99) allowedCards = 6;
+        } else if (user.plan === "CINEMATIC_2000") {
+          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 5;
+          allowedCards = allowedCards > 0 ? allowedCards : 10;
+          if (allowedTemplates === 99) allowedTemplates = 5;
+          if (allowedCards === 99) allowedCards = 10;
         }
       }
 
@@ -238,7 +244,7 @@ export async function GET() {
         email: user.email || "N/A",
         phone: user.phone || "N/A",
         role: isUserAdmin ? "ADMIN" : "USER",
-        plan: isUserAdmin ? "PRO_999" : user.plan || "NONE",
+        plan: isUserAdmin ? "PRO_1799" : user.plan || "NONE",
         planExpiresAt: user.planExpiresAt,
         allowedTemplatesCount: isUserAdmin ? 99 : allowedTemplates,
         usedTemplatesCount,

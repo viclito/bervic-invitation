@@ -64,12 +64,15 @@ export async function POST(req: Request) {
     const targetPlan = overridePlan || targetUser.plan;
 
     // Normalize legacy 99 / 100 mock values to actual plan base before adding granted quota
-    if (targetPlan === "BASIC_299") {
+    if (targetPlan === "BASIC_599") {
       if (currentTemplates >= 99) currentTemplates = 1;
       if (currentCards >= 99) currentCards = 2;
-    } else if (targetPlan === "PRO_999") {
+    } else if (targetPlan === "PRO_1799") {
       if (currentTemplates >= 99) currentTemplates = 4;
       if (currentCards >= 99) currentCards = 6;
+    } else if (targetPlan === "CINEMATIC_2000") {
+      if (currentTemplates >= 99) currentTemplates = 5;
+      if (currentCards >= 99) currentCards = 10;
     } else {
       if (currentTemplates >= 99) currentTemplates = 0;
       if (currentCards >= 99) currentCards = 0;
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
       allowedCardsCount: newCardQuota,
     };
 
-    if (overridePlan && ["NONE", "BASIC_299", "PRO_999"].includes(overridePlan)) {
+    if (overridePlan && ["NONE", "BASIC_599", "PRO_1799", "CINEMATIC_2000"].includes(overridePlan)) {
       updateData.plan = overridePlan;
       if (overridePlan !== "NONE") {
         const nextMonth = new Date();

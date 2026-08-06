@@ -18,6 +18,8 @@ export interface TemplateRegistryItem {
   fontStyle: "serif" | "sans";
   layoutVariant: string;
   hasDualPartnerPhotos?: boolean;
+  isCinematicExclusive?: boolean;
+  price?: number;
 }
 
 export const templatesRegistry: TemplateRegistryItem[] = [
@@ -40,6 +42,8 @@ export const templatesRegistry: TemplateRegistryItem[] = [
     fontStyle: "serif",
     layoutVariant: "scroll-scrubber",
     hasDualPartnerPhotos: true,
+    isCinematicExclusive: true,
+    price: 2000,
   },
   {
     id: "1",

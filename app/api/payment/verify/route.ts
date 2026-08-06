@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = "PRO_999" } = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = "PRO_1799" } = await req.json();
 
     const user = await prisma.user.findFirst({
       where: {
@@ -51,11 +51,17 @@ export async function POST(req: Request) {
     }
 
     // In test mode or when signature is valid, activate subscription
-    const selectedPlan = plan === "BASIC_299" ? "BASIC_299" : "PRO_999";
-    const validityMonths = selectedPlan === "BASIC_299" ? 6 : 12;
-    const addTemplates = selectedPlan === "BASIC_299" ? 1 : 4;
-    const addCards = selectedPlan === "BASIC_299" ? 2 : 6;
-    const amount = selectedPlan === "BASIC_299" ? 299 : 999;
+    const selectedPlan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" =
+      plan === "CINEMATIC_2000"
+        ? "CINEMATIC_2000"
+        : plan === "PRO_1799"
+        ? "PRO_1799"
+        : "BASIC_599";
+
+    const validityMonths = selectedPlan === "BASIC_599" ? 6 : 12;
+    const addTemplates = selectedPlan === "BASIC_599" ? 1 : selectedPlan === "PRO_1799" ? 4 : 5;
+    const addCards = selectedPlan === "BASIC_599" ? 2 : selectedPlan === "PRO_1799" ? 6 : 10;
+    const amount = selectedPlan === "BASIC_599" ? 599 : selectedPlan === "PRO_1799" ? 1799 : 2000;
 
     // Calculate expiration date: take whichever is longer between existing remaining validity and new purchase validity
     const now = new Date();
@@ -74,8 +80,11 @@ export async function POST(req: Request) {
     const newAllowedTemplates = (user.allowedTemplatesCount || 0) + addTemplates;
     const newAllowedCards = (user.allowedCardsCount || 0) + addCards;
 
-    // Determine target plan: keep PRO_999 if user was already on PRO_999
-    const targetPlan = user.plan === "PRO_999" ? "PRO_999" : selectedPlan;
+    // Determine target plan according to hierarchy (NONE < BASIC_599 < PRO_1799 < CINEMATIC_2000)
+    const planHierarchy = { NONE: 0, BASIC_599: 1, PRO_1799: 2, CINEMATIC_2000: 3 };
+    const currentRank = planHierarchy[user.plan as keyof typeof planHierarchy] || 0;
+    const selectedRank = planHierarchy[selectedPlan] || 0;
+    const targetPlan = selectedRank > currentRank ? selectedPlan : user.plan || selectedPlan;
 
     // Record Payment
     if (razorpay_order_id) {
@@ -141,7 +150,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Payment verified successfully! Your ${selectedPlan === "BASIC_299" ? "Basic (₹299)" : "Pro (₹999)"} plan is now active.`,
+      message: `Payment verified successfully! Your ${
+        selectedPlan === "CINEMATIC_2000"
+          ? "Cinematic Masterpiece (₹2000)"
+          : selectedPlan === "PRO_1799"
+          ? "Pro (₹1799)"
+          : "Basic (₹599)"
+      } plan is now active.`,
       plan: updatedUser.plan,
       planExpiresAt: updatedUser.planExpiresAt,
       allowedTemplatesCount: updatedUser.allowedTemplatesCount,

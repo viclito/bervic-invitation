@@ -9,15 +9,15 @@ export default function FAQSection() {
   const faqs = [
     {
       q: "Can I preview templates before paying?",
-      a: "Yes! You can browse and preview all digital invitation templates and 31 Instagram announcement card designs 100% for free. To customize, save, publish, export high-res PDFs, or send WhatsApp invitations, you can select our ₹299 (6 Months) or ₹999 (1 Year) plan.",
+      a: "Yes! You can browse and preview all digital invitation templates and 31 Instagram announcement card designs 100% for free. To customize, save, publish, export high-res PDFs, or send WhatsApp invitations, you can select our ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) plan.",
     },
     {
       q: "How does template locking work?",
-      a: "Once you select a template for a slot included in your plan (1 template slot for ₹299, 4 slots for ₹999), that slot is locked to that chosen template design. However, you can edit all details (names, dates, photos, venue maps, timelines) of your selected template as many times as you like!",
+      a: "Once you select a template for a slot included in your plan (1 template slot for ₹599, 4 slots for ₹1799, 5 slots for ₹2000), that slot is locked to that chosen template design. However, you can edit all details (names, dates, photos, venue maps, timelines) of your selected template as many times as you like!",
     },
     {
       q: "Do my invitations or assets expire after the wedding date?",
-      a: "No! Your invitations, cards, and guest RSVPs do NOT auto-delete on your event date. They remain active for the full duration of your subscription (6 months for ₹299, 1 year for ₹999), unless you manually delete them.",
+      a: "No! Your invitations, cards, and guest RSVPs do NOT auto-delete on your event date. They remain active for the full duration of your subscription (6 months for ₹599, 1 year for ₹1799 and ₹2000), unless you manually delete them.",
     },
     {
       q: "Can I send personalized WhatsApp invitations to guests?",

@@ -337,8 +337,9 @@ export default function AdminPage() {
                 className="px-3 py-2 rounded-xl bg-[#EFE7D8] border border-[#D9A441]/40 text-xs font-bold text-[#7A1F2B] focus:outline-none"
               >
                 <option value="ALL">All Plans</option>
-                <option value="BASIC_299">BASIC ₹299</option>
-                <option value="PRO_999">PRO ₹999</option>
+                <option value="BASIC_599">BASIC ₹599</option>
+                <option value="PRO_1799">PRO ₹1799</option>
+                <option value="CINEMATIC_2000">CINEMATIC ₹2000</option>
                 <option value="NONE">Free / Unsubscribed</option>
               </select>
             </div>
@@ -386,17 +387,21 @@ export default function AdminPage() {
                       <td className="py-4 px-4">
                         <span
                           className={`inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
-                            user.plan === "PRO_999"
+                            user.plan === "CINEMATIC_2000"
+                              ? "bg-amber-500/20 text-amber-800 border-amber-500/50"
+                              : user.plan === "PRO_1799"
                               ? "bg-[#D9A441]/20 text-[#8B6519] border-[#D9A441]/50"
-                              : user.plan === "BASIC_299"
+                              : user.plan === "BASIC_599"
                               ? "bg-[#7A1F2B]/10 text-[#7A1F2B] border-[#7A1F2B]/30"
                               : "bg-gray-100 text-gray-600 border-gray-300"
                           }`}
                         >
-                          {user.plan === "PRO_999"
-                            ? "PRO ₹999 Plan"
-                            : user.plan === "BASIC_299"
-                            ? "BASIC ₹299 Plan"
+                          {user.plan === "CINEMATIC_2000"
+                            ? "CINEMATIC ₹2000 Plan"
+                            : user.plan === "PRO_1799"
+                            ? "PRO ₹1799 Plan"
+                            : user.plan === "BASIC_599"
+                            ? "BASIC ₹599 Plan"
                             : "Free User"}
                         </span>
                       </td>
@@ -558,8 +563,9 @@ export default function AdminPage() {
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
                   >
                     <option value="">Keep current plan ({selectedUser.plan})</option>
-                    <option value="BASIC_299">Set Plan to BASIC ₹299 (1 Template + 5 Cards)</option>
-                    <option value="PRO_999">Set Plan to PRO ₹999 (3 Templates + 15 Cards)</option>
+                    <option value="BASIC_599">Set Plan to BASIC ₹599 (1 Template + 2 Cards)</option>
+                    <option value="PRO_1799">Set Plan to PRO ₹1799 (4 Templates + 6 Cards)</option>
+                    <option value="CINEMATIC_2000">Set Plan to CINEMATIC ₹2000 (5 Templates + 10 Cards)</option>
                     <option value="NONE">Reset Plan to Free User</option>
                   </select>
                 </div>

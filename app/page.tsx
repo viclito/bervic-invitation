@@ -19,6 +19,13 @@ const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTempl
   loading: () => <SectionSkeleton height="h-[750px]" />,
 });
 
+const CinematicShowcaseSection = dynamic(
+  () => import("@/components/CinematicShowcaseSection"),
+  {
+    loading: () => <SectionSkeleton height="h-[750px]" />,
+  }
+);
+
 const AboutSection = dynamic(() => import("@/components/AboutSection"), {
   loading: () => <SectionSkeleton height="h-[600px]" />,
 });
@@ -61,6 +68,9 @@ export default function Home() {
 
       {/* 3D Coverflow Popular Invitation Templates Showcase */}
       <PopularTemplatesShowcase />
+
+      {/* Dedicated Showcase Section for ₹2000 Cinematic Exclusive 480-Frame Template */}
+      <CinematicShowcaseSection />
 
       {/* Lazy-Loaded Below the Fold Sections */}
       <AboutSection />

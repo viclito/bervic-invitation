@@ -208,7 +208,7 @@ export default function CardGenerator() {
       });
 
       if (!data.isActive) {
-        setPricingReason('An active subscription plan (₹299 for 6 Months or ₹999 for 1 Year) is required to download & export High-Res Instagram Announcement Cards.');
+        setPricingReason('An active subscription plan (₹599 for Basic, ₹1799 for Pro, or ₹2000 for Cinematic) is required to download & export High-Res Instagram Announcement Cards.');
         setShowPricingModal(true);
         return false;
       }

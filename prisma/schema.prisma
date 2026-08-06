@@ -15,7 +15,7 @@ model User {
   password              String?
   image                 String?
   phone                 String?
-  plan                  String           @default("NONE") // NONE, BASIC_299, PRO_999
+  plan                  String           @default("NONE") // NONE, BASIC_599, PRO_1799, CINEMATIC_2000
   planExpiresAt         DateTime?
   allowedTemplatesCount Int              @default(0)
   allowedCardsCount     Int              @default(0)
@@ -115,7 +115,7 @@ model Guest {
 model Subscription {
   id                String   @id @default(cuid())
   userId            String
-  plan              String   // BASIC_299, PRO_999
+  plan              String   // BASIC_599, PRO_1799, CINEMATIC_2000
   amount            Float
   status            String   @default("ACTIVE") // ACTIVE, EXPIRED
   allowedTemplates  Int

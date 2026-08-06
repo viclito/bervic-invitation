@@ -33,7 +33,7 @@ export default function PricingCheckoutModal({
 
   if (!isOpen) return null;
 
-  const handleCheckout = async (plan: "BASIC_299" | "PRO_999") => {
+  const handleCheckout = async (plan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000") => {
     setLoadingPlan(plan);
     setErrorMsg(null);
 
@@ -50,13 +50,19 @@ export default function PricingCheckoutModal({
         throw new Error(data.error || "Failed to create payment order");
       }
 
+      const planNames = {
+        BASIC_599: "Basic Plan (₹599 - 6 Months)",
+        PRO_1799: "Pro Plan (₹1799 - 1 Year)",
+        CINEMATIC_2000: "Cinematic Pass (₹2000 - 1 Year)",
+      };
+
       // 2. Open Razorpay Checkout Widget
       const options = {
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
         name: "Bervic Invitations",
-        description: `${plan === "BASIC_299" ? "Basic Plan (₹299 - 6 Months)" : "Pro Plan (₹999 - 1 Year)"}`,
+        description: planNames[plan],
         image: "https://bervic.app/images/category-wedding.jpg",
         order_id: data.orderId,
         prefill: {
@@ -143,117 +149,164 @@ export default function PricingCheckoutModal({
           </div>
         )}
 
-        {/* Content: 2 Plan Pricing Cards */}
-        <div data-lenis-prevent className="p-6 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6 overscroll-contain">
-          {/* Plan 1: BASIC ₹299 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-6 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group relative">
+        {/* Content: 3 Plan Pricing Cards */}
+        <div data-lenis-prevent className="p-6 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-5 overscroll-contain">
+          {/* Plan 1: BASIC ₹599 */}
+          <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/40 rounded-3xl p-5 flex flex-col justify-between hover:border-[#7A1F2B] transition-all shadow-md group relative">
             <div>
               <span className="px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#7A1F2B]/20 inline-block mb-3">
                 6 Months Plan
               </span>
-              <h3 className="text-2xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
-              <div className="flex items-baseline gap-2 mt-2 mb-4">
-                <span className="line-through text-sm text-[#221C17]/40 font-semibold">₹900</span>
-                <span className="text-3xl font-bold text-[#7A1F2B]">₹299</span>
-                <span className="text-xs text-[#221C17]/60 font-medium">/ 6 Months</span>
+              <h3 className="text-xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
+              <div className="flex items-baseline gap-2 mt-1 mb-3">
+                <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹1,499</span>
+                <span className="text-2xl font-bold text-[#7A1F2B]">₹599</span>
+                <span className="text-[11px] text-[#221C17]/60 font-medium">/ 6 Mos</span>
               </div>
 
-              <hr className="border-t border-[#D9A441]/20 mb-4" />
+              <hr className="border-t border-[#D9A441]/20 mb-3" />
 
-              <ul className="space-y-3 text-xs text-[#221C17]/80">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>1 Wedding Invitation Template</strong> (locked to chosen template once selected)</span>
+              <ul className="space-y-2 text-[11px] text-[#221C17]/80">
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>1 Standard Template Slot</strong></span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Unlimited Edits</strong> to your chosen template anytime</span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>Unlimited Edits</strong> anytime</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>1 Instagram Announcement Card</strong></span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>2 Instagram Cards</strong></span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Invite Unlimited Guests via WhatsApp</strong> with guest name personalization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Active for 6 Months</strong> (Assets stay live until plan ends)</span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>WhatsApp Invitations</strong></span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => handleCheckout("BASIC_299")}
+              onClick={() => handleCheckout("BASIC_599")}
               disabled={loadingPlan !== null}
-              className="mt-6 w-full py-3 rounded-xl bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              className="mt-6 w-full py-2.5 rounded-xl bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
             >
-              {loadingPlan === "BASIC_299" ? (
-                <span>Processing Payment...</span>
+              {loadingPlan === "BASIC_599" ? (
+                <span>Processing...</span>
               ) : (
                 <>
-                  <Zap className="w-4 h-4 text-[#D9A441]" />
-                  <span>Choose Basic (₹299)</span>
+                  <Zap className="w-3.5 h-3.5 text-[#D9A441]" />
+                  <span>Choose Basic (₹599)</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Plan 2: PRO ₹999 */}
-          <div className="bg-[#FAF7F2] border-2 border-[#7A1F2B] rounded-3xl p-6 flex flex-col justify-between shadow-xl relative group">
-            <span className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest shadow-md">
-              Best Value & Most Popular
+          {/* Plan 2: PRO ₹1799 */}
+          <div className="bg-[#FAF7F2] border-2 border-[#7A1F2B] rounded-3xl p-5 flex flex-col justify-between shadow-xl relative group">
+            <span className="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md">
+              Most Popular
             </span>
 
             <div>
               <span className="px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/40 inline-block mb-3">
                 1 Year Annual Pass
               </span>
-              <h3 className="text-2xl font-serif font-bold text-[#221C17]">Pro Annual Pass</h3>
-              <div className="flex items-baseline gap-2 mt-2 mb-4">
-                <span className="line-through text-sm text-[#221C17]/40 font-semibold">₹2,000</span>
-                <span className="text-3xl font-bold text-[#7A1F2B]">₹999</span>
-                <span className="text-xs text-[#221C17]/60 font-medium">/ 1 Full Year</span>
+              <h3 className="text-xl font-serif font-bold text-[#221C17]">Pro Pass</h3>
+              <div className="flex items-baseline gap-2 mt-1 mb-3">
+                <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹3,499</span>
+                <span className="text-2xl font-bold text-[#7A1F2B]">₹1799</span>
+                <span className="text-[11px] text-[#221C17]/60 font-medium">/ 1 Year</span>
               </div>
 
-              <hr className="border-t border-[#D9A441]/20 mb-4" />
+              <hr className="border-t border-[#D9A441]/20 mb-3" />
 
-              <ul className="space-y-3 text-xs text-[#221C17]/80">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>4 Wedding Invitation Templates</strong> (select 4 distinct template designs)</span>
+              <ul className="space-y-2 text-[11px] text-[#221C17]/80">
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>4 Standard Template Slots</strong></span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Unlimited Edits</strong> to all selected templates</span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>Unlimited Edits</strong></span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>6 Instagram Announcement Cards</strong></span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>6 Instagram Cards</strong></span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Invite Unlimited Guests via WhatsApp</strong> with guest name personalization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>Active for 1 Full Year (12 Months)</strong></span>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
+                  <span><strong>8 PDF Exports</strong></span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => handleCheckout("PRO_999")}
+              onClick={() => handleCheckout("PRO_1799")}
               disabled={loadingPlan !== null}
-              className="mt-6 w-full py-3.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#601822] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              className="mt-6 w-full py-2.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#601822] transition-all flex items-center justify-center gap-1.5 shadow-lg disabled:opacity-50"
             >
-              {loadingPlan === "PRO_999" ? (
-                <span>Processing Payment...</span>
+              {loadingPlan === "PRO_1799" ? (
+                <span>Processing...</span>
               ) : (
                 <>
-                  <Crown className="w-4 h-4 text-[#D9A441]" />
-                  <span>Choose Pro (₹999)</span>
+                  <Crown className="w-3.5 h-3.5 text-[#D9A441]" />
+                  <span>Choose Pro (₹1799)</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Plan 3: CINEMATIC ₹2000 EXCLUSIVE */}
+          <div className="bg-[#0D0D0D] border-2 border-[#D9A441] text-[#FDF6F3] rounded-3xl p-5 flex flex-col justify-between shadow-2xl relative group">
+            <span className="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-[#D9A441] text-[#070707] text-[9px] font-extrabold uppercase tracking-widest shadow-md">
+              Cinematic Exclusive
+            </span>
+
+            <div>
+              <span className="px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/50 inline-block mb-3">
+                Exclusive Masterpiece
+              </span>
+              <h3 className="text-xl font-serif font-bold text-[#F7E7C4]">Cinematic Pass</h3>
+              <div className="flex items-baseline gap-2 mt-1 mb-3">
+                <span className="line-through text-xs text-[#FDF6F3]/40 font-semibold">₹4,999</span>
+                <span className="text-2xl font-bold text-[#D9A441]">₹2000</span>
+                <span className="text-[11px] text-[#FDF6F3]/70 font-medium">/ 1 Year</span>
+              </div>
+
+              <hr className="border-t border-[#D9A441]/30 mb-3" />
+
+              <ul className="space-y-2 text-[11px] text-[#FDF6F3]/90">
+                <li className="flex items-start gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
+                  <span><strong>Includes 480-Frame Scroll Template</strong></span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
+                  <span><strong>5 Total Template Slots</strong></span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
+                  <span><strong>10 Instagram Cards</strong></span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#D9A441] shrink-0 mt-0.5" />
+                  <span><strong>WhatsApp RSVPs</strong></span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => handleCheckout("CINEMATIC_2000")}
+              disabled={loadingPlan !== null}
+              className="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] text-xs font-bold hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+            >
+              {loadingPlan === "CINEMATIC_2000" ? (
+                <span>Processing...</span>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-[#070707]" />
+                  <span>Choose Cinematic (₹2000)</span>
                 </>
               )}
             </button>

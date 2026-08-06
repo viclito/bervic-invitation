@@ -429,30 +429,29 @@ export default function ScrollScrubberCanvas({
       const isMobile =
         typeof window !== "undefined" &&
         (window.innerWidth < 768 || "ontouchstart" in window);
-      const lerpFactor = isMobile ? 0.38 : 0.16;
 
-      // Smooth frame interpolation
+      // On mobile screens, update frames instantly with finger scroll to prevent frame lag & stuttering
+      const lerpFactor = isMobile ? 1.0 : 0.16;
+
+      // Frame interpolation
       const frameDiff = Math.abs(targetFrameRef.current - currentFrameRef.current);
       if (frameDiff > 0.01) {
-        currentFrameRef.current = lerp(
-          currentFrameRef.current,
-          targetFrameRef.current,
-          lerpFactor
-        );
+        currentFrameRef.current = isMobile
+          ? targetFrameRef.current
+          : lerp(currentFrameRef.current, targetFrameRef.current, lerpFactor);
         drawFrame(Math.round(currentFrameRef.current));
       }
 
-      // Smooth opacity & transform progress interpolation
+      // Opacity & transform progress interpolation
       const progDiff = Math.abs(targetProgressRef.current - smoothProgressRef.current);
       if (progDiff > 0.0002) {
-        smoothProgressRef.current = lerp(
-          smoothProgressRef.current,
-          targetProgressRef.current,
-          lerpFactor
-        );
+        smoothProgressRef.current = isMobile
+          ? targetProgressRef.current
+          : lerp(smoothProgressRef.current, targetProgressRef.current, lerpFactor);
 
-        // Throttle React state re-renders to prevent 60-FPS main-thread layout thrashing on mobile
-        if (Math.abs(smoothProgressRef.current - lastStateProgressRef.current) >= 0.001) {
+        // Throttle React state re-renders on mobile to prevent 60-FPS DOM layout thrashing
+        const stateThreshold = isMobile ? 0.005 : 0.001;
+        if (Math.abs(smoothProgressRef.current - lastStateProgressRef.current) >= stateThreshold) {
           lastStateProgressRef.current = smoothProgressRef.current;
           setScrollProgress(smoothProgressRef.current);
         }
@@ -502,13 +501,17 @@ export default function ScrollScrubberCanvas({
     end: number,
     options?: { fadeInRatio?: number; fadeOutRatio?: number; isHero?: boolean; startRiseY?: number }
   ) => {
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || "ontouchstart" in window);
+
     const p = scrollProgress;
     if (p < start || p > end) {
       return {
         opacity: 0,
-        transform: "translate3d(0, 40px, 0)",
+        transform: isMobile ? "translate3d(0, 20px, 0)" : "translate3d(0, 40px, 0)",
         pointerEvents: "none" as const,
-        willChange: "opacity, transform",
+        willChange: isMobile ? "auto" : "opacity, transform",
       };
     }
 
@@ -540,26 +543,28 @@ export default function ScrollScrubberCanvas({
     const rangeProgress = (p - start) / duration;
     let translateY = 0;
 
-    if (options?.isHero) {
-      translateY = (1 - opacity) * -20;
-    } else {
-      const startRise = options?.startRiseY ?? 65;
-      if (rangeProgress < fadeInRatio) {
-        const riseProgress = rangeProgress / fadeInRatio;
-        translateY = (1 - riseProgress) * startRise;
-      } else if (rangeProgress > fadeOutRatio) {
-        const fadeProgress = (rangeProgress - fadeOutRatio) / (1 - fadeOutRatio);
-        translateY = fadeProgress * -25;
+    if (!isMobile) {
+      if (options?.isHero) {
+        translateY = (1 - opacity) * -20;
       } else {
-        translateY = 0;
+        const startRise = options?.startRiseY ?? 65;
+        if (rangeProgress < fadeInRatio) {
+          const riseProgress = rangeProgress / fadeInRatio;
+          translateY = (1 - riseProgress) * startRise;
+        } else if (rangeProgress > fadeOutRatio) {
+          const fadeProgress = (rangeProgress - fadeOutRatio) / (1 - fadeOutRatio);
+          translateY = fadeProgress * -25;
+        } else {
+          translateY = 0;
+        }
       }
     }
 
     return {
       opacity,
-      transform: `translate3d(0, ${translateY}px, 0)`,
+      transform: isMobile ? "none" : `translate3d(0, ${translateY}px, 0)`,
       pointerEvents: opacity > 0.3 ? ("auto" as const) : ("none" as const),
-      willChange: "opacity, transform",
+      willChange: isMobile ? "auto" : "opacity, transform",
       WebkitBackfaceVisibility: "hidden" as const,
       backfaceVisibility: "hidden" as const,
     };
@@ -578,8 +583,8 @@ export default function ScrollScrubberCanvas({
     if (p < timelineStart || p > timelineEnd) {
       return {
         opacity: 0,
-        transform: "translate3d(0, 30px, 0)",
-        willChange: "opacity, transform",
+        transform: isMobile ? "none" : "translate3d(0, 30px, 0)",
+        willChange: isMobile ? "auto" : "opacity, transform",
         WebkitBackfaceVisibility: "hidden" as const,
         backfaceVisibility: "hidden" as const,
       };
@@ -616,14 +621,10 @@ export default function ScrollScrubberCanvas({
       translateY = 0;
     }
 
-    const transformStr = isMobile
-      ? `translate3d(0, ${translateY}px, 0)`
-      : `translate3d(${translateX}px, 0, 0)`;
-
     return {
       opacity,
-      transform: transformStr,
-      willChange: "opacity, transform",
+      transform: isMobile ? "none" : `translate3d(${translateX}px, 0, 0)`,
+      willChange: isMobile ? "auto" : "opacity, transform",
       WebkitBackfaceVisibility: "hidden" as const,
       backfaceVisibility: "hidden" as const,
     };

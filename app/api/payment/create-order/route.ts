@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     const { plan } = await req.json();
-    if (plan !== "BASIC_299" && plan !== "PRO_999") {
+    if (plan !== "BASIC_599" && plan !== "PRO_1799" && plan !== "CINEMATIC_2000") {
       return NextResponse.json({ error: "Invalid plan selected." }, { status: 400 });
     }
 
@@ -35,10 +35,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const amount = plan === "BASIC_299" ? 29900 : 99900; // in paise
+    const amountInPaise =
+      plan === "CINEMATIC_2000"
+        ? 200000
+        : plan === "PRO_1799"
+        ? 179900
+        : 59900; // in paise
+
+    const amountInRupees =
+      plan === "CINEMATIC_2000"
+        ? 2000
+        : plan === "PRO_1799"
+        ? 1799
+        : 599;
 
     const orderOptions = {
-      amount,
+      amount: amountInPaise,
       currency: "INR",
       receipt: `receipt_${user.id.slice(-6)}_${Date.now()}`,
       notes: {
@@ -55,7 +67,7 @@ export async function POST(req: Request) {
       data: {
         userId: user.id,
         razorpayOrderId: razorpayOrder.id,
-        amount: plan === "BASIC_299" ? 299 : 999,
+        amount: amountInRupees,
         plan,
         status: "CREATED",
       },

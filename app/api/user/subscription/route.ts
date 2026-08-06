@@ -67,7 +67,7 @@ export async function GET(req: Request) {
 
     if (!user) {
       return NextResponse.json({
-        plan: isAdmin ? "PRO_999" : "NONE",
+        plan: isAdmin ? "CINEMATIC_2000" : "NONE",
         isActive: isAdmin,
         allowedTemplatesCount: isAdmin ? 99 : 0,
         allowedCardsCount: isAdmin ? 99 : 0,
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     // Admin always gets full pass
     if (isAdmin) {
       return NextResponse.json({
-        plan: "PRO_999",
+        plan: "CINEMATIC_2000",
         planExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         isActive: true,
         allowedTemplatesCount: 99,
@@ -137,12 +137,15 @@ export async function GET(req: Request) {
     let allowedCards = 0;
 
     if (isSubscribed) {
-      allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : (user.plan === "BASIC_299" ? 1 : 4);
-      allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : (user.plan === "BASIC_299" ? 2 : 6);
+      const defaultTemplates = user.plan === "CINEMATIC_2000" ? 5 : user.plan === "PRO_1799" ? 4 : 1;
+      const defaultCards = user.plan === "CINEMATIC_2000" ? 10 : user.plan === "PRO_1799" ? 6 : 2;
+
+      allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : defaultTemplates;
+      allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : defaultCards;
 
       // Fix legacy mock 99 values for non-admin users
-      if (allowedTemplates === 99) allowedTemplates = user.plan === "BASIC_299" ? 1 : 4;
-      if (allowedCards === 99) allowedCards = user.plan === "BASIC_299" ? 2 : 6;
+      if (allowedTemplates === 99) allowedTemplates = defaultTemplates;
+      if (allowedCards === 99) allowedCards = defaultCards;
     }
 
     const remainingTemplateSlots = Math.max(0, allowedTemplates - usedTemplatesCount);

@@ -182,7 +182,13 @@ export default function DashboardPage() {
                 <span className="px-2.5 py-0.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] text-[11px] font-bold border border-[#D9A441]/30 flex items-center gap-1">
                   <Crown className="w-3 h-3 text-[#D9A441]" />
                   <span>
-                    {subData.plan === "PRO_999" ? "Pro Pass (₹999)" : subData.plan === "BASIC_299" ? "Basic Pass (₹299)" : "Free Preview"}
+                    {subData.plan === "CINEMATIC_2000"
+                      ? "Cinematic Pass (₹2000)"
+                      : subData.plan === "PRO_1799"
+                      ? "Pro Pass (₹1799)"
+                      : subData.plan === "BASIC_599"
+                      ? "Basic Pass (₹599)"
+                      : "Free Preview"}
                   </span>
                 </span>
               </div>
@@ -453,10 +459,12 @@ export default function DashboardPage() {
                     <span className="px-3 py-1 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-sm">
                       <Crown className="w-3.5 h-3.5 text-[#D9A441]" />
                       <span>
-                        {subData.plan === "PRO_999"
-                          ? "Pro Annual Pass (₹999)"
-                          : subData.plan === "BASIC_299"
-                          ? "Basic Pass (₹299)"
+                        {subData.plan === "CINEMATIC_2000"
+                          ? "Cinematic Masterpiece Pass (₹2000)"
+                          : subData.plan === "PRO_1799"
+                          ? "Pro Annual Pass (₹1799)"
+                          : subData.plan === "BASIC_599"
+                          ? "Basic Pass (₹599)"
                           : "Free Preview Mode"}
                       </span>
                     </span>
@@ -476,7 +484,15 @@ export default function DashboardPage() {
                   <p className="text-xs text-[#221C17]/70 mt-1">
                     {subData.isActive && subData.planExpiresAt ? (
                       <>
-                        Amount Paid: <strong className="text-[#7A1F2B]">{subData.plan === "PRO_999" ? "₹999" : "₹299"}</strong> • Valid until{" "}
+                        Amount Paid:{" "}
+                        <strong className="text-[#7A1F2B]">
+                          {subData.plan === "CINEMATIC_2000"
+                            ? "₹2000"
+                            : subData.plan === "PRO_1799"
+                            ? "₹1799"
+                            : "₹599"}
+                        </strong>{" "}
+                        • Valid until{" "}
                         <strong>
                           {new Date(subData.planExpiresAt).toLocaleDateString("en-IN", {
                             day: "numeric",
@@ -487,7 +503,7 @@ export default function DashboardPage() {
                         ({daysRemaining} days remaining)
                       </>
                     ) : (
-                      <>Subscribe to ₹299 (6 Months) or ₹999 (1 Year) to unlock 1-click customization, saving, and WhatsApp invitations.</>
+                      <>Subscribe to ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) to unlock 1-click customization, saving, and WhatsApp invitations.</>
                     )}
                   </p>
                 </div>

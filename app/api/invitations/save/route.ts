@@ -21,6 +21,7 @@ export async function POST(req: Request) {
         id: true,
         name: true,
         email: true,
+        role: true,
         plan: true,
         planExpiresAt: true,
         allowedTemplatesCount: true,
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
           id: true,
           name: true,
           email: true,
+          role: true,
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
@@ -87,13 +89,25 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "PAYMENT_REQUIRED",
-          message: "Active plan required to save & publish invitations. Please choose a plan (₹299 for 6 months or ₹999 for 1 year).",
+          message: "Active plan required to save & publish invitations. Please choose a plan (₹599 for Basic, ₹1799 for Pro, or ₹2000 for Cinematic).",
         },
         { status: 402 }
       );
     }
 
-    // 2. Template Lock & Slot Quota Checks
+    // 2. Cinematic Template Exclusive Tier Check
+    const isCinematicTemplate = templateSlug === "scroll-scrubber";
+    if (isCinematicTemplate && dbUser.role !== "ADMIN" && dbUser.plan !== "CINEMATIC_2000") {
+      return NextResponse.json(
+        {
+          error: "CINEMATIC_PLAN_REQUIRED",
+          message: "The 480-Frame Cinematic Scroll Sequence template requires the ₹2000 Cinematic Masterpiece Pass. Please upgrade your plan to unlock this exclusive template!",
+        },
+        { status: 402 }
+      );
+    }
+
+    // 3. Template Lock & Slot Quota Checks
     if (invitationId) {
       // Editing existing invitation
       const existingInv = await prisma.userInvitation.findFirst({
@@ -112,10 +126,17 @@ export async function POST(req: Request) {
     } else {
       // Creating new invitation slot
       if (dbUser.invitations.length >= dbUser.allowedTemplatesCount) {
+        const planLabel =
+          dbUser.plan === "CINEMATIC_2000"
+            ? "₹2000 Cinematic"
+            : dbUser.plan === "PRO_1799"
+            ? "₹1799 Pro"
+            : "₹599 Basic";
+
         return NextResponse.json(
           {
             error: "QUOTA_EXCEEDED",
-            message: `You have used all ${dbUser.allowedTemplatesCount} template slot(s) in your current plan (${dbUser.plan === 'BASIC_299' ? '₹299 Basic' : '₹999 Pro'}). Upgrade to unlock additional template slots!`,
+            message: `You have used all ${dbUser.allowedTemplatesCount} template slot(s) in your current plan (${planLabel}). Upgrade to unlock additional template slots!`,
           },
           { status: 402 }
         );

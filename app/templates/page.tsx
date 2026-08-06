@@ -22,6 +22,7 @@ function TemplateGalleryContent() {
 
   const categories = [
     { id: "all", label: "All Templates" },
+    { id: "cinematic", label: "🎬 Cinematic (₹2000 Exclusive)" },
     { id: "wedding", label: "Weddings" },
     { id: "birthday", label: "Birthdays" },
     { id: "religious", label: "Religious & Pujas" },
@@ -47,7 +48,11 @@ function TemplateGalleryContent() {
 
   const filteredTemplates = templatesRegistry.filter((tpl) => {
     const matchesCategory =
-      selectedCategory === "all" || tpl.category === selectedCategory;
+      selectedCategory === "all"
+        ? true
+        : selectedCategory === "cinematic"
+        ? tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"
+        : tpl.category === selectedCategory;
     const matchesSearch =
       tpl.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tpl.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -146,13 +151,18 @@ function TemplateGalleryContent() {
                       : "border-[#D9C88A]/40 shadow-sm hover:shadow-md hover:border-[#D9A441]"
                   }`}
                 >
-                  {/* Highlight Badge for Recently Viewed Template */}
-                  {isViewed && (
+                  {/* Badge for Cinematic Exclusive vs Recently Viewed */}
+                  {tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#070707] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-[#D9A441] flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 fill-current text-[#D9A441]" />
+                      <span>₹2000 Cinematic Exclusive</span>
+                    </div>
+                  ) : isViewed ? (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-[#D9A441] flex items-center gap-1">
                       <Sparkles className="w-2.5 h-2.5 fill-current text-[#D9A441]" />
                       <span>Last Viewed</span>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* ── Card Graphic Container (Clicking goes to Live Preview) ── */}
                   <div
