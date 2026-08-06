@@ -143,6 +143,7 @@ export default function ScrollScrubberCanvas({
   // Eased progress ref to eliminate text box flickering during scroll
   const smoothProgressRef = useRef<number>(0);
   const targetProgressRef = useRef<number>(0);
+  const lastStateProgressRef = useRef<number>(-1);
 
   const rafIdRef = useRef<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -428,11 +429,11 @@ export default function ScrollScrubberCanvas({
       const isMobile =
         typeof window !== "undefined" &&
         (window.innerWidth < 768 || "ontouchstart" in window);
-      const lerpFactor = isMobile ? 0.28 : 0.16;
+      const lerpFactor = isMobile ? 0.38 : 0.16;
 
       // Smooth frame interpolation
       const frameDiff = Math.abs(targetFrameRef.current - currentFrameRef.current);
-      if (frameDiff > 0.005) {
+      if (frameDiff > 0.01) {
         currentFrameRef.current = lerp(
           currentFrameRef.current,
           targetFrameRef.current,
@@ -443,13 +444,18 @@ export default function ScrollScrubberCanvas({
 
       // Smooth opacity & transform progress interpolation
       const progDiff = Math.abs(targetProgressRef.current - smoothProgressRef.current);
-      if (progDiff > 0.0005) {
+      if (progDiff > 0.0002) {
         smoothProgressRef.current = lerp(
           smoothProgressRef.current,
           targetProgressRef.current,
           lerpFactor
         );
-        setScrollProgress(smoothProgressRef.current);
+
+        // Throttle React state re-renders to prevent 60-FPS main-thread layout thrashing on mobile
+        if (Math.abs(smoothProgressRef.current - lastStateProgressRef.current) >= 0.001) {
+          lastStateProgressRef.current = smoothProgressRef.current;
+          setScrollProgress(smoothProgressRef.current);
+        }
       }
 
       rafIdRef.current = requestAnimationFrame(tick);
@@ -701,7 +707,7 @@ export default function ScrollScrubberCanvas({
       </AnimatePresence>
 
       {/* 2. Pinned Full-Viewport Canvas Container */}
-      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden z-0">
+      <div className="sticky top-0 left-0 w-full h-[100dvh] overflow-hidden z-0">
         <canvas
           ref={canvasRef}
           className="w-full h-full object-cover block filter brightness-[0.92] contrast-[1.04]"
@@ -880,7 +886,7 @@ export default function ScrollScrubberCanvas({
                       }`}
                     >
                       <div
-                        className={`w-full sm:w-[48%] p-4 sm:p-5 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441] ${
+                        className={`w-full sm:w-[48%] p-4 sm:p-5 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441] ${
                           isEven ? "sm:mr-auto" : "sm:ml-auto"
                         }`}
                         style={itemStyle}
@@ -938,7 +944,7 @@ export default function ScrollScrubberCanvas({
                 {locations.map((loc, idx) => (
                   <div
                     key={idx}
-                    className="p-5 sm:p-6 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441]"
+                    className="p-5 sm:p-6 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441]"
                   >
                     <div>
                       {loc.title && (
@@ -1075,7 +1081,7 @@ export default function ScrollScrubberCanvas({
               </p>
 
               {/* RSVP Action Card */}
-              <div className="w-full max-w-md p-6 rounded-3xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/40 shadow-[0_15px_40px_rgba(0,0,0,0.9)] flex flex-col gap-3">
+              <div className="w-full max-w-md p-6 rounded-3xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/40 shadow-[0_15px_40px_rgba(0,0,0,0.9)] flex flex-col gap-3">
                 <button
                   onClick={onExploreClick}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#0B0B0B] font-bold text-sm tracking-widest uppercase shadow-[0_0_25px_rgba(217,164,65,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
@@ -1117,7 +1123,7 @@ export default function ScrollScrubberCanvas({
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3 sm:p-4 rounded-2xl bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/40 shadow-[0_10px_25px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center"
+                    className="p-3 sm:p-4 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/40 shadow-[0_10px_25px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center"
                   >
                     <span className="text-xl sm:text-3xl font-mono font-bold text-[#F7E7C4] leading-none">
                       {item.value}
@@ -1140,7 +1146,7 @@ export default function ScrollScrubberCanvas({
                   <button
                     key={idx}
                     onClick={() => setBlessingCount((prev) => prev + 1)}
-                    className="px-3.5 py-2 rounded-full bg-[#070707]/80 backdrop-blur-md border border-[#D9A441]/30 text-xs text-[#F8F3EA]/90 hover:border-[#D9A441] hover:text-[#D9A441] transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.8)] cursor-pointer"
+                    className="px-3.5 py-2 rounded-full bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/30 text-xs text-[#F8F3EA]/90 hover:border-[#D9A441] hover:text-[#D9A441] transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.8)] cursor-pointer"
                   >
                     {blessing}
                   </button>
