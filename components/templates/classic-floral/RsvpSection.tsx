@@ -551,46 +551,11 @@ export default function RsvpSection({
               </div>
             </div>
 
-            {/* Phone & Email Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.subtitleColor}`}>
-                  WhatsApp / Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className={`w-4 h-4 ${theme.inputIconColor} absolute left-4 top-3.5`} />
-                  <input
-                    type="tel"
-                    placeholder="e.g. +1 555 019 2831"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`w-full pl-11 pr-4 py-3 rounded-xl border text-xs font-medium focus:outline-none transition-all ${theme.inputBg}`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.subtitleColor}`}>
-                  Email Address (Optional)
-                </label>
-                <div className="relative">
-                  <Mail className={`w-4 h-4 ${theme.inputIconColor} absolute left-4 top-3.5`} />
-                  <input
-                    type="email"
-                    placeholder="e.g. eleanor@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full pl-11 pr-4 py-3 rounded-xl border text-xs font-medium focus:outline-none transition-all ${theme.inputBg}`}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Plus Ones / Additional Guests */}
             {status === "ATTENDING" && (
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${theme.subtitleColor}`}>
-                  Additional Guests (Plus Ones)
+                  Number of Guests (Including Yourself)
                 </label>
                 <div className="relative">
                   <Users className={`w-4 h-4 ${theme.inputIconColor} absolute left-4 top-3.5`} />
@@ -604,6 +569,12 @@ export default function RsvpSection({
                     <option value={2}>Myself + 2 Guests (3 People)</option>
                     <option value={3}>Myself + 3 Guests (4 People)</option>
                     <option value={4}>Myself + 4 Guests (5 People)</option>
+                    <option value={5}>Myself + 5 Guests (6 People)</option>
+                    <option value={6}>Myself + 6 Guests (7 People)</option>
+                    <option value={7}>Myself + 7 Guests (8 People)</option>
+                    <option value={8}>Myself + 8 Guests (9 People)</option>
+                    <option value={9}>Myself + 9 Guests (10 People)</option>
+                    <option value={10}>Myself + 10+ Guests (Large Family)</option>
                   </select>
                 </div>
               </div>

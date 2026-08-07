@@ -253,41 +253,6 @@ export default function ScrollScrubberTemplate({
                   </div>
                 </div>
 
-                {/* Phone & Email Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-[#D9A441] font-medium mb-1.5">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-[#D9A441]/70 absolute left-4 top-3.5" />
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full bg-[#070707] border border-[#D9A441]/30 rounded-xl pl-11 pr-4 py-3 text-sm text-[#FDF6F3] placeholder-[#F8F3EA]/30 focus:outline-none focus:border-[#D9A441] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-[#D9A441] font-medium mb-1.5">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-[#D9A441]/70 absolute left-4 top-3.5" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="w-full bg-[#070707] border border-[#D9A441]/30 rounded-xl pl-11 pr-4 py-3 text-sm text-[#FDF6F3] placeholder-[#F8F3EA]/30 focus:outline-none focus:border-[#D9A441] transition-colors"
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Attendance Selection */}
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-[#D9A441] font-medium mb-1.5">
@@ -338,6 +303,13 @@ export default function ScrollScrubberTemplate({
                         <option value={1}>2 Persons (+1 Guest)</option>
                         <option value={2}>3 Persons (+2 Guests)</option>
                         <option value={3}>4 Persons (+3 Guests)</option>
+                        <option value={4}>5 Persons (+4 Guests)</option>
+                        <option value={5}>6 Persons (+5 Guests)</option>
+                        <option value={6}>7 Persons (+6 Guests)</option>
+                        <option value={7}>8 Persons (+7 Guests)</option>
+                        <option value={8}>9 Persons (+8 Guests)</option>
+                        <option value={9}>10 Persons (+9 Guests)</option>
+                        <option value={10}>11+ Persons (Large Family)</option>
                       </select>
                     </div>
                   </div>
