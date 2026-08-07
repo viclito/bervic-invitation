@@ -72,9 +72,9 @@ export function checkInvitationLockStatus(invitation: LockCheckParams): LockChec
   if (now >= lockStartTime && !isGraceActive) {
     return {
       isLocked: true,
-      lockReason: `Editing is locked starting 2 hours before your event date (${weddingDate.toLocaleDateString(
+      lockReason: `Editing concluded starting 2 hours before your wedding event date (${weddingDate.toLocaleDateString(
         "en-IN"
-      )}) to protect invitation data and prevent multi-event reuse.`,
+      )}) to preserve live invitation data and guest responses.`,
       hoursUntilLock: 0,
       timeUntilLockText: "Locked (2H Pre-Event)",
       lockStartTime: lockStartTime.toISOString(),
