@@ -35,6 +35,9 @@ import {
   Globe,
   Camera,
   Lock,
+  ExternalLink,
+  MessageSquare,
+  X,
 } from "lucide-react";
 
 function formatMainDateAndTime(dateVal: string, timeVal: string): string {
@@ -181,6 +184,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const [savedSuccessModal, setSavedSuccessModal] = useState(false);
   const [savedInvitationSlug, setSavedInvitationSlug] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showLockModal, setShowLockModal] = useState(false);
 
   // Refs for zero-lag background auto-save without stale closures
   const invitationIdRef = useRef(invitationId);
@@ -572,20 +576,17 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   const isEditingLockedForUser = lockStatus.isLocked && session?.user?.email?.toLowerCase() !== "berglin1998@gmail.com";
 
+  // Auto-pop modal on first load if locked
+  const lockModalShownRef = useRef(false);
+  useEffect(() => {
+    if (isEditingLockedForUser && !lockModalShownRef.current) {
+      setShowLockModal(true);
+      lockModalShownRef.current = true;
+    }
+  }, [isEditingLockedForUser]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
-      {/* Top Lock Banner if Editing is Locked */}
-      {isEditingLockedForUser && (
-        <div className="bg-rose-900 text-rose-100 border-b border-rose-700 px-4 py-3 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-md z-[110] sticky top-0">
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-rose-300 shrink-0" />
-            <span>{lockStatus.lockReason || "Editing for this invitation is locked 2 hours prior to your wedding date to protect invitation data."}</span>
-          </div>
-          <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono text-[10px] shrink-0 uppercase tracking-widest">
-            🔒 LOCKED FOR EVENT
-          </span>
-        </div>
-      )}
       {/* Top Header Controls Bar */}
       <header className="fixed top-0 inset-x-0 z-[100] bg-[#F8F3EA] border-b border-[#D9A441]/40 px-2 sm:px-6 py-2 sm:py-3 shadow-md">
         <div className="max-w-[1450px] mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
@@ -683,13 +684,26 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
             {/* Manual Save Button */}
             <button
               type="button"
-              onClick={handleSave}
+              onClick={isEditingLockedForUser ? () => setShowLockModal(true) : handleSave}
               disabled={saving}
-              className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 text-xs font-extrabold flex items-center gap-1.5 shadow-sm hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all disabled:opacity-50 shrink-0"
-              title="Click to manually save all changes"
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full border-2 text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all shrink-0 ${
+                isEditingLockedForUser
+                  ? "bg-rose-950/20 text-rose-800 border-rose-800/40 hover:bg-rose-900 hover:text-white cursor-pointer"
+                  : "bg-[#EFE7D8] text-[#7A1F2B] border-[#7A1F2B]/40 hover:bg-[#7A1F2B] hover:text-[#F8F3EA]"
+              }`}
+              title={isEditingLockedForUser ? "Editing locked for this wedding date. Click for options." : "Click to manually save all changes"}
             >
-              <Save className="w-3.5 h-3.5 text-[#7A1F2B]" />
-              <span>{saving ? "Saving..." : "Save Changes"}</span>
+              {isEditingLockedForUser ? (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-rose-800" />
+                  <span>Editing Locked</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5 text-[#7A1F2B]" />
+                  <span>{saving ? "Saving..." : "Save Changes"}</span>
+                </>
+              )}
             </button>
 
             {/* Select This Template / Selected in Profile Button */}
@@ -701,7 +715,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
             ) : (
               <button
                 type="button"
-                onClick={handleSave}
+                onClick={isEditingLockedForUser ? () => setShowLockModal(true) : handleSave}
                 disabled={saving}
                 className="btn-maroon px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md disabled:opacity-50 shrink-0 hover:scale-105 transition-all"
               >
@@ -718,15 +732,30 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
         {/* Left Panel: Form Editor */}
         <div
           data-lenis-prevent
-          className={`p-6 sm:p-8 bg-[#F8F3EA] border-r border-[#D9A441]/20 overflow-y-auto max-h-[calc(100vh-80px)] ${
+          className={`p-6 sm:p-8 bg-[#F8F3EA] border-r border-[#D9A441]/20 overflow-y-auto max-h-[calc(100vh-80px)] relative ${
             activeTab === "edit"
               ? "col-span-12 block"
               : activeTab === "split"
               ? "hidden lg:block col-span-12 lg:col-span-5"
               : "hidden"
-          }`}
+          } ${isEditingLockedForUser ? "pointer-events-none opacity-60 select-none" : ""}`}
         >
           <div className="space-y-8 max-w-xl mx-auto pb-16">
+            {isEditingLockedForUser && (
+              <div className="p-4 rounded-2xl bg-[#7A1F2B]/10 border-2 border-[#7A1F2B]/40 text-[#7A1F2B] text-xs font-semibold flex items-center justify-between gap-3 shadow-sm pointer-events-auto">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-[#7A1F2B] shrink-0" />
+                  <span>Form editing has concluded for this event date.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLockModal(true)}
+                  className="px-3 py-1 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-[11px] font-bold shadow hover:bg-[#D9A441] hover:text-[#221C17] transition-all shrink-0"
+                >
+                  Lock Options
+                </button>
+              </div>
+            )}
             {errorMsg && (
               <div className="p-4 rounded-2xl bg-[#7A1F2B]/10 border border-[#7A1F2B]/40 text-[#7A1F2B] text-xs font-semibold flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-[#7A1F2B]" />
@@ -1510,6 +1539,94 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
           onSuccess={() => handleSave()}
           reason={pricingReason}
         />
+      )}
+
+      {/* Polite Celebration / Locked Modal Popup */}
+      {isEditingLockedForUser && showLockModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg bg-[#FAF6F0] border-2 border-[#D9A441] rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.5)] space-y-6 text-center overflow-hidden">
+            {/* Decorative background glow */}
+            <div className="absolute -top-12 -left-12 w-40 h-40 bg-[#D9A441]/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-[#7A1F2B]/20 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Top Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowLockModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all"
+              title="Close modal and view invitation preview"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Glowing Icon Badge */}
+            <div className="w-16 h-16 rounded-full bg-[#7A1F2B]/10 border-2 border-[#D9A441] flex items-center justify-center mx-auto shadow-md">
+              <Sparkles className="w-8 h-8 text-[#D9A441] animate-pulse" />
+            </div>
+
+            {/* Modal Title */}
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#D9A441] block mb-1">
+                💍 Celebration Mode Active
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#7A1F2B]">
+                Editing Period Concluded
+              </h2>
+            </div>
+
+            {/* Message Body */}
+            <p className="text-xs sm:text-sm text-[#221C17]/80 leading-relaxed max-w-md mx-auto">
+              Your special wedding date has arrived! To preserve live invitation details and protect guest RSVP responses, editing for this invitation card has been politely concluded starting 2 hours prior to the event.
+            </p>
+
+            <div className="p-3.5 rounded-2xl bg-[#EFE7D8] border border-[#D9A441]/40 text-xs text-[#7A1F2B] font-medium flex items-center justify-center gap-2">
+              <Lock className="w-4 h-4 shrink-0 text-[#D9A441]" />
+              <span>Need an urgent correction? Contact Admin Support to request temporary unlock access.</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <a
+                href={`${baseUrl}/invitations/${savedInvitationSlug || customSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-1/2 py-3 rounded-full bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#D9A441] hover:text-[#221C17] transition-all shadow-md flex items-center justify-center gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>View Live Invitation</span>
+              </a>
+
+              <a
+                href={`https://wa.me/919042127115?text=${encodeURIComponent(
+                  `Hi Bervic Admin, please unlock editing access for my wedding invitation: ${customSlug}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-1/2 py-3 rounded-full bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition-all shadow-md flex items-center justify-center gap-1.5"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Contact Admin Support</span>
+              </a>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-[#D9A441]/20 pt-4 text-[11px] text-[#221C17]/60">
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="font-bold text-[#7A1F2B] hover:underline"
+              >
+                Return to Dashboard
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLockModal(false)}
+                className="font-bold text-[#221C17]/70 hover:text-[#7A1F2B] hover:underline"
+              >
+                Dismiss &amp; View Card
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
