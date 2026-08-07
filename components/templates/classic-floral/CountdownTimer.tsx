@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Heart } from "lucide-react";
@@ -35,7 +36,7 @@ export default function CountdownTimer({
   });
 
   useEffect(() => {
-    const target = new Date(weddingDate).getTime();
+    const target = getWeddingTargetDate(weddingDate).getTime();
 
     const calculateTime = () => {
       const now = new Date().getTime();

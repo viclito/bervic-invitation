@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -35,7 +36,7 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date("2026-05-13T10:00:00");
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime);
     const interval = setInterval(() => {
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
@@ -46,10 +47,12 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [props.weddingDate, props.weddingTime]);
 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";

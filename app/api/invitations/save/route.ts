@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
+import { checkInvitationLockStatus } from "@/lib/lockCheck";
 
 export async function POST(req: Request) {
   try {
@@ -171,18 +172,39 @@ export async function POST(req: Request) {
     // 3. Template Lock & Slot Quota Checks
     if (invitationId) {
       // Editing existing invitation
-      const existingInv = await prisma.userInvitation.findFirst({
+      const existingInv: any = await prisma.userInvitation.findFirst({
         where: { id: invitationId, userId },
       });
 
-      if (existingInv && existingInv.templateSlug !== templateSlug) {
-        return NextResponse.json(
-          {
-            error: "TEMPLATE_LOCKED",
-            message: `Template locked! This slot is locked to template "${existingInv.templateSlug}" and cannot be changed to another template. You can edit all details (names, dates, photos, venue) of your chosen template as many times as you like!`,
-          },
-          { status: 400 }
-        );
+      if (existingInv) {
+        if (existingInv.templateSlug !== templateSlug) {
+          return NextResponse.json(
+            {
+              error: "TEMPLATE_LOCKED",
+              message: `Template locked! This slot is locked to template "${existingInv.templateSlug}" and cannot be changed to another template. You can edit all details (names, dates, photos, venue) of your chosen template as many times as you like!`,
+            },
+            { status: 400 }
+          );
+        }
+
+        // Anti-Reuse Lock Check: 2 hours prior to wedding event date
+        if (dbUser.role !== "ADMIN") {
+          const lockStatus = checkInvitationLockStatus({
+            createdAt: existingInv.createdAt,
+            weddingDate: existingInv.weddingDate,
+            isUnlockedByAdmin: (existingInv as any).isUnlockedByAdmin,
+          });
+
+          if (lockStatus.isLocked) {
+            return NextResponse.json(
+              {
+                error: "INVITATION_LOCKED_EVENT_EXPIRED",
+                message: lockStatus.lockReason || "Editing for this invitation is locked 2 hours prior to your wedding event date to protect invitation data. Please contact Admin if you require an edit unlock.",
+              },
+              { status: 403 }
+            );
+          }
+        }
       }
     } else {
       // Creating new invitation slot

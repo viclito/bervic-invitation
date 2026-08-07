@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
+import { checkInvitationLockStatus } from "@/lib/lockCheck";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    await ensureDbSchema();
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user || !session.user.email) {
@@ -15,12 +18,16 @@ export async function GET() {
     const isAdmin = currentUserEmail === "berglin1998@gmail.com";
 
     if (!isAdmin) {
-      return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
+      const dbUser: any = await prisma.user.findUnique({
+        where: { email: currentUserEmail },
+        select: { id: true, role: true },
+      });
+      if (!dbUser || dbUser.role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
+      }
     }
 
-    // 1. Fetch Users cleanly WITHOUT requesting unmigrated 'role' column from PostgreSQL
     let rawUsers: any[] = [];
-
     try {
       rawUsers = await prisma.user.findMany({
         select: {
@@ -31,6 +38,7 @@ export async function GET() {
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
+          allowedCinematicCount: true,
           allowedCardsCount: true,
           createdAt: true,
         },
@@ -40,7 +48,7 @@ export async function GET() {
       console.warn("Prisma findMany user query warning, attempting SQL fallback:", err1?.message);
       try {
         rawUsers = await prisma.$queryRawUnsafe(
-          `SELECT "id", "name", "email", "phone", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
+          `SELECT "id", "name", "email", "phone", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCinematicCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
         );
       } catch (err2: any) {
         console.error("Raw SQL user query error:", err2?.message);
@@ -54,19 +62,30 @@ export async function GET() {
     // Guarantee admin account is present in rawUsers list
     const hasAdminInList = rawUsers.some((u: any) => u.email && u.email.toLowerCase() === "berglin1998@gmail.com");
     if (!hasAdminInList) {
-      rawUsers.unshift({
-        id: (session.user as any)?.id || "admin-1",
-        name: session.user.name || "berglin viclito",
-        email: "berglin1998@gmail.com",
-        phone: "+91 90421 27115",
-        plan: "PRO_1799",
-        allowedTemplatesCount: 99,
-        allowedCardsCount: 99,
-        createdAt: new Date(),
-      });
+      try {
+        const adminDbUser = await prisma.user.findUnique({
+          where: { email: "berglin1998@gmail.com" },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            planExpiresAt: true,
+            allowedTemplatesCount: true,
+            allowedCinematicCount: true,
+            allowedCardsCount: true,
+            createdAt: true,
+          },
+        });
+        if (adminDbUser) {
+          rawUsers.unshift(adminDbUser);
+        }
+      } catch (adminErr: any) {
+        console.warn("Admin user fetch warning:", adminErr?.message);
+      }
     }
 
-    // 2. Fetch Invitations, Cards, Subscriptions, Payments
     let invitations: any[] = [];
     let cards: any[] = [];
     let subscriptions: any[] = [];
@@ -74,13 +93,35 @@ export async function GET() {
 
     try {
       invitations = await prisma.userInvitation.findMany({
-        select: { id: true, userId: true },
+        select: {
+          id: true,
+          userId: true,
+          templateSlug: true,
+          partnerOne: true,
+          partnerTwo: true,
+          slug: true,
+          weddingDate: true,
+          isUnlockedByAdmin: true,
+          isLockedByAdmin: true,
+          createdAt: true,
+          user: { select: { name: true, email: true } },
+          _count: { select: { guests: true } },
+        },
+        orderBy: { createdAt: "desc" },
       });
     } catch {
       try {
-        invitations = await prisma.$queryRawUnsafe(`SELECT "id", "userId" FROM "UserInvitation"`);
+        invitations = await prisma.$queryRawUnsafe(
+          `SELECT "id", "userId", "templateSlug", "partnerOne", "partnerTwo", "slug", "weddingDate", "isUnlockedByAdmin", "isLockedByAdmin", "createdAt" FROM "UserInvitation" ORDER BY "createdAt" DESC`
+        );
       } catch {}
     }
+
+    // Enforce lock status
+    invitations = invitations.map((inv) => ({
+      ...inv,
+      isLocked: !checkInvitationLockStatus(inv),
+    }));
 
     try {
       cards = await prisma.userCard.findMany({
@@ -94,21 +135,23 @@ export async function GET() {
 
     try {
       subscriptions = await prisma.subscription.findMany({
-        select: { id: true, userId: true, plan: true, amount: true, status: true, expiresAt: true },
+        select: { id: true, userId: true, plan: true, amount: true, status: true, expiresAt: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
       });
     } catch {
       try {
-        subscriptions = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "plan", "amount", "status", "expiresAt" FROM "Subscription"`);
+        subscriptions = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "plan", "amount", "status", "expiresAt", "createdAt" FROM "Subscription" ORDER BY "createdAt" DESC`);
       } catch {}
     }
 
     try {
       payments = await prisma.payment.findMany({
-        select: { id: true, userId: true, amount: true, status: true, plan: true },
+        select: { id: true, userId: true, amount: true, status: true, plan: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
       });
     } catch {
       try {
-        payments = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "amount", "status", "plan" FROM "Payment"`);
+        payments = await prisma.$queryRawUnsafe(`SELECT "id", "userId", "amount", "status", "plan", "createdAt" FROM "Payment" ORDER BY "createdAt" DESC`);
       } catch {}
     }
 
@@ -164,18 +207,78 @@ export async function GET() {
       if (c?.userId) cardCountMap[c.userId] = (cardCountMap[c.userId] || 0) + 1;
     });
 
-    // Group revenue per user from Payments & Subscriptions
-    const revenueMap: Record<string, number> = {};
-    
-    (payments || []).forEach((p) => {
-      if (p?.userId && p.amount) {
-        revenueMap[p.userId] = Math.max(revenueMap[p.userId] || 0, Number(p.amount) || 0);
+    // Group subscriptions & payments history per user
+    const userSubscriptionsMap: Record<string, any[]> = {};
+    const userPurchasedPlansMap: Record<string, Set<string>> = {};
+
+    (payments || []).forEach((p: any) => {
+      if (p?.userId) {
+        if (!userSubscriptionsMap[p.userId]) userSubscriptionsMap[p.userId] = [];
+        if (!userPurchasedPlansMap[p.userId]) userPurchasedPlansMap[p.userId] = new Set<string>();
+
+        const created = p.createdAt ? new Date(p.createdAt) : new Date();
+        const expires = new Date(created);
+        expires.setDate(expires.getDate() + 30);
+
+        const isSucc = p.status === "SUCCESS" || p.status === "COMPLETED";
+        if (isSucc && p.plan && p.plan !== "NONE") {
+          userPurchasedPlansMap[p.userId].add(p.plan);
+        }
+
+        userSubscriptionsMap[p.userId].push({
+          id: p.id,
+          type: "PAYMENT",
+          plan: p.plan || "UNKNOWN",
+          amount: Number(p.amount) || 0,
+          status: p.status || "UNKNOWN",
+          createdAt: created.toISOString(),
+          expiresAt: expires.toISOString(),
+          isExpired: now > expires,
+        });
       }
     });
 
-    (subscriptions || []).forEach((sub) => {
-      if (sub?.userId && sub.amount) {
-        revenueMap[sub.userId] = Math.max(revenueMap[sub.userId] || 0, Number(sub.amount) || 0);
+    (subscriptions || []).forEach((sub: any) => {
+      if (sub?.userId) {
+        if (!userSubscriptionsMap[sub.userId]) userSubscriptionsMap[sub.userId] = [];
+        if (!userPurchasedPlansMap[sub.userId]) userPurchasedPlansMap[sub.userId] = new Set<string>();
+
+        const created = sub.createdAt ? new Date(sub.createdAt) : new Date();
+        const expires = sub.expiresAt ? new Date(sub.expiresAt) : new Date(created.getTime() + 30 * 86400000);
+
+        if (sub.plan && sub.plan !== "NONE") {
+          userPurchasedPlansMap[sub.userId].add(sub.plan);
+        }
+
+        userSubscriptionsMap[sub.userId].push({
+          id: sub.id,
+          type: "SUBSCRIPTION",
+          plan: sub.plan || "UNKNOWN",
+          amount: Number(sub.amount) || 0,
+          status: sub.status || "ACTIVE",
+          createdAt: created.toISOString(),
+          expiresAt: expires.toISOString(),
+          isExpired: now > expires,
+        });
+      }
+    });
+
+    // Group revenue per user from Payments & Subscriptions (SUM ONLY SUCCESSFUL TRANSACTIONS)
+    const revenueMap: Record<string, number> = {};
+    const processedUserIds = new Set<string>();
+    
+    (payments || []).forEach((p: any) => {
+      if (p?.userId && p.amount && (p.status === "SUCCESS" || p.status === "COMPLETED")) {
+        const amt = Number(p.amount) || 0;
+        revenueMap[p.userId] = (revenueMap[p.userId] || 0) + amt;
+        processedUserIds.add(p.userId);
+      }
+    });
+
+    (subscriptions || []).forEach((sub: any) => {
+      if (sub?.userId && sub.amount && (sub.status === "ACTIVE" || !sub.status) && !processedUserIds.has(sub.userId)) {
+        const amt = Number(sub.amount) || 0;
+        revenueMap[sub.userId] = (revenueMap[sub.userId] || 0) + amt;
       }
     });
 
@@ -196,12 +299,14 @@ export async function GET() {
       const usedTemplatesCount = invCountMap[user.id] || 0;
       const usedCardsCount = cardCountMap[user.id] || 0;
       
-      // Calculate revenue for user
       let userRevenue = revenueMap[user.id] || 0;
       if (userRevenue === 0 && !isUserAdmin) {
-        if (user.plan === "BASIC_599") userRevenue = 599;
-        if (user.plan === "PRO_1799") userRevenue = 1799;
-        if (user.plan === "CINEMATIC_2000") userRevenue = 2000;
+        let basePlanRev = user.plan === "BASIC_599" ? 599 : user.plan === "PRO_1799" ? 1799 : user.plan === "CINEMATIC_2000" ? 2000 : 0;
+        let cinematicPassRev = (user.allowedCinematicCount || 0) * 2000;
+        if (user.plan === "CINEMATIC_2000" && cinematicPassRev > 0) {
+          cinematicPassRev = (user.allowedCinematicCount - 1) * 2000;
+        }
+        userRevenue = basePlanRev + cinematicPassRev;
       }
 
       const hasActiveSub =
@@ -234,6 +339,14 @@ export async function GET() {
         }
       }
 
+      const purchasedPlansSet = userPurchasedPlansMap[user.id] || new Set<string>();
+      if (user.plan && user.plan !== "NONE") {
+        purchasedPlansSet.add(user.plan);
+      }
+      const purchasedPlansList = Array.from(purchasedPlansSet);
+
+      const history = userSubscriptionsMap[user.id] || [];
+
       return {
         id: user.id,
         name: user.name || (email ? email.split("@")[0] : "User"),
@@ -241,6 +354,8 @@ export async function GET() {
         phone: user.phone || "N/A",
         role: isUserAdmin ? "ADMIN" : "USER",
         plan: isUserAdmin ? "CINEMATIC_2000" : user.plan || "NONE",
+        purchasedPlansList: isUserAdmin ? ["CINEMATIC_2000"] : purchasedPlansList,
+        subscriptionsHistory: history,
         planExpiresAt: user.planExpiresAt,
         allowedTemplatesCount: isUserAdmin ? 99 : allowedTemplates,
         allowedCinematicCount: isUserAdmin ? 99 : allowedCinematic,
@@ -250,6 +365,35 @@ export async function GET() {
         totalRevenue: isUserAdmin ? 0 : userRevenue,
         hasActiveSubscription: isUserAdmin ? true : hasActiveSub,
         createdAt: user.createdAt,
+      };
+    });
+
+    // Format invitations detailed analytics for Admin
+    const invitationsList = (invitations || []).map((inv: any) => {
+      const lockData = checkInvitationLockStatus({
+        createdAt: inv.createdAt,
+        weddingDate: inv.weddingDate,
+        isUnlockedByAdmin: inv.isUnlockedByAdmin,
+        isLockedByAdmin: inv.isLockedByAdmin,
+      });
+
+      return {
+        id: inv.id,
+        userId: inv.userId,
+        userName: inv.user?.name || "User",
+        userEmail: inv.user?.email || "N/A",
+        templateSlug: inv.templateSlug,
+        partnerOne: inv.partnerOne || "Bride",
+        partnerTwo: inv.partnerTwo || "Groom",
+        slug: inv.slug,
+        createdAt: inv.createdAt,
+        weddingDate: inv.weddingDate,
+        isUnlockedByAdmin: !!inv.isUnlockedByAdmin,
+        isLockedByAdmin: !!inv.isLockedByAdmin,
+        daysInUse: lockData.daysInUse,
+        isLocked: lockData.isLocked,
+        lockReason: lockData.lockReason || null,
+        guestsCount: inv._count?.guests || 0,
       };
     });
 
@@ -268,6 +412,7 @@ export async function GET() {
       success: true,
       stats: overviewStats,
       users,
+      invitationsList,
     });
   } catch (error: any) {
     console.error("Admin Overview Error:", error);

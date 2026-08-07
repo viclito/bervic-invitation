@@ -7,7 +7,7 @@ import Link from "next/link";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import CloudinaryUploader from "@/components/CloudinaryUploader";
 import PricingCheckoutModal from "@/components/payment/PricingCheckoutModal";
-
+import { checkInvitationLockStatus } from "@/lib/lockCheck";
 
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { sampleBirthdayData } from "@/data/sampleBirthdayData";
@@ -34,6 +34,7 @@ import {
   Video,
   Globe,
   Camera,
+  Lock,
 } from "lucide-react";
 
 function formatMainDateAndTime(dateVal: string, timeVal: string): string {
@@ -165,6 +166,8 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const [isSavedInProfile, setIsSavedInProfile] = useState<boolean>(Boolean(invitationId));
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [invitationCreatedAt, setInvitationCreatedAt] = useState<string | null>(null);
+  const [invitationUnlockedByAdmin, setInvitationUnlockedByAdmin] = useState<boolean>(false);
   const [savedSuccessModal, setSavedSuccessModal] = useState(false);
   const [savedInvitationSlug, setSavedInvitationSlug] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
@@ -255,6 +258,8 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
             if (found) {
               setIsSavedInProfile(true);
               setCustomSlug(found.slug || "");
+              if (found.createdAt) setInvitationCreatedAt(found.createdAt);
+              if (typeof found.isUnlockedByAdmin === "boolean") setInvitationUnlockedByAdmin(found.isUnlockedByAdmin);
               if (found.weddingDate) {
                 const d = new Date(found.weddingDate);
                 if (!isNaN(d.getTime())) {
@@ -548,8 +553,29 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   // Ensure gallery list always has 6 items
   const galleryList = Array.from({ length: 6 }, (_, i) => (formData.galleryImages || [])[i] || DEFAULT_SIX_MOMENTS[i]);
 
+  // Compute Lock Status
+  const lockStatus = checkInvitationLockStatus({
+    createdAt: invitationCreatedAt || new Date(),
+    weddingDate: formData.weddingDate,
+    isUnlockedByAdmin: invitationUnlockedByAdmin,
+  });
+
+  const isEditingLockedForUser = lockStatus.isLocked && session?.user?.email?.toLowerCase() !== "berglin1998@gmail.com";
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
+      {/* Top Lock Banner if Editing is Locked */}
+      {isEditingLockedForUser && (
+        <div className="bg-rose-900 text-rose-100 border-b border-rose-700 px-4 py-3 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 shadow-md z-[110] sticky top-0">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-rose-300 shrink-0" />
+            <span>{lockStatus.lockReason || "Editing for this invitation is locked 2 hours prior to your wedding date to protect invitation data."}</span>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono text-[10px] shrink-0 uppercase tracking-widest">
+            🔒 LOCKED FOR EVENT
+          </span>
+        </div>
+      )}
       {/* Top Header Controls Bar */}
       <header className="fixed top-0 inset-x-0 z-[100] bg-[#F8F3EA] border-b border-[#D9A441]/40 px-2 sm:px-6 py-2 sm:py-3 shadow-md">
         <div className="max-w-[1450px] mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
@@ -1492,17 +1518,17 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
               </button>
             </div>
           </div>
-
-          {/* Pricing Checkout Modal */}
-          {showPricingModal && (
-            <PricingCheckoutModal
-              isOpen={showPricingModal}
-              onClose={() => setShowPricingModal(false)}
-              onSuccess={() => handleSave()}
-              reason={pricingReason}
-            />
-          )}
         </div>
+      )}
+
+      {/* Pricing Checkout Modal */}
+      {showPricingModal && (
+        <PricingCheckoutModal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          onSuccess={() => handleSave()}
+          reason={pricingReason}
+        />
       )}
     </div>
   );

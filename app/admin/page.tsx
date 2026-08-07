@@ -22,7 +22,20 @@ import {
   X,
   Crown,
   ArrowLeft,
+  Lock,
+  Check,
 } from "lucide-react";
+
+interface SubscriptionHistoryItem {
+  id: string;
+  type: string;
+  plan: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  isExpired: boolean;
+}
 
 interface AdminUser {
   id: string;
@@ -31,8 +44,11 @@ interface AdminUser {
   phone: string;
   role: string;
   plan: string;
+  purchasedPlansList?: string[];
+  subscriptionsHistory?: SubscriptionHistoryItem[];
   planExpiresAt: string | null;
   allowedTemplatesCount: number;
+  allowedCinematicCount: number;
   usedTemplatesCount: number;
   allowedCardsCount: number;
   usedCardsCount: number;
@@ -50,6 +66,25 @@ interface OverviewStats {
   totalCardsGenerated: number;
 }
 
+interface AdminInvitation {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  templateSlug: string;
+  partnerOne: string;
+  partnerTwo: string;
+  slug: string;
+  createdAt: string;
+  weddingDate: string;
+  isUnlockedByAdmin: boolean;
+  isLockedByAdmin: boolean;
+  daysInUse: number;
+  isLocked: boolean;
+  lockReason: string | null;
+  guestsCount: number;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -57,6 +92,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [invitationsList, setInvitationsList] = useState<AdminInvitation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [planFilter, setPlanFilter] = useState("ALL");
   const [errorMsg, setErrorMsg] = useState("");
@@ -64,10 +100,12 @@ export default function AdminPage() {
   // Modal State for Granting Extra Quota
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [addTemplateSlots, setAddTemplateSlots] = useState<number>(1);
+  const [addCinematicSlots, setAddCinematicSlots] = useState<number>(1);
   const [addCardCredits, setAddCardCredits] = useState<number>(5);
   const [overridePlan, setOverridePlan] = useState<string>("");
   const [granting, setGranting] = useState(false);
   const [successToast, setSuccessToast] = useState("");
+  const [togglingLockId, setTogglingLockId] = useState<string | null>(null);
 
   const isAdmin = session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
 
@@ -84,10 +122,67 @@ export default function AdminPage() {
 
       setStats(data.stats);
       setUsers(data.users || []);
+      setInvitationsList(data.invitationsList || []);
     } catch (err: any) {
       setErrorMsg(err?.message || "Error loading admin dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUserClick = (userId: string, userEmail: string) => {
+    const foundUser = users.find(
+      (u) => u.id === userId || (u.email && u.email.toLowerCase() === userEmail.toLowerCase())
+    );
+    if (foundUser) {
+      setSelectedUser(foundUser);
+      setAddTemplateSlots(1);
+      setAddCinematicSlots(1);
+      setAddCardCredits(5);
+      setOverridePlan("");
+    }
+  };
+
+  const handleToggleLock = async (invitationId: string, isCurrentlyLocked: boolean) => {
+    setTogglingLockId(invitationId);
+    const targetUnlockState = isCurrentlyLocked; // If currently locked, unlock it; if open, lock it
+    try {
+      const res = await fetch("/api/admin/toggle-lock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitationId,
+          unlockState: targetUnlockState,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to toggle lock status");
+      }
+
+      setInvitationsList((prev) =>
+        prev.map((inv) => {
+          if (inv.id === invitationId) {
+            const newUnlocked = !!data.isUnlockedByAdmin;
+            const newLocked = !!data.isLockedByAdmin;
+            return {
+              ...inv,
+              isUnlockedByAdmin: newUnlocked,
+              isLockedByAdmin: newLocked,
+              isLocked: newLocked ? true : newUnlocked ? false : inv.isLocked,
+            };
+          }
+          return inv;
+        })
+      );
+
+      setSuccessToast(data.message);
+      setTimeout(() => setSuccessToast(""), 3500);
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Error toggling lock state");
+    } finally {
+      setTogglingLockId(null);
     }
   };
 
@@ -109,6 +204,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           userId: selectedUser.id,
           addTemplateSlots,
+          addCinematicSlots,
           addCardCredits,
           overridePlan: overridePlan || undefined,
         }),
@@ -411,27 +507,43 @@ export default function AdminPage() {
                         </div>
                       </td>
 
-                      {/* Active Plan */}
+                      {/* Active Plan(s) & Purchases */}
                       <td className="py-4 px-4">
-                        <span
-                          className={`inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
-                            user.plan === "CINEMATIC_2000"
-                              ? "bg-amber-500/20 text-amber-800 border-amber-500/50"
-                              : user.plan === "PRO_1799"
-                              ? "bg-[#D9A441]/20 text-[#8B6519] border-[#D9A441]/50"
-                              : user.plan === "BASIC_599"
-                              ? "bg-[#7A1F2B]/10 text-[#7A1F2B] border-[#7A1F2B]/30"
-                              : "bg-gray-100 text-gray-600 border-gray-300"
-                          }`}
-                        >
-                          {user.plan === "CINEMATIC_2000"
-                            ? "CINEMATIC ₹2000 Plan"
-                            : user.plan === "PRO_1799"
-                            ? "PRO ₹1799 Plan"
-                            : user.plan === "BASIC_599"
-                            ? "BASIC ₹599 Plan"
-                            : "Free User"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {(!user.purchasedPlansList || user.purchasedPlansList.length === 0) ? (
+                            <span className="inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border bg-gray-100 text-gray-600 border-gray-300">
+                              Free User
+                            </span>
+                          ) : (
+                            user.purchasedPlansList.map((planKey) => (
+                              <span
+                                key={planKey}
+                                className={`inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
+                                  planKey === "CINEMATIC_2000"
+                                    ? "bg-amber-500/20 text-amber-900 border-amber-500/50 font-bold"
+                                    : planKey === "PRO_1799"
+                                    ? "bg-[#D9A441]/20 text-[#8B6519] border-[#D9A441]/50 font-bold"
+                                    : planKey === "BASIC_599"
+                                    ? "bg-[#7A1F2B]/10 text-[#7A1F2B] border-[#7A1F2B]/30 font-bold"
+                                    : "bg-gray-100 text-gray-600 border-gray-300"
+                                }`}
+                              >
+                                {planKey === "CINEMATIC_2000"
+                                  ? "CINEMATIC ₹2000"
+                                  : planKey === "PRO_1799"
+                                  ? "PRO ₹1799"
+                                  : planKey === "BASIC_599"
+                                  ? "BASIC ₹599"
+                                  : "Free User"}
+                              </span>
+                            ))
+                          )}
+                          {user.subscriptionsHistory && user.subscriptionsHistory.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#EFE7D8] text-[#8B6519] text-[9px] font-bold font-mono">
+                              {user.subscriptionsHistory.length} Purchase{user.subscriptionsHistory.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Template Slots */}
@@ -486,68 +598,391 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Modal: Grant Quota Drawer */}
+        {/* SECTION 2: INVITATION ANTI-REUSE & EDIT UNLOCK CONTROLS */}
+        <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 sm:p-8 card-shadow mt-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-5 h-5 text-[#7A1F2B]" />
+                <h2 className="text-xl font-serif font-bold text-[#221C17]">
+                  Invitation Anti-Reuse &amp; Edit Unlock Controls
+                </h2>
+              </div>
+              <p className="text-xs text-[#221C17]/70">
+                Summary of active user invitation websites. Click any user to view all their created templates and manage individual 2-hour pre-event edit locks.
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-xs font-bold shrink-0">
+              {invitationsList.length} Active Invitation Websites Built
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-[#D9A441]/20 bg-white">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#EFE7D8] text-[#7A1F2B] text-xs font-serif uppercase tracking-wider border-b border-[#D9A441]/30">
+                  <th className="py-3.5 px-4 font-bold">Owner User</th>
+                  <th className="py-3.5 px-4 font-bold">Templates Built</th>
+                  <th className="py-3.5 px-4 font-bold">Total Guests &amp; RSVPs</th>
+                  <th className="py-3.5 px-4 font-bold">Lock Status Overview</th>
+                  <th className="py-3.5 px-4 text-right">Admin Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9A441]/20 text-xs">
+                {users.filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email)).length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                      No user invitations created yet.
+                    </td>
+                  </tr>
+                ) : (
+                  users
+                    .filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email))
+                    .map((user) => {
+                      const userInvs = invitationsList.filter(
+                        (inv) => inv.userId === user.id || inv.userEmail.toLowerCase() === user.email.toLowerCase()
+                      );
+                      const totalGuests = userInvs.reduce((acc, inv) => acc + (inv.guestsCount || 0), 0);
+                      const lockedInvsCount = userInvs.filter((inv) => (inv.isLocked && !inv.isUnlockedByAdmin) || inv.isLockedByAdmin).length;
+
+                      return (
+                        <tr key={user.id} className="hover:bg-[#EFE7D8]/40 transition-colors">
+                          {/* 1. Owner User (Clickable) */}
+                          <td className="py-4 px-4">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setAddTemplateSlots(1);
+                                setAddCardCredits(5);
+                                setOverridePlan("");
+                              }}
+                              className="text-left group focus:outline-none"
+                              title="Click to view all created templates & manage lock status"
+                            >
+                              <div className="font-bold text-[#7A1F2B] text-sm group-hover:underline flex items-center gap-1">
+                                <span>{user.name}</span>
+                                <Zap className="w-3.5 h-3.5 text-[#D9A441]" />
+                              </div>
+                              <div className="text-[11px] text-[#221C17]/60 font-mono">{user.email}</div>
+                            </button>
+                          </td>
+
+                          {/* 2. Templates Built Summary */}
+                          <td className="py-4 px-4">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2.5 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] font-bold text-xs">
+                                {userInvs.length} Invitation{userInvs.length !== 1 ? "s" : ""} Built
+                              </span>
+                              {userInvs.map((inv) => (
+                                <span key={inv.id} className="px-2 py-0.5 rounded-md bg-[#EFE7D8] text-[#8B6519] text-[10px] font-mono font-bold">
+                                  {inv.templateSlug}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+
+                          {/* 3. Total Guests & RSVPs */}
+                          <td className="py-4 px-4 font-bold text-emerald-700">
+                            {totalGuests} Total Guests Attached
+                          </td>
+
+                          {/* 4. Lock Status Overview */}
+                          <td className="py-4 px-4">
+                            {lockedInvsCount > 0 ? (
+                              <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
+                                <Lock className="w-3 h-3 text-rose-600" />
+                                {lockedInvsCount} Locked / {userInvs.length} Total
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                All {userInvs.length} Active (Editable)
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 5. Admin Action Button */}
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setAddTemplateSlots(1);
+                                setAddCardCredits(5);
+                                setOverridePlan("");
+                              }}
+                              className="btn-maroon px-3.5 py-1.5 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm hover:scale-105 transition-all"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                              <span>Manage Templates &amp; Locks</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Modal: Grant Quota Drawer & Template Lock Controls */}
         {selectedUser && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#FAF7F2] border-2 border-[#D9A441]/50 rounded-3xl p-6 sm:p-8 max-w-md w-full card-shadow relative space-y-5 animate-scale-up">
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div data-lenis-prevent className="bg-[#FAF7F2] border-2 border-[#D9A441]/50 rounded-3xl p-6 sm:p-8 max-w-3xl sm:max-w-4xl w-full card-shadow relative space-y-6 animate-scale-up max-h-[88vh] overflow-y-auto pr-3 sm:pr-6">
               <button
                 onClick={() => setSelectedUser(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] hover:bg-[#7A1F2B]/10 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] hover:bg-[#7A1F2B]/10 transition-colors shadow-sm"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
 
               <div className="flex items-center gap-3 border-b border-[#D9A441]/20 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md">
-                  <Zap className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md shrink-0">
+                  <Zap className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#221C17]">Admin Quota Authority Top-Up</h3>
-                  <p className="text-xs text-[#221C17]/70 font-semibold">{selectedUser.name} ({selectedUser.email})</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-[#221C17]">User Authority &amp; Template Lock Manager</h3>
+                  <p className="text-xs sm:text-sm text-[#221C17]/70 font-semibold">{selectedUser.name} ({selectedUser.email})</p>
                 </div>
               </div>
 
+              {/* SECTION A: CREATED INVITATION TEMPLATES & LOCK CONTROLS FOR THIS USER */}
+              <div className="bg-[#EFE7D8]/60 rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#7A1F2B]" />
+                    Created Invitation Websites ({invitationsList.filter((inv) => inv.userId === selectedUser.id || inv.userEmail.toLowerCase() === selectedUser.email.toLowerCase()).length})
+                  </h4>
+                </div>
+
+                {invitationsList.filter((inv) => inv.userId === selectedUser.id || inv.userEmail.toLowerCase() === selectedUser.email.toLowerCase()).length === 0 ? (
+                  <p className="text-xs text-[#221C17]/60 italic p-3 bg-white/60 rounded-xl">
+                    This user has not created any invitation websites yet.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {invitationsList
+                      .filter((inv) => inv.userId === selectedUser.id || inv.userEmail.toLowerCase() === selectedUser.email.toLowerCase())
+                      .map((inv) => {
+                        const isCurrentlyLocked = (inv.isLocked && !inv.isUnlockedByAdmin) || inv.isLockedByAdmin;
+
+                        return (
+                          <div key={inv.id} className="p-4 bg-white rounded-2xl border border-[#D9A441]/30 grid grid-cols-1 md:grid-cols-12 gap-3 items-center shadow-sm hover:border-[#7A1F2B]/40 transition-all">
+                            {/* Left Info: Bride & Groom, Slug Badge, Public Link */}
+                            <div className="md:col-span-7 space-y-1">
+                              <div className="font-bold text-sm text-[#221C17]">
+                                {inv.partnerOne} &amp; {inv.partnerTwo}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-2 py-0.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] text-[10px] font-mono font-bold">
+                                  {inv.templateSlug}
+                                </span>
+                                <a
+                                  href={`/invitations/${inv.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] text-[#7A1F2B] font-mono underline hover:text-[#D9A441] truncate max-w-[180px] sm:max-w-[220px]"
+                                >
+                                  /{inv.slug}
+                                </a>
+                                <span className="text-[11px] text-[#221C17]/60 font-mono">
+                                  • {inv.daysInUse} Days Active
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Right Info: Status Badge & Action Button */}
+                            <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-2 flex-wrap">
+                              {inv.isUnlockedByAdmin ? (
+                                <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                  <Sparkles className="w-3 h-3 text-amber-600" />
+                                  Admin Unlocked
+                                </span>
+                              ) : isCurrentlyLocked ? (
+                                <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                  <Lock className="w-3 h-3 text-rose-600" />
+                                  {inv.isLockedByAdmin ? "Admin Locked" : "Locked (2H Pre-Event)"}
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  Active (Editable)
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={togglingLockId === inv.id}
+                                onClick={() => handleToggleLock(inv.id, isCurrentlyLocked)}
+                                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-sm shrink-0 ${
+                                  isCurrentlyLocked
+                                    ? "bg-[#7A1F2B] text-[#D9A441] hover:bg-[#5C1720]"
+                                    : "bg-rose-700 text-white hover:bg-rose-800"
+                                }`}
+                              >
+                                {togglingLockId === inv.id ? (
+                                  <span className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
+                                ) : isCurrentlyLocked ? (
+                                  <>
+                                    <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                                    <span>Unlock Edit Access</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="w-3.5 h-3.5" />
+                                    <span>Lock Edit Access</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION B: FULL SUBSCRIPTION & TRANSACTION HISTORY */}
+              <div className="bg-[#EFE7D8]/60 rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-[#7A1F2B]" />
+                    Subscription &amp; Transaction History ({selectedUser.subscriptionsHistory?.length || 0} Purchase{selectedUser.subscriptionsHistory?.length !== 1 ? "s" : ""})
+                  </h4>
+                </div>
+
+                {(!selectedUser.subscriptionsHistory || selectedUser.subscriptionsHistory.length === 0) ? (
+                  <p className="text-xs text-[#221C17]/60 italic p-3 bg-white/60 rounded-xl">
+                    No recorded subscription transactions for this user.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {selectedUser.subscriptionsHistory.map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="p-3.5 bg-white rounded-2xl border border-[#D9A441]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:border-[#7A1F2B]/40 transition-all"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs sm:text-sm text-[#221C17]">
+                              {sub.plan === "CINEMATIC_2000"
+                                ? "CINEMATIC ₹2000 Plan"
+                                : sub.plan === "PRO_1799"
+                                ? "PRO ₹1799 Plan"
+                                : sub.plan === "BASIC_599"
+                                ? "BASIC ₹599 Plan"
+                                : sub.plan}
+                            </span>
+                            <strong className="text-xs sm:text-sm font-extrabold text-[#5B8C69]">₹{sub.amount.toLocaleString()}</strong>
+                          </div>
+                          <div className="text-[11px] text-[#221C17]/60 font-mono">
+                            Purchased On: {new Date(sub.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                          {sub.status === "SUCCESS" || sub.status === "COMPLETED" || sub.status === "ACTIVE" ? (
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              SUCCESS
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] uppercase tracking-wider">
+                              {sub.status}
+                            </span>
+                          )}
+
+                          {sub.isExpired ? (
+                            <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider">
+                              🔴 Finished ({new Date(sub.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })})
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider">
+                              🟢 Active (Valid to {new Date(sub.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION C: QUOTA TOP-UP & PLAN OVERRIDE */}
               <form onSubmit={handleGrantSubmit} className="space-y-4">
-                {/* Current Status */}
-                <div className="p-3 bg-[#EFE7D8]/70 rounded-2xl border border-[#D9A441]/30 grid grid-cols-2 gap-2 text-xs">
+                <div className="p-4 bg-[#EFE7D8]/70 rounded-2xl border border-[#D9A441]/30 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-[10px] text-[#221C17]/60 block font-semibold">Current Templates Allowed:</span>
-                    <strong className="text-[#7A1F2B] font-bold">{selectedUser.allowedTemplatesCount} Slots</strong>
+                    <span className="text-[11px] text-[#221C17]/60 block font-semibold">Current Standard Templates Allowed:</span>
+                    <strong className="text-[#7A1F2B] font-bold text-sm">{selectedUser.allowedTemplatesCount} Slots</strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#221C17]/60 block font-semibold">Current Cards Allowed:</span>
-                    <strong className="text-[#8B6519] font-bold">{selectedUser.allowedCardsCount} Credits</strong>
+                    <span className="text-[11px] text-[#221C17]/60 block font-semibold">Current Premium Cinematic Passes Allowed:</span>
+                    <strong className="text-amber-800 font-bold text-sm">{selectedUser.allowedCinematicCount} Passes</strong>
                   </div>
                 </div>
 
-                {/* Add Template Slots */}
-                <div>
-                  <label className="block text-xs font-bold text-[#7A1F2B] mb-1.5">
-                    📜 Add Extra Wedding Template Slots
-                  </label>
-                  <div className="flex items-center gap-2 mb-2">
-                    {[1, 3, 5].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setAddTemplateSlots(preset)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                          addTemplateSlots === preset
-                            ? "bg-[#7A1F2B] text-[#F8F3EA] border-[#7A1F2B]"
-                            : "bg-[#EFE7D8] text-[#221C17] border-[#D9A441]/40 hover:bg-[#D9A441]/20"
-                        }`}
-                      >
-                        +{preset} Slot{preset > 1 ? "s" : ""}
-                      </button>
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Add Standard Template Slots */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#7A1F2B] mb-1.5">
+                      📜 Add Extra Standard Template Slots
+                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      {[1, 3, 5].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setAddTemplateSlots(preset)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                            addTemplateSlots === preset
+                              ? "bg-[#7A1F2B] text-[#F8F3EA] border-[#7A1F2B]"
+                              : "bg-[#EFE7D8] text-[#221C17] border-[#D9A441]/40 hover:bg-[#D9A441]/20"
+                          }`}
+                        >
+                          +{preset} Slot{preset > 1 ? "s" : ""}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="number"
+                      value={addTemplateSlots}
+                      onChange={(e) => setAddTemplateSlots(parseInt(e.target.value, 10) || 0)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-bold text-[#221C17] focus:outline-none focus:border-[#7A1F2B]"
+                      placeholder="Enter number of extra template slots to add"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    value={addTemplateSlots}
-                    onChange={(e) => setAddTemplateSlots(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-bold text-[#221C17] focus:outline-none focus:border-[#7A1F2B]"
-                    placeholder="Enter number of extra template slots to add"
-                  />
+
+                  {/* Add Premium Cinematic Pass Slots */}
+                  <div>
+                    <label className="block text-xs font-bold text-amber-900 mb-1.5">
+                      👑 Add Extra Premium Wedding Template Slots (₹2000 Cinematic Passes)
+                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      {[1, 2, 3].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setAddCinematicSlots(preset)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                            addCinematicSlots === preset
+                              ? "bg-amber-800 text-white border-amber-800"
+                              : "bg-[#EFE7D8] text-amber-900 border-amber-300 hover:bg-amber-100"
+                          }`}
+                        >
+                          +{preset} Pass{preset > 1 ? "es" : ""}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="number"
+                      value={addCinematicSlots}
+                      onChange={(e) => setAddCinematicSlots(parseInt(e.target.value, 10) || 0)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-400 text-xs font-bold text-amber-900 focus:outline-none focus:border-amber-700"
+                      placeholder="Enter number of extra cinematic passes to add"
+                    />
+                  </div>
                 </div>
 
                 {/* Add Card Credits */}
@@ -605,7 +1040,7 @@ export default function AdminPage() {
                     onClick={() => setSelectedUser(null)}
                     className="w-1/2 py-3 rounded-full border border-[#D9A441] text-xs font-bold text-[#221C17] hover:bg-[#EFE7D8]"
                   >
-                    Cancel
+                    Close
                   </button>
                   <button
                     type="submit"
@@ -613,7 +1048,7 @@ export default function AdminPage() {
                     className="btn-maroon w-1/2 py-3 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
                   >
                     <Zap className="w-4 h-4 text-[#D9A441]" />
-                    <span>{granting ? "Granting..." : "Grant Authority Quota"}</span>
+                    <span>{granting ? "Granting..." : "Grant Quota & Save"}</span>
                   </button>
                 </div>
               </form>

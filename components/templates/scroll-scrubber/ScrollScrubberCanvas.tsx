@@ -13,6 +13,8 @@ import {
   Phone,
 } from "lucide-react";
 
+import { getWeddingTargetDate } from "@/lib/dateUtils";
+
 const TOTAL_SCENE1_FRAMES = 240;
 const TOTAL_SCENE2_FRAMES = 240;
 const TOTAL_FRAMES = TOTAL_SCENE1_FRAMES + TOTAL_SCENE2_FRAMES;
@@ -153,6 +155,45 @@ export default function ScrollScrubberCanvas({
   const rafIdRef = useRef<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [blessingCount, setBlessingCount] = useState(148);
+
+  // Live Wedding Countdown Calculation
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isPassed: boolean;
+  }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isPassed: false,
+  });
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const targetDate = getWeddingTargetDate(weddingDate, weddingTime);
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isPassed: true });
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds, isPassed: false });
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [weddingDate, weddingTime]);
 
   // Draw frame with object-fit: cover matrix calculation
   const drawFrame = useCallback((frameIndex: number) => {
@@ -1155,10 +1196,10 @@ export default function ScrollScrubberCanvas({
               {/* Live Wedding Countdown Pill Cards */}
               <div className="grid grid-cols-4 gap-2.5 sm:gap-4 max-w-md w-full mb-6">
                 {[
-                  { label: "DAYS", value: "134" },
-                  { label: "HOURS", value: "18" },
-                  { label: "MINS", value: "42" },
-                  { label: "SECS", value: "09" },
+                  { label: "DAYS", value: String(timeLeft.days).padStart(2, "0") },
+                  { label: "HOURS", value: String(timeLeft.hours).padStart(2, "0") },
+                  { label: "MINS", value: String(timeLeft.minutes).padStart(2, "0") },
+                  { label: "SECS", value: String(timeLeft.seconds).padStart(2, "0") },
                 ].map((item, idx) => (
                   <div
                     key={idx}

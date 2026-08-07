@@ -86,6 +86,8 @@ model UserInvitation {
   contactAddress    String
   socialLinksJson   String   @db.Text
   slug              String   @unique
+  isUnlockedByAdmin Boolean  @default(false)
+  isLockedByAdmin   Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

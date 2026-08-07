@@ -25,6 +25,12 @@ export async function ensureDbSchema() {
     await prisma.$executeRawUnsafe(
       `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "allowedCardsCount" INTEGER DEFAULT 0;`
     );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "UserInvitation" ADD COLUMN IF NOT EXISTS "isUnlockedByAdmin" BOOLEAN DEFAULT false;`
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "UserInvitation" ADD COLUMN IF NOT EXISTS "isLockedByAdmin" BOOLEAN DEFAULT false;`
+    );
     schemaEnsured = true;
   } catch (err: any) {
     console.warn("Db Schema Auto-Migration warning:", err?.message);

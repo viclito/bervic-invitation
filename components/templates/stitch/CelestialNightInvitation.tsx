@@ -20,6 +20,8 @@ import {
   Heart,
 } from "lucide-react";
 
+import { getWeddingTargetDate } from "@/lib/dateUtils";
+
 export default function CelestialNightInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -39,7 +41,7 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date("2026-05-13T10:00:00");
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime);
     const interval = setInterval(() => {
       const now = new Date();
       const difference = targetDate.getTime() - now.getTime();
@@ -50,10 +52,12 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [props.weddingDate, props.weddingTime]);
 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";

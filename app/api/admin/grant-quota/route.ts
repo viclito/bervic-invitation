@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, addTemplateSlots, addCardCredits, overridePlan } = body;
+    const { userId, addTemplateSlots, addCinematicSlots, addCardCredits, overridePlan } = body;
 
     if (!userId) {
       return NextResponse.json({ error: "Target userId is required" }, { status: 400 });
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
           email: true,
           plan: true,
           allowedTemplatesCount: true,
+          allowedCinematicCount: true,
           allowedCardsCount: true,
         },
       });
@@ -56,9 +57,11 @@ export async function POST(req: Request) {
     }
 
     const templateInc = parseInt(addTemplateSlots, 10) || 0;
+    const cinematicInc = parseInt(addCinematicSlots, 10) || 0;
     const cardInc = parseInt(addCardCredits, 10) || 0;
 
     let currentTemplates = targetUser.allowedTemplatesCount || 0;
+    let currentCinematic = targetUser.allowedCinematicCount || 0;
     let currentCards = targetUser.allowedCardsCount || 0;
 
     const targetPlan = overridePlan || targetUser.plan;
@@ -66,23 +69,29 @@ export async function POST(req: Request) {
     // Normalize legacy 99 / 100 mock values to actual plan base before adding granted quota
     if (targetPlan === "BASIC_599") {
       if (currentTemplates >= 99) currentTemplates = 1;
+      if (currentCinematic >= 99) currentCinematic = 0;
       if (currentCards >= 99) currentCards = 2;
     } else if (targetPlan === "PRO_1799") {
       if (currentTemplates >= 99) currentTemplates = 4;
+      if (currentCinematic >= 99) currentCinematic = 0;
       if (currentCards >= 99) currentCards = 6;
     } else if (targetPlan === "CINEMATIC_2000") {
       if (currentTemplates >= 99) currentTemplates = 1;
+      if (currentCinematic >= 99) currentCinematic = 1;
       if (currentCards >= 99) currentCards = 10;
     } else {
       if (currentTemplates >= 99) currentTemplates = 0;
+      if (currentCinematic >= 99) currentCinematic = 0;
       if (currentCards >= 99) currentCards = 0;
     }
 
     const newTemplateQuota = Math.max(0, currentTemplates + templateInc);
+    const newCinematicQuota = Math.max(0, currentCinematic + cinematicInc);
     const newCardQuota = Math.max(0, currentCards + cardInc);
 
     const updateData: any = {
       allowedTemplatesCount: newTemplateQuota,
+      allowedCinematicCount: newCinematicQuota,
       allowedCardsCount: newCardQuota,
     };
 
@@ -104,19 +113,21 @@ export async function POST(req: Request) {
         email: true,
         plan: true,
         allowedTemplatesCount: true,
+        allowedCinematicCount: true,
         allowedCardsCount: true,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Successfully granted +${templateInc} template slots and +${cardInc} card credits to ${updatedUser.name || updatedUser.email}! Total: ${updatedUser.allowedTemplatesCount} template slots & ${updatedUser.allowedCardsCount} card credits.`,
+      message: `Successfully granted +${templateInc} standard templates, +${cinematicInc} cinematic passes, and +${cardInc} card credits to ${updatedUser.name || updatedUser.email}! Total: ${updatedUser.allowedTemplatesCount} standard, ${updatedUser.allowedCinematicCount} cinematic, & ${updatedUser.allowedCardsCount} cards.`,
       user: {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
         plan: updatedUser.plan,
         allowedTemplatesCount: updatedUser.allowedTemplatesCount,
+        allowedCinematicCount: updatedUser.allowedCinematicCount,
         allowedCardsCount: updatedUser.allowedCardsCount,
       },
     });
