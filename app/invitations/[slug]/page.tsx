@@ -7,6 +7,9 @@ import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;

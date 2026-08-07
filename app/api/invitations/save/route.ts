@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
@@ -350,6 +351,15 @@ export async function POST(req: Request) {
         },
       });
     }
+
+    if (slugToSave) {
+      revalidatePath(`/invitations/${slugToSave}`);
+    }
+    if (invitation?.slug) {
+      revalidatePath(`/invitations/${invitation.slug}`);
+    }
+    revalidatePath(`/templates/customize/${templateSlug}`);
+    revalidatePath("/dashboard");
 
     return NextResponse.json({
       message: "Invitation saved successfully!",
