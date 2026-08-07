@@ -82,6 +82,8 @@ interface AdminInvitation {
   daysInUse: number;
   isLocked: boolean;
   lockReason: string | null;
+  timeUntilLockText?: string | null;
+  lockStartTime?: string | null;
   guestsCount: number;
 }
 
@@ -806,10 +808,17 @@ export default function AdminPage() {
                                   {inv.isLockedByAdmin ? "Admin Locked" : "Locked (2H Pre-Event)"}
                                 </span>
                               ) : (
-                                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  Active (Editable)
-                                </span>
+                                <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
+                                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    Active (Editable)
+                                  </span>
+                                  {inv.timeUntilLockText && (
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 border border-amber-400/40 text-[9.5px] font-bold font-mono flex items-center gap-1 shadow-sm">
+                                      ⏳ {inv.timeUntilLockText}
+                                    </span>
+                                  )}
+                                </div>
                               )}
 
                               <button

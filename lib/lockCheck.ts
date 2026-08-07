@@ -9,6 +9,8 @@ export interface LockCheckResult {
   isLocked: boolean;
   lockReason?: string;
   hoursUntilLock?: number;
+  timeUntilLockText?: string;
+  lockStartTime?: string;
   daysInUse: number;
 }
 
@@ -33,46 +35,82 @@ export function checkInvitationLockStatus(invitation: LockCheckParams): LockChec
 
   // Admin explicit override: unlock
   if (invitation.isUnlockedByAdmin) {
-    return { isLocked: false, daysInUse };
+    return {
+      isLocked: false,
+      daysInUse,
+      timeUntilLockText: "Admin Unlocked (Unlimited)",
+    };
   }
 
   // Admin explicit manual lock
   if (invitation.isLockedByAdmin) {
     return {
       isLocked: true,
-      lockReason: "Editing has been manually locked for this invitation by Admin. Contact Admin to request an unlock.",
+      lockReason: "Editing has been manually locked for this invitation by Admin.",
       daysInUse,
+      timeUntilLockText: "Admin Locked",
     };
   }
 
   if (!weddingDate || isNaN(weddingDate.getTime()) || isNaN(createdAt.getTime())) {
-    return { isLocked: false, daysInUse };
-  }
-
-  // Grace Period Protection: If created within the last 24 hours, allow editing unconditionally
-  const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-  if (hoursSinceCreation < 24) {
-    return { isLocked: false, daysInUse };
+    return {
+      isLocked: false,
+      daysInUse,
+      timeUntilLockText: "Wedding Date Not Set",
+    };
   }
 
   // 2 Hours Before Event Lock Trigger
   const lockStartTime = new Date(weddingDate.getTime() - 2 * 60 * 60 * 1000);
-  const hoursUntilLock = (lockStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const msUntilLock = lockStartTime.getTime() - now.getTime();
+  const hoursUntilLock = msUntilLock / (1000 * 60 * 60);
 
-  if (now >= lockStartTime) {
+  // Grace Period Protection: If created within the last 24 hours, allow editing unconditionally
+  const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+  const isGraceActive = hoursSinceCreation < 24;
+
+  if (now >= lockStartTime && !isGraceActive) {
     return {
       isLocked: true,
       lockReason: `Editing is locked starting 2 hours before your event date (${weddingDate.toLocaleDateString(
         "en-IN"
-      )}) to protect invitation data and prevent multi-event reuse. Contact Admin to request an unlock.`,
+      )}) to protect invitation data and prevent multi-event reuse.`,
       hoursUntilLock: 0,
+      timeUntilLockText: "Locked (2H Pre-Event)",
+      lockStartTime: lockStartTime.toISOString(),
       daysInUse,
     };
+  }
+
+  // Format human-friendly time remaining until lock
+  let remainingText = "";
+  if (msUntilLock > 0) {
+    const totalMins = Math.floor(msUntilLock / (1000 * 60));
+    const d = Math.floor(totalMins / (60 * 24));
+    const h = Math.floor((totalMins % (60 * 24)) / 60);
+    const m = totalMins % 60;
+
+    if (d > 0) {
+      remainingText = `Locks in ${d}d ${h}h`;
+    } else if (h > 0) {
+      remainingText = `Locks in ${h}h ${m}m`;
+    } else {
+      remainingText = `Locks in ${m} mins`;
+    }
+  } else {
+    // If lockStartTime has passed but 24h creation grace period is active:
+    const graceMsRemaining = (24 - hoursSinceCreation) * 3600 * 1000;
+    const graceMins = Math.floor(graceMsRemaining / (1000 * 60));
+    const gh = Math.floor(graceMins / 60);
+    const gm = graceMins % 60;
+    remainingText = `Creation Grace Active (Locks in ${gh}h ${gm}m)`;
   }
 
   return {
     isLocked: false,
     hoursUntilLock: Math.max(0, Math.round(hoursUntilLock)),
+    timeUntilLockText: remainingText,
+    lockStartTime: lockStartTime.toISOString(),
     daysInUse,
   };
 }

@@ -393,6 +393,8 @@ export async function GET(req: Request) {
         daysInUse: lockData.daysInUse,
         isLocked: lockData.isLocked,
         lockReason: lockData.lockReason || null,
+        timeUntilLockText: lockData.timeUntilLockText || null,
+        lockStartTime: lockData.lockStartTime || null,
         guestsCount: inv._count?.guests || 0,
       };
     });

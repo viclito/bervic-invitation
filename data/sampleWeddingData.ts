@@ -10,6 +10,7 @@ export const sampleWeddingData: TemplateClassicFloralProps = {
   weddingTime: "Saturday, 28th November 2026 at 10:30 AM IST",
   heroImage: "/images/templates/floral-hero.jpg",
   coupleImage: "/images/templates/couple-photo.jpg",
+  partnerTwoImage: "/images/templates/groom-bride-2.jpg",
   venuePlace: "Your Venue Name, Your City, State",
   events: [
     {
