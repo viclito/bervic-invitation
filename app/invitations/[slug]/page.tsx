@@ -70,6 +70,8 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
   }
 
   const props = {
+    invitationId: invitation.id,
+    slug: invitation.slug,
     templateSlug: invitation.templateSlug,
     coupleInitials: invitation.coupleInitials,
     partnerOne: invitation.partnerOne,

@@ -106,6 +106,12 @@ function formatTimelineTime(timeVal: string): string {
   return `${formattedHours}:${parts[1]} ${ampm}`;
 }
 
+const DEFAULT_THREE_MOMENTS = [
+  "/images/templates/gallery-1.jpg",
+  "/images/templates/gallery-2.jpg",
+  "/images/templates/gallery-3.jpg",
+];
+
 const DEFAULT_SIX_MOMENTS = [
   "/images/templates/gallery-1.jpg",
   "/images/templates/gallery-2.jpg",
@@ -127,6 +133,10 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   const showEvents = targetTemplate?.hasEvents !== false;
   const showDayTimeline = targetTemplate?.hasDayTimeline !== false;
   const showLoveStory = targetTemplate?.hasLoveStory !== false;
+
+  const maxGalleryPhotos = (templateSlug === "scroll-scrubber" || templateSlug === "premium-scroll") ? 3 : 6;
+  const defaultGallery = maxGalleryPhotos === 3 ? DEFAULT_THREE_MOMENTS : DEFAULT_SIX_MOMENTS;
+
   const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
 
   // Auth Protection
@@ -139,7 +149,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   // Form State
   const [formData, setFormData] = useState<TemplateClassicFloralProps>({
     ...defaultSampleData,
-    galleryImages: defaultSampleData.galleryImages?.slice(0, 6) || DEFAULT_SIX_MOMENTS,
+    galleryImages: defaultGallery,
   });
 
   const [baseUrl, setBaseUrl] = useState("https://bervic-invitation-six.vercel.app");
@@ -266,8 +276,8 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   setDatePickerVal(d.toISOString().split("T")[0]);
                 }
               }
-              const loadedGallery = found.galleryImagesJson ? JSON.parse(found.galleryImagesJson) : DEFAULT_SIX_MOMENTS;
-              const activeGallery = Array.isArray(loadedGallery) && loadedGallery.length > 0 ? loadedGallery : DEFAULT_SIX_MOMENTS;
+              const loadedGallery = found.galleryImagesJson ? JSON.parse(found.galleryImagesJson) : defaultGallery;
+              const activeGallery = Array.isArray(loadedGallery) && loadedGallery.length > 0 ? loadedGallery.slice(0, maxGalleryPhotos) : defaultGallery;
 
               setFormData({
                 coupleInitials: found.coupleInitials || "Y | P",
@@ -277,9 +287,9 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 inviteLine: found.inviteLine || "invite you to celebrate their wedding",
                 weddingDate: found.weddingDate || "2026-11-28T10:30:00.000Z",
                 weddingTime: found.weddingTime || "Saturday, 28th November 2026 at 10:30 AM IST",
-                heroImage: found.heroImage || "/images/templates/floral-hero.jpg",
-                coupleImage: found.coupleImage || "/images/templates/groom-bride-1.jpg",
-                partnerTwoImage: found.partnerTwoImage || "/images/templates/groom-bride-2.jpg",
+                heroImage: found.heroImage || "",
+                coupleImage: found.coupleImage || "",
+                partnerTwoImage: found.partnerTwoImage || "",
                 venuePlace: found.venuePlace || "Your Venue Name, Your City, State",
                 events: found.eventsJson ? JSON.parse(found.eventsJson) : sampleWeddingData.events,
                 timelineDay: found.timelineDayJson ? JSON.parse(found.timelineDayJson) : sampleWeddingData.timelineDay,
@@ -466,7 +476,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   const addGalleryImage = () => {
     const current = [...(formData.galleryImages || [])];
-    if (current.length >= 6) return;
+    if (current.length >= maxGalleryPhotos) return;
     handleInputChange("galleryImages", [...current, "/images/templates/gallery-1.jpg"]);
   };
 
@@ -937,35 +947,6 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   placeholder="/images/templates/couple-photo.jpg"
                 />
               )}
-
-              {/* Moments Gallery Uploaders (Up to 6 Photos) */}
-              <div className="pt-4 border-t border-[#D9A441]/20 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
-                    <span>Our Moments Gallery (Upload Up to 6 Photos)</span>
-                  </h4>
-                  <span className="text-[10px] text-[#7A1F2B] font-bold bg-[#EFE7D8] px-2 py-0.5 rounded-full border border-[#D9A441]/30">
-                    {(formData.galleryImages || []).length} / 6 Photos
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[0, 1, 2, 3, 4, 5].map((slotIdx) => (
-                    <CloudinaryUploader
-                      key={slotIdx}
-                      label={`Moment Photo ${slotIdx + 1}`}
-                      value={(formData.galleryImages && formData.galleryImages[slotIdx]) || ""}
-                      onChange={(url) => {
-                        const currentList = [...(formData.galleryImages || DEFAULT_SIX_MOMENTS)];
-                        currentList[slotIdx] = url;
-                        handleInputChange("galleryImages", currentList);
-                      }}
-                      placeholder={`/images/templates/gallery-${slotIdx + 1}.jpg`}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Step 4: Wedding Events Suite */}
@@ -1331,13 +1312,13 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                 <div>
                   <h3 className="text-base font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-2">
                     <Camera className="w-4 h-4 text-[#D9A441]" />
-                    <span>8. Our Moments Gallery ({(formData.galleryImages || []).length}/6 Photos)</span>
+                    <span>8. Our Moments Gallery ({(formData.galleryImages || []).length}/{maxGalleryPhotos} Photos)</span>
                   </h3>
                   <p className="text-xs text-[#221C17]/70 mt-1">
-                    Upload up to 6 favorite wedding photos (Maximum 6 photos). Use <strong>"Remove Photo"</strong> to delete unwanted photos.
+                    Upload up to {maxGalleryPhotos} favorite wedding photos (Maximum {maxGalleryPhotos} photos). Use <strong>"Remove Photo"</strong> to delete unwanted photos.
                   </p>
                 </div>
-                {(formData.galleryImages || []).length < 6 ? (
+                {(formData.galleryImages || []).length < maxGalleryPhotos ? (
                   <button
                     type="button"
                     onClick={addGalleryImage}
@@ -1348,7 +1329,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                   </button>
                 ) : (
                   <span className="text-[10px] text-[#7A1F2B] font-bold bg-[#7A1F2B]/10 px-3 py-1.5 rounded-xl border border-[#7A1F2B]/20 shrink-0">
-                    Max 6 Photos Reached
+                    Max {maxGalleryPhotos} Photos Reached
                   </span>
                 )}
               </div>

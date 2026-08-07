@@ -54,5 +54,7 @@ export interface TemplateClassicFloralProps {
   isCustomizer?: boolean;
   guestName?: string;
   guestPhone?: string;
+  invitationId?: string;
+  slug?: string;
 }
 

@@ -68,10 +68,9 @@ export default function RsvpSection({
     }
 
     setSubmitting(true);
-    setErrorMessage("");
-
     try {
-      const currentSlug = activeSlug || window.location.pathname.split("/").pop();
+      const pathSlug = typeof window !== "undefined" ? window.location.pathname.split("/").pop() : undefined;
+      const currentSlug = (pathSlug && pathSlug !== "customize" && pathSlug !== "templates") ? pathSlug : (activeSlug || pathSlug);
 
       const res = await fetch(`/api/invitations/${currentSlug}/rsvp`, {
         method: "POST",

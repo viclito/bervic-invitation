@@ -31,6 +31,8 @@ export interface LocationItem {
 }
 
 export interface ScrollScrubberTemplateProps {
+  invitationId?: string;
+  slug?: string;
   templateSlug?: string;
   coupleInitials?: string;
   partnerOne?: string;
@@ -51,6 +53,8 @@ export interface ScrollScrubberTemplateProps {
 }
 
 export default function ScrollScrubberTemplate({
+  invitationId,
+  slug,
   templateSlug = "scroll-scrubber",
   partnerOne = "Your Name",
   partnerTwo = "Partner Name",
@@ -135,7 +139,11 @@ export default function ScrollScrubberTemplate({
     setErrorMessage("");
 
     try {
-      const res = await fetch(`/api/invitations/${templateSlug}/rsvp`, {
+      const urlSlug = typeof window !== "undefined" ? window.location.pathname.split("/").pop() : undefined;
+      const activeSlug = slug || (urlSlug && urlSlug !== "scroll-scrubber" && urlSlug !== "customize" && urlSlug !== "templates" ? urlSlug : undefined);
+      const targetIdentifier = activeSlug || invitationId || templateSlug;
+
+      const res = await fetch(`/api/invitations/${targetIdentifier}/rsvp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,13 +156,14 @@ export default function ScrollScrubberTemplate({
         }),
       });
 
+      const resData = await res.json();
       if (!res.ok) {
-        setSubmitted(true);
+        setErrorMessage(resData.error || "Failed to submit RSVP response.");
       } else {
         setSubmitted(true);
       }
     } catch {
-      setSubmitted(true);
+      setErrorMessage("Network error. Please try submitting your response again.");
     } finally {
       setSubmitting(false);
     }
