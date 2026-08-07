@@ -99,7 +99,7 @@ export default function Hero() {
             href="/templates"
             className="btn-maroon px-8 py-4 text-base font-semibold flex items-center justify-center gap-3 w-full sm:w-auto shadow-xl"
           >
-            <span>Create Free Invitation</span>
+            <span>Create Invitation</span>
             <ArrowRight className="w-5 h-5 text-[#D9A441]" />
           </Link>
           <Link

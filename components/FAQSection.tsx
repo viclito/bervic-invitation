@@ -9,7 +9,7 @@ export default function FAQSection() {
   const faqs = [
     {
       q: "Can I preview templates before paying?",
-      a: "Yes! You can browse and preview all digital invitation templates and 31 Instagram announcement card designs 100% for free. To customize, save, publish, export high-res PDFs, or send WhatsApp invitations, you can select our ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) plan.",
+      a: "Yes! You can browse and live-preview all digital invitation templates and 31 Instagram announcement card designs anytime before choosing a plan. To customize, save, publish, export high-res PDFs, or send WhatsApp invitations, you can select our ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) plan.",
     },
     {
       q: "How does template locking work?",

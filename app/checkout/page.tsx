@@ -141,7 +141,7 @@ function CheckoutContent() {
               <div>
                 <h4 className="font-bold text-sm">Subscription Required to Edit & Save</h4>
                 <p className="text-xs text-[#221C17]/70 mt-0.5">
-                  Browsing templates is free. Choose a plan below to customize, save, and send personalized WhatsApp invitations!
+                  Explore all available templates below. Choose a plan to customize, save, and send personalized WhatsApp invitations!
                 </p>
               </div>
             </div>

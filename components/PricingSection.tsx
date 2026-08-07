@@ -73,7 +73,7 @@ export default function PricingSection() {
             Simple & Affordable <span className="font-accent text-[#7A1F2B] italic">Plans</span>
           </h2>
           <p className="text-xs sm:text-sm text-[#221C17]/70 max-w-xl mx-auto">
-            Browse and preview designs for free. Choose ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) to customize & publish.
+            Browse and live-preview all designs anytime. Choose ₹599 (Basic), ₹1799 (Pro), or ₹2000 (Cinematic Exclusive) to customize & publish.
           </p>
         </div>
 

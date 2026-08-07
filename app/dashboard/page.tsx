@@ -196,7 +196,7 @@ export default function DashboardPage() {
                 )}
                 {subData.plan === "NONE" && !(subData.allowedCinematicCount || 0) && (
                   <span className="px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-700 text-[11px] font-bold border border-gray-300">
-                    Free Preview Mode
+                    Preview Mode
                   </span>
                 )}
               </div>

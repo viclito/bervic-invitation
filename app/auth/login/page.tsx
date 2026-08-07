@@ -153,7 +153,7 @@ function LoginForm() {
           href={`/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
           className="text-[#7A1F2B] font-bold underline"
         >
-          Create Free Account
+          Create Account
         </Link>
       </p>
     </div>

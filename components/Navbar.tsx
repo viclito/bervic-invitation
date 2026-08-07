@@ -155,7 +155,7 @@ export default function Navbar() {
                 className="btn-maroon px-5 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md"
               >
                 <Sparkles className="w-4 h-4 text-[#D9A441]" />
-                <span>Get Started Free</span>
+                <span>Get Started</span>
               </Link>
             </div>
           )}
@@ -391,7 +391,7 @@ export default function Navbar() {
                     className="btn-maroon w-full py-3.5 text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md"
                   >
                     <Sparkles className="w-4 h-4 text-[#D9A441]" />
-                    <span>Get Started Free</span>
+                    <span>Get Started</span>
                   </Link>
                   <Link
                     href="/auth/login"

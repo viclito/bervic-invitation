@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://bervic.app"),
   title: "Bervic — Beautiful Indian Invitation Generator for Every Celebration",
   description:
-    "Create stunning digital invitations for weddings, birthdays, religious functions, and all celebrations in minutes. Free & premium designs crafted with elegance.",
+    "Create stunning digital invitations for weddings, birthdays, religious functions, and all celebrations in minutes. Premium designs crafted with elegance.",
   keywords: [
     "Indian invitation card generator",
     "wedding invite maker",
