@@ -74,9 +74,11 @@ export default function Timeline({ timelineDay }: TimelineProps) {
                 <h4 className="text-base font-accent font-bold text-[#2B2320] leading-snug">
                   {step.title}
                 </h4>
-                <p className="text-xs text-[#2B2320]/60 mt-1 font-sans">
-                  Schedule of Events
-                </p>
+                {step.desc && step.desc !== "Schedule of Events" && step.desc !== "Main Event" && (
+                  <p className="text-xs text-[#2B2320]/60 mt-1 font-sans">
+                    {step.desc}
+                  </p>
+                )}
               </motion.div>
             ))}
           </div>

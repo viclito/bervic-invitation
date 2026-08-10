@@ -11,6 +11,7 @@ export interface TimelineStep {
   title: string;
   time: string;
   date?: string;
+  desc?: string;
   status?: "upcoming" | "live" | "done";
 }
 
@@ -39,6 +40,7 @@ export interface TemplateClassicFloralProps {
   weddingTime: string;
   heroImage: string;
   coupleImage: string;
+  coverImage?: string;
   partnerTwoImage?: string;
   venuePlace: string;
   events: WeddingEvent[];
@@ -46,6 +48,7 @@ export interface TemplateClassicFloralProps {
   loveStoryText: string;
   loveStoryVideoUrl: string;
   showVideoSection?: boolean;
+  welcomeMessage?: string;
   locations: LocationVenue[];
   galleryImages: string[];
   contactPhone: string;

@@ -28,6 +28,7 @@ model User {
   subscriptions         Subscription[]
   payments              Payment[]
   cards                 UserCard[]
+  draftDetails          UserDraftDetails[]
 }
 
 model Account {
@@ -172,3 +173,51 @@ model UserCard {
 
   @@index([userId])
 }
+
+model UserDraftDetails {
+  id                String   @id @default(cuid())
+  userId            String
+  profileName       String?  // e.g. "Sasa & Allan's Wedding" or "Main Profile"
+  isActive          Boolean  @default(true) // Main active profile for all live template previews
+  eventType         String   @default("WEDDING") // WEDDING, BIRTHDAY
+  hostNameOne       String?  // Partner One or Birthday Person Name
+  hostNameTwo       String?  // Partner Two (if Wedding)
+  coupleInitials    String?  // Monogram e.g. "S & A"
+  eventTitle        String?  // e.g. "Sasa & Allan's Wedding"
+  inviteLine        String?  // Formal invitation line
+  eventDate         String?
+  eventTime         String?
+  venueName         String?
+  venueAddress      String?
+  venueMapUrl       String?  // Google Maps link for Venue 1
+  venueTwoName      String?  // Venue 2 (Reception / Secondary)
+  venueTwoAddress   String?  // Venue 2 Address
+  venueTwoMapUrl    String?  // Google Maps link for Venue 2
+  locationsJson     String?  @db.Text // JSON array of locations
+  tagline           String?
+  turningAge        String?  // for Birthday
+  dressCode         String?
+  rsvpContact       String?
+  loveStoryText     String?  @db.Text // Our Story text
+  loveStoryVideoUrl String?  // Video URL
+  coverImage        String?  // Primary couple/host photo
+  coupleImage       String?  // Secondary couple photo
+  partnerTwoImage   String?  // Individual photo
+  venueImage        String?  // Uploaded venue photo
+  galleryImagesJson String?  @db.Text // JSON array of gallery image URLs
+  functionsJson     String?  @db.Text // JSON array of sub-events (Sangeet, Reception, etc.)
+  dayTimelineJson   String?  @db.Text // JSON array of day timeline items (vows, lunch, reception)
+  additionalNotes   String?  @db.Text
+  extractedFromDoc  Boolean  @default(false)
+  completedFields   String?  @db.Text // JSON string array of filled field keys
+  currentStep       Int      @default(0)
+  isComplete        Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+

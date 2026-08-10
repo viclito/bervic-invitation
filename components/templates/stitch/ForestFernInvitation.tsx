@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -40,6 +41,7 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const fernHeroImg =
+    props.heroImage ||
     "https://lh3.googleusercontent.com/aida/AP1WRLsyetsNB3VvfHZJLQR2gtqueKxbmMGzqWXsyFEZbFabL5kkLReXEYwmDSNP9hAIcrzTSOHiCTlhoVSptSS_OuDvU4dIAuu1wFgioY2rNp8-VM2X3ts_1QIVIYh8Sv65MZ_pUSU8Z4tHbMIS9-aKr_7ut0qoplvLZMO2Qp9Kz0KJ4Z7Eb8jDRYiAa_W77sRCAbNbRO11060IAs6hdnkrLOWrtHvS2D42Y0_ql2MedmME2ueWwEn8_HpLHNk";
 
   const storyImg =
@@ -47,7 +49,10 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
     "https://lh3.googleusercontent.com/aida-public/AB6AXuB57ztD0xf_u0DHs5VOUMPCWgFavF3EdhazNk79b5TX059nnRN0MjckatYElDg9voGsKEdKDqDkuWMR6XXuF0IioEr3YBk0fROV8MbydX9OVHfg7YtjTlM6lyzkFJbUSYiC385Ncu4bKVcrENO500KbTD-Ub02kalv4p0bbm-OzRcrHK6lyMGCUp9k_Ri72su6fYhgt7PIqnLTuVColtm5wEcsDpxh8SYuyFE5eXnQhFF2ztQV315R_";
 
   const videoCoverImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC8i0wWwVz0XkdyjrVRPE_3gLQ1AOASUEPF3522qAE5ggUHQ-HHEaPB_BOT_C92cOVdxrxEj330lttE-e2ha-j2DLSL_N3W4-uiQE395S2aK0QK7bLMEjC_yd6cRbCp0gbacGsZ19T5yRsitocxP9lGmPFka6_lsjRM1sB4jUyI0wrbXTW3ZTX5nThN8-7e2ZOYOm9cDlNufwWPaqyFBkTcuTTA9N5sUzgyczfSkvi6kvaVEZ9VZxBB";
+    props.coverImage ||
+    props.coupleImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
 
   const defaultTimeline = [
     { time: "10:00 AM", title: "The Ceremony", desc: "Witness the exchange of our vows in the presence of God and our loved ones.", icon: <Church className="w-4 h-4 text-[#203527]" /> },
@@ -55,6 +60,23 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
     { time: "12:30 PM", title: "Luncheon", desc: "A traditional feast to celebrate the joyous occasion.", icon: <Utensils className="w-4 h-4 text-[#203527]" /> },
     { time: "06:00 PM", title: "Evening Reception", desc: "Join us for an evening of music, dancing, and merriment under the stars.", icon: <PartyPopper className="w-4 h-4 text-[#203527]" /> },
   ];
+
+  const timelineList =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t, idx) => ({
+          time: t.time,
+          title: t.title,
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
+          icon: defaultTimeline[idx % defaultTimeline.length]?.icon,
+        }))
+      : props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          time: e.time,
+          title: e.title,
+          desc: e.date ? `Date: ${e.date}` : "",
+          icon: defaultTimeline[idx % defaultTimeline.length]?.icon,
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -160,8 +182,8 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
           </p>
 
           <div className="pt-4 text-center">
-            <p className="font-serif text-3xl font-bold text-[#b4cdb8]">13th May 2026</p>
-            <p className="text-xs text-[#c3c8c1] uppercase tracking-widest mt-1">10:00 AM ONWARDS</p>
+            <p className="font-serif text-3xl font-bold text-[#b4cdb8]">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs text-[#c3c8c1] uppercase tracking-widest mt-1">{props.weddingTime || "10:00 AM ONWARDS"}</p>
           </div>
 
           <a
@@ -220,7 +242,7 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
             >
               <Church className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="font-serif text-2xl font-bold text-[#d0e9d4] mb-2">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">13th May 2026 • 10:00 AM</p>
+              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • {props.weddingTime || "10:00 AM"}</p>
               <p className="text-xs text-[#c3c8c1] mb-8 leading-relaxed">
                 St. Antony Church<br />Kaval Kinaru, Tirunelveli District
               </p>
@@ -241,7 +263,7 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
             >
               <PartyPopper className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="font-serif text-2xl font-bold text-[#d0e9d4] mb-2">The Reception</h3>
-              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">13th May 2026 • 06:00 PM</p>
+              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • 06:00 PM</p>
               <p className="text-xs text-[#c3c8c1] mb-8 leading-relaxed">
                 Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
               </p>
@@ -262,12 +284,12 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
       <section className="py-24 px-6 md:px-16 bg-[#1b1c17]" id="timeline">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl font-bold text-[#d0e9d4] mb-2">The Day's Flow</h2>
+            <h2 className="font-serif text-4xl font-bold text-[#d0e9d4] mb-2">The Day&apos;s Flow</h2>
             <p className="text-base text-[#f0bd8b] italic">Our story unfolds</p>
           </div>
 
           <div className="space-y-12 relative border-l-2 border-[#434843]/30 ml-4 md:ml-1/2">
-            {defaultTimeline.map((item, idx) => {
+            {timelineList.map((item, idx) => {
               const isEven = idx % 2 === 1;
               return (
                 <motion.div
@@ -328,8 +350,8 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
           <div className="relative aspect-video rounded-xl overflow-hidden border border-[#434843]/30 shadow-2xl group cursor-pointer">
             {isPlayingVideo ? (
               <iframe
-                title="Teaser video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="Love story video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
                 className="w-full h-full"
                 allow="autoplay; encrypted-media"
                 allowFullScreen

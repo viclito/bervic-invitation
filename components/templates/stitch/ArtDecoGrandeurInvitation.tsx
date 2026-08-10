@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -29,8 +30,9 @@ export default function ArtDecoGrandeurInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-14T19:00:00"
+    const targetDate = getWeddingTargetDate(
+      props.weddingDate,
+      props.weddingTime
     ).getTime();
 
     const interval = setInterval(() => {

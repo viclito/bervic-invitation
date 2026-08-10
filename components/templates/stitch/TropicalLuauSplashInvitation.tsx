@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -23,6 +24,7 @@ export default function TropicalLuauSplashInvitation(
 ) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Celebrant name fallback
   const celebrantName =
@@ -445,19 +447,33 @@ export default function TropicalLuauSplashInvitation(
             </p>
           </div>
 
-          <div className="relative w-full max-w-4xl mx-auto aspect-video bg-[#fcf9f8] rounded-2xl shadow-md overflow-hidden border border-[#cac7b1]/30 flex items-center justify-center group cursor-pointer">
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10"></div>
-            <img
-              alt="Video highlight thumbnail"
-              className="w-full h-full object-cover"
-              src={
-                props.heroImage ||
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuCbj6E_qQBW8N2ekBWlNRTe3cHrgYRMT4QzPd43bvCMBA7Bl6HjAkpuZqvTe__V8hRoA2cLJpxwnpp7wbvCQPktW5Wy49-XG1Y1u9QwL9qXNRTnR2KYvCPYcqgrqJtYSBcXixeYf200LnvQ_ZYdOBdVti2jGn10c4_li63voJM0kByRtKG13sLM-HyR-nWViDmm0QJUi8Ru7jubY98alvyIVdP_1eTY2sw1jz2hGG_7Mv4UyREs4tw8"
-              }
-            />
-            <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#5f5f00] group-hover:scale-110 transition-transform shadow-lg">
-              <Play className="w-10 h-10 fill-[#5f5f00] ml-1" />
-            </div>
+          <div className="relative w-full max-w-4xl mx-auto aspect-video bg-black rounded-2xl shadow-md overflow-hidden border border-[#cac7b1]/30 flex items-center justify-center group cursor-pointer">
+            {isPlayingVideo ? (
+              <iframe
+                title="Luau celebration video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                className="w-full h-full border-0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            ) : (
+              <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
+                <img
+                  alt="Video highlight thumbnail"
+                  className="w-full h-full object-cover"
+                  src={
+                    props.coverImage ||
+                    props.heroImage ||
+                    props.coupleImage ||
+                    "/images/templates/couple-photo.jpg"
+                  }
+                />
+                <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#5f5f00] group-hover:scale-110 transition-transform shadow-lg">
+                  <Play className="w-10 h-10 fill-[#5f5f00] ml-1" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
@@ -39,6 +40,7 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const archHeroImg =
+    props.heroImage ||
     "https://lh3.googleusercontent.com/aida-public/AB6AXuC_KRSL4qgXTZlSEB5QSWBr0fQ3cx2xsJjp_LfTXZJdZLmHGF2ZF0k4QeyTUrGQeyJMvqyCMCP0r0n2gDBiGx1L4el-tm8YzE5gnq064HUHJOYYgvZL2oUQjRt8YI5kIUz682EBFxlopiQZCscE_F1b3l1Q9zDissZPDzgGF5yQmIN4XT62j31HmT4nE3Md_-_hQ02IP1q3cIJNwIh7LxRDO0HvjuIup3g_diVXhXGwo9faKmCNZ0fl";
 
   const defaultTimeline = [
@@ -53,7 +55,7 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
       ? props.timelineDay.map((t) => ({
           time: t.time,
           title: t.title,
-          desc: "Schedule of Events",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
         }))
       : defaultTimeline;
 
@@ -154,13 +156,13 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
 
           <div className="flex flex-col sm:flex-row items-center gap-6 border-2 border-[#76786b] p-6 bg-[#f9f9f7]/80 backdrop-blur-md rounded shadow-lg">
             <div className="text-center px-4">
-              <span className="block font-serif text-2xl font-bold text-[#1a1c1b]">13th May 2026</span>
+              <span className="block font-serif text-2xl font-bold text-[#1a1c1b]">{props.weddingDate || "13th May 2026"}</span>
               <span className="text-xs font-bold uppercase tracking-widest text-[#56642b]">Date</span>
             </div>
             <div className="hidden sm:block w-px h-10 bg-[#76786b]" />
             <div className="sm:hidden w-12 h-px bg-[#76786b]" />
             <div className="text-center px-4">
-              <span className="block font-serif text-2xl font-bold text-[#1a1c1b]">10:00 AM</span>
+              <span className="block font-serif text-2xl font-bold text-[#1a1c1b]">{props.weddingTime || "10:00 AM"}</span>
               <span className="text-xs font-bold uppercase tracking-widest text-[#56642b]">Time</span>
             </div>
           </div>
@@ -190,7 +192,7 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
             >
               <Church className="w-12 h-12 text-[#56642b] mb-4" />
               <h3 className="font-serif text-2xl font-bold text-[#1a1c1b] mb-2">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">13th May 2026 • 10:00 AM</p>
+              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • {props.weddingTime || "10:00 AM"}</p>
               <p className="text-xs text-[#1a1c1b] mb-8 leading-relaxed">
                 St. Antony Church<br />Kaval Kinaru, Tirunelveli District
               </p>
@@ -211,7 +213,7 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
             >
               <PartyPopper className="w-12 h-12 text-[#56642b] mb-4" />
               <h3 className="font-serif text-2xl font-bold text-[#1a1c1b] mb-2">Grand Reception</h3>
-              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">13th May 2026 • 06:30 PM</p>
+              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • 06:30 PM</p>
               <p className="text-xs text-[#1a1c1b] mb-8 leading-relaxed">
                 Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
               </p>
@@ -304,8 +306,8 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
             {isPlayingVideo ? (
               <iframe
                 title="Love story video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                className="w-full h-full"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                className="w-full h-full border-0"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -64,14 +64,32 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
     "https://lh3.googleusercontent.com/aida/AP1WRLvWfzXdN3dHblHMwCfYoZzOQpFd55WruE3qhpS4L0St43rwB0l9HRsSVUPWL226kWxQkGJRu6OUJ5cOQo4G0Vp8s-N63YtcTfH8vIaWTvvr9rHykEUQ0mI_v8bBC7ZTc8VAO1--z-jMa4pg_IU1uaN3Gd76BW-8k-d4R5LU4PtaWr7aPUpDbHttGiVo0D0y6Y_O7PNACCjqktCyXRVWMTP8nJzTwqnxpfozIb53uukdEtbwZ1iwTN6b4rI";
 
   const videoCoverImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC8i0wWwVz0XkdyjrVRPE_3gLQ1AOASUEPF3522qAE5ggUHQ-HHEaPB_BOT_C92cOVdxrxEj330lttE-e2ha-j2DLSL_N3W4-uiQE395S2aK0QK7bLMEjC_yd6cRbCp0gbacGsZ19T5yRsitocxP9lGmPFka6_lsjRM1sB4jUyI0wrbXTW3ZTX5nThN8-7e2ZOYOm9cDlNufwWPaqyFBkTcuTTA9N5sUzgyczfSkvi6kvaVEZ9VZxBB";
+    props.coverImage ||
+    props.coupleImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
 
   const defaultTimeline = [
-    { time: "10:00 AM", title: "Sunset Matrimony", desc: "Exchange of vows under warm golden sunbeams" },
-    { time: "12:30 PM", title: "Terracotta Feast", desc: "Traditional feast with artisan delicacies" },
-    { time: "07:00 PM", title: "Golden Hour Reception", desc: "Cocktails and dancing under warm festoon lights" },
-    { time: "08:30 PM", title: "Banquet Dinner & Toast", desc: "Heartfelt speeches and grand celebration" },
+    { time: "10:00 AM", title: "Sunset Matrimony", desc: "Golden hour exchange of sacred vows" },
+    { time: "12:30 PM", title: "Terracotta Banquet", desc: "Feast with family & loved ones" },
+    { time: "07:00 PM", title: "Warm Evening Reception", desc: "Music, toasts & sunset dancing" },
+    { time: "08:30 PM", title: "Dinner & Bonfire", desc: "Cosy bonfire dinner under golden lights" },
   ];
+
+  const timelineList =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t) => ({
+          time: t.time,
+          title: t.title,
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
+        }))
+      : props.events && props.events.length > 0
+      ? props.events.map((e) => ({
+          time: e.time,
+          title: e.title,
+          desc: e.date ? `Date: ${e.date}` : "",
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -172,8 +190,8 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
           </p>
 
           <div className="border-2 border-[#e07a5f]/60 p-6 rounded-xl backdrop-blur-md bg-[#1f0d07]/80 shadow-[0_0_35px_rgba(224,122,95,0.25)] flex flex-col items-center">
-            <p className="font-serif text-3xl font-bold text-[#f4a261]">13th May 2026</p>
-            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">10:00 AM ONWARDS</p>
+            <p className="font-serif text-3xl font-bold text-[#f4a261]">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">{props.weddingTime || "10:00 AM ONWARDS"}</p>
           </div>
 
           {/* Countdown Grid */}
@@ -260,12 +278,12 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
       <section className="py-24 px-6 md:px-16 bg-[#261009]" id="timeline">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl font-bold text-[#e07a5f] mb-3">Day's Flow</h2>
+            <h2 className="font-serif text-4xl font-bold text-[#e07a5f] mb-3">Day&apos;s Flow</h2>
             <div className="w-20 h-0.5 bg-[#e07a5f] mx-auto" />
           </div>
 
           <div className="flex flex-col gap-6">
-            {defaultTimeline.map((item, idx) => (
+            {timelineList.map((item, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -318,8 +336,8 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
           <div className="relative aspect-video rounded-xl overflow-hidden border border-[#e07a5f]/40 shadow-2xl group cursor-pointer">
             {isPlayingVideo ? (
               <iframe
-                title="Terracotta video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="Love story video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
                 className="w-full h-full"
                 allow="autoplay; encrypted-media"
                 allowFullScreen

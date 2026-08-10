@@ -1,12 +1,15 @@
 "use client";
 
-import { use } from "react";
-import Link from "next/link";
+import { use, useEffect, useState } from "react";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
+import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { sampleBirthdayData } from "@/data/sampleBirthdayData";
 import { templatesRegistry } from "@/data/templatesRegistry";
-import { Sparkles, Edit3, ArrowLeft } from "lucide-react";
+import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
+import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
+import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
+import { TemplateClassicFloralProps } from "@/types/template";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,6 +17,8 @@ interface Props {
 
 export default function GenericTemplatePreviewPage({ params }: Props) {
   const { slug } = use(params);
+  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails(`/templates/${slug}`);
+  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps | null>(null);
 
   const targetTemplate =
     templatesRegistry.find((t) => t.slug === slug && t.category === "birthday") ||
@@ -24,42 +29,63 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
       ? sampleBirthdayData
       : sampleWeddingData;
 
+  useEffect(() => {
+    let activeDraft: Record<string, unknown> | null = null;
+
+    if (typeof window !== "undefined") {
+      const localStr = localStorage.getItem("bervic_user_draft_details");
+      if (localStr) {
+        try {
+          activeDraft = JSON.parse(localStr);
+        } catch {
+          activeDraft = null;
+        }
+      }
+    }
+
+    fetch("/api/user/event-draft")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.draft) {
+          const merged = mapEventProfileToInvitationData(data.draft, initialData);
+          setInvitationData(merged);
+        } else if (activeDraft) {
+          const merged = mapEventProfileToInvitationData(activeDraft, initialData);
+          setInvitationData(merged);
+        } else {
+          setInvitationData(initialData);
+        }
+      })
+      .catch(() => {
+        if (activeDraft) {
+          setInvitationData(mapEventProfileToInvitationData(activeDraft, initialData));
+        } else {
+          setInvitationData(initialData);
+        }
+      });
+  }, [slug, targetTemplate?.category, initialData]);
+
   const categoryParam = targetTemplate?.category || "all";
+  const displayData = invitationData || initialData;
+
+  if (isLoading || !hasCompletedDetails) {
+    return <TemplatePreviewSkeleton />;
+  }
 
   return (
     <div className="relative min-h-screen">
       {/* Live Preview Full Invitation Screen */}
-      <DynamicTemplateCard {...initialData} templateSlug={slug} />
+      <DynamicTemplateCard {...displayData} templateSlug={slug} />
 
-      {/* Floating Sticky Bottom CTA Bar to Customize */}
-      <div className="fixed bottom-6 inset-x-4 max-w-lg mx-auto z-50 bg-[#221C17]/95 backdrop-blur-md border-2 border-[#D9A441] text-[#F8F3EA] p-3 rounded-full shadow-2xl flex items-center justify-between gap-2 sm:gap-3">
-        <Link
-          href={`/templates?category=${categoryParam}&viewed=${slug}`}
-          className="px-3 py-2 rounded-full bg-[#EFE7D8]/20 text-[#D9A441] hover:bg-[#D9A441]/30 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold"
-          title={`Back to ${targetTemplate?.categoryLabel || "Gallery"}`}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-[11px] font-bold">Back</span>
-        </Link>
-
-        <div className="flex flex-col text-left leading-tight truncate">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D9A441] flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            <span>Love this design?</span>
-          </span>
-          <span className="text-xs font-bold text-[#F8F3EA] truncate">
-            {targetTemplate?.title || "Custom Invitation"}
-          </span>
-        </div>
-
-        <Link
-          href={`/templates/customize/${slug}?from=templates`}
-          className="btn-maroon px-4 sm:px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all text-[#F8F3EA]"
-        >
-          <Edit3 className="w-4 h-4 text-[#D9A441]" />
-          <span>Make It Yours ✨</span>
-        </Link>
-      </div>
+      {/* Floating Bottom CTA Bar & Ownership Modal */}
+      <TemplatePreviewBottomBar
+        slug={slug}
+        templateTitle={targetTemplate?.title}
+        isPremium={targetTemplate?.isPremium}
+        price={targetTemplate?.price}
+        categoryParam={categoryParam}
+        displayData={displayData}
+      />
     </div>
   );
 }

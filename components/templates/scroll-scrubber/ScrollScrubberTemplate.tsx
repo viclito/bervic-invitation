@@ -50,68 +50,52 @@ export interface ScrollScrubberTemplateProps {
   guestPhone?: string;
   contactPhone?: string;
   contactAddress?: string;
+  venuePlace?: string;
 }
 
-export default function ScrollScrubberTemplate({
-  invitationId,
-  slug,
-  templateSlug = "scroll-scrubber",
-  partnerOne = "Your Name",
-  partnerTwo = "Partner Name",
-  tagline = "TOGETHER WITH THEIR FAMILIES",
-  inviteLine = "Request the honor of your presence at the celebration of their holy matrimony",
-  weddingDate = "December 18, 2026",
-  weddingTime = "4:00 PM Onwards",
-  coupleImage = "/images/templates/groom-bride-1.jpg",
-  partnerTwoImage = "/images/templates/groom-bride-2.jpg",
-  contactPhone,
-  contactAddress,
-  events = [
-    {
-      time: "03:30 PM",
-      title: "Guest Arrival & Welcome Drinks",
-      location: "Grand Foyer, St. Patrick's",
-      description: "Welcome champagne & classical harp performance",
-    },
-    {
-      time: "04:30 PM",
-      title: "Holy Matrimony Ceremony",
-      location: "St. Patrick's Cathedral",
-      description: "Exchange of vows and sacred ring blessing",
-    },
-    {
-      time: "07:00 PM",
-      title: "Royal Gala Reception",
-      location: "The Palace Grand Ballroom",
-      description: "Live band, dinner banquet, and royal dancing",
-    },
-  ],
-  locations = [
-    {
-      title: "Sacred Ceremony",
-      name: "St. Patrick's Cathedral",
-      address: "124 Cathedral Square, Central City",
-      time: "04:30 PM",
-      mapUrl: "https://maps.google.com",
-    },
-    {
-      title: "Evening Banquet",
-      name: "The Palace Grand Ballroom",
-      address: "88 Royal Gardens Boulevard",
-      time: "07:00 PM",
-      mapUrl: "https://maps.google.com",
-    },
-  ],
-  galleryImages = [
-    "/images/templates/groom-bride-1.jpg",
-    "/images/templates/groom-bride-2.jpg",
-    "/images/templates/gallery-1.jpg",
-    "/images/templates/gallery-2.jpg",
-  ],
-  guestName = "",
-  guestPhone = "",
-}: ScrollScrubberTemplateProps) {
+export default function ScrollScrubberTemplate(props: ScrollScrubberTemplateProps & {
+  heroImage?: string;
+  coverImage?: string;
+  timelineDay?: any[];
+}) {
+  const {
+    invitationId,
+    slug,
+    templateSlug = "scroll-scrubber",
+    partnerOne = "Your Name",
+    partnerTwo = "Partner Name",
+    tagline = "TOGETHER WITH THEIR FAMILIES",
+    inviteLine = "Request the honor of your presence at the celebration of their holy matrimony",
+    weddingDate = "December 18, 2026",
+    weddingTime = "4:00 PM Onwards",
+    coupleImage,
+    partnerTwoImage,
+    contactPhone,
+    contactAddress,
+    events,
+    locations,
+    galleryImages,
+    guestName = "",
+    guestPhone = "",
+  } = props;
   const rsvpSectionRef = useRef<HTMLDivElement>(null);
+
+  // Photo resolution from profile
+  const rawCoupleImg = props.coupleImage?.trim() || "";
+  const rawPartnerTwoImg = props.partnerTwoImage?.trim() || "";
+  const rawCoverImg = props.coverImage?.trim() || "";
+  const rawHeroImg = props.heroImage?.trim() || "";
+
+  const bridePhoto =
+    rawCoupleImg ||
+    rawCoverImg ||
+    rawHeroImg ||
+    "/images/templates/groom-bride-1.jpg";
+
+  const groomPhoto =
+    rawPartnerTwoImg ||
+    (rawCoverImg && rawCoverImg !== bridePhoto ? rawCoverImg : "") ||
+    "/images/templates/groom-bride-2.jpg";
 
   // RSVP Form States
   const [name, setName] = useState(guestName);
@@ -126,6 +110,11 @@ export default function ScrollScrubberTemplate({
 
   const scrollToRsvp = () => {
     rsvpSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSelectBlessing = (blessingText: string) => {
+    setMessage(blessingText);
+    scrollToRsvp();
   };
 
   const handleRsvpSubmit = async (e: React.FormEvent) => {
@@ -169,6 +158,84 @@ export default function ScrollScrubberTemplate({
     }
   };
 
+  const defaultEvents: EventItem[] = [
+    {
+      time: weddingTime || "10:00 AM",
+      title: "Holy Matrimony Ceremony",
+      location: props.venuePlace || "Ceremony Venue",
+      description: "Exchange of vows and sacred ring blessing",
+    },
+    {
+      time: "01:00 PM",
+      title: "Cocktail Hours & Luncheon",
+      location: props.venuePlace || "Grand Banquet",
+      description: "Welcome drinks, feast and music",
+    },
+    {
+      time: "07:00 PM",
+      title: "Royal Gala Reception",
+      location: props.contactAddress || props.venuePlace || "Grand Ballroom",
+      description: "Grand dinner, dancing, and evening celebration",
+    },
+  ];
+
+  const eventsList: EventItem[] =
+    events && events.length > 0
+      ? events.map((e: any) => ({
+          time: e.time || weddingTime || "10:00 AM",
+          title: e.title || e.name || "Special Ceremony",
+          location: e.location || e.venue || (e.date ? `Date: ${e.date}` : props.venuePlace || "Wedding Venue"),
+          description: e.description || e.desc || `Celebrate ${e.title || "this function"} with us.`,
+        }))
+      : props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t: any) => ({
+          time: t.time || "10:00 AM",
+          title: t.title || "Special Activity",
+          location: t.date ? `Date: ${t.date}` : props.venuePlace || "Wedding Venue",
+          description: t.desc || "A memorable part of our wedding day.",
+        }))
+      : defaultEvents;
+
+  const defaultLocations: LocationItem[] = [
+    {
+      title: "Marriage Ceremony",
+      name: props.venuePlace ? props.venuePlace.split(",")[0] : "Marriage Ceremony Venue",
+      address: props.venuePlace || "Venue Address",
+      time: weddingTime || "10:00 AM",
+      mapUrl: "https://maps.google.com",
+    },
+    {
+      title: "Grand Reception",
+      name: "Grand Reception Hall",
+      address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+      time: "07:00 PM",
+      mapUrl: "https://maps.google.com",
+    },
+  ];
+
+  const locationsList: LocationItem[] =
+    locations && locations.length > 0
+      ? locations.map((loc: any, idx: number) => ({
+          title: loc.title || loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception"),
+          name: loc.name || loc.venueLabel || (idx === 0 ? props.venuePlace?.split(",")[0] || "Ceremony Venue" : "Reception Hall"),
+          address: loc.address || props.venuePlace || "Venue Address",
+          time: loc.time || weddingTime || "10:00 AM",
+          mapUrl: loc.mapUrl || loc.mapLink || "https://maps.google.com",
+        }))
+      : defaultLocations;
+
+  const defaultGallery = [
+    groomPhoto,
+    bridePhoto,
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+  ];
+
+  const galleryList =
+    galleryImages && galleryImages.length > 0
+      ? galleryImages
+      : defaultGallery;
+
   return (
     <main className="w-full bg-[#070707] text-[#F8F3EA] min-h-screen selection:bg-[#D9A441] selection:text-[#070707]">
       {/* 1. Scroll-Scrubbing Canvas Section (480 Frames + Top-Aligned Text Overlay) */}
@@ -179,15 +246,18 @@ export default function ScrollScrubberTemplate({
         inviteLine={inviteLine}
         weddingDate={weddingDate}
         weddingTime={weddingTime}
-        groomImage={coupleImage}
-        brideImage={partnerTwoImage}
-        events={events}
-        locations={locations}
-        galleryImages={galleryImages}
+        groomImage={groomPhoto}
+        brideImage={bridePhoto}
+        coupleImage={groomPhoto}
+        partnerTwoImage={bridePhoto}
+        events={eventsList}
+        locations={locationsList}
+        galleryImages={galleryList}
         guestName={guestName}
         contactPhone={contactPhone}
         contactAddress={contactAddress}
         onExploreClick={scrollToRsvp}
+        onSelectBlessing={handleSelectBlessing}
       />
 
       {/* 2. Interactive Luxury RSVP Form */}
@@ -213,7 +283,7 @@ export default function ScrollScrubberTemplate({
               Will You Attend?
             </h2>
             <p className="text-xs text-[#F8F3EA]/70 mb-8">
-              Please respond by November 30, 2026
+              Please respond before {weddingDate}
             </p>
 
             {submitted ? (

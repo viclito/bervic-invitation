@@ -64,6 +64,7 @@ export interface ScrollScrubberCanvasProps {
   contactPhone?: string;
   contactAddress?: string;
   onExploreClick?: () => void;
+  onSelectBlessing?: (blessing: string) => void;
   bgAudioUrl?: string;
 }
 
@@ -81,6 +82,8 @@ export default function ScrollScrubberCanvas({
   guestName = "Honored Guest",
   contactPhone,
   contactAddress,
+  onExploreClick,
+  onSelectBlessing,
   events = [
     {
       time: "03:30 PM",
@@ -123,7 +126,6 @@ export default function ScrollScrubberCanvas({
     "/images/templates/gallery-3.jpg",
     "/images/templates/gallery-4.jpg",
   ],
-  onExploreClick,
   bgAudioUrl,
 }: ScrollScrubberCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -886,19 +888,19 @@ export default function ScrollScrubberCanvas({
                 Meet the Couple
               </h2>
 
-              {/* Groom & Bride Photos Grid */}
+              {/* Bride & Groom Photos Grid */}
               <div className="grid grid-cols-2 gap-5 max-w-lg mx-auto mb-5 w-full">
-                {/* Groom Photo */}
+                {/* Bride Photo */}
                 <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
                   <img
-                    src={groomImage || coupleImage || "/images/templates/groom-bride-1.jpg"}
-                    alt={`${partnerOne} - Groom`}
+                    src={brideImage || coupleImage || "/images/templates/groom-bride-1.jpg"}
+                    alt={`${partnerOne} - Bride`}
                     className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 text-left">
                     <span className="text-[10px] uppercase tracking-widest text-[#D9A441] font-semibold">
-                      Groom
+                      Bride
                     </span>
                     <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
                       {partnerOne}
@@ -906,17 +908,17 @@ export default function ScrollScrubberCanvas({
                   </div>
                 </div>
 
-                {/* Bride Photo */}
+                {/* Groom Photo */}
                 <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
                   <img
-                    src={brideImage || partnerTwoImage || "/images/templates/groom-bride-2.jpg"}
-                    alt={`${partnerTwo} - Bride`}
+                    src={groomImage || partnerTwoImage || "/images/templates/groom-bride-2.jpg"}
+                    alt={`${partnerTwo} - Groom`}
                     className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 text-left">
                     <span className="text-[10px] uppercase tracking-widest text-[#D9A441] font-semibold">
-                      Bride
+                      Groom
                     </span>
                     <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
                       {partnerTwo}
@@ -944,57 +946,43 @@ export default function ScrollScrubberCanvas({
               <span className="text-xs uppercase tracking-[0.35em] text-[#D9A441] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                 Schedule of Celebration
               </span>
-              <h2 className="text-4xl sm:text-6xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-1 mb-6 sm:mb-8">
+              <h2 className="text-3xl sm:text-5xl font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] mt-0.5 mb-3 sm:mb-4">
                 Order of Events
               </h2>
 
-              {/* Alternating Left-Right Timeline Grid */}
-              <div className="relative w-full max-w-2xl mx-auto space-y-4 sm:space-y-5">
-                {/* Central Vertical Gold Dashed Line */}
-                <div className="absolute left-1/2 top-4 bottom-4 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-[#D9A441]/40 to-transparent border-r border-dashed border-[#D9A441]/40 hidden sm:block pointer-events-none" />
-
+              {/* Compact 2-Column Responsive Grid for All Events */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
                 {events.map((evt, idx) => {
-                  const isEven = idx % 2 === 0;
                   const itemStyle = calculateEventItemStyle(idx, events.length);
                   return (
                     <div
                       key={idx}
-                      className={`flex items-center w-full ${
-                        isEven
-                          ? "sm:justify-start justify-center"
-                          : "sm:justify-end justify-center"
-                      }`}
+                      className="w-full p-3.5 sm:p-4 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441]"
+                      style={itemStyle}
                     >
-                      <div
-                        className={`w-full sm:w-[48%] p-4 sm:p-5 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] text-left transition-all duration-300 hover:scale-[1.02] hover:border-[#D9A441] ${
-                          isEven ? "sm:mr-auto" : "sm:ml-auto"
-                        }`}
-                        style={itemStyle}
-                      >
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="px-3 py-1 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-mono font-bold tracking-wider">
-                            {evt.time}
-                          </span>
-                          <Sparkles className="w-3.5 h-3.5 text-[#D9A441]/70" />
-                        </div>
-
-                        <h3 className="text-base sm:text-lg font-bold text-[#FDF6F3] mt-1">
-                          {evt.title}
-                        </h3>
-
-                        {evt.location && (
-                          <p className="text-xs text-[#D9A441] flex items-center gap-1 mt-1 font-medium">
-                            <MapPin className="w-3.5 h-3.5" />
-                            <span>{evt.location}</span>
-                          </p>
-                        )}
-
-                        {evt.description && (
-                          <p className="text-xs text-[#F8F3EA]/80 mt-1.5 font-light leading-relaxed">
-                            {evt.description}
-                          </p>
-                        )}
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-mono font-bold tracking-wider">
+                          {evt.time}
+                        </span>
+                        <Sparkles className="w-3.5 h-3.5 text-[#D9A441]/70" />
                       </div>
+
+                      <h3 className="text-sm sm:text-base font-bold text-[#FDF6F3] mt-1">
+                        {evt.title}
+                      </h3>
+
+                      {evt.location && (
+                        <p className="text-xs text-[#D9A441] flex items-center gap-1 mt-1 font-medium">
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span>{evt.location}</span>
+                        </p>
+                      )}
+
+                      {evt.description && (
+                        <p className="text-[11px] sm:text-xs text-[#F8F3EA]/80 mt-1 font-light leading-snug line-clamp-2">
+                          {evt.description}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -1170,7 +1158,7 @@ export default function ScrollScrubberCanvas({
                 </button>
 
                 <p className="text-[11px] text-[#D9A441]/85 uppercase tracking-widest font-mono">
-                  Response Requested Before Nov 18, 2026
+                  Response Requested Before {weddingDate || "Nov 18, 2026"}
                 </p>
               </div>
             </div>
@@ -1225,7 +1213,12 @@ export default function ScrollScrubberCanvas({
                 ].map((blessing, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setBlessingCount((prev) => prev + 1)}
+                    onClick={() => {
+                      setBlessingCount((prev) => prev + 1);
+                      if (onSelectBlessing) {
+                        onSelectBlessing(blessing);
+                      }
+                    }}
                     className="px-3.5 py-2 rounded-full bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/30 text-xs text-[#F8F3EA]/90 hover:border-[#D9A441] hover:text-[#D9A441] transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.8)] cursor-pointer"
                   >
                     {blessing}

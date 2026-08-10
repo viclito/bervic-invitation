@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -24,9 +25,10 @@ import {
 export default function OliveOchreInvitation(props: TemplateClassicFloralProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Countdown timer state
-  const [timeLeft, setTimeLeft] = useState({ days: 124, hours: 12, minutes: 45, seconds: 30 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,7 +43,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(props.weddingDate || "2026-05-13T10:00:00").getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const difference = Math.max(0, targetDate - now);
@@ -53,8 +55,9 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
 
       setTimeLeft({ days, hours, minutes, seconds });
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
@@ -239,12 +242,51 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
               {props.inviteLine || "Invite you to celebrate their wedding"}
             </p>
 
+            {/* Bride & Groom Photo Cards */}
+            <div className="grid grid-cols-2 gap-4 md:gap-6 w-full max-w-lg mx-auto mt-4">
+              {/* Bride Card */}
+              <div className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden border-2 border-[#5f5f00]/30 shadow-md bg-white">
+                <img
+                  src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 text-left">
+                  <span className="text-[10px] font-sans uppercase tracking-widest text-[#e9e86b] font-bold block">
+                    Bride
+                  </span>
+                  <h3 className="text-lg font-bold text-white leading-none mt-0.5">
+                    {partner1}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Groom Card */}
+              <div className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden border-2 border-[#5f5f00]/30 shadow-md bg-white">
+                <img
+                  src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 text-left">
+                  <span className="text-[10px] font-sans uppercase tracking-widest text-[#e9e86b] font-bold block">
+                    Groom
+                  </span>
+                  <h3 className="text-lg font-bold text-white leading-none mt-0.5">
+                    {partner2}
+                  </h3>
+                </div>
+              </div>
+            </div>
+
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="flex flex-col items-center gap-1.5 mt-6 py-6 border-y border-[#cac7b1]/40 w-full max-w-md bg-white/40 backdrop-blur-sm rounded-xl"
             >
-              <p className="text-2xl font-bold text-[#1b1c1c] tracking-wide">{props.weddingTime || "13th May 2026"}</p>
-              <p className="font-sans text-xs text-[#484837] font-semibold uppercase tracking-wider">10:00 AM Onwards</p>
+              <p className="text-2xl font-bold text-[#1b1c1c] tracking-wide">{props.weddingDate || "13th May 2026"}</p>
+              <p className="font-sans text-xs text-[#484837] font-semibold uppercase tracking-wider">{props.weddingTime || "10:00 AM Onwards"}</p>
             </motion.div>
 
             <motion.div
@@ -311,7 +353,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
               <h2 className="text-4xl font-bold text-[#5f5f00]">Our Love Story</h2>
               <div className="w-16 h-1 bg-[#904d00] rounded-full" />
               <blockquote className="text-xl italic text-[#1b1c1c] pl-6 border-l-4 border-[#5f5f00]/40 leading-relaxed bg-[#5f5f00]/5 py-3 rounded-r-xl">
-                "Every love story is beautiful, but ours is my favorite."
+                &ldquo;Every love story is beautiful, but ours is my favorite.&rdquo;
               </blockquote>
               <p className="font-sans text-sm text-[#484837] leading-relaxed">
                 {props.loveStoryText ||
@@ -333,16 +375,28 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#cac7b1]/40 shadow-xl group cursor-pointer"
+              className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#cac7b1]/40 shadow-xl group cursor-pointer bg-black"
             >
-              <img
-                src={coupleImg}
-                alt="Couple Love Story Photo"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/15 transition-colors">
-                <PlayCircle className="w-16 h-16 text-white drop-shadow-2xl group-hover:scale-110 transition-transform" />
-              </div>
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                  <img
+                    src={coupleImg}
+                    alt="Couple Love Story Photo"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/15 transition-colors">
+                    <PlayCircle className="w-16 h-16 text-white drop-shadow-2xl group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         </section>
@@ -456,7 +510,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
           <div className="flex flex-col gap-3 text-center md:text-left">
             <span className="text-3xl font-bold italic text-[#5f5f00]">{initials}</span>
             <p className="font-sans text-xs text-[#484837] max-w-sm leading-relaxed">
-              Thank you for being a part of our special journey. We can't wait to celebrate with you!
+              Thank you for being a part of our special journey. We can&apos;t wait to celebrate with you!
             </p>
             <div className="font-sans text-xs text-[#904d00] font-semibold mt-2 space-y-1">
               <p>📞 {props.contactPhone || "+91 934590 0711"}</p>

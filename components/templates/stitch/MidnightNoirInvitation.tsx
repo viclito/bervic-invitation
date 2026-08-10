@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
+import { parseYouTubeEmbedUrl } from "../classic-floral/LoveStoryVideoFacade";
 import {
   Sparkles,
   MapPin,
@@ -19,6 +21,7 @@ import {
 export default function MidnightNoirInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({ days: 42, hours: 14, minutes: 59, seconds: 20 });
@@ -36,7 +39,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(props.weddingDate || "2026-11-18T17:00:00").getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const difference = Math.max(0, targetDate - now);
@@ -186,8 +189,53 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
               {partner1} <span className="text-[#c1c7cf] italic font-light">&amp;</span> {partner2}
             </motion.h1>
 
+            {/* Bride & Groom Photo Cards */}
+            <div className="grid grid-cols-2 gap-4 md:gap-6 w-full max-w-lg mx-auto my-2">
+              {/* Bride Photo Card */}
+              <motion.div
+                whileHover={{ y: -5 }}
+                className="group relative h-52 sm:h-60 rounded-2xl overflow-hidden border border-[#c1c7cf]/40 shadow-xl bg-[#152031]"
+              >
+                <img
+                  src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#081425]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 text-left">
+                  <span className="text-[10px] uppercase tracking-widest text-[#c1c7cf] font-bold block">
+                    Bride
+                  </span>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-white leading-none mt-1">
+                    {partner1}
+                  </h3>
+                </div>
+              </motion.div>
+
+              {/* Groom Photo Card */}
+              <motion.div
+                whileHover={{ y: -5 }}
+                className="group relative h-52 sm:h-60 rounded-2xl overflow-hidden border border-[#c1c7cf]/40 shadow-xl bg-[#152031]"
+              >
+                <img
+                  src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#081425]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 text-left">
+                  <span className="text-[10px] uppercase tracking-widest text-[#c1c7cf] font-bold block">
+                    Groom
+                  </span>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-white leading-none mt-1">
+                    {partner2}
+                  </h3>
+                </div>
+              </motion.div>
+            </div>
+
             {/* Glowing Vertical Line */}
-            <div className="w-0.5 h-24 bg-gradient-to-b from-[#c1c7cf] via-[#c1c7cf]/40 to-transparent my-2 animate-pulse" />
+            <div className="w-0.5 h-16 bg-gradient-to-b from-[#c1c7cf] via-[#c1c7cf]/40 to-transparent my-1 animate-pulse" />
 
             {/* Countdown Grid */}
             <div className="flex gap-8 md:gap-14 text-center">
@@ -244,7 +292,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
                   <div>
                     <h3 className="font-serif text-2xl font-bold text-[#d8e3fb] mb-1">The Grand Atrium</h3>
                     <p className="text-xs text-[#c6c6cb] leading-relaxed">
-                      {props.weddingTime || "Saturday, November 18th, 2026"}<br />Five O'clock in the Evening
+                      {props.weddingTime || "Saturday, November 18th, 2026"}<br />Five O&apos;clock in the Evening
                     </p>
                   </div>
                   <p className="text-xs text-[#c6c6cb]">
@@ -424,24 +472,45 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
         </section>
 
         {/* Video Proposal Feature */}
-        <section className="py-28 relative min-h-[500px] flex items-center justify-center overflow-hidden bg-[#040e1f] border-t border-[#45474b]/30 text-center">
-          <div className="relative z-10 flex flex-col items-center gap-6 px-6">
+        <section className="py-28 relative min-h-[500px] flex items-center justify-center overflow-hidden bg-[#040e1f] border-t border-[#45474b]/30 text-center" id="video">
+          <div className="relative z-10 flex flex-col items-center gap-6 px-6 max-w-4xl mx-auto w-full">
             <h2 className="font-serif text-4xl font-bold text-[#d8e3fb]">
-              The <span className="text-[#c1c7cf] italic font-normal">Proposal</span>
+              The <span className="text-[#c1c7cf] italic font-normal">Proposal &amp; Film</span>
             </h2>
 
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-20 h-20 rounded-full border-2 border-[#c1c7cf] flex items-center justify-center group bg-[#081425]/80 backdrop-blur-sm hover:bg-[#c1c7cf] transition-all duration-500 relative shadow-2xl"
-            >
-              <span className="absolute inset-0 rounded-full border border-[#c1c7cf] animate-ping opacity-30 pointer-events-none" />
-              <Play className="w-8 h-8 text-[#c1c7cf] group-hover:text-[#081425] ml-1 transition-colors fill-current" />
-            </motion.button>
+            {isVideoPlaying ? (
+              <div className="relative w-full aspect-video rounded-3xl overflow-hidden border-2 border-[#c1c7cf]/40 shadow-2xl bg-black">
+                <iframe
+                  src={parseYouTubeEmbedUrl(props.loveStoryVideoUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
+                  title="Wedding Journey Film"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
+                <button
+                  onClick={() => setIsVideoPlaying(false)}
+                  className="absolute top-4 right-4 bg-[#081425]/90 hover:bg-[#c1c7cf] text-white hover:text-[#081425] px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-[#c1c7cf]/40"
+                >
+                  Close Video ✕
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <motion.button
+                  onClick={() => setIsVideoPlaying(true)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-20 h-20 rounded-full border-2 border-[#c1c7cf] flex items-center justify-center group bg-[#081425]/80 backdrop-blur-sm hover:bg-[#c1c7cf] transition-all duration-500 relative shadow-2xl cursor-pointer"
+                >
+                  <span className="absolute inset-0 rounded-full border border-[#c1c7cf] animate-ping opacity-30 pointer-events-none" />
+                  <Play className="w-8 h-8 text-[#c1c7cf] group-hover:text-[#081425] ml-1 transition-colors fill-current" />
+                </motion.button>
 
-            <span className="text-xs font-bold text-[#c1c7cf] uppercase tracking-widest mt-2">
-              Watch The Motion Film
-            </span>
+                <span className="text-xs font-bold text-[#c1c7cf] uppercase tracking-widest mt-2">
+                  Watch The Motion Film
+                </span>
+              </div>
+            )}
           </div>
         </section>
 

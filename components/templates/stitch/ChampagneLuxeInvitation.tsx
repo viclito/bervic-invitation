@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -14,10 +15,12 @@ import {
   Menu,
   X,
   Sparkles,
+  MapPin,
 } from "lucide-react";
 
 export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
@@ -175,59 +178,138 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
           </motion.div>
         </section>
 
-        {/* The Details Section */}
-        <section className="py-24 px-6 md:px-16 bg-[#f4f3f1]" id="details">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="font-serif text-4xl md:text-5xl font-light text-[#735c00]">The Details</h2>
+        {/* Section 1: Meet the Couple */}
+        <section className="py-20 px-6 md:px-16 bg-[#faf9f6] border-b border-[#d0c5af]/30" id="couple">
+          <div className="max-w-[1000px] mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-12"
+            >
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#d4af37] block mb-1">
+                The Blessed Union
+              </span>
+              <h2 className="font-serif text-4xl md:text-5xl font-light text-[#735c00]">
+                Meet the Couple
+              </h2>
               <div className="h-0.5 w-24 bg-[#d0c5af] mx-auto mt-4" />
-            </div>
+            </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
+              {/* Bride Card */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="bg-white/50 backdrop-blur-xl border border-white/60 p-8 md:p-12 rounded-2xl shadow-[0_10px_40px_-10px_rgba(212,175,55,0.08)] relative overflow-hidden flex flex-col gap-6"
-              >
-                <div className="absolute top-4 right-4 opacity-15 text-[#735c00]">
-                  <Church className="w-16 h-16" />
-                </div>
-
-                <div>
-                  <h3 className="font-serif text-3xl font-light text-[#735c00] mb-2">Ceremony</h3>
-                  <p className="text-xs font-semibold text-[#685d4a] uppercase tracking-wider mb-2">3:00 PM in the Afternoon</p>
-                  <p className="text-sm text-[#1a1c1a] leading-relaxed">
-                    The Grand Estate Gardens<br />123 Champagne Boulevard<br />Beverly Hills, CA 90210
-                  </p>
-                </div>
-
-                <div className="h-px w-full bg-[#d0c5af]/40 my-2" />
-
-                <div>
-                  <h3 className="font-serif text-3xl font-light text-[#735c00] mb-2">Reception</h3>
-                  <p className="text-xs font-semibold text-[#685d4a] uppercase tracking-wider mb-2">6:00 PM in the Evening</p>
-                  <p className="text-sm text-[#1a1c1a] leading-relaxed">
-                    The Glass Conservatory<br />Dinner, dancing, and celebrations to follow.
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="relative h-[480px] rounded-2xl overflow-hidden shadow-xl border border-[#d0c5af]/40 group"
+                whileHover={{ y: -6 }}
+                className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden shadow-xl border-2 border-[#d0c5af]/50 bg-white"
               >
                 <img
-                  src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuA5ZBSVi6ZFGGktCxO8BRSXhu4U_4g5eh4s4t2thzsReW256sU1bXFNlbu9M0XKep96SLVXvh0Obp7rj4WfjrHL7zEVTI27XdiswLNS3LvIbjpjKXYfJnaaQij1Epe28Fpdv9Gu7alUAKuJpjlHWeEe7FWv19XGZR45bp725IFe5AHHO_2Zb-T-zOrcXKIOVxYHGr1JT9LFIahbGWE8FJI2mE-2_mrsU2Glqp2WrXsIzTRfJ0sd0FUN"}
-                  alt="Reception Details"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-[#685d4a]/10 group-hover:bg-transparent transition-colors duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4a3b00]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-5 left-5 text-left">
+                  <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#f2ca50] font-bold block">
+                    Bride
+                  </span>
+                  <h3 className="text-2xl font-serif font-light text-white leading-none mt-1">
+                    {partner1}
+                  </h3>
+                </div>
               </motion.div>
+
+              {/* Groom Card */}
+              <motion.div
+                whileHover={{ y: -6 }}
+                className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden shadow-xl border-2 border-[#d0c5af]/50 bg-white"
+              >
+                <img
+                  src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4a3b00]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-5 left-5 text-left">
+                  <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#f2ca50] font-bold block">
+                    Groom
+                  </span>
+                  <h3 className="text-2xl font-serif font-light text-white leading-none mt-1">
+                    {partner2}
+                  </h3>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Event Schedule & Functions */}
+        <section className="py-24 px-6 md:px-16 bg-[#f4f3f1]" id="details">
+          <div className="max-w-[1200px] mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#d4af37] block mb-1">
+                The Celebrations
+              </span>
+              <h2 className="font-serif text-4xl md:text-5xl font-light text-[#735c00]">
+                Event Schedule &amp; Functions
+              </h2>
+              <div className="h-0.5 w-24 bg-[#d0c5af] mx-auto mt-4" />
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(props.events && props.events.length > 0
+                ? props.events
+                : [
+                    {
+                      time: props.weddingTime || "3:00 PM",
+                      title: "Wedding Ceremony",
+                      location: props.venuePlace || "The Grand Estate Gardens",
+                      description: "Sacred marriage ceremony surrounded by family & friends.",
+                    },
+                    {
+                      time: "6:00 PM",
+                      title: "Evening Reception",
+                      location: props.venuePlace || "The Glass Conservatory",
+                      description: "Dinner, dancing, and celebrations to follow.",
+                    },
+                  ]
+              ).map((evt: any, idx: number) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 25 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  whileHover={{ y: -6 }}
+                  className="bg-white/80 backdrop-blur-xl border border-white/90 p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="inline-block px-3 py-1 rounded-full bg-[#735c00]/10 border border-[#735c00]/20 text-xs font-bold text-[#735c00] uppercase tracking-wider mb-4">
+                      {evt.time} {evt.date ? `• ${evt.date}` : ""}
+                    </span>
+                    <h3 className="font-serif text-2xl font-light text-[#735c00] mb-2">
+                      {evt.title}
+                    </h3>
+                    {evt.location && (
+                      <p className="text-xs text-[#685d4a] font-medium flex items-center gap-1.5 mb-3">
+                        <MapPin className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span>{evt.location}</span>
+                      </p>
+                    )}
+                    {evt.description && (
+                      <p className="text-xs text-[#685d4a] leading-relaxed font-light">
+                        {evt.description}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
@@ -360,18 +442,30 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
 
             <motion.div
               whileHover={{ scale: 1.01 }}
-              className="relative w-full rounded-2xl overflow-hidden shadow-xl aspect-video bg-[#e3e2e0] group cursor-pointer border border-[#d0c5af]/40"
+              className="relative w-full rounded-2xl overflow-hidden shadow-xl aspect-video bg-black group cursor-pointer border border-[#d0c5af]/40"
             >
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAORY9siwAN-JdJdGrTwXTw25F_Ww6LUbZTU8C1sHkmFEy7bq_tvRJJESSMsPXKGroLYJEjo30l3g_i6whtnldfOV73vanlfVEkuk-eheRd21Ge7yEkbbDMnlZlz8hdvyzQPh9PHKZZ6kv8JE5A9zbOcbMK4NFf0mA0N9BR8HkOO8-A7Ha_78Wnr7IEPbDj31fX4pYTLlfmlW2Zprauy7T34gU6e2nc5fIcsLkPDOdxRKaR2YBwPaUq"
-                alt="Video Thumbnail"
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-white/80 text-[#735c00] rounded-full flex items-center justify-center backdrop-blur-md transition-transform duration-500 group-hover:scale-110 border border-white/60 shadow-lg">
-                  <Play className="w-8 h-8 ml-1 fill-current" />
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                  <img
+                    src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
+                    alt="Video Cover Photo"
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 bg-white/80 text-[#735c00] rounded-full flex items-center justify-center backdrop-blur-md transition-transform duration-500 group-hover:scale-110 border border-white/60 shadow-lg">
+                      <Play className="w-8 h-8 ml-1 fill-current" />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </div>
         </section>

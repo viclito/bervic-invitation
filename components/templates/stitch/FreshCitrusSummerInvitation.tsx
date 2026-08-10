@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -24,6 +25,7 @@ export default function FreshCitrusSummerInvitation(
   props: TemplateClassicFloralProps
 ) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Celebrant Name
   const celebrantName =
@@ -319,15 +321,29 @@ export default function FreshCitrusSummerInvitation(
               <div className="relative">
                 <div className="absolute inset-0 bg-[#ff8c00]/20 rounded-[2rem] transform rotate-3 blur-xl" />
                 <div className="relative bg-[#fafaf4] p-4 rounded-[2rem] shadow-xl border border-white/50 backdrop-blur-md">
-                  <div className="aspect-video bg-[#e8e8e3] rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
-                    <img
-                      alt="Atmospheric video placeholder showing brunch preparation"
-                      className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDAa-CQssAiTB1dYJ7m-aAuco9W43tzwq04LhshX-PFk8odwNjZNMLoMNqQfZ1E3-rQ6tw_cKSDVnNMGSOy6ZTJbdv08ouaq9yOfsvudo_QQsWEKN8mbX9brnV_AXpSNfGoXXtCsHYde4l9hzBopvBB0b24HIATmZBuZx0VrL3YYn6JtK7cPtOT68pHqSQD_EjLWPLufVnpQvLQZtgZLr_KJXXARsFB68s7AX2YkSJR6egWNKVEdUc"
-                    />
-                    <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center z-10 text-[#904d00] shadow-lg group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 fill-current ml-1" />
-                    </div>
+                  <div className="aspect-video bg-black rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
+                    {isPlayingVideo ? (
+                      <iframe
+                        title="Love story video"
+                        src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                        className="w-full h-full border-0"
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                        <img
+                          alt="Video Cover Photo"
+                          className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+                          src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center z-10 text-[#904d00] shadow-lg group-hover:scale-110 transition-transform">
+                            <Play className="w-8 h-8 fill-current ml-1" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -9,9 +9,14 @@ import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
 import { Search, ExternalLink, Edit3, Crown, Palette, Sparkles } from "lucide-react";
 
+import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
+import TemplateGallerySkeleton from "@/components/skeletons/TemplateGallerySkeleton";
+import MakeItYoursModal from "@/components/templates/MakeItYoursModal";
+
 function TemplateGalleryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates");
 
   const categoryParam = searchParams.get("category");
   const viewedParam = searchParams.get("viewed");
@@ -19,6 +24,53 @@ function TemplateGalleryContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedSlug, setHighlightedSlug] = useState<string | null>(viewedParam);
+
+  const [selectedTemplateForModal, setSelectedTemplateForModal] = useState<{
+    slug: string;
+    title: string;
+    isPremium: boolean;
+    price: number;
+  } | null>(null);
+
+  const [subData, setSubData] = useState<{
+    plan?: string;
+    isActive?: boolean;
+    remainingTemplateSlots?: number;
+    remainingCinematicSlots?: number;
+    hasCinematicPass?: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user/subscription")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setSubData({
+            plan: data.subscription?.planType || data.subscription?.plan,
+            isActive: Boolean(data.subscription?.isActive || data.subscription?.status === "ACTIVE"),
+            remainingTemplateSlots: data.allowedTemplatesCount ?? 1,
+            remainingCinematicSlots: data.allowedCinematicCount ?? 0,
+            hasCinematicPass: Boolean(data.subscription?.hasCinematicPass),
+          });
+        }
+      })
+      .catch(() => setSubData(null));
+  }, []);
+
+  const handleActivateTemplate = async () => {
+    if (!selectedTemplateForModal) return;
+    const res = await fetch("/api/user/event-draft/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ templateSlug: selectedTemplateForModal.slug }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      router.push(`/invitations/${selectedTemplateForModal.slug}`);
+    } else {
+      throw new Error(data.message || "Failed to activate template.");
+    }
+  };
 
   const categories = [
     { id: "all", label: "All Templates" },
@@ -59,6 +111,10 @@ function TemplateGalleryContent() {
       tpl.styleTag.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  if (isLoading || !hasCompletedDetails) {
+    return <TemplateGallerySkeleton />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F5EEE0" }}>
@@ -190,19 +246,26 @@ function TemplateGalleryContent() {
                     <button
                       type="button"
                       onClick={() => router.push(`/templates/${tpl.slug}`)}
-                      className="py-1.5 px-2 rounded-xl border border-[#D9A441]/60 bg-[#F8F3EA] text-[#221C17] text-[11px] sm:text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1 shadow-sm"
+                      className="py-2 px-1.5 rounded-xl border border-[#D9A441]/60 bg-[#F8F3EA] text-[#221C17] text-[11px] sm:text-xs font-semibold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1 shadow-sm whitespace-nowrap"
                     >
-                      <ExternalLink className="w-3 h-3 text-[#7A1F2B]" />
+                      <ExternalLink className="w-3 h-3 text-[#7A1F2B] shrink-0" />
                       <span>Preview</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => router.push(`/templates/customize/${tpl.slug}?from=templates`)}
-                      className="btn-maroon py-1.5 px-2 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-sm"
+                      onClick={() =>
+                        setSelectedTemplateForModal({
+                          slug: tpl.slug,
+                          title: tpl.title,
+                          isPremium: Boolean(tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"),
+                          price: tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? 2000 : 599,
+                        })
+                      }
+                      className="btn-maroon py-2 px-1.5 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.01] transition-transform whitespace-nowrap"
                     >
-                      <Edit3 className="w-3 h-3 text-[#D9A441]" />
-                      <span>Customize</span>
+                      <Sparkles className="w-3 h-3 text-[#D9A441] shrink-0" />
+                      <span>Make It Yours</span>
                     </button>
                   </div>
                 </div>
@@ -211,6 +274,19 @@ function TemplateGalleryContent() {
           </div>
         )}
       </main>
+
+      {selectedTemplateForModal && (
+        <MakeItYoursModal
+          isOpen={Boolean(selectedTemplateForModal)}
+          onClose={() => setSelectedTemplateForModal(null)}
+          templateSlug={selectedTemplateForModal.slug}
+          templateTitle={selectedTemplateForModal.title}
+          isPremium={selectedTemplateForModal.isPremium}
+          price={selectedTemplateForModal.price}
+          userSubscription={subData}
+          onConfirmActivate={handleActivateTemplate}
+        />
+      )}
 
       <Footer />
     </div>

@@ -22,29 +22,25 @@ import {
 export default function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setMobileMenuOpen(false);
+  }
+
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 40);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
-  const isHomePage = pathname === "/";
-  const isLightNav = scrolled || !isHomePage;
+  const isLightNav = true;
 
   const navLinkClass = `transition-colors font-semibold ${
     isLightNav

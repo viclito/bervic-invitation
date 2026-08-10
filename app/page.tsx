@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import QuickStartDetailsWizard from "@/components/QuickStartDetailsWizard";
 import Footer from "@/components/Footer";
 
 // Reusable Skeleton Component for Lazy Loaded Sections
@@ -63,8 +64,11 @@ export default function Home() {
       {/* Sticky Navbar */}
       <Navbar />
 
-      {/* Hero Section (Loaded immediately, priority) */}
+      {/* Hero Section */}
       <Hero />
+
+      {/* Interactive Quick-Start Details Collection Wizard (Upload or 1-to-3 Question Form) */}
+      <QuickStartDetailsWizard />
 
       {/* 3D Coverflow Popular Invitation Templates Showcase */}
       <PopularTemplatesShowcase />

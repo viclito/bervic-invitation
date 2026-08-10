@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -20,6 +21,7 @@ import {
 
 export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
@@ -41,7 +43,7 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
       ? props.timelineDay.map((t) => ({
           time: t.time,
           title: t.title,
-          desc: "Main Event",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
         }))
       : defaultTimeline;
 
@@ -171,70 +173,134 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
       {/* Main Content Canvas with Art Deco Pattern Background */}
       <main className="relative py-24 px-6 md:px-16 bg-[#131410] border-t border-[#4d4635]/40" id="events">
         <div className="max-w-[1200px] mx-auto space-y-28">
-          {/* The Celebration (Bento/Asymmetric) */}
+          {/* Section 1: Meet the Couple (Bride & Groom) */}
           <section className="relative">
             <div className="text-center mb-16">
-              <h2 className="font-serif text-3xl md:text-4xl text-[#f2ca50] uppercase tracking-[0.2em]">
-                The Celebration
+              <span className="text-xs font-bold text-[#d4af37] uppercase tracking-[0.3em] block mb-2">
+                The Happy Couple
+              </span>
+              <h2 className="font-serif text-3xl md:text-5xl text-[#f2ca50] uppercase tracking-[0.15em]">
+                Meet the Bride &amp; Groom
               </h2>
-              <div className="w-16 h-0.5 bg-[#d4af37] mx-auto mt-4" />
+              <div className="w-20 h-0.5 bg-[#d4af37] mx-auto mt-4" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-              {/* Left Image Rail with Double Gold Border */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              {/* Bride Card */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="md:col-span-5 h-[520px] p-2 border border-[#d4af37] relative group"
+                whileHover={{ y: -6 }}
+                className="group relative h-80 sm:h-96 border-2 border-[#d4af37] p-2 bg-[#131410] shadow-2xl"
               >
-                <div className="w-full h-full border border-[#d4af37] overflow-hidden">
+                <div className="w-full h-full border border-[#d4af37] overflow-hidden relative">
                   <img
-                    src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuAQN0JQjHjBr_Dr7kqsqaL8i75h9t4ORDdRbNpnJChk5hRppIoYCkOpmE_NC6YoaMss4471FGAwh5SfLQfPScHxfiHZhcUq03khn9InXOGCLdASTOO8fpA-oVYvkGUf33m380ek_HqRPbAGNm_D_syQkgNSx91Tu8aUld7fHOxJYrsGEyNei7Mrlyvu-3oI57EcPy6ecaBtoTuuryKhSQzs-QnVIaUR5sncLnsYZtOeKmzZDlCEvOur"}
-                    alt="Art Deco Detail"
+                    src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                    alt={`${partner1} - Bride`}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-4 left-4 text-left">
+                    <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#f2ca50] font-bold block">
+                      Bride
+                    </span>
+                    <h3 className="text-2xl font-serif text-white tracking-wider uppercase mt-1">
+                      {partner1}
+                    </h3>
+                  </div>
                 </div>
               </motion.div>
 
-              {/* Right Content Area */}
+              {/* Groom Card */}
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="md:col-span-7 bg-[#20201c] p-10 md:p-14 border border-[#d4af37] relative z-10 md:-ml-12 shadow-2xl"
+                whileHover={{ y: -6 }}
+                className="group relative h-80 sm:h-96 border-2 border-[#d4af37] p-2 bg-[#131410] shadow-2xl"
               >
-                <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-[#d4af37] m-4" />
-                <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-[#d4af37] m-4" />
-
-                <div className="space-y-10">
-                  <div>
-                    <h3 className="font-serif text-2xl text-white uppercase tracking-wider mb-2">The Ceremony</h3>
-                    <p className="text-xs font-bold text-[#f2ca50] tracking-widest mb-3">
-                      {props.weddingTime || "Saturday, October 26th • 4:00 PM"}
-                    </p>
-                    <p className="text-sm text-[#d0c5af] leading-relaxed">
-                      The Grand Cathedral<br />123 Deco Avenue, Metropolis
-                    </p>
-                  </div>
-
-                  <div className="w-full h-px bg-[#4d4635]" />
-
-                  <div>
-                    <h3 className="font-serif text-2xl text-white uppercase tracking-wider mb-2">The Reception</h3>
-                    <p className="text-xs font-bold text-[#f2ca50] tracking-widest mb-3">Follows immediately</p>
-                    <p className="text-sm text-[#d0c5af] leading-relaxed">
-                      The Emerald Room at The Gatsby Hotel<br />Black Tie Strictly Enforced
-                    </p>
+                <div className="w-full h-full border border-[#d4af37] overflow-hidden relative">
+                  <img
+                    src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                    alt={`${partner2} - Groom`}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-4 left-4 text-left">
+                    <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#f2ca50] font-bold block">
+                      Groom
+                    </span>
+                    <h3 className="text-2xl font-serif text-white tracking-wider uppercase mt-1">
+                      {partner2}
+                    </h3>
                   </div>
                 </div>
               </motion.div>
             </div>
           </section>
 
-          {/* Venues & Maps */}
+          {/* Section 2: Event Schedule & Functions */}
+          <section className="relative" id="functions">
+            <div className="text-center mb-16">
+              <span className="text-xs font-bold text-[#d4af37] uppercase tracking-[0.3em] block mb-2">
+                Celebrations &amp; Timings
+              </span>
+              <h2 className="font-serif text-3xl md:text-5xl text-[#f2ca50] uppercase tracking-[0.15em]">
+                Event Schedule &amp; Functions
+              </h2>
+              <div className="w-20 h-0.5 bg-[#d4af37] mx-auto mt-4" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(props.events && props.events.length > 0
+                ? props.events
+                : [
+                    {
+                      time: props.weddingTime || "4:00 PM",
+                      title: "Ceremony & Muhurtham",
+                      location: props.venuePlace || "The Grand Cathedral",
+                      description: "Traditional marriage rituals surrounded by loved ones.",
+                    },
+                    {
+                      time: "7:00 PM",
+                      title: "Grand Reception Party",
+                      location: props.venuePlace || "The Emerald Room at Gatsby Hotel",
+                      description: "Dinner, toasts, and dancing to celebrate the newlyweds.",
+                    },
+                  ]
+              ).map((evt: any, idx: number) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  whileHover={{ y: -6 }}
+                  className="bg-[#1c1d18] border border-[#d4af37]/60 p-8 relative group shadow-2xl flex flex-col justify-between"
+                >
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#d4af37] m-2" />
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-[#d4af37] m-2" />
+
+                  <div>
+                    <span className="inline-block px-3 py-1 bg-[#28261e] border border-[#d4af37]/40 text-[#f2ca50] text-xs font-bold uppercase tracking-widest mb-4">
+                      {evt.time} {evt.date ? `• ${evt.date}` : ""}
+                    </span>
+                    <h3 className="font-serif text-2xl text-white uppercase tracking-wider mb-2">
+                      {evt.title}
+                    </h3>
+                    {evt.location && (
+                      <p className="text-xs text-[#d4af37] font-medium flex items-center gap-1.5 mb-3">
+                        <MapPin className="w-3.5 h-3.5 text-[#f2ca50]" />
+                        <span>{evt.location}</span>
+                      </p>
+                    )}
+                    {evt.description && (
+                      <p className="text-xs text-[#d0c5af] leading-relaxed font-light">
+                        {evt.description}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section 3: Venues & Directions */}
           <section className="relative">
             <div className="text-center mb-16">
               <h2 className="font-serif text-3xl md:text-4xl text-[#f2ca50] uppercase tracking-[0.2em]">
@@ -244,7 +310,7 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Map 1 */}
+              {/* Venue 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -252,20 +318,28 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
                 transition={{ duration: 0.6 }}
                 className="flex flex-col space-y-4"
               >
-                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group">
+                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group bg-[#20201c]">
                   <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA80y1HYqrbRUudf8Uo74QzvTJKtooSA1TiDOs_HUIPMNiDnmcpLeIzYiWsl7KJPeu-26rBcbMGH0TybhD09qGtn7ZhbsQLTPZIdFbKCuqetkSLFpO9IaV2Qt3n00UJHC0tZxbhS6yXoKmE-DPewy__xxuz25FcA3pC_ztPWjVMfY9PaI7YYx7Zzvcfkiz-87xRXTveUsqmPKdyVpPfa76LVTUYIM9R3er5DWOSeT2n9fqK6DoB9e2S"
-                    alt="Ceremony Map"
-                    className="w-full h-full object-cover filter grayscale sepia-[0.3] group-hover:scale-105 transition-transform duration-700"
+                    src={
+                      props.locations?.[0]?.image ||
+                      props.coverImage ||
+                      "/images/templates/venue-ceremony.jpg"
+                    }
+                    alt="Ceremony Venue"
+                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                   />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">Ceremony Location</h4>
-                  <p className="text-xs text-[#d0c5af]">The Grand Cathedral</p>
+                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">
+                    {props.locations?.[0]?.name || "Ceremony Location"}
+                  </h4>
+                  <p className="text-xs text-[#d0c5af]">
+                    {props.locations?.[0]?.address || props.venuePlace || "The Grand Cathedral"}
+                  </p>
                 </div>
               </motion.div>
 
-              {/* Map 2 */}
+              {/* Venue 2 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -273,16 +347,24 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="flex flex-col space-y-4"
               >
-                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group">
+                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group bg-[#20201c]">
                   <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_StURIiABl83VzbxF6Hc-AsX51MyaBjA3lAAIizKYqgOzG60qMyKm6Tz6vJ9ZwoZgXfAu9esbFbYlCYXrTzeYVtlC1o3JPj43O8nPh6eTPYK0iRlaeRenLK4msM4_sGpLijnYrOYF5yy3KHcrsfnLyi2YI0zSnV1IBCAxTTOykB2MP907zhXajKjC_ooi58Lug2tpDze9xp5tDRpsq3cdOXcIA4XJS7OVGtc0UUT8kd2K4yLaIhiH"
-                    alt="Reception Map"
-                    className="w-full h-full object-cover filter grayscale sepia-[0.3] group-hover:scale-105 transition-transform duration-700"
+                    src={
+                      props.locations?.[1]?.image ||
+                      props.coverImage ||
+                      "/images/templates/venue-reception.jpg"
+                    }
+                    alt="Reception Venue"
+                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                   />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">Reception Location</h4>
-                  <p className="text-xs text-[#d0c5af]">The Emerald Room at Gatsby Hotel</p>
+                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">
+                    {props.locations?.[1]?.name || "Reception Location"}
+                  </h4>
+                  <p className="text-xs text-[#d0c5af]">
+                    {props.locations?.[1]?.address || "The Emerald Room at Gatsby Hotel"}
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -370,16 +452,28 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
 
             <div className="max-w-4xl mx-auto border border-[#d4af37] p-2">
               <div className="relative aspect-video bg-[#1c1c18] overflow-hidden group cursor-pointer border border-[#d4af37]">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuADa97sld8paFwGW0c7RBjzItKjCjkqdCAG8O_ajfKVVhlSPiVQ4D6f5Fmmdmeion4KnW3_--vz0ZAvXwIvghzDWNEC78csvOsT2hs-DuU0Rc6SZAOvn3cIwlabTCn1o9ObLyysQiZo4wWWquBKVENFokM1Kn0PwCKiB0W9e2Eb5hktbnfVg7m50ZhLBVe-uVTEmNj3n6fdqyRhHAK3ksk5pApy5dxto-nWsDObj7yT6s-4xIIngkbF"
-                  alt="Video Thumbnail"
-                  className="w-full h-full object-cover opacity-60 grayscale group-hover:opacity-80 transition-opacity duration-500"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full border-2 border-[#d4af37] flex items-center justify-center bg-[#131410]/70 text-[#f2ca50] hover:bg-[#d4af37] hover:text-black transition-colors duration-300 shadow-2xl">
-                    <Play className="w-8 h-8 ml-1 fill-current" />
+                {isPlayingVideo ? (
+                  <iframe
+                    title="Motion film video"
+                    src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                    <img
+                      src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
+                      alt="Video Cover Photo"
+                      className="w-full h-full object-cover opacity-60 grayscale group-hover:opacity-80 transition-opacity duration-500"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-full border-2 border-[#d4af37] flex items-center justify-center bg-[#131410]/70 text-[#f2ca50] hover:bg-[#d4af37] hover:text-black transition-colors duration-300 shadow-2xl">
+                        <Play className="w-8 h-8 ml-1 fill-current" />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </section>

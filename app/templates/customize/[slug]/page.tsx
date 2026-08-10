@@ -12,6 +12,7 @@ import { checkInvitationLockStatus } from "@/lib/lockCheck";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { sampleBirthdayData } from "@/data/sampleBirthdayData";
 import { templatesRegistry } from "@/data/templatesRegistry";
+import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
 import { TemplateClassicFloralProps, WeddingEvent, TimelineStep, LocationVenue } from "@/types/template";
 import {
   Sparkles,
@@ -139,12 +140,14 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
 
-  // Auth Protection
+  // Redirect to dedicated Event Profile Form Page
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push(`/auth/login?callbackUrl=/templates/customize/${templateSlug}`);
+      router.push(`/auth/login?callbackUrl=/dashboard/event-profile`);
+    } else if (status === "authenticated") {
+      router.replace(`/dashboard/event-profile`);
     }
-  }, [status, router, templateSlug]);
+  }, [status, router]);
 
   // Form State
   const [formData, setFormData] = useState<TemplateClassicFloralProps>({
@@ -152,16 +155,15 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
     galleryImages: defaultGallery,
   });
 
-  const [baseUrl, setBaseUrl] = useState("https://bervic-invitation-six.vercel.app");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setBaseUrl(window.location.origin);
-      if (window.innerWidth < 1024) {
-        setActiveTab("edit");
-      }
+  const [activeTab, setActiveTab] = useState<"edit" | "preview" | "split">(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      return "edit";
     }
-  }, []);
+    return "split";
+  });
+  const [baseUrl] = useState(() =>
+    typeof window !== "undefined" ? window.location.origin : "https://bervic-invitation-six.vercel.app"
+  );
 
   const [datePickerVal, setDatePickerVal] = useState(
     isBirthday ? "2026-09-15" : "2026-11-28"
@@ -171,7 +173,6 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
   );
 
   const [customSlug, setCustomSlug] = useState("");
-  const [activeTab, setActiveTab] = useState<"edit" | "preview" | "split">("split");
   const [saving, setSaving] = useState(false);
   const [isSavedInProfile, setIsSavedInProfile] = useState<boolean>(Boolean(invitationId));
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | null>(null);
@@ -257,6 +258,44 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
     }, 400);
   };
 
+  // Pre-fill formData with user's active Event Profile details if no existing invitationId
+  useEffect(() => {
+    if (invitationId) return;
+
+    let activeDraft: Record<string, unknown> | null = null;
+    if (typeof window !== "undefined") {
+      const localStr = localStorage.getItem("bervic_user_draft_details");
+      if (localStr) {
+        try {
+          activeDraft = JSON.parse(localStr);
+        } catch {
+          activeDraft = null;
+        }
+      }
+    }
+
+    fetch("/api/user/event-draft")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.draft) {
+          const merged = mapEventProfileToInvitationData(data.draft, defaultSampleData);
+          setFormData((prev) => ({ ...prev, ...merged }));
+          formDataRef.current = { ...formDataRef.current, ...merged };
+        } else if (activeDraft) {
+          const merged = mapEventProfileToInvitationData(activeDraft, defaultSampleData);
+          setFormData((prev) => ({ ...prev, ...merged }));
+          formDataRef.current = { ...formDataRef.current, ...merged };
+        }
+      })
+      .catch(() => {
+        if (activeDraft) {
+          const merged = mapEventProfileToInvitationData(activeDraft, defaultSampleData);
+          setFormData((prev) => ({ ...prev, ...merged }));
+          formDataRef.current = { ...formDataRef.current, ...merged };
+        }
+      });
+  }, [invitationId, templateSlug, defaultSampleData]);
+
   // If editing an existing saved invitation, load it from DB
   useEffect(() => {
     if (invitationId && status === "authenticated") {
@@ -264,51 +303,51 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
         .then((res) => res.json())
         .then((data) => {
           if (data.invitations) {
-            const found = data.invitations.find((inv: any) => inv.id === invitationId);
+            const found = data.invitations.find((inv: { id: string; [key: string]: unknown }) => inv.id === invitationId);
             if (found) {
               setIsSavedInProfile(true);
-              setCustomSlug(found.slug || "");
-              if (found.createdAt) setInvitationCreatedAt(found.createdAt);
+              setCustomSlug((found.slug as string) || "");
+              if (found.createdAt) setInvitationCreatedAt(found.createdAt as string);
               if (typeof found.isUnlockedByAdmin === "boolean") setInvitationUnlockedByAdmin(found.isUnlockedByAdmin);
               if (found.weddingDate) {
-                const d = new Date(found.weddingDate);
+                const d = new Date(found.weddingDate as string);
                 if (!isNaN(d.getTime())) {
                   setDatePickerVal(d.toISOString().split("T")[0]);
                 }
               }
-              const loadedGallery = found.galleryImagesJson ? JSON.parse(found.galleryImagesJson) : defaultGallery;
+              const loadedGallery = found.galleryImagesJson ? JSON.parse(found.galleryImagesJson as string) : defaultGallery;
               const activeGallery = Array.isArray(loadedGallery) && loadedGallery.length > 0 ? loadedGallery.slice(0, maxGalleryPhotos) : defaultGallery;
 
               setFormData({
-                coupleInitials: found.coupleInitials || "Y | P",
-                partnerOne: found.partnerOne || "Your Name",
-                partnerTwo: found.partnerTwo || "Partner's Name",
-                tagline: found.tagline || "TOGETHER WITH THEIR FAMILIES",
-                inviteLine: found.inviteLine || "invite you to celebrate their wedding",
-                weddingDate: found.weddingDate || "2026-11-28T10:30:00.000Z",
-                weddingTime: found.weddingTime || "Saturday, 28th November 2026 at 10:30 AM IST",
-                heroImage: found.heroImage || "",
-                coupleImage: found.coupleImage || "",
-                partnerTwoImage: found.partnerTwoImage || "",
-                venuePlace: found.venuePlace || "Your Venue Name, Your City, State",
-                events: found.eventsJson ? JSON.parse(found.eventsJson) : sampleWeddingData.events,
-                timelineDay: found.timelineDayJson ? JSON.parse(found.timelineDayJson) : sampleWeddingData.timelineDay,
-                loveStoryText: found.loveStoryText || "",
-                loveStoryVideoUrl: found.loveStoryVideoUrl || "",
-                locations: found.locationsJson ? JSON.parse(found.locationsJson) : sampleWeddingData.locations,
+                coupleInitials: (found.coupleInitials as string) || "Y | P",
+                partnerOne: (found.partnerOne as string) || "Your Name",
+                partnerTwo: (found.partnerTwo as string) || "Partner's Name",
+                tagline: (found.tagline as string) || "TOGETHER WITH THEIR FAMILIES",
+                inviteLine: (found.inviteLine as string) || "invite you to celebrate their wedding",
+                weddingDate: (found.weddingDate as string) || "2026-11-28T10:30:00.000Z",
+                weddingTime: (found.weddingTime as string) || "Saturday, 28th November 2026 at 10:30 AM IST",
+                heroImage: (found.heroImage as string) || "",
+                coupleImage: (found.coupleImage as string) || "",
+                partnerTwoImage: (found.partnerTwoImage as string) || "",
+                venuePlace: (found.venuePlace as string) || "Your Venue Name, Your City, State",
+                events: found.eventsJson ? JSON.parse(found.eventsJson as string) : sampleWeddingData.events,
+                timelineDay: found.timelineDayJson ? JSON.parse(found.timelineDayJson as string) : sampleWeddingData.timelineDay,
+                loveStoryText: (found.loveStoryText as string) || "",
+                loveStoryVideoUrl: (found.loveStoryVideoUrl as string) || "",
+                locations: found.locationsJson ? JSON.parse(found.locationsJson as string) : sampleWeddingData.locations,
                 galleryImages: activeGallery,
-                contactPhone: found.contactPhone || "",
-                contactAddress: found.contactAddress || "",
-                socialLinks: found.socialLinksJson ? JSON.parse(found.socialLinksJson) : sampleWeddingData.socialLinks,
+                contactPhone: (found.contactPhone as string) || "",
+                contactAddress: (found.contactAddress as string) || "",
+                socialLinks: found.socialLinksJson ? JSON.parse(found.socialLinksJson as string) : sampleWeddingData.socialLinks,
               });
             }
           }
         })
         .catch((err) => console.error(err));
     }
-  }, [invitationId, status]);
+  }, [invitationId, status, defaultGallery, maxGalleryPhotos]);
 
-  const handleInputChange = (field: keyof TemplateClassicFloralProps, value: any) => {
+  const handleInputChange = (field: keyof TemplateClassicFloralProps, value: TemplateClassicFloralProps[keyof TemplateClassicFloralProps]) => {
     setFormData((prev) => {
       const updated = {
         ...prev,
@@ -403,7 +442,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
     );
   };
 
-  const handleTimelineChange = (index: number, key: keyof TimelineStep, value: any) => {
+  const handleTimelineChange = (index: number, key: keyof TimelineStep, value: TimelineStep[keyof TimelineStep]) => {
     const updated = [...formData.timelineDay];
     updated[index] = { ...updated[index], [key]: value };
     handleInputChange("timelineDay", updated);
@@ -533,8 +572,9 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
       }
 
       setSavedSuccessModal(true);
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Error saving invitation to database");
+    } catch (err) {
+      const errorObj = err as Error;
+      setErrorMsg(errorObj?.message || "Error saving invitation to database");
     } finally {
       setSaving(false);
     }
@@ -559,9 +599,6 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
       </div>
     );
   }
-
-  // Ensure gallery list always has 6 items
-  const galleryList = Array.from({ length: 6 }, (_, i) => (formData.galleryImages || [])[i] || DEFAULT_SIX_MOMENTS[i]);
 
   // Compute Lock Status
   const lockStatus = checkInvitationLockStatus({
@@ -1169,7 +1206,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                       </h4>
                       <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed text-[#221C17]/75 font-medium">
                         <li>Upload your wedding teaser or glimpse video to <strong>YouTube</strong> (Set visibility to <em>Public</em> or <em>Unlisted</em>).</li>
-                        <li>In YouTube Studio under <strong>Advanced Settings</strong>, ensure <strong>"Allow embedding"</strong> is turned <strong>ON</strong>.</li>
+                        <li>In YouTube Studio under <strong>Advanced Settings</strong>, ensure <strong>&quot;Allow embedding&quot;</strong> is turned <strong>ON</strong>.</li>
                         <li>Copy the YouTube video link from your browser address bar or share button (e.g. <code>https://www.youtube.com/watch?v=...</code> or <code>https://youtu.be/...</code>) and paste it below!</li>
                       </ol>
                     </div>
@@ -1315,7 +1352,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
                     <span>8. Our Moments Gallery ({(formData.galleryImages || []).length}/{maxGalleryPhotos} Photos)</span>
                   </h3>
                   <p className="text-xs text-[#221C17]/70 mt-1">
-                    Upload up to {maxGalleryPhotos} favorite wedding photos (Maximum {maxGalleryPhotos} photos). Use <strong>"Remove Photo"</strong> to delete unwanted photos.
+                    Upload up to {maxGalleryPhotos} favorite wedding photos (Maximum {maxGalleryPhotos} photos). Use <strong>&quot;Remove Photo&quot;</strong> to delete unwanted photos.
                   </p>
                 </div>
                 {(formData.galleryImages || []).length < maxGalleryPhotos ? (

@@ -37,15 +37,26 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
   const partner2 = props.partnerTwo || "Sophia";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
+  const heroBg =
+    props.coverImage ||
+    props.heroImage ||
+    props.coupleImage ||
+    "/images/templates/couple-photo.jpg";
+
   const coupleImg1 =
     props.coupleImage ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC4vXQa4es04gV_xcvR-T-23xenF_7yNe_3WhQQKnKI6MsTsJ1AtphDJqA0TPF2V97g3Iw7QBVsjc3g_Uy8aG-mb64B3YxcxXpbRGlFoDDEAEGcSbk5wqIh0wmO8qkxYxBrWNstRjJeXZ-VVMIv_gCWhRHq8LFWmUZe_zd8FTUav-lKSf3YouUSNDPd2rSQUXofn4yHYzRgusatt2WSi165bY27cMPYBLSIlN8isbiy4tlgQH-YYk3l";
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
 
   const coupleImg2 =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC3XEG3i0Z8VNePibgsxxvKrCtaqfewEMMRMnzvi_pyVXQY6rY_t-AnJDr4OpBKCGO_REbQawZ88ROXSFtt380bmKz4SMeRcTiGAgl52ko2OOvHFam9HFYjzYchzGjCt1CA1u9XYT50eLQZ4qeeaUpRzl6raS5VLdH1CjP3PE24V1YyfMKXqmFxvRaDglyp_K1EJ8Z30ATDygs4z0OId2Xby--_DK7WBzHQkBzt8Jnd9Tl4sbNdsY32";
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
 
   const coupleImg3 =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBKM0Q-7Fa_Wso3KTiIf3fAt4v6Z7Au-unGDTTM2nvGF4BaP9AK-JWPlJ098jn6QY5XPSEP-CDN9da8bcNQtsdVfrgymrGf_9nP-38VT8JbvHigLx-aOM7AXARw42jy582yIvqVXSB9iZlhJVPY67d_93rhExZ3mgcB6Gi9R3dfEVPejOP8eEcqdR5wLK-upYvwAB4FUxtve4A2Rzl7ril6NNeyQ_4GDtYB5xR2aUYLHDC2U2mpokq8";
+    props.coverImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
 
   const defaultTimeline = [
     {
@@ -180,14 +191,38 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
           </div>
 
           {/* Grid Photos */}
-          <div className="md:col-span-2 md:row-span-2 relative rounded-2xl overflow-hidden shadow-md group">
-            <img src={coupleImg1} alt="Hero Couple 1" className="w-full h-full min-h-[350px] object-cover group-hover:scale-105 transition-transform duration-700" />
+          {/* Main Large Hero Slot: Cover Photo */}
+          <div className="md:col-span-2 md:row-span-2 relative rounded-2xl overflow-hidden shadow-md group border border-[#D4AF37]/30">
+            <img src={coupleImg3} alt="Wedding Cover Photo" className="w-full h-full min-h-[350px] object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/50 via-transparent to-transparent" />
           </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block">
-            <img src={coupleImg2} alt="Hero Couple 2" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+
+          {/* Right Top Slot: Bride Photo Card */}
+          <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block border border-[#D4AF37]/30">
+            <img src={coupleImg1} alt={`${partner1} - Bride`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 text-left">
+              <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#D4AF37] font-bold block">
+                Bride
+              </span>
+              <h3 className="text-xl font-serif font-bold text-white mt-0.5">
+                {partner1}
+              </h3>
+            </div>
           </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block">
-            <img src={coupleImg3} alt="Hero Couple 3" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+
+          {/* Right Bottom Slot: Groom Photo Card */}
+          <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block border border-[#D4AF37]/30">
+            <img src={coupleImg2} alt={`${partner2} - Groom`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 text-left">
+              <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#D4AF37] font-bold block">
+                Groom
+              </span>
+              <h3 className="text-xl font-serif font-bold text-white mt-0.5">
+                {partner2}
+              </h3>
+            </div>
           </div>
         </div>
       </section>
@@ -270,15 +305,25 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-[#fbf9f4] rounded-2xl overflow-hidden shadow-md border border-[#D4AF37]/30 flex flex-col">
               <div className="h-56 overflow-hidden">
-                <img src={coupleImg1} alt="Ceremony Venue" className="w-full h-full object-cover" />
+                <img
+                  src={props.locations?.[0]?.image || "/images/templates/venue-ceremony.jpg"}
+                  alt="Ceremony Venue"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="p-6 flex-grow flex flex-col">
-                <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">The Ceremony</h3>
-                <p className="text-xs text-[#4a4452] mb-4">Villa Cetinale, Sovicille, Siena, Italy</p>
-                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto">
+                <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">
+                  {props.locations?.[0]?.name || "The Ceremony"}
+                </h3>
+                <p className="text-xs text-[#4a4452] mb-4">
+                  {props.locations?.[0]?.address || props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy"}
+                </p>
+                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100">
                   <iframe
                     title="Ceremony Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11568.176465492476!2d11.2312!3d43.2725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132a2c1111111111%3A0x1111111111111111!2sVilla%20Cetinale!5e0!3m2!1sen!2sus!4v1680000000000!5m2!1sen!2sus"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      `${props.locations?.[0]?.name || "The Ceremony"} ${props.locations?.[0]?.address || props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy"}`.trim()
+                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -290,15 +335,25 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
 
             <div className="bg-[#fbf9f4] rounded-2xl overflow-hidden shadow-md border border-[#D4AF37]/30 flex flex-col">
               <div className="h-56 overflow-hidden">
-                <img src={coupleImg2} alt="Reception Venue" className="w-full h-full object-cover" />
+                <img
+                  src={props.locations?.[1]?.image || "/images/templates/venue-reception.jpg"}
+                  alt="Reception Venue"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="p-6 flex-grow flex flex-col">
-                <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">The Reception</h3>
-                <p className="text-xs text-[#4a4452] mb-4">Borgo Santo Pietro, Chiusdino, Siena, Italy</p>
-                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto">
+                <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">
+                  {props.locations?.[1]?.name || "The Reception"}
+                </h3>
+                <p className="text-xs text-[#4a4452] mb-4">
+                  {props.locations?.[1]?.address || "Borgo Santo Pietro, Chiusdino, Siena, Italy"}
+                </p>
+                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100">
                   <iframe
                     title="Reception Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11579.5!2d11.1!3d43.15!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132a2c2222222222%3A0x2222222222222222!2sBorgo%20Santo%20Pietro!5e0!3m2!1sen!2sus!4v1680000000001!5m2!1sen!2sus"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      `${props.locations?.[1]?.name || "The Reception"} ${props.locations?.[1]?.address || "Borgo Santo Pietro, Chiusdino, Siena, Italy"}`.trim()
+                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}

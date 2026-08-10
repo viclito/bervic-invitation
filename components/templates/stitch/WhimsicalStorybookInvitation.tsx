@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import { Menu, X, MapPin, Car, Compass } from "lucide-react";
@@ -14,20 +15,36 @@ export default function WhimsicalStorybookInvitation(
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
 
-  // Celebrant name & headers
-  const celebrantName =
-    props.partnerOne && props.partnerOne !== "Your Name"
-      ? props.partnerOne
-      : "Evelyn";
+  // Partner names & headers
+  const partner1 = props.partnerOne || "Sasa Adi Tinah";
+  const partner2 = props.partnerTwo || "Allan Susilo";
+  const celebrationHeader = `${partner1} & ${partner2}`;
 
-  const celebrationHeader = `${celebrantName}'s Celebration`;
+  // Video state
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+
+  // Couple portrait images
+  const brideImg =
+    props.coupleImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
+
+  const groomImg =
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
+
+  const coverImg =
+    props.coverImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
-    days: 42,
-    hours: 18,
-    minutes: 36,
-    seconds: 9,
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
   });
 
   useEffect(() => {
@@ -71,12 +88,22 @@ export default function WhimsicalStorybookInvitation(
     return () => clearInterval(interval);
   }, []);
 
+  // Live countdown timer computation
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T16:00:00"
-    ).getTime();
+    const parseTargetDate = () => {
+      if (props.weddingDate) {
+        const dateStr = props.weddingTime
+          ? `${props.weddingDate}T${props.weddingTime}`
+          : `${props.weddingDate}T16:00:00`;
+        const parsed = new Date(dateStr).getTime();
+        if (!isNaN(parsed)) return parsed;
+      }
+      return new Date("2026-10-15T16:00:00").getTime();
+    };
 
-    const interval = setInterval(() => {
+    const targetDate = parseTargetDate();
+
+    const updateTimer = () => {
       const now = new Date().getTime();
       const difference = Math.max(0, targetDate - now);
 
@@ -90,102 +117,53 @@ export default function WhimsicalStorybookInvitation(
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
       setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
-  // Gallery items fallback matching Tuscany polaroids (filtering any wedding images)
-  const isWeddingGallery = props.galleryImages?.some(
-    (img) =>
-      typeof img === "string" &&
-      (img.includes("wedding") ||
-        img.includes("AB6AXuDh4Z4xW8jzsbsKdg5ia6FglPse") ||
-        img.includes("AB6AXuBHAT2ujkSkrVrFXNwYxZGWYhPp") ||
-        img.includes("AB6AXuCkq4ouHRpN0B0WcEm_ER0duJsq"))
-  );
+  const defaultGallery = [
+    "/images/templates/gallery-1.jpg",
+    "/images/templates/gallery-2.jpg",
+    "/images/templates/gallery-3.jpg",
+    "/images/templates/gallery-4.jpg",
+    "/images/templates/gallery-5.jpg",
+    "/images/templates/gallery-6.jpg",
+  ];
 
-  const galleryList =
-    props.galleryImages &&
-    props.galleryImages.length >= 3 &&
-    !isWeddingGallery
-      ? props.galleryImages
-      : [
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB47RcuNAWPDNqvotcasm_ahBOHiIyzKW2VVDWJURkrEFmNV-oUA-ZqenVJIGo6OCgi8v1mTdEvan_cQvkvFmXrC2PfsfUvgfVLTgDaQKJHJVYKTi0VGEERDG_x0qdiLjYleiLlcqWKL5QcgZLnyeiQArNVwLPUYE0BXj3l_tdMU-V-Z1FuheDsymGfF0u52sC2tWypTzuURhsxltU0DtBwdlaBDGzER8VvrQ3Z9FrrxDECMtr0HJ2_",
-            caption: "Summer in Tuscany",
-            rotate: "rotate-[-3deg]",
-          },
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuApZU7Ow6MLqENDh86xBbw5G1LoApFS8IYd6qovP-TYGLiFmKsSNP4XWZVU7wBptWZwAYSi2SRaOJboPQgzegM-ZWZFQbIH_cd1msEUQPhIM1m0lNX0t6AYoG-7URXAo1eL3VM4sRT9KTUK9BXMmmXm7r3HwDZylWm0JOYHNVDSxsmVRUVlwHTHXQ3CJh6ZceJAyJ9YxS-pWpuallrdXeyMPdJ-hzQvBy5wB_n4yUA4vmWQ2V7Sckps",
-            caption: "Quiet Mornings",
-            rotate: "rotate-[4deg] md:mt-12",
-          },
-          {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPQMTsycrDipgpbv_pcVi-uYhO81nx6SBsKrwO2PZ3sswgB9L0MiY8puqO2hBsTGpeJXpuILs-d1z1gGGedPdqPf6Wk3aXJ-Un-WSFrNAOAJyIozaL7HkzLhZwnp8C7UZveiUX6mGkbftaJMFnAKxzaExUVbK920T7V8-Yv8RNzDcyZmCnk3MwU8Co97CD1YOt7zXdWqaKBlZXRQxmbQ-3WfT6UHIiKcdkQS2sOrA4iWUG07PrZswc",
-            caption: "Under the Stars",
-            rotate: "rotate-[-2deg] lg:mt-6",
-          },
-        ];
+  const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
 
-  // Ensure no wedding timeline or wedding hero image is displayed
-  const hasWeddingTimeline = props.timelineDay?.some((step) =>
-    /marriage|vow|wedding|nuptials|bride|groom/i.test(step.title)
-  );
+  const defaultTimeline = [
+    {
+      time: "4:00 PM",
+      title: "Welcome & Mingling",
+      desc: "Arrive, grab a welcome drink, and find your way through the garden path.",
+    },
+    {
+      time: "5:30 PM",
+      title: "The Main Event",
+      desc: "Gather around for vows, toasts, and a few surprises.",
+    },
+    {
+      time: "7:00 PM",
+      title: "Dinner & Dancing Under the Stars",
+      desc: "A feast followed by music as the evening settles in.",
+    },
+  ];
 
   const timelineSteps =
-    props.timelineDay && props.timelineDay.length > 0 && !hasWeddingTimeline
+    props.timelineDay && props.timelineDay.length > 0
       ? props.timelineDay
-      : [
-          {
-            time: "4:00 PM",
-            title: "Welcome & Mingling",
-            desc: "Arrive, grab a welcome drink, and find your way through the garden path.",
-          },
-          {
-            time: "5:30 PM",
-            title: "The Main Event",
-            desc: "Gather around for toasts, stories, and a few surprises.",
-          },
-          {
-            time: "7:00 PM",
-            title: "Dinner & Dancing Under the Stars",
-            desc: "A feast followed by music as the evening settles in.",
-          },
-        ];
+      : defaultTimeline;
 
-  const isWeddingHero =
-    props.heroImage &&
-    (props.heroImage.includes("photo-1519741497674") ||
-      props.heroImage.includes("wedding") ||
-      Boolean(props.partnerTwo && props.partnerTwo.trim() !== ""));
-
-  const displayHeroImage =
-    props.heroImage && !isWeddingHero
-      ? props.heroImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuDrVMsAemSWHGr2lcwjK3vgvRujVym4mEEb4wsP6WDJaI0eGsbqLRUvHf32mav7Inu-v4ZLPJIwdvwuuJuiOlxDtSNMP-id7hTAA4pemzzDMPmXOcNU4mlW0RCiCE_OM9O3VEXc2XQ8FcotdQ03z_LNeVmMXyGXsl46Nevwet7Pg9MlTha_JIGnac6LFdLaUMihK3YszA1sOgV2u3w5rwR_SZ3niNI1bFYKemzKiPsckqFrtPjmTSN3";
-
-  // Couple portrait sanitization
-  const isWeddingCoupleImage =
-    props.coupleImage &&
-    (props.coupleImage.includes("wedding") ||
-      props.coupleImage.includes("AB6AXuArG5YFkRTyG0NbTRVMqnmH7qfHqXAFAyK9JzYzo") ||
-      props.coupleImage.includes("AB6AXuCqCEp1yGZWj7bxmvIrpv5xGR3"));
-
-  const displayCoupleImage =
-    props.coupleImage && !isWeddingCoupleImage
-      ? props.coupleImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuCqCEp1yGZWj7bxmvIrpv5xGR3-lfMsihmWxlGPUBkjpKGlJssMhFvFt8Ltjz16mLArr3OiQXXfSHawlWaDPP_gRNVKJXAYnD14YdZxAKQRgTqw4Y35o9po_FQgq4gf8duBNKRajszxM6NX24ByN0Xv5kskvaRGnIEJfviSUMv51MBsy5Yn128X3Ll5HrpbIoxfEu9wBDjkro4YLmvAA0DItB_mAW-OXqk7iZRkZO3RUFgb57FIGia3";
-
-  // Story narrative text sanitization
-  const isWeddingStoryText =
-    props.loveStoryText &&
-    /wedding|marriage|love story narrative|first met/i.test(props.loveStoryText);
+  const displayHeroImage = coverImg;
 
   const displayStoryText =
-    props.loveStoryText && !isWeddingStoryText
-      ? props.loveStoryText
-      : `From quiet beginnings to roaring successes, ${celebrantName}'s path has been uniquely hers. We gather to honor the chapters written so far and to enthusiastically turn the page to whatever magic comes next.`;
+    props.loveStoryText ||
+    `From quiet beginnings to a lifetime of shared dreams, ${partner1} and ${partner2}'s journey together is rooted in love, laughter, and companionship. We invite you to join us as we celebrate the start of our forever chapter.`;
 
   // Venue location fallback & sanitization
   const rawVenueName =
@@ -337,11 +315,11 @@ export default function WhimsicalStorybookInvitation(
       {/* Envelope Cover Integration */}
       <PersonalizedEnvelopeCover
         guestName={props.guestName}
-        partnerOne={celebrantName}
-        partnerTwo=""
+        partnerOne={partner1}
+        partnerTwo={partner2}
         weddingTime={props.weddingTime || "Saturday at 4:00 PM"}
         isCustomizer={props.isCustomizer}
-        templateSlug="whimsical-storybook-birthday"
+        templateSlug="whimsical-storybook"
       />
 
       {/* Top Navigation Bar */}
@@ -473,30 +451,35 @@ export default function WhimsicalStorybookInvitation(
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto text-center mt-12 space-y-6">
-            <div className="inline-block px-4 py-1.5 bg-[#5f5f00]/10 rounded-full text-[#5f5f00] text-xs font-semibold uppercase tracking-widest border border-[#5f5f00]/20">
-              A Magical Journey Begins
+            <div className="inline-block px-5 py-2 bg-[#5f5f00]/10 rounded-full text-[#5f5f00] text-xs font-bold uppercase tracking-[0.25em] border border-[#5f5f00]/30 shadow-sm">
+              {props.tagline || "TOGETHER WITH THEIR FAMILIES"}
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold font-serif sparkle-container gold-shimmer-text leading-tight">
-              Once Upon A Time...
+            <h1 className="text-4xl md:text-7xl font-bold font-serif sparkle-container gold-shimmer-text leading-tight">
+              {partner1} &amp; {partner2}
               <div className="sparkle"></div>
               <div className="sparkle"></div>
               <div className="sparkle"></div>
               <div className="sparkle"></div>
             </h1>
 
-            <p className="text-base md:text-lg font-serif text-[#484837] max-w-2xl mx-auto leading-relaxed">
-              {props.inviteLine && !props.inviteLine.includes("wedding")
-                ? props.inviteLine
-                : `Join us in celebrating ${celebrantName}'s beautifully unscripted next chapter. A day of joy, shared stories, and memories yet to be written.`}
+            <p className="text-base md:text-xl font-serif text-[#484837] max-w-2xl mx-auto leading-relaxed italic">
+              {props.inviteLine ||
+                "Request the pleasure of your company at the celebration of their wedding."}
             </p>
+
+            {props.welcomeMessage && (
+              <p className="text-sm font-serif text-[#904d00] font-semibold max-w-xl mx-auto tracking-wide">
+                "{props.welcomeMessage}"
+              </p>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <a
                 className="w-full sm:w-auto bg-[#5f5f00] text-white px-8 py-4 rounded-full font-semibold text-xs uppercase tracking-wider hover:bg-[#797900] transition-all text-center shadow-[0_4px_14px_0_rgba(95,95,0,0.39)] hover:shadow-[0_6px_20px_rgba(95,95,0,0.23)] hover:-translate-y-0.5 duration-200"
                 href="#rsvp"
               >
-                Open The Book
+                RSVP Now
               </a>
             </div>
           </div>
@@ -506,11 +489,63 @@ export default function WhimsicalStorybookInvitation(
           <div className="absolute -right-20 bottom-20 w-80 h-80 bg-[#cccc52] opacity-20 blur-3xl rounded-full mix-blend-multiply"></div>
         </section>
 
+        {/* Meet the Bride & Groom Section */}
+        <section className="py-20 px-6 md:px-16 bg-[#fcf9f8] border-b border-[#cac7b1]/30" id="couple">
+          <div className="max-w-5xl mx-auto text-center space-y-12">
+            <div>
+              <span className="text-xs font-bold text-[#904d00] uppercase tracking-[0.3em] block mb-2">
+                The Happy Couple
+              </span>
+              <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
+                Meet the Bride &amp; Groom
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+              {/* Bride Card */}
+              <div className="group relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#5f5f00]/30 bg-white p-3">
+                <div className="relative h-96 w-full rounded-2xl overflow-hidden">
+                  <img
+                    src={brideImg}
+                    alt={`${partner1} - Bride`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#5f5f00]/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-6 left-6 text-left text-white">
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-[#e9e86b] font-bold block mb-1">
+                      Bride
+                    </span>
+                    <h3 className="text-3xl font-serif font-bold">{partner1}</h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Groom Card */}
+              <div className="group relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#5f5f00]/30 bg-white p-3">
+                <div className="relative h-96 w-full rounded-2xl overflow-hidden">
+                  <img
+                    src={groomImg}
+                    alt={`${partner2} - Groom`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#5f5f00]/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-6 left-6 text-left text-white">
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-[#e9e86b] font-bold block mb-1">
+                      Groom
+                    </span>
+                    <h3 className="text-3xl font-serif font-bold">{partner2}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Countdown Section */}
         <section className="py-24 px-6 md:px-16 bg-[#f6f3f2] relative" id="countdown">
           <div className="max-w-[1280px] mx-auto text-center pt-4 space-y-12">
             <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-              The Story Continues In...
+              The Celebration Begins In...
             </h2>
 
             <div className="flex flex-wrap justify-center gap-6 md:gap-12">
@@ -575,10 +610,10 @@ export default function WhimsicalStorybookInvitation(
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-5 md:col-start-2 order-2 md:order-1 space-y-6">
                 <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-                  A Milestone to Remember
+                  Our Love Story
                 </h2>
                 <p className="text-base font-serif text-[#484837] leading-relaxed">
-                  Every great story has its turning points, those beautiful chapters where everything seems to align perfectly. This celebration marks one of those moments for {celebrantName}. It's not just a party; it's a reflection on a journey filled with laughter, unexpected adventures, and the unwavering support of wonderful friends and family.
+                  Every great love story has its turning points, those beautiful chapters where two lives intertwine seamlessly. This celebration marks one of those unforgettable moments for {partner1} and {partner2}.
                 </p>
                 <p className="text-base font-serif text-[#484837] leading-relaxed">
                   {displayStoryText}
@@ -589,9 +624,9 @@ export default function WhimsicalStorybookInvitation(
                 <div className="relative">
                   <div className="organic-shape w-full aspect-square bg-[#ffdcc2] opacity-40 absolute -inset-4 z-0 pointer-events-none"></div>
                   <img
-                    alt="Candid portrait"
+                    alt="Couple portrait"
                     className="relative z-10 rounded-2xl w-full h-auto object-cover shadow-lg filter sepia-[.1]"
-                    src={displayCoupleImage}
+                    src={coverImg}
                   />
                 </div>
               </div>
@@ -688,65 +723,147 @@ export default function WhimsicalStorybookInvitation(
           </div>
         </section>
 
-        {/* Venue Section */}
-        <section className="py-24 px-6 md:px-16 bg-[#fcf9f8] relative" id="venue">
-          <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-                The Setting
+        {/* Our Celebration Film Video Section */}
+        <section className="py-24 px-6 md:px-16 bg-[#f6f3f2] relative border-b border-[#cac7b1]/30" id="video">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div>
+              <span className="text-xs font-bold text-[#904d00] uppercase tracking-[0.3em] block mb-2">
+                Cinematic Moments
+              </span>
+              <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
+                Our Celebration Film
               </h2>
-              <h3 className="text-2xl font-bold font-serif text-[#904d00]">
-                {mainVenue.name || "The Enchanted Garden Reserve"}
-              </h3>
-              <p className="text-base font-serif text-[#484837] leading-relaxed">
-                Nestled away from the hustle, this hidden gem offers lush botanical pathways, historic stonework, and an open-air glasshouse where our evening will unfold.
+              <p className="text-sm font-serif text-[#484837] mt-2 max-w-xl mx-auto">
+                Watch a preview of our story and shared memories together.
               </p>
-
-              <div className="flex items-start gap-4">
-                <MapPin className="w-5 h-5 text-[#5f5f00] mt-1 shrink-0" />
-                <div>
-                  <p className="text-sm font-bold text-[#1b1c1c]">Address</p>
-                  <p className="text-sm font-serif text-[#484837]">
-                    {mainVenue.address}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <Car className="w-5 h-5 text-[#5f5f00] mt-1 shrink-0" />
-                <div>
-                  <p className="text-sm font-bold text-[#1b1c1c]">Parking</p>
-                  <p className="text-sm font-serif text-[#484837]">
-                    Complimentary valet service will be provided at the main gates.
-                  </p>
-                </div>
-              </div>
-
-              <a
-                className="inline-flex items-center gap-2 bg-[#fcf9f8] border-2 border-[#5f5f00] text-[#5f5f00] px-6 py-2.5 rounded-full font-semibold text-xs uppercase tracking-wider hover:bg-[#5f5f00]/5 transition-colors"
-                href={mainVenue.mapLink}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Compass className="w-4 h-4" />
-                <span>Get Directions</span>
-              </a>
             </div>
 
-            <div className="w-full h-[400px] bg-[#e4e2e1] rounded-2xl overflow-hidden relative shadow-lg">
-              <img
-                alt="Enchanted Garden Map"
-                className="w-full h-full object-cover opacity-80"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg flex items-center gap-3 border border-[#cac7b1]">
-                  <MapPin className="w-6 h-6 text-[#904d00]" />
-                  <span className="font-bold font-serif text-[#5f5f00]">
-                    {mainVenue.name || "The Enchanted Garden Reserve"}
-                  </span>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-[#5f5f00]/30 aspect-video bg-black group">
+              {isPlayingVideo ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  title="Love Story Video"
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                  <img
+                    src={coverImg}
+                    alt="Video Thumbnail"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-[#5f5f00] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                      <div className="w-0 h-0 border-y-[12px] border-y-transparent border-l-[20px] border-l-white ml-1" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-4 left-6 text-white text-left">
+                    <p className="text-xs uppercase tracking-widest text-[#e9e86b] font-bold">Watch Video</p>
+                    <p className="text-lg font-serif font-bold">{partner1} &amp; {partner2}</p>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Venue Section */}
+        <section className="py-24 px-6 md:px-16 bg-[#fcf9f8] relative" id="venue">
+          <div className="max-w-[1280px] mx-auto space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <span className="text-xs font-bold text-[#904d00] uppercase tracking-[0.3em] block">
+                Event Locations &amp; Maps
+              </span>
+              <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
+                The Setting
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {(props.locations && props.locations.length > 0
+                ? props.locations
+                : [
+                    {
+                      name: props.venuePlace || "The Ceremony",
+                      venueLabel: "The Ceremony",
+                      address: props.contactAddress || "Villa Cetinale, Sovicille, Siena, Italy",
+                      image: "/images/templates/venue-ceremony.jpg",
+                      mapLink: "https://maps.google.com",
+                    },
+                    {
+                      name: "The Reception",
+                      venueLabel: "The Reception",
+                      address: "Borgo Santo Pietro, Chiusdino, Siena, Italy",
+                      image: "/images/templates/venue-reception.jpg",
+                      mapLink: "https://maps.google.com",
+                    },
+                  ]
+              ).map((loc, idx) => (
+                <div
+                  key={idx}
+                  className="space-y-6 bg-white p-8 rounded-3xl border-2 border-[#5f5f00]/20 shadow-lg flex flex-col justify-between"
+                >
+                  <div className="h-56 rounded-2xl overflow-hidden shadow-sm">
+                    <img
+                      src={
+                        loc.image ||
+                        (idx === 0
+                          ? "/images/templates/venue-ceremony.jpg"
+                          : "/images/templates/venue-reception.jpg")
+                      }
+                      alt={loc.name || "Venue"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#5f5f00]">
+                      {loc.venueLabel || (idx === 0 ? "The Ceremony" : "The Reception")}
+                    </span>
+                    <h3 className="text-2xl font-bold font-serif text-[#904d00]">
+                      {loc.name || (idx === 0 ? "The Ceremony" : "The Reception")}
+                    </h3>
+
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-[#5f5f00] mt-0.5 shrink-0" />
+                      <p className="text-sm font-serif text-[#484837]">
+                        {loc.address || "Siena, Italy"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-48 w-full rounded-2xl overflow-hidden border border-[#cac7b1] mt-2 bg-gray-100">
+                    <iframe
+                      title={`Venue Map ${idx + 1}`}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                        `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                      )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <a
+                    className="inline-flex items-center justify-center gap-2 bg-[#5f5f00] text-white px-6 py-3 rounded-full font-semibold text-xs uppercase tracking-wider hover:bg-[#797900] transition-colors shadow-md mt-2"
+                    href={
+                      loc.mapLink && loc.mapLink !== "https://maps.google.com"
+                        ? loc.mapLink
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                          )}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Compass className="w-4 h-4" />
+                    <span>Get Directions</span>
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -803,7 +920,7 @@ export default function WhimsicalStorybookInvitation(
 
         {/* RSVP Section */}
         <section id="rsvp" className="py-20 bg-[#fcf9f8]">
-          <RsvpSection partnerOne={celebrantName} partnerTwo="" />
+          <RsvpSection partnerOne={partner1} partnerTwo={partner2} templateSlug="whimsical-storybook" />
         </section>
 
         {/* Footer */}
@@ -813,7 +930,7 @@ export default function WhimsicalStorybookInvitation(
               {celebrationHeader}
             </div>
             <div className="text-xs text-[#5d5c58] font-serif">
-              © {new Date().getFullYear()} Crafted with Love for {celebrantName}'s Special Day
+              © {new Date().getFullYear()} Crafted with Love for {partner1} &amp; {partner2}'s Special Day
             </div>
             <div className="flex gap-6 text-xs text-[#484837] font-semibold">
               <a href="#" className="hover:text-[#904d00] transition-colors">

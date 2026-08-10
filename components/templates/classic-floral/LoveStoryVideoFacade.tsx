@@ -9,6 +9,7 @@ interface LoveStoryVideoFacadeProps {
   loveStoryText: string;
   loveStoryVideoUrl: string;
   coupleImage: string;
+  coverImage?: string;
   partnerOne: string;
   partnerTwo: string;
   showVideoSection?: boolean;
@@ -51,6 +52,7 @@ export default function LoveStoryVideoFacade({
   loveStoryText,
   loveStoryVideoUrl,
   coupleImage,
+  coverImage,
   partnerOne,
   partnerTwo,
   showVideoSection = true,
@@ -142,7 +144,7 @@ export default function LoveStoryVideoFacade({
             >
               {/* Facade Poster Image */}
               <Image
-                src={coupleImage || "/images/templates/couple-photo.jpg"}
+                src={coverImage || coupleImage || "/images/templates/couple-photo.jpg"}
                 alt={`${partnerOne} & ${partnerTwo} Video Thumbnail`}
                 fill
                 loading="lazy"

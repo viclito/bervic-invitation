@@ -40,7 +40,9 @@ export default function TemplateClassicFloral(props: TemplateClassicFloralProps)
       {/* Section 2: Countdown Timer & Couple Photo */}
       <CountdownTimer
         weddingDate={props.weddingDate}
+        weddingTime={props.weddingTime}
         coupleImage={props.coupleImage}
+        partnerTwoImage={props.partnerTwoImage}
         partnerOne={props.partnerOne}
         partnerTwo={props.partnerTwo}
       />

@@ -38,10 +38,13 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
 
   const coupleImg1 =
     props.coupleImage ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBmET8Ov9nd9F_OcOL2e8nAi-N9bWyoHs-r0O-BHihHuFVwS4XqOCnnD9ATnWLidSUbQho3zkNo1a4MiT9FQY1aLrltxcopfCs6cXuRna-yPoFVsd5zWK5qP8o9AbkmJoxlfTSGN_9XjcvCuZH-UhXu7OgFg-LVUGnh2wpTsryMueMD69e7KbhvrKzyGSgo9QVCIuhp13V7BfNyjaJs2sRy6gy2bqGpczDve2KMx41wZuKZsVF8bBbB";
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
 
   const coupleImg2 =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDunvjY0ZM_XJordm4ZIu-5YRH6MEHia0nwL4co2m8ebxNAEmaz-sCAWqBXDCzpLjFJBDxqB_9ILqfn1LtAANX7ZmszlaTVGbTh-8lT6rdkMghWrM8Wib5klbJej1_J6oopwtnjrVWaALMtlUbHJW-VLCa50SI9PPmYSnA7qT5d0DQke1t3geCV-oaTbDDwGA6pjj2pzYdZi4md6wtHIp3MLuzNyaizYqARMz7KKs4gzOpjN6ToXndO";
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
 
   const defaultTimeline = [
     { time: "10:00 AM", title: "Ceremony", desc: "Exchange of vows and rings at St. Antony Church." },
@@ -151,18 +154,43 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
           </p>
         </motion.div>
 
-        {/* Side-by-Side Framed Portraits */}
+        {/* Side-by-Side Framed Portraits for Bride & Groom */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mt-12 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8"
         >
-          <div className="border border-[#061b0e] p-2 bg-[#fbf9f8] shadow-md">
-            <img src={coupleImg1} alt="Portrait 1" className="w-full h-80 md:h-96 object-cover" />
+          {/* Bride Card */}
+          <div className="group relative border-2 border-[#061b0e] p-2 bg-[#fbf9f8] shadow-lg overflow-hidden">
+            <div className="relative w-full h-80 md:h-96 overflow-hidden">
+              <img src={coupleImg1} alt={`${partner1} - Bride`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#061b0e]/90 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 text-left">
+                <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#735c00] font-bold block">
+                  Bride
+                </span>
+                <h3 className="text-2xl font-serif font-bold text-white mt-1">
+                  {partner1}
+                </h3>
+              </div>
+            </div>
           </div>
-          <div className="border border-[#061b0e] p-2 bg-[#fbf9f8] shadow-md">
-            <img src={coupleImg2} alt="Portrait 2" className="w-full h-80 md:h-96 object-cover" />
+
+          {/* Groom Card */}
+          <div className="group relative border-2 border-[#061b0e] p-2 bg-[#fbf9f8] shadow-lg overflow-hidden">
+            <div className="relative w-full h-80 md:h-96 overflow-hidden">
+              <img src={coupleImg2} alt={`${partner2} - Groom`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#061b0e]/90 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 text-left">
+                <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#735c00] font-bold block">
+                  Groom
+                </span>
+                <h3 className="text-2xl font-serif font-bold text-white mt-1">
+                  {partner2}
+                </h3>
+              </div>
+            </div>
           </div>
         </motion.div>
       </section>

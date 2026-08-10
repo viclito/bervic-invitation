@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -21,6 +22,7 @@ import {
 export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({ days: 324, hours: 12, minutes: 45, seconds: 10 });
@@ -38,7 +40,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(props.weddingDate || "2026-05-13T10:00:00").getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const difference = Math.max(0, targetDate - now);
@@ -58,8 +60,10 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const coupleImg =
+    props.coverImage ||
+    props.heroImage ||
     props.coupleImage ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBzh-DFGJj_U1DZRPzjxnqkkrglM17JLOewBo8SuFrlEjUUqhrGg747dObwQ2VXNrbfB_IBypko4TzCqgUykrUri53oe6yqYE0sEz1_Z0dI3bornXVj3PfH6bKfsx_i0PREvOX7LkKZQtTEKETrZaamb7Z6F1GsOnv9nX0fG1aeaoDMzaoBPOXR1Xudz51r3EjygMSHwy7IgHqVXjeh52JiK4NBDZKxEsTGd-uLf4ZoFF-0reXPlI7H";
+    "/images/templates/couple-photo.jpg";
 
   const defaultTimeline = [
     { time: "09:30 AM", title: "Guest Arrival", desc: "Gathering at the church for welcoming refreshments." },
@@ -116,6 +120,10 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
               Our Story
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#93e9be] transition-all duration-300 group-hover:w-full" />
             </a>
+            <a href="#couple" className="hover:text-[#046c4a] transition-colors relative group">
+              The Couple
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#93e9be] transition-all duration-300 group-hover:w-full" />
+            </a>
             <a href="#events" className="hover:text-[#046c4a] transition-colors relative group">
               Events
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#93e9be] transition-all duration-300 group-hover:w-full" />
@@ -154,6 +162,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
             className="md:hidden bg-[#faf9f6] border-b border-[#046c4a]/20 px-6 py-4 flex flex-col gap-3 text-xs font-bold uppercase tracking-widest text-[#3f4943]"
           >
             <a href="#our-story" onClick={() => setMobileMenuOpen(false)}>Our Story</a>
+            <a href="#couple" onClick={() => setMobileMenuOpen(false)}>The Couple</a>
             <a href="#events" onClick={() => setMobileMenuOpen(false)}>Events</a>
             <a href="#timeline" onClick={() => setMobileMenuOpen(false)}>Timeline</a>
             <a href="#gallery" onClick={() => setMobileMenuOpen(false)}>Gallery</a>
@@ -200,10 +209,10 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
           </p>
 
           <div className="flex flex-col items-center justify-center space-y-3 mb-8 py-4 border-y border-[#93e9be]/50 bg-white/40 rounded-xl">
-            <p className="text-2xl font-bold text-[#046c4a]">{props.weddingTime || "13th May 2026"}</p>
+            <p className="text-2xl font-bold text-[#046c4a]">{props.weddingDate || "13th May 2026"}</p>
             <span className="w-12 h-0.5 bg-[#93e9be]" />
-            <p className="text-sm text-[#5a5f62] font-semibold">10:00 AM Onwards</p>
-            <p className="text-xs text-[#5a5f62]">St. Mary's Church &amp; Grand Pearl Hotel</p>
+            <p className="text-sm text-[#5a5f62] font-semibold">{props.weddingTime || "10:00 AM Onwards"}</p>
+            <p className="text-xs text-[#5a5f62]">{props.venuePlace || "St. Mary's Church & Grand Pearl Hotel"}</p>
           </div>
 
           <a
@@ -213,6 +222,62 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
             Save the Date
           </a>
         </motion.div>
+      </section>
+
+      {/* Meet the Couple (Bride & Groom Photo Cards) */}
+      <section className="py-24 bg-[#faf9f6] border-t border-[#046c4a]/10" id="couple">
+        <div className="max-w-[1120px] mx-auto px-6 text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#046c4a] block mb-2">
+            The Happy Couple
+          </span>
+          <h2 className="text-4xl md:text-5xl font-bold text-[#046c4a] mb-12">
+            Meet the Bride &amp; Groom
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Bride Card */}
+            <motion.div
+              whileHover={{ y: -6 }}
+              className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden shadow-lg border border-[#93e9be]/50 bg-white"
+            >
+              <img
+                src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                alt={`${partner1} - Bride`}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#046c4a]/90 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 text-left">
+                <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#93e9be] font-bold block">
+                  Bride
+                </span>
+                <h3 className="text-3xl font-serif italic text-white leading-none mt-1">
+                  {partner1}
+                </h3>
+              </div>
+            </motion.div>
+
+            {/* Groom Card */}
+            <motion.div
+              whileHover={{ y: -6 }}
+              className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden shadow-lg border border-[#93e9be]/50 bg-white"
+            >
+              <img
+                src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                alt={`${partner2} - Groom`}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#046c4a]/90 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 text-left">
+                <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#93e9be] font-bold block">
+                  Groom
+                </span>
+                <h3 className="text-3xl font-serif italic text-white leading-none mt-1">
+                  {partner2}
+                </h3>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* Countdown Section */}
@@ -265,9 +330,9 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
               <div className="absolute inset-0 bg-gradient-to-br from-[#93e9be]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <Church className="w-10 h-10 text-[#046c4a] mb-4" />
               <h3 className="font-serif italic text-3xl text-[#046c4a] mb-3">Marriage Ceremony</h3>
-              <p className="text-lg font-bold text-[#1a1c1a] mb-1">13th May 2026</p>
+              <p className="text-lg font-bold text-[#1a1c1a] mb-1">{props.weddingDate || "13th May 2026"}</p>
               <p className="text-sm text-[#5a5f62] mb-6">10:00 AM - 12:00 PM</p>
-              <p className="text-sm text-[#1a1c1a] font-semibold mb-8">St. Mary's Church, Seafoam Avenue</p>
+              <p className="text-sm text-[#1a1c1a] font-semibold mb-8">St. Mary&apos;s Church, Seafoam Avenue</p>
               <a
                 href="#"
                 className="bg-gradient-to-r from-[#93e9be] to-[#ffffff] text-[#046c4a] font-bold text-xs uppercase tracking-widest px-8 py-3 rounded-full inline-flex items-center gap-2 mt-auto border border-[#93e9be] shadow-sm group-hover:shadow-md transition-all"
@@ -288,7 +353,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
               <div className="absolute inset-0 bg-gradient-to-br from-[#93e9be]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <PartyPopper className="w-10 h-10 text-[#046c4a] mb-4" />
               <h3 className="font-serif italic text-3xl text-[#046c4a] mb-3">Reception</h3>
-              <p className="text-lg font-bold text-[#1a1c1a] mb-1">13th May 2026</p>
+              <p className="text-lg font-bold text-[#1a1c1a] mb-1">{props.weddingDate || "13th May 2026"}</p>
               <p className="text-sm text-[#5a5f62] mb-6">7:00 PM Onwards</p>
               <p className="text-sm text-[#1a1c1a] font-semibold mb-8">Grand Pearl Hotel, Ocean Drive</p>
               <a
@@ -357,6 +422,47 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
                 <img src={img} alt={`Moment ${idx + 1}`} className="w-full h-64 object-cover hover:scale-105 transition-transform duration-700" />
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Love Story Video Film Section */}
+      <section className="py-24 bg-[#faf9f6] border-t border-[#046c4a]/10" id="video">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#046c4a] block mb-2">
+            Cherished Highlights
+          </span>
+          <h2 className="text-4xl md:text-5xl font-bold text-[#046c4a] mb-12">
+            Our Celebration Film
+          </h2>
+
+          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/90 bg-black group cursor-pointer flex items-center justify-center">
+            {isPlayingVideo ? (
+              <iframe
+                title="Seafoam Pearl Celebration Video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                className="w-full h-full border-0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            ) : (
+              <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                <img
+                  alt="Video poster thumbnail"
+                  className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-700"
+                  src={
+                    props.coverImage ||
+                    props.heroImage ||
+                    props.coupleImage ||
+                    "/images/templates/couple-photo.jpg"
+                  }
+                />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
+                <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#046c4a] group-hover:scale-110 transition-transform shadow-lg border border-[#93e9be]">
+                  <Play className="w-10 h-10 fill-[#046c4a] ml-1" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

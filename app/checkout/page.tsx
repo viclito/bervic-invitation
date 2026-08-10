@@ -97,9 +97,9 @@ function CheckoutContent() {
 
             setLoadingPlan(null);
             if (templateSlug) {
-              router.push(`/templates/customize/${templateSlug}`);
+              router.push(`/templates/${templateSlug}?payment=success`);
             } else {
-              router.push("/dashboard?payment=success");
+              router.push("/templates?payment=success");
             }
           } catch (err: any) {
             console.error("Verification error:", err);

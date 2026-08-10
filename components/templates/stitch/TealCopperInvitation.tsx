@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import {
   Church,
   PartyPopper,
@@ -23,6 +24,7 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,12 +38,61 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime);
+    const updateTimer = () => {
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [props.weddingDate, props.weddingTime]);
+
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const artDecoPatternImg =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDY5Zt6iboDwKNt77wxIMSXY8fbpVlmb7lBggYis9bpQ87UdeF4G0fprPj8EM_f8zVs2RGkrifN2pUkhvxW9C-EHjRS_Di2nc3i-Fph57T4XdlZeMNTJawHgbbOdHJvjObfy5OQy6v1UeQS6ME6SR_ETJCOcIz_dVLvSTCZzTZS6QSUpO5G8fEthKmJbOKEFtvDyWCV1-z_KSKHYNfI4vaQ9TXBPwgc_bYE-33-mbNynfBXs6KEUZqw";
+
+  const defaultEvents = [
+    {
+      title: "Holy Matrimony",
+      time: "Thursday, 13 May 2026 • 10:00 AM",
+      venue: "St. Antony Church",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+    {
+      title: "Grand Reception",
+      time: "Thursday, 13 May 2026 • 07:00 PM",
+      venue: "Ubahara Matha Mahal",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+  ];
+
+  const eventsList =
+    props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          title: e.title,
+          time: `${e.date || props.weddingDate || "13 May 2026"} • ${e.time || "10:00 AM"}`,
+          venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
+          address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
+          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
+        }))
+      : defaultEvents;
 
   const defaultTimeline = [
     { time: "09:00 AM", title: "Guest Arrival", desc: "Welcome drinks and seating", icon: <Coffee className="w-4 h-4 text-[#ffb77b]" /> },
@@ -55,7 +106,7 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
       ? props.timelineDay.map((t, i) => ({
           time: t.time,
           title: t.title,
-          desc: "Schedule of Events",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
           icon: defaultTimeline[i % 4].icon,
         }))
       : defaultTimeline;
@@ -167,13 +218,36 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
             {partner2}
           </h1>
 
+          {/* Bride & Groom Couple Photo Card */}
+          <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#ffb77b] p-2 bg-[#131407] shadow-2xl overflow-hidden group rounded-sm">
+              <img
+                src={props.coupleImage || props.coverImage || props.heroImage || "/images/templates/couple-photo.jpg"}
+                alt={`${partner1} & ${partner2}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+              />
+              <div className="absolute inset-0 border border-[#ffb77b]/40 m-2 pointer-events-none" />
+            </div>
+
+            {props.partnerTwoImage && (
+              <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#ffb77b] p-2 bg-[#131407] shadow-2xl overflow-hidden group rounded-sm">
+                <img
+                  src={props.partnerTwoImage}
+                  alt={partner2}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+                />
+                <div className="absolute inset-0 border border-[#ffb77b]/40 m-2 pointer-events-none" />
+              </div>
+            )}
+          </div>
+
           <p className="text-base sm:text-lg text-[#e4e4cc] mb-8 max-w-lg mx-auto leading-relaxed">
             {props.inviteLine || "Invite you to celebrate their wedding"}
           </p>
 
           <div className="inline-block border border-[#ffb77b] p-4 px-8 mb-8 bg-[#131407]/60">
-            <p className="font-serif text-2xl font-bold text-[#ffb77b]">13th May 2026</p>
-            <p className="text-xs text-[#bdc9c8] mt-1 font-semibold uppercase tracking-wider">10:00 AM Onwards</p>
+            <p className="font-serif text-2xl font-bold text-[#ffb77b]">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs text-[#bdc9c8] mt-1 font-semibold uppercase tracking-wider">{props.weddingTime || "10:00 AM Onwards"}</p>
           </div>
 
           <div>
@@ -197,20 +271,33 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
             <div className="h-px w-full bg-[#ffb77b]/40" />
           </div>
 
-          <div className="flex justify-center gap-6 sm:gap-10 mt-10">
-            <div className="border border-[#ffb77b] p-6 w-28 sm:w-36 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
-              <div className="font-serif text-4xl sm:text-5xl text-[#ffb77b] font-bold">180</div>
+          <div className="flex justify-center gap-4 sm:gap-8 mt-10">
+            <div className="border border-[#ffb77b] p-5 sm:p-6 w-24 sm:w-32 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
+              <div className="font-serif text-3xl sm:text-5xl text-[#ffb77b] font-bold">
+                {String(timeLeft.days).padStart(2, "0")}
+              </div>
               <div className="text-[10px] font-bold text-[#bdc9c8] uppercase tracking-widest mt-2">DAYS</div>
             </div>
 
-            <div className="border border-[#ffb77b] p-6 w-28 sm:w-36 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
-              <div className="font-serif text-4xl sm:text-5xl text-[#ffb77b] font-bold">12</div>
+            <div className="border border-[#ffb77b] p-5 sm:p-6 w-24 sm:w-32 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
+              <div className="font-serif text-3xl sm:text-5xl text-[#ffb77b] font-bold">
+                {String(timeLeft.hours).padStart(2, "0")}
+              </div>
               <div className="text-[10px] font-bold text-[#bdc9c8] uppercase tracking-widest mt-2">HOURS</div>
             </div>
 
-            <div className="border border-[#ffb77b] p-6 w-28 sm:w-36 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
-              <div className="font-serif text-4xl sm:text-5xl text-[#ffb77b] font-bold">45</div>
+            <div className="border border-[#ffb77b] p-5 sm:p-6 w-24 sm:w-32 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
+              <div className="font-serif text-3xl sm:text-5xl text-[#ffb77b] font-bold">
+                {String(timeLeft.minutes).padStart(2, "0")}
+              </div>
               <div className="text-[10px] font-bold text-[#bdc9c8] uppercase tracking-widest mt-2">MINUTES</div>
+            </div>
+
+            <div className="border border-[#ffb77b] p-5 sm:p-6 w-24 sm:w-32 bg-[#131407] shadow-[0_0_15px_rgba(255,183,123,0.15)] relative">
+              <div className="font-serif text-3xl sm:text-5xl text-[#ffb77b] font-bold">
+                {String(timeLeft.seconds).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] font-bold text-[#bdc9c8] uppercase tracking-widest mt-2">SECONDS</div>
             </div>
           </div>
         </div>
@@ -227,61 +314,39 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Holy Matrimony */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="border border-[#ffb77b] p-8 bg-[#343625]/80 backdrop-blur-md flex flex-col items-center justify-between h-full shadow-[0_0_20px_rgba(255,183,123,0.12)] relative"
-            >
-              <div className="mb-4">
-                <Church className="w-10 h-10 text-[#ffb77b] mx-auto mb-3" />
-                <h3 className="font-serif text-2xl text-[#76d6d5] uppercase font-bold">Holy Matrimony</h3>
-                <p className="text-xs text-[#ffb77b] font-semibold mt-1">Thursday, 13 May 2026 • 10:00 AM</p>
-              </div>
-
-              <div className="w-16 h-px bg-[#ffb77b]/50 my-4" />
-
-              <div className="mb-6">
-                <p className="text-base font-bold text-[#e4e4cc] mb-1">St. Antony Church</p>
-                <p className="text-xs text-[#bdc9c8]">Kaval Kinaru, Tirunelveli District</p>
-              </div>
-
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-[#ffb77b] text-[#ffb77b] px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#ffb77b] hover:text-[#4d2700] transition-colors"
+            {eventsList.map((evt, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -6 }}
+                className="border border-[#ffb77b] p-8 bg-[#343625]/80 backdrop-blur-md flex flex-col items-center justify-between h-full shadow-[0_0_20px_rgba(255,183,123,0.12)] relative"
               >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="mb-4">
+                  {idx % 2 === 0 ? (
+                    <Church className="w-10 h-10 text-[#ffb77b] mx-auto mb-3" />
+                  ) : (
+                    <PartyPopper className="w-10 h-10 text-[#ffb77b] mx-auto mb-3" />
+                  )}
+                  <h3 className="font-serif text-2xl text-[#76d6d5] uppercase font-bold">{evt.title}</h3>
+                  <p className="text-xs text-[#ffb77b] font-semibold mt-1">{evt.time}</p>
+                </div>
 
-            {/* Reception */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="border border-[#ffb77b] p-8 bg-[#343625]/80 backdrop-blur-md flex flex-col items-center justify-between h-full shadow-[0_0_20px_rgba(255,183,123,0.12)] relative"
-            >
-              <div className="mb-4">
-                <PartyPopper className="w-10 h-10 text-[#ffb77b] mx-auto mb-3" />
-                <h3 className="font-serif text-2xl text-[#76d6d5] uppercase font-bold">Grand Reception</h3>
-                <p className="text-xs text-[#ffb77b] font-semibold mt-1">Thursday, 13 May 2026 • 07:00 PM</p>
-              </div>
+                <div className="w-16 h-px bg-[#ffb77b]/50 my-4" />
 
-              <div className="w-16 h-px bg-[#ffb77b]/50 my-4" />
+                <div className="mb-6">
+                  <p className="text-base font-bold text-[#e4e4cc] mb-1">{evt.venue}</p>
+                  <p className="text-xs text-[#bdc9c8]">{evt.address}</p>
+                </div>
 
-              <div className="mb-6">
-                <p className="text-base font-bold text-[#e4e4cc] mb-1">Ubahara Matha Mahal</p>
-                <p className="text-xs text-[#bdc9c8]">Kaval Kinaru, Tirunelveli District</p>
-              </div>
-
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border border-[#ffb77b] text-[#ffb77b] px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#ffb77b] hover:text-[#4d2700] transition-colors"
-              >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <a
+                  href={evt.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 border border-[#ffb77b] text-[#ffb77b] px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#ffb77b] hover:text-[#4d2700] transition-colors"
+                >
+                  <MapPin className="w-4 h-4" /> View on Map
+                </a>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

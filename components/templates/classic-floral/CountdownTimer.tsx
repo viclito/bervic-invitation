@@ -8,7 +8,9 @@ import { Heart } from "lucide-react";
 
 interface CountdownTimerProps {
   weddingDate: string; // ISOString
+  weddingTime?: string;
   coupleImage: string;
+  partnerTwoImage?: string;
   partnerOne: string;
   partnerTwo: string;
 }
@@ -23,7 +25,9 @@ interface TimeLeft {
 
 export default function CountdownTimer({
   weddingDate,
+  weddingTime,
   coupleImage,
+  partnerTwoImage,
   partnerOne,
   partnerTwo,
 }: CountdownTimerProps) {
@@ -36,7 +40,7 @@ export default function CountdownTimer({
   });
 
   useEffect(() => {
-    const target = getWeddingTargetDate(weddingDate).getTime();
+    const target = getWeddingTargetDate(weddingDate, weddingTime).getTime();
 
     const calculateTime = () => {
       const now = new Date().getTime();
@@ -69,7 +73,7 @@ export default function CountdownTimer({
     const interval = setInterval(calculateTime, 1000);
 
     return () => clearInterval(interval);
-  }, [weddingDate]);
+  }, [weddingDate, weddingTime]);
 
   return (
     <section id="countdown" className="py-20 md:py-28 bg-[#F9EBEA]/60 relative overflow-hidden">
@@ -95,23 +99,67 @@ export default function CountdownTimer({
           </div>
         </motion.div>
 
-        {/* Centered Couple Photo */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden mx-auto mb-12 border-4 border-[#C9A15A]/40 shadow-xl"
-        >
-          <Image
-            src={coupleImage?.trim() || "/images/templates/couple-photo.jpg"}
-            alt={`${partnerOne} & ${partnerTwo}`}
-            fill
-            loading="lazy"
-            sizes="(max-width: 640px) 192px, 256px"
-            className="object-cover"
-          />
-        </motion.div>
+        {/* Side-by-Side Bride & Groom Circular Photos */}
+        <div className="flex flex-row items-center justify-center gap-4 sm:gap-10 mb-12">
+          {/* Partner 1 (Bride) Photo */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="relative w-36 h-36 sm:w-52 sm:h-52 rounded-full overflow-hidden border-4 border-[#C9A15A]/50 shadow-xl ring-4 ring-[#C9A15A]/10 bg-white">
+              <Image
+                src={coupleImage?.trim() || "/images/templates/couple-photo.jpg"}
+                alt={partnerOne}
+                fill
+                loading="lazy"
+                sizes="(max-width: 640px) 144px, 208px"
+                className="object-cover"
+              />
+            </div>
+            <span className="font-serif italic text-base sm:text-xl font-semibold text-[#2B2320]">
+              {partnerOne}
+            </span>
+          </motion.div>
+
+          {/* Floating Heart Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-col items-center justify-center text-[#B85C6B] z-10 shrink-0"
+          >
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#FDF6F3] border-2 border-[#C9A15A]/40 flex items-center justify-center shadow-md">
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6 fill-current text-[#B85C6B]" />
+            </div>
+          </motion.div>
+
+          {/* Partner 2 (Groom) Photo */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="relative w-36 h-36 sm:w-52 sm:h-52 rounded-full overflow-hidden border-4 border-[#C9A15A]/50 shadow-xl ring-4 ring-[#C9A15A]/10 bg-white">
+              <Image
+                src={partnerTwoImage?.trim() || "/images/templates/groom-bride-2.jpg"}
+                alt={partnerTwo}
+                fill
+                loading="lazy"
+                sizes="(max-width: 640px) 144px, 208px"
+                className="object-cover"
+              />
+            </div>
+            <span className="font-serif italic text-base sm:text-xl font-semibold text-[#2B2320]">
+              {partnerTwo}
+            </span>
+          </motion.div>
+        </div>
 
         {/* Live Countdown Cards OR Married Life Celebration Banner */}
         {timeLeft.isPassed ? (

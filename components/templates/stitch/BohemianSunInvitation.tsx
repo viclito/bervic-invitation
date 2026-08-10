@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
@@ -38,12 +39,25 @@ export default function BohemianSunInvitation(props: TemplateClassicFloralProps)
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const partner1 = props.partnerOne || "Terance";
-  const partner2 = props.partnerTwo || "Ancy";
+  const partner1 = props.partnerOne || "Sasa Adi Tinah";
+  const partner2 = props.partnerTwo || "Allan Susilo";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
-  const heroArchImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCnEL--Gfk0geKfHH8ySi3pS7tFAYlkFi82ejbjOtmSkCTWELxufhpZqmm4C4OwDuCt9TpqKC0x1Nxukl4zsSyXJsv4WigVHuSEu-RVO2DCGj9VE3MXVcjqqmln1ZH80FNDzta9nw9NHGcPmZkGfRfI_IkSgY899vimu-t8wVRE2Qyw4BoQ-a3Oae7RJ-s21eOkol8VmtxOKenTezQgmagq-O5RgIroY_GT1a03s-4DJQs10Z-fwmem";
+  const coverImg =
+    props.coverImage ||
+    props.heroImage ||
+    props.coupleImage ||
+    "/images/templates/couple-photo.jpg";
+
+  const brideImg =
+    props.coupleImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
+
+  const groomImg =
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
 
   const storyImg =
     props.coupleImage ||
@@ -56,6 +70,21 @@ export default function BohemianSunInvitation(props: TemplateClassicFloralProps)
     { time: "07:30 PM", title: "Cake Cutting", icon: <Cake className="w-5 h-5 text-[#91472a]" /> },
     { time: "08:00 PM", title: "Grand Dinner", icon: <Utensils className="w-5 h-5 text-[#91472a]" /> },
   ];
+
+  const timelineList =
+    props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          time: e.time,
+          title: e.title,
+          icon: defaultTimeline[idx % defaultTimeline.length]?.icon,
+        }))
+      : props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t, idx) => ({
+          time: t.time,
+          title: t.title,
+          icon: defaultTimeline[idx % defaultTimeline.length]?.icon,
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -152,15 +181,133 @@ export default function BohemianSunInvitation(props: TemplateClassicFloralProps)
 
           <div className="w-full max-w-lg relative mt-4">
             <div className="aspect-[4/3] rounded-t-[120px] overflow-hidden border-2 border-[#e6e2dd] shadow-xl">
-              <img src={heroArchImg} alt="Bohemian Wedding Arch" className="w-full h-full object-cover" />
+              <img src={coverImg} alt="Cover Photo" className="w-full h-full object-cover" />
             </div>
 
             <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-[#fdf9f4] px-6 py-2.5 rounded-full shadow-md border border-[#dac1b9]/50 flex items-center gap-2 text-xs font-bold text-[#54433d] whitespace-nowrap">
               <Calendar className="w-4 h-4 text-[#91472a]" />
-              <span>13th May 2026 • 10:00 AM</span>
+              <span>{props.weddingTime || props.weddingDate || "13th May 2026 • 10:00 AM"}</span>
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* Meet the Bride & Groom Section */}
+      <section className="py-20 px-6 md:px-16 bg-[#fdf9f4] border-b border-[#dac1b9]/50 relative overflow-hidden" id="couple">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          <div>
+            <span className="text-[11px] font-bold text-[#546347] uppercase tracking-[0.3em] block mb-2">
+              The Happy Couple
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-[#91472a] tracking-tight">
+              Meet the Bride &amp; Groom
+            </h2>
+            <div className="w-16 h-0.5 bg-[#91472a] mx-auto mt-4 opacity-80" />
+          </div>
+
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center max-w-4xl mx-auto">
+            {/* Bride Card */}
+            <motion.div
+              whileHover={{ y: -6 }}
+              className="bg-[#f7f3ee] border-2 border-[#dac1b9]/60 p-4 rounded-t-[140px] rounded-b-3xl shadow-xl transition-all group relative"
+            >
+              <div className="aspect-[4/5] rounded-t-[125px] rounded-b-2xl overflow-hidden relative border border-[#dac1b9]/40">
+                <img
+                  src={brideImg}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#91472a] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.25em] backdrop-blur-md shadow-md">
+                  The Bride
+                </div>
+              </div>
+              <div className="pt-6 pb-2 text-center">
+                <h3 className="font-serif text-2xl md:text-3xl font-bold text-[#1c1c19]">
+                  {partner1}
+                </h3>
+                <p className="text-xs text-[#91472a] font-semibold uppercase tracking-widest mt-1">
+                  Bride-To-Be
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Central Heart Badge */}
+            <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-14 h-14 rounded-full bg-[#91472a] text-[#ffdbcf] border-4 border-white shadow-2xl items-center justify-center">
+              <Heart className="w-6 h-6 fill-current animate-pulse" />
+            </div>
+
+            {/* Groom Card */}
+            <motion.div
+              whileHover={{ y: -6 }}
+              className="bg-[#f7f3ee] border-2 border-[#dac1b9]/60 p-4 rounded-t-[140px] rounded-b-3xl shadow-xl transition-all group relative"
+            >
+              <div className="aspect-[4/5] rounded-t-[125px] rounded-b-2xl overflow-hidden relative border border-[#dac1b9]/40">
+                <img
+                  src={groomImg}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#91472a] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.25em] backdrop-blur-md shadow-md">
+                  The Groom
+                </div>
+              </div>
+              <div className="pt-6 pb-2 text-center">
+                <h3 className="font-serif text-2xl md:text-3xl font-bold text-[#1c1c19]">
+                  {partner2}
+                </h3>
+                <p className="text-xs text-[#91472a] font-semibold uppercase tracking-widest mt-1">
+                  Groom-To-Be
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Celebration Film Video Section */}
+      <section className="py-20 px-6 md:px-16 bg-[#380d00] text-white relative border-b border-[#dac1b9]/50" id="video">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div>
+            <span className="text-xs font-bold text-[#ffdbcf] uppercase tracking-[0.25em] block mb-2">
+              Cinematic Preview
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-[#ffdbcf]">
+              Our Celebration Film
+            </h2>
+            <p className="text-sm font-serif text-[#fdf9f4]/80 mt-2 max-w-xl mx-auto">
+              Watch a preview of our story and shared memories together.
+            </p>
+          </div>
+
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-[#ffdbcf] aspect-video bg-black group">
+            {isPlayingVideo ? (
+              <iframe
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                title="Love Story Video"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                <img
+                  src={coverImg}
+                  alt="Video Poster"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-[#ffdbcf] text-[#380d00] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Play className="w-8 h-8 fill-current ml-1" />
+                  </div>
+                </div>
+                <div className="absolute bottom-6 left-6 text-white text-left">
+                  <p className="text-xs uppercase tracking-widest text-[#ffdbcf] font-bold">Watch Video</p>
+                  <p className="text-xl font-serif font-bold">{partner1} &amp; {partner2}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* Our Journey Section */}
@@ -197,79 +344,95 @@ export default function BohemianSunInvitation(props: TemplateClassicFloralProps)
 
       {/* Celebrations Bento Section */}
       <section className="py-20 px-6 md:px-16 max-w-6xl mx-auto" id="events">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#91472a] mb-2">Celebrations</h2>
-          <p className="text-sm text-[#54433d] max-w-md mx-auto">
-            Join us for a weekend of love, laughter, and celebration in Tirunelveli.
-          </p>
-        </div>
+        <div id="venue">
+          <div className="text-center mb-16">
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#91472a] mb-2">Celebrations &amp; Venues</h2>
+            <p className="text-sm text-[#54433d] max-w-md mx-auto">
+              Join us for a weekend of love, laughter, and celebration.
+            </p>
+          </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Marriage */}
-          <motion.div
-            whileHover={{ y: -4 }}
-            className="bg-[#fdf9f4] rounded-2xl p-8 border border-[#dac1b9]/50 shadow-lg flex flex-col justify-between"
-          >
-            <div>
-              <span className="inline-block bg-[#d4e5c1] text-[#58674b] font-bold text-xs px-3 py-1 rounded-full mb-4">
-                Holy Matrimony
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-[#1c1c19] mb-2">The Marriage Ceremony</h3>
-              <div className="flex items-center gap-2 mb-1 text-xs text-[#54433d] font-semibold">
-                <Clock className="w-4 h-4 text-[#7f5214]" />
-                <span>13 May 2026 • 10:00 AM</span>
-              </div>
-              <div className="flex items-center gap-2 mb-4 text-xs text-[#54433d] font-semibold">
-                <MapPin className="w-4 h-4 text-[#7f5214]" />
-                <span>St. Antony Church, Kaval Kinaru</span>
-              </div>
-              <p className="text-xs text-[#54433d] border-t border-[#dac1b9]/30 pt-4 mb-6">
-                Join us as we exchange our vows and begin our journey together.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            {(props.locations && props.locations.length > 0
+              ? props.locations
+              : [
+                  {
+                    name: "Holy Matrimony",
+                    venueLabel: "St. Antony Church",
+                    address: props.contactAddress || "Kaval Kinaru, Tirunelveli District",
+                    image: "/images/templates/venue-ceremony.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                  {
+                    name: "Evening Reception",
+                    venueLabel: "Ubahara Matha Mahal",
+                    address: props.venuePlace || "Kaval Kinaru, Tirunelveli District",
+                    image: "/images/templates/venue-reception.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                ]
+            ).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                id={`venue-card-${idx}`}
+                whileHover={{ y: -4 }}
+                className="bg-[#fdf9f4] rounded-2xl p-6 border border-[#dac1b9]/50 shadow-lg flex flex-col justify-between scroll-mt-28"
+              >
+                <div>
+                  <div className="h-48 rounded-xl overflow-hidden mb-6 border border-[#dac1b9]/40">
+                    <img
+                      src={
+                        loc.image ||
+                        (idx === 0
+                          ? "/images/templates/venue-ceremony.jpg"
+                          : "/images/templates/venue-reception.jpg")
+                      }
+                      alt={loc.name || "Venue"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-            <div className="w-full h-44 rounded-xl overflow-hidden border border-[#dac1b9]/50">
-              <iframe
-                title="Church Location Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15764.041530932822!2d77.7249339!3d8.7135063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b0411ed00645069%3A0xcb13e9a4440f93ff!2sSt.%20Antony's%20Church!5e0!3m2!1sen!2sin!4v1711200000000!5m2!1sen!2sin"
-                className="w-full h-full border-0"
-                loading="lazy"
-              />
-            </div>
-          </motion.div>
+                  <span className="inline-block bg-[#d4e5c1] text-[#58674b] font-bold text-xs px-3 py-1 rounded-full mb-3">
+                    {loc.venueLabel || (idx === 0 ? "Holy Matrimony" : "Grand Celebration")}
+                  </span>
+                  <h3 className="font-serif text-2xl font-bold text-[#1c1c19] mb-2">
+                    {loc.name || (idx === 0 ? "The Marriage Ceremony" : "Evening Reception")}
+                  </h3>
+                  <div className="flex items-center gap-2 mb-4 text-xs text-[#54433d] font-semibold">
+                    <MapPin className="w-4 h-4 text-[#7f5214]" />
+                    <span>{loc.address || "Kaval Kinaru, Tirunelveli District"}</span>
+                  </div>
+                </div>
 
-          {/* Reception */}
-          <motion.div
-            whileHover={{ y: -4 }}
-            className="bg-[#fdf9f4] rounded-2xl p-8 border border-[#dac1b9]/50 shadow-lg flex flex-col justify-between"
-          >
-            <div>
-              <span className="inline-block bg-[#ffdbcf] text-[#380d00] font-bold text-xs px-3 py-1 rounded-full mb-4">
-                Grand Celebration
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-[#1c1c19] mb-2">Evening Reception</h3>
-              <div className="flex items-center gap-2 mb-1 text-xs text-[#54433d] font-semibold">
-                <Clock className="w-4 h-4 text-[#7f5214]" />
-                <span>13 May 2026 • 07:00 PM Onwards</span>
-              </div>
-              <div className="flex items-center gap-2 mb-4 text-xs text-[#54433d] font-semibold">
-                <MapPin className="w-4 h-4 text-[#7f5214]" />
-                <span>Ubahara Matha Mahal, Kaval Kinaru</span>
-              </div>
-              <p className="text-xs text-[#54433d] border-t border-[#dac1b9]/30 pt-4 mb-6">
-                An evening of celebration, dinner, and dancing under the bohemian sky.
-              </p>
-            </div>
+                <div className="w-full h-44 rounded-xl overflow-hidden border border-[#dac1b9]/50 mb-4 bg-gray-100">
+                  <iframe
+                    title={`Venue Map ${idx + 1}`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                </div>
 
-            <div className="w-full h-44 rounded-xl overflow-hidden border border-[#dac1b9]/50">
-              <iframe
-                title="Reception Venue Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.433433618485!2d77.73359677590827!3d8.74526689408665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b041160ce3959c5%3A0x88981f33f7c4c379!2sUbahara%20Matha%20Mahal!5e0!3m2!1sen!2sin!4v1711200000001!5m2!1sen!2sin"
-                className="w-full h-full border-0"
-                loading="lazy"
-              />
-            </div>
-          </motion.div>
+                <a
+                  href={
+                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
+                      ? loc.mapLink
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                        )}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#91472a] hover:underline uppercase"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions</span>
+                </a>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -279,7 +442,7 @@ export default function BohemianSunInvitation(props: TemplateClassicFloralProps)
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#91472a] mb-12">Day Itinerary</h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-            {defaultTimeline.map((item, idx) => (
+            {timelineList.map((item, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}

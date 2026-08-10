@@ -1,22 +1,61 @@
-import { Metadata } from "next";
-import ScrollScrubberTemplate from "@/components/templates/scroll-scrubber/ScrollScrubberTemplate";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Your Name & Partner Name | Premium Scroll Wedding Invitation",
-  description:
-    "Experience a luxury 480-frame scroll-scrubbing wedding invitation for Your Name & Partner Name.",
-};
+import { useEffect, useState } from "react";
+import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
+import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
+import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
+import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
+import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
+import { sampleWeddingData } from "@/data/sampleWeddingData";
+import { TemplateClassicFloralProps } from "@/types/template";
 
 export default function ScrollScrubberPage() {
+  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates/scroll-scrubber");
+  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
+
+  useEffect(() => {
+    let activeDraft: Record<string, unknown> | null = null;
+    if (typeof window !== "undefined") {
+      const localStr = localStorage.getItem("bervic_user_draft_details");
+      if (localStr) {
+        try {
+          activeDraft = JSON.parse(localStr);
+        } catch {
+          activeDraft = null;
+        }
+      }
+    }
+
+    fetch("/api/user/event-draft")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.draft) {
+          setInvitationData(mapEventProfileToInvitationData(data.draft, sampleWeddingData));
+        } else if (activeDraft) {
+          setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        }
+      })
+      .catch(() => {
+        if (activeDraft) {
+          setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        }
+      });
+  }, []);
+
+  if (isLoading || !hasCompletedDetails) {
+    return <TemplatePreviewSkeleton />;
+  }
+
   return (
-    <ScrollScrubberTemplate
-      templateSlug="scroll-scrubber"
-      partnerOne="Your Name"
-      partnerTwo="Partner Name"
-      tagline="TOGETHER WITH THEIR FAMILIES"
-      inviteLine="Request the honor of your presence as they exchange sacred vows of love"
-      weddingDate="December 18, 2026"
-      weddingTime="4:00 PM Onwards"
-    />
+    <div className="relative min-h-screen">
+      <DynamicTemplateCard {...invitationData} templateSlug="scroll-scrubber" />
+      <TemplatePreviewBottomBar
+        slug="scroll-scrubber"
+        templateTitle="Cinematic 480-Frame Scroll Sequence"
+        isPremium={true}
+        price={2000}
+        displayData={invitationData}
+      />
+    </div>
   );
 }

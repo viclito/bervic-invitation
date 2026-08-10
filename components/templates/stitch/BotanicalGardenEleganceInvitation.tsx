@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -38,8 +39,9 @@ export default function BotanicalGardenEleganceInvitation(
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-01T15:00:00"
+    const targetDate = getWeddingTargetDate(
+      props.weddingDate,
+      props.weddingTime
     ).getTime();
 
     const interval = setInterval(() => {
@@ -59,7 +61,7 @@ export default function BotanicalGardenEleganceInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Timeline events fallback
   const timelineSteps =
@@ -326,18 +328,32 @@ export default function BotanicalGardenEleganceInvitation(
         {/* About Section */}
         <section className="py-28 px-6 md:px-16 bg-[#fcf9f8]" id="about">
           <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
-            <div className="md:col-span-5 md:col-start-2 botanical-frame p-4 bg-white shadow-sm rounded-xl">
-              <img
-                alt="Greenhouse portrait"
-                className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
-                src={
-                  props.coupleImage ||
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuB6apaciEMxIAm-wQUZbDL2MzB_jdg_BPJ9LReFAofj2uH7oYLs13yZ4TiRn_Kel5_q1R7z3GgKbIUlpIqJlR0bsNrBu0rS98x2Nm6cp4j5Oz2d_OYt1XtICNhXTV8Nl1zZxn1Zsxg6Us2EVIi0WlICPjKwedftf3Hw5s5bbJ4IxGqJPPtIPLUQpK_9goc6svfanSSizvdj9Lh4LmiZJ1owRrpdyVBginVt8gJwmtxCzcYdxiahSQPO"
-                }
-              />
+            <div className="md:col-span-6 flex flex-row gap-4 items-center justify-center">
+              <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
+                <img
+                  alt={props.partnerOne || "Bride"}
+                  className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
+                  src={
+                    props.coupleImage ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuB6apaciEMxIAm-wQUZbDL2MzB_jdg_BPJ9LReFAofj2uH7oYLs13yZ4TiRn_Kel5_q1R7z3GgKbIUlpIqJlR0bsNrBu0rS98x2Nm6cp4j5Oz2d_OYt1XtICNhXTV8Nl1zZxn1Zsxg6Us2EVIi0WlICPjKwedftf3Hw5s5bbJ4IxGqJPPtIPLUQpK_9goc6svfanSSizvdj9Lh4LmiZJ1owRrpdyVBginVt8gJwmtxCzcYdxiahSQPO"
+                  }
+                />
+                <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{props.partnerOne || "Bride"}</p>
+              </div>
+              <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
+                <img
+                  alt={props.partnerTwo || "Groom"}
+                  className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
+                  src={
+                    props.partnerTwoImage ||
+                    "/images/templates/groom-bride-2.jpg"
+                  }
+                />
+                <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{props.partnerTwo || "Groom"}</p>
+              </div>
             </div>
 
-            <div className="md:col-span-5 md:col-start-8 flex flex-col gap-6">
+            <div className="md:col-span-6 md:col-start-7 flex flex-col gap-6">
               <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] italic">
                 Our Story
               </h2>
@@ -358,7 +374,7 @@ export default function BotanicalGardenEleganceInvitation(
           <div className="max-w-4xl mx-auto text-center relative z-10 flex flex-col items-center gap-6">
             <Quote className="w-12 h-12 text-[#ffdcc2] opacity-60" />
             <p className="text-3xl md:text-5xl font-serif italic leading-tight">
-              "To plant a garden is to believe in tomorrow."
+              &ldquo;To plant a garden is to believe in tomorrow.&rdquo;
             </p>
             <span className="text-xs font-semibold text-[#ffdcc2] uppercase tracking-[0.2em]">
               Audrey Hepburn
@@ -371,7 +387,7 @@ export default function BotanicalGardenEleganceInvitation(
           <div className="max-w-3xl mx-auto flex flex-col gap-12">
             <div className="text-center space-y-2">
               <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00]">
-                The Day's Flow
+                The Day&apos;s Flow
               </h2>
               <p className="text-sm font-serif text-[#5d5c58]">
                 A curated experience from afternoon to evening.
@@ -415,7 +431,7 @@ export default function BotanicalGardenEleganceInvitation(
                       </h3>
                       <p className="text-sm font-serif text-[#484837] leading-relaxed">
                         {"desc" in step
-                          ? (step as any).desc
+                          ? (step as { desc?: string }).desc
                           : "Enjoy drinks, food, and music."}
                       </p>
                     </div>
@@ -438,7 +454,7 @@ export default function BotanicalGardenEleganceInvitation(
               {celebrationHeader}
             </div>
             <div className="text-xs text-[#5d5c58] font-serif">
-              © {new Date().getFullYear()} Crafted with Love for {celebrantName}'s Special Day
+              © {new Date().getFullYear()} Crafted with Love for {celebrantName}&apos;s Special Day
             </div>
             <div className="flex gap-6 text-xs text-[#484837] font-semibold">
               <a href="#" className="hover:text-[#904d00] transition-colors">

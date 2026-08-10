@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
@@ -35,12 +36,25 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const partner1 = props.partnerOne || "Terance";
-  const partner2 = props.partnerTwo || "Ancy";
+  const partner1 = props.partnerOne || "Sasa Adi Tinah";
+  const partner2 = props.partnerTwo || "Allan Susilo";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
-  const heroBackgroundImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCG4bCaZSK50IQkhwqyRPKK0RFSTlB4YQoaj6K5kvV9_SpCx6lEnJKyEatJp6y-Q7HSpxYusiGKfd4perA31IdJYJSttLmd11OHZ014o7k_90fuzxCmYugOeG-rO3mKG-RxDDANRpQlq1hr6f5f1KQioZObdRN3zd_u6n6WdvEkX-kTBh2tUVPC_dp_bJvj0J4bwK0Lvc1xsu_Kh0N-CrRxHPN7jHphZSfB2BSttpTbw7BWbSoGqkdC";
+  const coverImg =
+    props.coverImage ||
+    props.heroImage ||
+    props.coupleImage ||
+    "/images/templates/couple-photo.jpg";
+
+  const brideImg =
+    props.coupleImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
+
+  const groomImg =
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
 
   const coupleStoryImg =
     props.coupleImage ||
@@ -60,7 +74,7 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
       ? props.timelineDay.map((t, i) => ({
           time: t.time,
           title: t.title,
-          desc: "Schedule of Events",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
           icon: defaultTimeline[i % 3].icon,
         }))
       : defaultTimeline;
@@ -138,8 +152,8 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-6 md:px-16 pt-28 pb-20">
         <div className="absolute inset-0 z-0">
           <div
-            className="bg-cover bg-center w-full h-full opacity-25"
-            style={{ backgroundImage: `url('${heroBackgroundImg}')` }}
+            className="bg-cover bg-center w-full h-full opacity-30 filter contrast-125"
+            style={{ backgroundImage: `url('${coverImg}')` }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#f8f9fa]/50 via-[#f8f9fa]/80 to-[#f8f9fa]" />
         </div>
@@ -176,6 +190,105 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
         </motion.div>
       </section>
 
+      {/* Meet the Bride & Groom Section */}
+      <section className="py-24 px-6 md:px-16 bg-[#ffffff] border-b border-[#bccabe]/40" id="couple">
+        <div className="max-w-[1280px] mx-auto text-center space-y-12">
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#006d43]">
+              The Happy Couple
+            </span>
+            <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#191c1d]">
+              Meet the Bride &amp; Groom
+            </h2>
+            <div className="w-12 h-0.5 bg-[#006d43]" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Bride Card */}
+            <div className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-4 shadow-sm group overflow-hidden">
+              <div className="aspect-[4/5] rounded-xl overflow-hidden relative">
+                <img
+                  src={brideImg}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#191c1d]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 text-left text-white">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#78fbb6] block mb-1">
+                    Bride
+                  </span>
+                  <h3 className="font-serif text-3xl font-bold">{partner1}</h3>
+                </div>
+              </div>
+            </div>
+
+            {/* Groom Card */}
+            <div className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-4 shadow-sm group overflow-hidden">
+              <div className="aspect-[4/5] rounded-xl overflow-hidden relative">
+                <img
+                  src={groomImg}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#191c1d]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 text-left text-white">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#78fbb6] block mb-1">
+                    Groom
+                  </span>
+                  <h3 className="font-serif text-3xl font-bold">{partner2}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Celebration Film Video Section */}
+      <section className="py-24 px-6 md:px-16 bg-[#00331d] text-white relative border-b border-[#bccabe]/40" id="video">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#78fbb6] block mb-2">
+              Cinematic Journey
+            </span>
+            <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#78fbb6]">
+              Our Celebration Film
+            </h2>
+            <p className="text-sm text-white/80 mt-2 max-w-xl mx-auto">
+              Watch a preview of our story and shared memories together.
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-[#78fbb6] aspect-video bg-black group">
+            {isPlayingVideo ? (
+              <iframe
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                title="Love Story Video"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                <img
+                  src={coverImg}
+                  alt="Video Thumbnail"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-[#78fbb6] text-[#00331d] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Play className="w-8 h-8 fill-current ml-1" />
+                  </div>
+                </div>
+                <div className="absolute bottom-6 left-6 text-white text-left">
+                  <p className="text-xs uppercase tracking-widest text-[#78fbb6] font-bold">Watch Video</p>
+                  <p className="text-xl font-serif font-bold">{partner1} &amp; {partner2}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Our Love Story Section */}
       <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto" id="story">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -208,74 +321,95 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
         </div>
       </section>
 
-      {/* Bento Grid Events */}
+      {/* Wedding Events & Venues Section */}
       <section className="py-24 px-6 md:px-16 bg-[#ffffff]" id="events">
-        <div className="max-w-[1280px] mx-auto">
+        <div className="max-w-[1280px] mx-auto" id="venue">
           <div className="text-center mb-16 flex flex-col items-center gap-3">
-            <h2 className="font-serif text-4xl font-bold text-[#191c1d]">Wedding Events</h2>
+            <h2 className="font-serif text-4xl font-bold text-[#191c1d]">Wedding Events &amp; Venues</h2>
             <div className="w-12 h-0.5 bg-[#006d43]" />
             <p className="text-sm text-[#5d5e61]">Join us as we step into a lifetime of love and togetherness</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Wedding Ceremony (Span 2) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="md:col-span-2 bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[260px]"
-            >
-              <div>
-                <Church className="w-8 h-8 text-[#006d43] mb-4" />
-                <h3 className="font-serif text-2xl font-bold text-[#191c1d]">Wedding Ceremony</h3>
-                <p className="text-xs text-[#5d5e61] mt-1 font-semibold">10:00 AM • May 13, 2026</p>
-              </div>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="text-xs font-bold text-[#006d43] mt-6 inline-flex items-center gap-1 hover:underline">
-                St. Antony Church, Kaval Kinaru <MapPin className="w-4 h-4" />
-              </a>
-            </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {(props.locations && props.locations.length > 0
+              ? props.locations
+              : [
+                  {
+                    name: "Marriage Ceremony",
+                    venueLabel: "St. Antony Church",
+                    address: props.contactAddress || "Kaval Kinaru, Tirunelveli District",
+                    image: "/images/templates/venue-ceremony.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                  {
+                    name: "Grand Reception",
+                    venueLabel: "Ubahara Matha Mahal",
+                    address: props.venuePlace || "Kaval Kinaru, Tirunelveli District",
+                    image: "/images/templates/venue-reception.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                ]
+            ).map((loc, idx) => (
+              <div
+                key={idx}
+                id={`venue-card-${idx}`}
+                className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#006d43] transition-colors relative scroll-mt-28"
+              >
+                <div className="h-48 rounded-xl overflow-hidden mb-6 border border-[#bccabe]/30">
+                  <img
+                    src={
+                      loc.image ||
+                      (idx === 0
+                        ? "/images/templates/venue-ceremony.jpg"
+                        : "/images/templates/venue-reception.jpg")
+                    }
+                    alt={loc.name || "Venue"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-            {/* Lunch (Span 1) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[260px]"
-            >
-              <div>
-                <Utensils className="w-8 h-8 text-[#006d43] mb-4" />
-                <h3 className="font-serif text-2xl font-bold text-[#191c1d]">Lunch Feast</h3>
-                <p className="text-xs text-[#5d5e61] mt-1 font-semibold">12:00 PM</p>
-              </div>
-              <p className="text-xs text-[#5d5e61]">Traditional celebratory lunch served with love.</p>
-            </motion.div>
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#006d43] block">
+                    {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                  </span>
+                  <h3 className="font-serif text-2xl font-bold text-[#191c1d]">
+                    {loc.name || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                  </h3>
+                  <p className="text-xs text-[#5d5e61]">
+                    {loc.address || "Kaval Kinaru, Tirunelveli District"}
+                  </p>
+                </div>
 
-            {/* Reception (Span 1) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[260px]"
-            >
-              <div>
-                <PartyPopper className="w-8 h-8 text-[#006d43] mb-4" />
-                <h3 className="font-serif text-2xl font-bold text-[#191c1d]">Grand Reception</h3>
-                <p className="text-xs text-[#5d5e61] mt-1 font-semibold">07:00 PM</p>
-              </div>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="text-xs font-bold text-[#006d43] mt-6 inline-flex items-center gap-1 hover:underline">
-                Ubahara Matha Mahal <MapPin className="w-4 h-4" />
-              </a>
-            </motion.div>
+                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#bccabe]/30 mb-6 bg-gray-100">
+                  <iframe
+                    title={`Venue Map ${idx + 1}`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                  />
+                </div>
 
-            {/* Dinner (Span 2) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="md:col-span-2 bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[260px] relative overflow-hidden"
-            >
-              <div className="absolute inset-0 z-0">
-                <img src={dinnerBgImg} alt="Dinner Setting" className="w-full h-full object-cover opacity-15" />
+                <a
+                  href={
+                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
+                      ? loc.mapLink
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                        )}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006d43] hover:text-[#191c1d] uppercase tracking-wider"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions</span>
+                </a>
               </div>
-              <div className="relative z-10">
-                <Utensils className="w-8 h-8 text-[#006d43] mb-4" />
-                <h3 className="font-serif text-2xl font-bold text-[#191c1d]">Grand Dinner</h3>
-                <p className="text-xs text-[#5d5e61] mt-1 font-semibold">08:00 PM Onwards</p>
-              </div>
-              <p className="relative z-10 text-xs text-[#3d4a41]">Fine dining, toasts, and evening celebrations.</p>
-            </motion.div>
+            ))}
           </div>
         </div>
       </section>

@@ -20,7 +20,7 @@ import {
   Heart,
 } from "lucide-react";
 
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 
 export default function CelestialNightInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -68,7 +68,38 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
     "https://lh3.googleusercontent.com/aida/AP1WRLvWfzXdN3dHblHMwCfYoZzOQpFd55WruE3qhpS4L0St43rwB0l9HRsSVUPWL226kWxQkGJRu6OUJ5cOQo4G0Vp8s-N63YtcTfH8vIaWTvvr9rHykEUQ0mI_v8bBC7ZTc8VAO1--z-jMa4pg_IU1uaN3Gd76BW-8k-d4R5LU4PtaWr7aPUpDbHttGiVo0D0y6Y_O7PNACCjqktCyXRVWMTP8nJzTwqnxpfozIb53uukdEtbwZ1iwTN6b4rI";
 
   const videoCoverImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBpm4j-t6RMihRtGmM9BhDv4mA8cc80g2Gps4_cJa3CerbcYtH4lMbejonFYa25EunL-XZeXmhPP-_2I1lwaiQo-a4nhAYX7OAe3JdDaQvslcPrLk5sPtrDp5UzLmJ0eFX1h_SWxL1obiYSlKtXwkIpvk-xRzLrcTSK0M84D4f9YiS9Q9SBcSYrBg_NtLF78PMqb_wzFYCreqA7y0Gd5DOeYdbXdQn8IYQZXz6bhpnSZAHarQsf77e0";
+    props.coverImage ||
+    props.coupleImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
+
+  const defaultEvents = [
+    {
+      title: "Holy Matrimony",
+      time: "MAY 13, 2026 • 10:00 AM",
+      venue: "St. Antony Church",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+    {
+      title: "Starlight Reception",
+      time: "MAY 13, 2026 • 07:00 PM",
+      venue: "Ubahara Matha Mahal",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+  ];
+
+  const eventsList =
+    props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          title: e.title,
+          time: `${e.date || props.weddingDate || "MAY 13, 2026"} • ${e.time || "10:00 AM"}`,
+          venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
+          address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
+          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
+        }))
+      : defaultEvents;
 
   const defaultTimeline = [
     { time: "10:00 AM", title: "Holy Matrimony", desc: "Exchange of sacred vows under the celestial arch" },
@@ -76,6 +107,21 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
     { time: "07:00 PM", title: "Starlight Reception", desc: "Grand evening ball under twinkling stars" },
     { time: "08:30 PM", title: "Cake Cutting & Fireworks", desc: "Illuminating celebration and dinner" },
   ];
+
+  const timelineList =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t) => ({
+          time: t.time,
+          title: t.title,
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
+        }))
+      : props.events && props.events.length > 0
+      ? props.events.map((e) => ({
+          time: e.time,
+          title: e.title,
+          desc: e.date ? `Date: ${e.date}` : "",
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -148,9 +194,9 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
 
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-28 pb-20 px-6 overflow-hidden" id="story">
-        <div className="absolute inset-0 z-0 opacity-30">
-          <img src={coupleHeroImg} alt="Celestial background" className="w-full h-full object-cover mix-blend-overlay" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#090a10]/60 via-[#090a10]/80 to-[#090a10]" />
+        <div className="absolute inset-0 z-0 opacity-65">
+          <img src={coupleHeroImg} alt="Celestial background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#090a10]/50 via-[#090a10]/75 to-[#090a10]" />
         </div>
 
         <motion.div
@@ -171,13 +217,36 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
             <span>{partner2}</span>
           </h1>
 
+          {/* Bride & Groom Couple Photo Card */}
+          <div className="my-6 flex flex-col sm:flex-row items-center justify-center gap-6 z-10">
+            <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#d4af37] p-2 bg-[#121420] shadow-2xl overflow-hidden group rounded-xl">
+              <img
+                src={props.coupleImage || props.coverImage || props.heroImage || "/images/templates/couple-photo.jpg"}
+                alt={`${partner1} & ${partner2}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+              />
+              <div className="absolute inset-0 border border-[#d4af37]/40 m-2 rounded-lg pointer-events-none" />
+            </div>
+
+            {props.partnerTwoImage && (
+              <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#d4af37] p-2 bg-[#121420] shadow-2xl overflow-hidden group rounded-xl">
+                <img
+                  src={props.partnerTwoImage}
+                  alt={partner2}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+                />
+                <div className="absolute inset-0 border border-[#d4af37]/40 m-2 rounded-lg pointer-events-none" />
+              </div>
+            )}
+          </div>
+
           <p className="text-base sm:text-lg text-[#a3a8be] max-w-xl mx-auto">
             {props.inviteLine || "Invite you to celebrate their union under the starlight sky"}
           </p>
 
           <div className="border border-[#d4af37]/40 p-6 rounded-xl backdrop-blur-md bg-[#090a10]/60 shadow-[0_0_30px_rgba(212,175,55,0.15)] flex flex-col items-center">
-            <p className="font-serif text-3xl font-bold text-[#d4af37]">13th May 2026</p>
-            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">10:00 AM ONWARDS</p>
+            <p className="font-serif text-3xl font-bold text-[#d4af37]">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">{props.weddingTime || "10:00 AM ONWARDS"}</p>
           </div>
 
           {/* Countdown Grid */}
@@ -212,51 +281,34 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Matrimony */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#121420] border border-[#d4af37]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <Church className="w-10 h-10 text-[#d4af37] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mb-4">MAY 13, 2026 • 10:00 AM</p>
-              <p className="text-xs text-[#a3a8be] mb-6 leading-relaxed">
-                St. Antony Church<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#d4af37] text-[#d4af37] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#d4af37] hover:text-[#090a10] transition-colors"
+          {eventsList.map((evt, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -6 }}
+              className="bg-[#121420] border border-[#d4af37]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
             >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
-
-          {/* Reception */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#121420] border border-[#d4af37]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <PartyPopper className="w-10 h-10 text-[#d4af37] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Starlight Reception</h3>
-              <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mb-4">MAY 13, 2026 • 07:00 PM</p>
-              <p className="text-xs text-[#a3a8be] mb-6 leading-relaxed">
-                Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#d4af37] text-[#d4af37] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#d4af37] hover:text-[#090a10] transition-colors"
-            >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
+              <div>
+                {idx % 2 === 0 ? (
+                  <Church className="w-10 h-10 text-[#d4af37] mx-auto mb-4" />
+                ) : (
+                  <PartyPopper className="w-10 h-10 text-[#d4af37] mx-auto mb-4" />
+                )}
+                <h3 className="font-serif text-2xl font-bold text-white mb-1">{evt.title}</h3>
+                <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mb-4">{evt.time}</p>
+                <p className="text-xs text-[#a3a8be] mb-6 leading-relaxed">
+                  {evt.venue}<br />{evt.address}
+                </p>
+              </div>
+              <a
+                href={evt.mapLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 border border-[#d4af37] text-[#d4af37] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#d4af37] hover:text-[#090a10] transition-colors"
+              >
+                <MapPin className="w-4 h-4" /> View Location
+              </a>
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -269,7 +321,7 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
           </div>
 
           <div className="flex flex-col gap-6">
-            {defaultTimeline.map((item, idx) => (
+            {timelineList.map((item, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -322,8 +374,8 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
           <div className="relative aspect-video rounded-xl overflow-hidden border border-[#d4af37]/40 shadow-2xl group cursor-pointer">
             {isPlayingVideo ? (
               <iframe
-                title="Celestial video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="Love story video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
                 className="w-full h-full"
                 allow="autoplay; encrypted-media"
                 allowFullScreen

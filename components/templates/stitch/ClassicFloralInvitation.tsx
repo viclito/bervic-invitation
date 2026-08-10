@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -37,7 +38,7 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(props.weddingDate || "2026-05-13T14:00:00").getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const difference = Math.max(0, targetDate - now);
@@ -72,7 +73,7 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
       ? props.timelineDay.map((t) => ({
           time: t.time,
           title: t.title,
-          desc: "Main Event",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
         }))
       : defaultTimeline;
 
@@ -279,7 +280,7 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
               <Church className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
               <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-1">The Ceremony</h3>
               <p className="text-xs font-semibold text-[#4a4452] uppercase tracking-wider mb-6">2:00 PM</p>
-              <p className="text-sm text-[#1b1c19] font-bold mb-1">St. Patrick's Cathedral</p>
+              <p className="text-sm text-[#1b1c19] font-bold mb-1">St. Patrick&apos;s Cathedral</p>
               <p className="text-xs text-[#4a4452] mb-8">123 Wedding Lane, Cityville</p>
               <div className="w-full h-48 bg-[#e4e2dd] mb-8 rounded-xl overflow-hidden shadow-inner">
                 <iframe

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -64,14 +64,60 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
     "https://lh3.googleusercontent.com/aida/AP1WRLvWfzXdN3dHblHMwCfYoZzOQpFd55WruE3qhpS4L0St43rwB0l9HRsSVUPWL226kWxQkGJRu6OUJ5cOQo4G0Vp8s-N63YtcTfH8vIaWTvvr9rHykEUQ0mI_v8bBC7ZTc8VAO1--z-jMa4pg_IU1uaN3Gd76BW-8k-d4R5LU4PtaWr7aPUpDbHttGiVo0D0y6Y_O7PNACCjqktCyXRVWMTP8nJzTwqnxpfozIb53uukdEtbwZ1iwTN6b4rI";
 
   const videoCoverImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC8i0wWwVz0XkdyjrVRPE_3gLQ1AOASUEPF3522qAE5ggUHQ-HHEaPB_BOT_C92cOVdxrxEj330lttE-e2ha-j2DLSL_N3W4-uiQE395S2aK0QK7bLMEjC_yd6cRbCp0gbacGsZ19T5yRsitocxP9lGmPFka6_lsjRM1sB4jUyI0wrbXTW3ZTX5nThN8-7e2ZOYOm9cDlNufwWPaqyFBkTcuTTA9N5sUzgyczfSkvi6kvaVEZ9VZxBB";
+    props.coverImage ||
+    props.coupleImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
+
+  const defaultEvents = [
+    {
+      title: "Holy Matrimony",
+      time: "MAY 13, 2026 • 10:00 AM",
+      venue: "St. Antony Church",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+    {
+      title: "Maharani Gala Reception",
+      time: "MAY 13, 2026 • 07:00 PM",
+      venue: "Ubahara Matha Mahal",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+  ];
+
+  const eventsList =
+    props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          title: e.title,
+          time: `${e.date || props.weddingDate || "MAY 13, 2026"} • ${e.time || "10:00 AM"}`,
+          venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
+          address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
+          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
+        }))
+      : defaultEvents;
 
   const defaultTimeline = [
-    { time: "10:00 AM", title: "Royal Wedding Ceremony", desc: "Holy Matrimony at St. Antony Church" },
-    { time: "12:30 PM", title: "Grand Banquet Luncheon", desc: "Traditional royal feast for honored guests" },
-    { time: "07:00 PM", title: "Maharani Gala Reception", desc: "Evening gala with live orchestra and dancing" },
-    { time: "08:30 PM", title: "Royal Banquet Dinner", desc: "Delightful grand reception dinner" },
+    { time: "10:00 AM", title: "Royal Baarat & Welcome", desc: "Grand welcome procession with traditional dhol & shehnai" },
+    { time: "11:30 AM", title: "Mandap Varmala & Pheras", desc: "Sacred Vedic wedding rituals under the ornate mandap" },
+    { time: "01:00 PM", title: "Royal Rajwadi Feast", desc: "A lavish traditional feast featuring delicacies" },
+    { time: "07:30 PM", title: "Grand Royal Reception", desc: "An evening of royal music, dance, and celebrations" },
   ];
+
+  const timelineList =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t) => ({
+          time: t.time,
+          title: t.title,
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
+        }))
+      : props.events && props.events.length > 0
+      ? props.events.map((e) => ({
+          time: e.time,
+          title: e.title,
+          desc: e.date ? `Date: ${e.date}` : "",
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -144,9 +190,9 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
 
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-28 pb-20 px-6 overflow-hidden" id="story">
-        <div className="absolute inset-0 z-0 opacity-25">
-          <img src={coupleHeroImg} alt="Royal Maharani background" className="w-full h-full object-cover mix-blend-overlay" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1a0812]/60 via-[#1a0812]/80 to-[#1a0812]" />
+        <div className="absolute inset-0 z-0 opacity-60">
+          <img src={coupleHeroImg} alt="Royal Maharani background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a0812]/50 via-[#1a0812]/75 to-[#1a0812]" />
         </div>
 
         <motion.div
@@ -167,13 +213,36 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
             <span>{partner2}</span>
           </h1>
 
+          {/* Bride & Groom Couple Photo Card */}
+          <div className="my-6 flex flex-col sm:flex-row items-center justify-center gap-6 z-10">
+            <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#e6c280] p-2 bg-[#290d1d] shadow-2xl overflow-hidden group rounded-xl">
+              <img
+                src={props.coupleImage || props.coverImage || props.heroImage || "/images/templates/couple-photo.jpg"}
+                alt={`${partner1} & ${partner2}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+              />
+              <div className="absolute inset-0 border border-[#e6c280]/40 m-2 rounded-lg pointer-events-none" />
+            </div>
+
+            {props.partnerTwoImage && (
+              <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-2 border-[#e6c280] p-2 bg-[#290d1d] shadow-2xl overflow-hidden group rounded-xl">
+                <img
+                  src={props.partnerTwoImage}
+                  alt={partner2}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+                />
+                <div className="absolute inset-0 border border-[#e6c280]/40 m-2 rounded-lg pointer-events-none" />
+              </div>
+            )}
+          </div>
+
           <p className="text-base sm:text-lg text-[#d8b5c4] max-w-xl mx-auto">
             {props.inviteLine || "Cordially request the honor of your presence at their grand wedding celebration"}
           </p>
 
           <div className="border-2 border-[#e6c280]/60 p-6 rounded-xl backdrop-blur-md bg-[#1a0812]/80 shadow-[0_0_35px_rgba(230,194,128,0.2)] flex flex-col items-center">
-            <p className="font-serif text-3xl font-bold text-[#e6c280]">13th May 2026</p>
-            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">10:00 AM ONWARDS</p>
+            <p className="font-serif text-3xl font-bold text-[#e6c280]">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs font-bold text-white uppercase tracking-widest mt-1">{props.weddingTime || "10:00 AM ONWARDS"}</p>
           </div>
 
           {/* Countdown Grid */}
@@ -208,51 +277,34 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Matrimony */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#290d1d] border border-[#e6c280]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <Church className="w-10 h-10 text-[#e6c280] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#e6c280] uppercase tracking-widest mb-4">MAY 13, 2026 • 10:00 AM</p>
-              <p className="text-xs text-[#d8b5c4] mb-6 leading-relaxed">
-                St. Antony Church<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#e6c280] text-[#e6c280] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e6c280] hover:text-[#1a0812] transition-colors"
+          {eventsList.map((evt, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -6 }}
+              className="bg-[#290d1d] border border-[#e6c280]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
             >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
-
-          {/* Reception */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#290d1d] border border-[#e6c280]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <PartyPopper className="w-10 h-10 text-[#e6c280] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Maharani Gala Reception</h3>
-              <p className="text-xs font-bold text-[#e6c280] uppercase tracking-widest mb-4">MAY 13, 2026 • 07:00 PM</p>
-              <p className="text-xs text-[#d8b5c4] mb-6 leading-relaxed">
-                Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#e6c280] text-[#e6c280] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e6c280] hover:text-[#1a0812] transition-colors"
-            >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
+              <div>
+                {idx % 2 === 0 ? (
+                  <Church className="w-10 h-10 text-[#e6c280] mx-auto mb-4" />
+                ) : (
+                  <PartyPopper className="w-10 h-10 text-[#e6c280] mx-auto mb-4" />
+                )}
+                <h3 className="font-serif text-2xl font-bold text-white mb-1">{evt.title}</h3>
+                <p className="text-xs font-bold text-[#e6c280] uppercase tracking-widest mb-4">{evt.time}</p>
+                <p className="text-xs text-[#d8b5c4] mb-6 leading-relaxed">
+                  {evt.venue}<br />{evt.address}
+                </p>
+              </div>
+              <a
+                href={evt.mapLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 border border-[#e6c280] text-[#e6c280] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e6c280] hover:text-[#1a0812] transition-colors"
+              >
+                <MapPin className="w-4 h-4" /> View Location
+              </a>
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -265,7 +317,7 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
           </div>
 
           <div className="flex flex-col gap-6">
-            {defaultTimeline.map((item, idx) => (
+            {timelineList.map((item, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -318,8 +370,8 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
           <div className="relative aspect-video rounded-xl overflow-hidden border border-[#e6c280]/40 shadow-2xl group cursor-pointer">
             {isPlayingVideo ? (
               <iframe
-                title="Royal video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="Love story video"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
                 className="w-full h-full"
                 allow="autoplay; encrypted-media"
                 allowFullScreen

@@ -176,6 +176,71 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
         </motion.div>
       </header>
 
+      {/* Meet the Couple - Bride & Groom Photos */}
+      <section className="py-16 px-6 md:px-16 bg-[#fbf9f4] border-b border-[#D4AF37]/20" id="couple">
+        <div className="max-w-[1000px] mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-10"
+          >
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#D4AF37]">
+              The Blessed Union
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#31105C] mt-1">
+              Meet the Couple
+            </h2>
+            <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto mt-3" />
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            {/* Bride Photo Card */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="group relative h-64 sm:h-72 rounded-2xl overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-white"
+            >
+              <img
+                src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
+                alt={`${partner1} - Bride`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/85 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 text-left">
+                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-bold block">
+                  Bride
+                </span>
+                <h3 className="text-xl font-serif font-bold text-white leading-none mt-1">
+                  {partner1}
+                </h3>
+              </div>
+            </motion.div>
+
+            {/* Groom Photo Card */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="group relative h-64 sm:h-72 rounded-2xl overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-white"
+            >
+              <img
+                src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                alt={`${partner2} - Groom`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/85 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 text-left">
+                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-bold block">
+                  Groom
+                </span>
+                <h3 className="text-xl font-serif font-bold text-white leading-none mt-1">
+                  {partner2}
+                </h3>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Celebration & Events Section */}
       <section className="py-24 px-6 md:px-16 bg-[#ffffff] relative" id="events">
         <div className="max-w-[1200px] mx-auto">
@@ -187,63 +252,60 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
             className="text-center mb-16"
           >
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#31105C] mb-3">
-              The Celebration
+              Event Schedule &amp; Functions
             </h2>
             <div className="w-20 h-0.5 bg-[#D4AF37] mx-auto" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Ceremony Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-              whileHover={{ y: -6 }}
-              className="bg-[#ffffff] p-10 md:p-12 text-center rounded-2xl border border-[#D4AF37]/30 relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-500 shadow-md"
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Church className="w-10 h-10 text-[#D4AF37] mx-auto mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-2">The Ceremony</h3>
-              <p className="text-xs font-semibold text-[#4a4452] mb-6 uppercase tracking-wider">
-                {props.weddingTime || "Saturday, October 14th • 3:00 PM"}
-              </p>
-              <p className="text-sm text-[#4a4452] mb-8 leading-relaxed">
-                St. Patrick's Cathedral<br />5th Avenue, New York
-              </p>
-              <a
-                href="#locations"
-                className="inline-block border border-[#D4AF37] text-[#31105C] text-xs font-bold uppercase tracking-wider py-2.5 px-7 rounded-sm hover:bg-[#F1E9FF] transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(props.events && props.events.length > 0 ? props.events : [
+              {
+                time: props.weddingTime || "10:30 AM",
+                title: "Wedding Ceremony",
+                location: props.venuePlace || "Main Venue",
+                description: "Celebrate the sacred wedding ceremony with us.",
+              },
+              {
+                time: "07:00 PM",
+                title: "Grand Evening Reception",
+                location: props.venuePlace || "Reception Ballroom",
+                description: "An evening of feast, music, and grand celebration.",
+              },
+            ]).map((evt: any, idx: number) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-[#ffffff] p-8 md:p-10 text-left rounded-2xl border border-[#D4AF37]/30 relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-500 shadow-md flex flex-col justify-between"
               >
-                View Details
-              </a>
-            </motion.div>
-
-            {/* Reception Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-              whileHover={{ y: -6 }}
-              className="bg-[#ffffff] p-10 md:p-12 text-center rounded-2xl border border-[#D4AF37]/30 relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-500 shadow-md"
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity" />
-              <PartyPopper className="w-10 h-10 text-[#D4AF37] mx-auto mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-2">The Reception</h3>
-              <p className="text-xs font-semibold text-[#4a4452] mb-6 uppercase tracking-wider">
-                Saturday, October 14th • 6:00 PM
-              </p>
-              <p className="text-sm text-[#4a4452] mb-8 leading-relaxed">
-                The Plaza Hotel<br />Central Park South, New York
-              </p>
-              <a
-                href="#locations"
-                className="inline-block border border-[#D4AF37] text-[#31105C] text-xs font-bold uppercase tracking-wider py-2.5 px-7 rounded-sm hover:bg-[#F1E9FF] transition-colors"
-              >
-                View Details
-              </a>
-            </motion.div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div>
+                  <div className="w-12 h-12 rounded-full bg-[#31105C]/10 border border-[#D4AF37]/40 flex items-center justify-center text-xl mb-4 text-[#31105C]">
+                    {evt.icon || "💍"}
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37] block mb-1">
+                    {evt.time} {evt.date ? `• ${evt.date}` : ""}
+                  </span>
+                  <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-2">
+                    {evt.title}
+                  </h3>
+                  {evt.location && (
+                    <p className="text-xs text-[#4a4452] flex items-center gap-1.5 font-medium mb-3">
+                      <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>{evt.location}</span>
+                    </p>
+                  )}
+                  {evt.description && (
+                    <p className="text-xs text-[#6b6276] font-light leading-relaxed">
+                      {evt.description}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

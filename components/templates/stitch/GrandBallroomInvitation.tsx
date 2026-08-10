@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
@@ -35,15 +36,25 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const partner1 = props.partnerOne || "Elias";
-  const partner2 = props.partnerTwo || "Sophia";
+  const partner1 = props.partnerOne || "Sasa Adi Tinah";
+  const partner2 = props.partnerTwo || "Allan Susilo";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
-  const heroBallroomImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDPiSWwZuWF5lnBNg6pqKyu587msdF134pWzJkSddp1d9fS_F12V7moqHPQdgqziFCtCT7VtKjExV243eaLuzoCOx82iPmcKMmDwZKyV572LbYEeZ1pAEmG_tDqK47RICLeb7JxNle_l_w5V_b0vAyIfXf8UZ9Z1zbmNzK_242hq8D4PHlzsdVaZJ-qNkqxTh73y630VODGi3vbZb_BHo5BgNYB5xP_hStGKXKnkCv_uHddD4k5JzC-";
+  const heroBg =
+    props.coverImage ||
+    props.heroImage ||
+    props.coupleImage ||
+    "/images/templates/couple-photo.jpg";
 
-  const mandapImg =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBOKTYrPoHDJYdajFSzpXiuIBT7k8fowDi8bZKGGM-Ze3-y7TrctJMkPia3lWnv-VKd4vtlUhIv82wP6QAu947LsxfStD4akikV-1WZ0TzRJR6IfZkYvYyQqPeISrdVPbpkMesabEahjD10XB2e4zoVsAxDHMU41bHyc90J0V5DXYqDZEEvsybzyYXSh5kRdErS1IwTepvPHjq-xp01TkhEHZB4MgtmKAnGW1HSHAHubI6xwZBBz3bp";
+  const brideImg =
+    props.coupleImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-1.jpg";
+
+  const groomImg =
+    props.partnerTwoImage ||
+    props.coverImage ||
+    "/images/templates/groom-bride-2.jpg";
 
   const defaultTimeline = [
     { time: "4:00 PM", title: "The Vows", desc: "The ceremony begins at the Cathedral of St. Regis.", icon: <Church className="w-4 h-4 text-[#31105C]" /> },
@@ -56,7 +67,7 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
       ? props.timelineDay.map((t, i) => ({
           time: t.time,
           title: t.title,
-          desc: "Formal Ceremony Schedule",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
           icon: defaultTimeline[i % 3].icon,
         }))
       : defaultTimeline;
@@ -134,7 +145,7 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
       {/* Hero Grand Ballroom Section */}
       <header className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16" id="story">
         <div className="absolute inset-0 z-0">
-          <img src={heroBallroomImg} alt="Grand Ballroom Background" className="w-full h-full object-cover object-center filter brightness-75" />
+          <img src={heroBg} alt="Grand Ballroom Cover Background" className="w-full h-full object-cover object-center filter brightness-75" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-[#31105C]/30" />
         </div>
 
@@ -159,61 +170,200 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
         </motion.div>
       </header>
 
-      {/* Formal Details Bento Grid */}
-      <section className="py-24 px-6 md:px-16 bg-[#f5f3ee]" id="events">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl font-bold text-[#31105C] mb-2">The Celebration</h2>
-            <div className="h-0.5 w-24 bg-[#D4AF37] mx-auto" />
+      {/* Meet the Couple Section */}
+      <section className="py-24 px-6 md:px-16 bg-white border-b border-[#D4AF37]/30" id="couple">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          <div>
+            <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.3em] block mb-2">
+              The Happy Couple
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-[#31105C]">
+              Meet the Bride &amp; Groom
+            </h2>
+            <div className="h-0.5 w-24 bg-[#D4AF37] mx-auto mt-4" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Ceremony Card */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="md:col-span-7 bg-white p-8 sm:p-10 shadow-sm border border-[#D4AF37]/30 flex flex-col justify-center relative overflow-hidden"
-            >
-              <Church className="w-10 h-10 text-[#D4AF37] mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-2">The Ceremony</h3>
-              <p className="text-xs text-[#4a4452] mb-6 leading-relaxed">
-                Join us as we exchange our vows in the historic cathedral. Please arrive by three-thirty in the afternoon.
-              </p>
-              <div className="text-xs font-bold text-[#1b1c19] uppercase tracking-wider mb-2">4:00 PM - Cathedral of St. Regis</div>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="inline-flex items-center text-xs font-bold text-[#D4AF37] hover:text-[#31105C] transition-colors uppercase tracking-widest mt-2">
-                <MapPin className="w-4 h-4 mr-1" /> View Map
-              </a>
-            </motion.div>
-
-            {/* Reception Photo */}
-            <div className="md:col-span-5 h-80 md:h-auto overflow-hidden shadow-sm border border-[#D4AF37]/30">
-              <img src={mandapImg} alt="Grand Mandap" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </div>
-
-            {/* Dress Code Card */}
-            <div className="md:col-span-4 bg-[#31105C] text-white p-8 sm:p-10 flex flex-col items-center justify-center text-center shadow-md">
-              <Shirt className="w-10 h-10 text-[#D4AF37] mb-3" />
-              <h4 className="font-serif text-2xl font-bold text-[#D4AF37] mb-2">Dress Code</h4>
-              <p className="text-xs text-[#F1E9FF] leading-relaxed">
-                Black Tie Requested. We kindly ask our guests to embrace the formal elegance of the evening.
-              </p>
-            </div>
-
-            {/* Cocktails & Reception Details */}
-            <div className="md:col-span-8 bg-white p-8 sm:p-10 border border-[#D4AF37]/30 flex flex-col justify-center shadow-sm">
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-4">Cocktails &amp; Reception</h3>
-              <div className="flex flex-col gap-6 relative pl-6 border-l-2 border-[#D4AF37]">
-                <div className="relative">
-                  <div className="absolute w-3 h-3 bg-[#31105C] rounded-full -left-[1.9rem] top-1 border-2 border-white" />
-                  <div className="text-xs font-bold text-[#31105C] uppercase tracking-wider mb-1">6:00 PM</div>
-                  <p className="text-xs text-[#4a4452]">Cocktail hour begins in the Grand Foyer.</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute w-3 h-3 bg-[#31105C] rounded-full -left-[1.9rem] top-1 border-2 border-white" />
-                  <div className="text-xs font-bold text-[#31105C] uppercase tracking-wider mb-1">7:30 PM</div>
-                  <p className="text-xs text-[#4a4452]">Dinner, toasts, and dancing in the Crystal Ballroom.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            {/* Bride Card */}
+            <div className="group relative border-2 border-[#D4AF37] p-3 bg-[#fbf9f4] shadow-xl overflow-hidden">
+              <div className="relative w-full h-96 overflow-hidden">
+                <img
+                  src={brideImg}
+                  alt={`${partner1} - Bride`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 text-left text-white">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-bold block mb-1">
+                    Bride
+                  </span>
+                  <h3 className="text-3xl font-serif font-bold">{partner1}</h3>
                 </div>
               </div>
             </div>
+
+            {/* Groom Card */}
+            <div className="group relative border-2 border-[#D4AF37] p-3 bg-[#fbf9f4] shadow-xl overflow-hidden">
+              <div className="relative w-full h-96 overflow-hidden">
+                <img
+                  src={groomImg}
+                  alt={`${partner2} - Groom`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 text-left text-white">
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-bold block mb-1">
+                    Groom
+                  </span>
+                  <h3 className="text-3xl font-serif font-bold">{partner2}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Celebration Film Video Section */}
+      <section className="py-24 px-6 md:px-16 bg-[#31105C] text-white relative border-b border-[#D4AF37]/30" id="video">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div>
+            <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.3em] block mb-2">
+              Cinematic Moments
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-[#D4AF37]">
+              Our Celebration Film
+            </h2>
+            <p className="text-sm font-serif text-[#F1E9FF] mt-2 max-w-xl mx-auto">
+              Watch a preview of our story and shared memories together.
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] aspect-video bg-black group">
+            {isPlayingVideo ? (
+              <iframe
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                title="Love Story Video"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                <img
+                  src={heroBg}
+                  alt="Video Thumbnail"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-[#D4AF37] text-[#31105C] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Play className="w-8 h-8 fill-current ml-1" />
+                  </div>
+                </div>
+                <div className="absolute bottom-6 left-6 text-white text-left">
+                  <p className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">Watch Video</p>
+                  <p className="text-xl font-serif font-bold">{partner1} &amp; {partner2}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Event Schedule & Functions Section */}
+      <section className="py-24 px-6 md:px-16 bg-[#f5f3ee]" id="events">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.3em] block mb-2">
+              Event Functions &amp; Schedule
+            </span>
+            <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#31105C]">
+              The Celebration
+            </h2>
+            <div className="h-0.5 w-24 bg-[#D4AF37] mx-auto mt-4" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {(props.events && props.events.length > 0
+              ? props.events.map((e, idx) => ({
+                  title: e.title,
+                  time: e.time,
+                  date: e.date || props.weddingDate || "Saturday, October 26, 2026",
+                  location: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "The Grand Royal Palace",
+                  address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Main Event Venue",
+                  image: props.locations?.[idx % props.locations.length]?.image || (idx === 0 ? "/images/templates/venue-ceremony.jpg" : "/images/templates/venue-reception.jpg"),
+                }))
+              : [
+                  {
+                    title: "The Holy Ceremony",
+                    time: props.weddingTime || "10:00 AM",
+                    date: props.weddingDate || "Saturday, October 26, 2026",
+                    location: props.locations?.[0]?.name || props.venuePlace || "St. Regis Cathedral",
+                    address: props.locations?.[0]?.address || props.contactAddress || "456 Cathedral Ave, Cityville",
+                    image: props.locations?.[0]?.image || "/images/templates/venue-ceremony.jpg",
+                  },
+                  {
+                    title: "Grand Evening Reception",
+                    time: "7:00 PM",
+                    date: props.weddingDate || "Saturday, October 26, 2026",
+                    location: props.locations?.[1]?.name || "The Grand Royal Palace",
+                    address: props.locations?.[1]?.address || "789 Palace Blvd, Royal City",
+                    image: props.locations?.[1]?.image || "/images/templates/venue-reception.jpg",
+                  },
+                ]
+            ).map((evt, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -6 }}
+                className="bg-white border-2 border-[#D4AF37]/30 shadow-xl overflow-hidden flex flex-col justify-between"
+              >
+                <div className="h-64 overflow-hidden relative">
+                  <img
+                    src={evt.image}
+                    alt={evt.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-transparent" />
+                  <div className="absolute top-4 left-4 bg-[#31105C] text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest px-3 py-1 border border-[#D4AF37]/50 shadow-md">
+                    Function #{idx + 1}
+                  </div>
+                  <div className="absolute bottom-4 left-6 text-white">
+                    <h3 className="font-serif text-2xl font-bold">{evt.title}</h3>
+                  </div>
+                </div>
+
+                <div className="p-8 space-y-4 bg-white flex-grow flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
+                      <Clock className="w-4 h-4 text-[#31105C]" />
+                      <span>{evt.time} • {evt.date}</span>
+                    </div>
+
+                    <div className="flex items-start gap-2.5 text-xs text-[#4a4452]">
+                      <MapPin className="w-4 h-4 text-[#31105C] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-[#31105C]">{evt.location}</p>
+                        <p>{evt.address}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href="#venue"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const el = document.getElementById(`venue-card-${idx}`) || document.getElementById("venue");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="inline-flex items-center text-xs font-bold text-[#31105C] hover:text-[#D4AF37] transition-colors uppercase tracking-widest pt-3 border-t border-[#D4AF37]/20 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]" />
+                    <span>View Venue Location</span>
+                  </a>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -273,7 +423,7 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
       </section>
 
       {/* Event Location Maps */}
-      <section className="py-24 px-6 md:px-16 bg-white">
+      <section className="py-24 px-6 md:px-16 bg-white border-t border-[#D4AF37]/30" id="venue">
         <div className="max-w-[1200px] mx-auto">
           <div className="text-center mb-16">
             <MapPin className="w-10 h-10 text-[#D4AF37] mx-auto mb-3" />
@@ -282,35 +432,85 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-[#fbf9f4] p-8 border border-[#D4AF37]/30 shadow-sm text-center">
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">The Ceremony</h3>
-              <p className="text-xs text-[#4a4452] mb-6">Cathedral of St. Regis</p>
-              <div className="w-full h-60 border border-[#D4AF37]/20 mb-6 overflow-hidden">
-                <iframe
-                  title="Ceremony Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
-              </div>
-            </div>
+            {(props.locations && props.locations.length > 0
+              ? props.locations
+              : [
+                  {
+                    name: "The Ceremony",
+                    venueLabel: "Cathedral of St. Regis",
+                    address: props.contactAddress || "456 Cathedral Ave, Cityville",
+                    image: "/images/templates/venue-ceremony.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                  {
+                    name: "The Reception",
+                    venueLabel: "The Grand Royal Palace",
+                    address: props.venuePlace || "789 Palace Blvd, Royal City",
+                    image: "/images/templates/venue-reception.jpg",
+                    mapLink: "https://maps.google.com",
+                  },
+                ]
+            ).map((loc, idx) => (
+              <div
+                key={idx}
+                id={`venue-card-${idx}`}
+                className="bg-[#fbf9f4] p-8 border border-[#D4AF37]/30 shadow-sm text-center flex flex-col justify-between scroll-mt-28"
+              >
+                <div className="h-56 rounded-xl overflow-hidden mb-6 border border-[#D4AF37]/20">
+                  <img
+                    src={
+                      loc.image ||
+                      (idx === 0
+                        ? "/images/templates/venue-ceremony.jpg"
+                        : "/images/templates/venue-reception.jpg")
+                    }
+                    alt={loc.name || "Venue"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-            <div className="bg-[#fbf9f4] p-8 border border-[#D4AF37]/30 shadow-sm text-center">
-              <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">The Reception</h3>
-              <p className="text-xs text-[#4a4452] mb-6">The Grand Royal Palace</p>
-              <div className="w-full h-60 border border-[#D4AF37]/20 mb-6 overflow-hidden">
-                <iframe
-                  title="Reception Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] block mb-1">
+                    {loc.venueLabel || (idx === 0 ? "The Ceremony" : "The Reception")}
+                  </span>
+                  <h3 className="font-serif text-2xl font-bold text-[#31105C] mb-1">
+                    {loc.name || (idx === 0 ? "Cathedral of St. Regis" : "The Grand Royal Palace")}
+                  </h3>
+                  <p className="text-xs text-[#4a4452] mb-6">
+                    {loc.address || (idx === 0 ? "Cathedral of St. Regis" : "The Grand Royal Palace")}
+                  </p>
+                </div>
+
+                <div className="w-full h-52 border border-[#D4AF37]/20 mb-6 overflow-hidden rounded-xl bg-gray-100">
+                  <iframe
+                    title={`Venue Map ${idx + 1}`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                  />
+                </div>
+
+                <a
+                  href={
+                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
+                      ? loc.mapLink
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
+                        )}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 bg-[#31105C] text-[#D4AF37] px-6 py-2.5 rounded text-xs font-bold uppercase tracking-wider hover:bg-[#4a1b8c] transition-colors"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions</span>
+                </a>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

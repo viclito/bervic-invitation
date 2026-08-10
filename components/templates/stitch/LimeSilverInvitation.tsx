@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -39,7 +40,36 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const heroBgImg =
+    props.heroImage ||
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCUU4JX9QUA0wxl_auEnFsKeBci4Kf2M0N0gBp9W-68i9kn93kF2w9oAiW3_F41v_6VOc1SQnlpYrl6h4iBRZ7L7PmsWLc7JDPllF39G9d9bTGTDQc6Qzv87B4smbBOSyaTJHehFm1bNuQzxX2cgM47mA1kApxqbBLEUAb3U9eB6t4B0p7sjPIYcmRGw706baTFborZQFQcNb6N5GP-pWVwEQbo2Bgum2XGWr9k5MDyxfi-L9tJ-DtQ";
+
+  const defaultEvents = [
+    {
+      title: "Marriage",
+      time: "May 13, 2026 • 10:00 AM",
+      venue: "St. Antony Church",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+    {
+      title: "Reception",
+      time: "May 13, 2026 • 07:00 PM",
+      venue: "Ubahara Matha Mahal",
+      address: "Kaval Kinaru, Tirunelveli District",
+      mapLink: "https://maps.google.com",
+    },
+  ];
+
+  const eventsList =
+    props.events && props.events.length > 0
+      ? props.events.map((e, idx) => ({
+          title: e.title,
+          time: `${e.date || props.weddingDate || "May 13, 2026"} • ${e.time || "10:00 AM"}`,
+          venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
+          address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
+          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
+        }))
+      : defaultEvents;
 
   const defaultTimeline = [
     { time: "10:00 AM", title: "The Ceremony", desc: "The main event begins. Please arrive a few minutes early to find your seats as we exchange our vows." },
@@ -52,7 +82,7 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
       ? props.timelineDay.map((t) => ({
           time: t.time,
           title: t.title,
-          desc: "Schedule of Events",
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
         }))
       : defaultTimeline;
 
@@ -160,6 +190,27 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
               {partner2}
             </h1>
 
+            {/* Bride & Groom Couple Photo Card */}
+            <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6">
+              <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-l-4 border-[#32CD32] border-t border-r border-b border-white/20 p-2 bg-[#0A0A0A] shadow-2xl overflow-hidden group">
+                <img
+                  src={props.coupleImage || props.coverImage || props.heroImage || "/images/templates/couple-photo.jpg"}
+                  alt={`${partner1} & ${partner2}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+                />
+              </div>
+
+              {props.partnerTwoImage && (
+                <div className="relative w-52 sm:w-64 h-64 sm:h-72 border-l-4 border-[#32CD32] border-t border-r border-b border-white/20 p-2 bg-[#0A0A0A] shadow-2xl overflow-hidden group">
+                  <img
+                    src={props.partnerTwoImage}
+                    alt={partner2}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95"
+                  />
+                </div>
+              )}
+            </div>
+
             <p className="text-sm sm:text-base text-[#bccbb4] max-w-lg mb-8">
               {props.inviteLine || "Invite you to celebrate their wedding in high style."}
             </p>
@@ -167,12 +218,12 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
             <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
               <div className="flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-[#32CD32]" />
-                <span className="text-xl font-bold text-white uppercase">13th May 2026</span>
+                <span className="text-xl font-bold text-white uppercase">{props.weddingDate || "13th May 2026"}</span>
               </div>
               <div className="hidden sm:block w-1.5 h-1.5 bg-[#32CD32] rounded-full" />
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-[#32CD32]" />
-                <span className="text-xl font-bold text-white uppercase">10:00 AM</span>
+                <span className="text-xl font-bold text-white uppercase">{props.weddingTime || "10:00 AM"}</span>
               </div>
             </div>
           </motion.div>
@@ -185,71 +236,42 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
           <h2 className="text-4xl font-black text-white uppercase mb-12 text-center tracking-tight">The Main Events</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Marriage */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="bg-[#1a1c1c]/80 backdrop-blur-md p-8 sm:p-10 border-l-4 border-[#32CD32] border-t border-r border-b border-white/10 shadow-xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <Church className="w-8 h-8 text-[#32CD32]" />
-                <h3 className="text-3xl font-black text-white uppercase">Marriage</h3>
-              </div>
-              <p className="text-base font-bold text-white mb-2">St. Antony Church</p>
-              <p className="text-xs text-[#c6c6c6] mb-6 leading-relaxed">
-                Join us as we exchange our vows and begin our new journey together. Dress to impress in this momentous occasion.
-              </p>
-              <div className="flex flex-col gap-2 mb-6 text-xs text-[#bccbb4] font-semibold">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#32CD32]" />
-                  <span>May 13, 2026</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#32CD32]" />
-                  <span>10:00 AM - 11:30 AM</span>
-                </div>
-              </div>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#32CD32] text-[#0A0A0A] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-white transition-colors shadow-[0_0_15px_rgba(50,205,50,0.3)]"
+            {eventsList.map((evt, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -6 }}
+                className="bg-[#1a1c1c]/80 backdrop-blur-md p-8 sm:p-10 border-l-4 border-[#32CD32] border-t border-r border-b border-white/10 shadow-xl flex flex-col justify-between"
               >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
-
-            {/* Reception */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="bg-[#1a1c1c]/80 backdrop-blur-md p-8 sm:p-10 border-l-4 border-[#32CD32] border-t border-r border-b border-white/10 shadow-xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <PartyPopper className="w-8 h-8 text-[#32CD32]" />
-                <h3 className="text-3xl font-black text-white uppercase">Reception</h3>
-              </div>
-              <p className="text-base font-bold text-white mb-2">Ubahara Matha Mahal</p>
-              <p className="text-xs text-[#c6c6c6] mb-6 leading-relaxed">
-                Let's celebrate the night away with dinner, drinks, and plenty of dancing! Prepare for a high-energy evening.
-              </p>
-              <div className="flex flex-col gap-2 mb-6 text-xs text-[#bccbb4] font-semibold">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#32CD32]" />
-                  <span>May 13, 2026</span>
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    {idx % 2 === 0 ? (
+                      <Church className="w-8 h-8 text-[#32CD32]" />
+                    ) : (
+                      <PartyPopper className="w-8 h-8 text-[#32CD32]" />
+                    )}
+                    <h3 className="text-3xl font-black text-white uppercase">{evt.title}</h3>
+                  </div>
+                  <p className="text-base font-bold text-white mb-2">{evt.venue}</p>
+                  <p className="text-xs text-[#c6c6c6] mb-6 leading-relaxed">
+                    {evt.address}
+                  </p>
+                  <div className="flex flex-col gap-2 mb-6 text-xs text-[#bccbb4] font-semibold">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#32CD32]" />
+                      <span>{evt.time}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#32CD32]" />
-                  <span>07:00 PM Onwards</span>
-                </div>
-              </div>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#32CD32] text-[#0A0A0A] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-white transition-colors shadow-[0_0_15px_rgba(50,205,50,0.3)]"
-              >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <a
+                  href={evt.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#32CD32] text-[#0A0A0A] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-white transition-colors shadow-[0_0_15px_rgba(50,205,50,0.3)] w-fit"
+                >
+                  <MapPin className="w-4 h-4" /> View on Map
+                </a>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -306,8 +328,8 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
             {isPlayingVideo ? (
               <iframe
                 title="Save the date video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                className="w-full h-full"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                className="w-full h-full border-0"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               />

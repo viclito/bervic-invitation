@@ -1,19 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
-  Menu,
-  X,
+  Zap,
   Sparkles,
-  MapPin,
+  Star,
+  Flame,
   PartyPopper,
   Calendar,
   Clock,
+  MapPin,
+  Music,
+  Volume2,
+  ShieldAlert,
+  Heart,
+  Disc,
+  Award,
+  Menu,
+  X,
 } from "lucide-react";
 
 export default function BoldPopArtInvitation(
@@ -78,8 +88,9 @@ export default function BoldPopArtInvitation(
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-09-15T19:00:00"
+    const targetDate = getWeddingTargetDate(
+      props.weddingDate,
+      props.weddingTime
     ).getTime();
 
     const interval = setInterval(() => {

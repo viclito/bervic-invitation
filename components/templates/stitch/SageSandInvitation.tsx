@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -59,6 +59,7 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
   const heroBgImg =
+    props.heroImage ||
     "https://lh3.googleusercontent.com/aida/AP1WRLtisJD1qdDfRYnXBmh9fVPEvajF-Z31oa-thOzmiupl4y2rKbfLzXWdpbGf3wAC2X9LROwEGS-vT7Bvo5AnQ8XY3_AYOfMyRRzWyhwo6edp7_Wm_Lw3cPXFgUEDCJvHwixIa3g8uwQW-X9ip7CeG8QyN-TgNTaJ8z1SBrOZ5wfF0xvynfOT0cG9gFt4l7-tYHRUwdcHqGONEDBf4lcMWcoWcOp24qBi03-nAOrmNNbaKq0eaoztQr6wi7g";
 
   const storyImg =
@@ -66,7 +67,10 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDHkcXt0pSfWYe0a2Wk7yE-xixPDHHuI3_QTdS7VGNJ1RKkKxGstOOPEZbFAIzOoaz8gPwL3LDRI34AnQtH1c1BCKvHrFNTK66uQFzdsJy3DfhddU8lMnbhX9bWTczZ8oMQWo81Ax_bddACSrgDildpfcfI7bFAgJebwY3xnlTvgrfJazegnbmKqY7YR0nP-Huqy8tzIWSTJSf4f8q0zWuW_zRrtcoNl4Ztv7-kaF-vPIwAsz8ZSfdC";
 
   const videoCoverImg =
-    "https://lh3.googleusercontent.com/aida/AP1WRLvWfzXdN3dHblHMwCfYoZzOQpFd55WruE3qhpS4L0St43rwB0l9HRsSVUPWL226kWxQkGJRu6OUJ5cOQo4G0Vp8s-N63YtcTfH8vIaWTvvr9rHykEUQ0mI_v8bBC7ZTc8VAO1--z-jMa4pg_IU1uaN3Gd76BW-8k-d4R5LU4PtaWr7aPUpDbHttGiVo0D0y6Y_O7PNACCjqktCyXRVWMTP8nJzTwqnxpfozIb53uukdEtbwZ1iwTN6b4rI";
+    props.coverImage ||
+    props.coupleImage ||
+    props.heroImage ||
+    "/images/templates/couple-photo.jpg";
 
   const defaultTimeline = [
     { time: "10:00 AM", title: "Ceremony", desc: "The exchanging of vows and rings in the presence of our loved ones." },
@@ -74,6 +78,21 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
     { time: "07:00 PM", title: "Grand Reception", desc: "An evening of celebrations with music, drinks, and good company." },
     { time: "08:00 PM", title: "Grand Dinner", desc: "A grand dinner to conclude our special day." },
   ];
+
+  const timelineList =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay.map((t) => ({
+          time: t.time,
+          title: t.title,
+          desc: t.desc || (t.date ? `Date: ${t.date}` : ""),
+        }))
+      : props.events && props.events.length > 0
+      ? props.events.map((e) => ({
+          time: e.time,
+          title: e.title,
+          desc: e.date ? `Date: ${e.date}` : "",
+        }))
+      : defaultTimeline;
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -169,8 +188,8 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
           </p>
 
           <div className="bg-[#efeded]/70 backdrop-blur-sm border border-[#c5c8bc]/40 rounded-2xl p-8 shadow-xl inline-block">
-            <p className="font-serif text-3xl font-bold text-[#6c5b4e] mb-2">13th May 2026</p>
-            <p className="text-xs font-bold text-[#44483f] uppercase tracking-widest">10:00 AM ONWARDS</p>
+            <p className="font-serif text-3xl font-bold text-[#6c5b4e] mb-2">{props.weddingDate || "13th May 2026"}</p>
+            <p className="text-xs font-bold text-[#44483f] uppercase tracking-widest">{props.weddingTime || "10:00 AM ONWARDS"}</p>
           </div>
         </motion.div>
       </section>
@@ -236,7 +255,7 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
           </div>
 
           <div className="relative border-l-2 border-[#c5c8bc]/40 ml-4 md:ml-1/2">
-            {defaultTimeline.map((item, idx) => {
+            {timelineList.map((item, idx) => {
               const isEven = idx % 2 === 1;
               return (
                 <motion.div
@@ -269,49 +288,53 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Matrimony */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-2xl overflow-hidden border border-[#c5c8bc]/30 shadow-md flex flex-col justify-between"
-            >
-              <div className="aspect-video w-full">
-                <iframe
-                  title="Church Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15764.041530932822!2d77.7249339!3d8.7135063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b0411ed00645069%3A0xcb13e9a4440f93ff!2sSt.%20Antony's%20Church!5e0!3m2!1sen!2sin!4v1711200000000!5m2!1sen!2sin"
-                  className="w-full h-full border-0"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="font-serif text-2xl font-bold text-[#526442] mb-2">Marriage Ceremony</h3>
-                <p className="text-xs text-[#44483f] mb-4">St. Antony Church, Kaval Kinaru</p>
-                <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#526442] font-bold text-xs hover:text-[#6c5b4e]">
-                  <MapPin className="w-4 h-4" /> Get Directions
-                </a>
-              </div>
-            </motion.div>
-
-            {/* Reception */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-2xl overflow-hidden border border-[#c5c8bc]/30 shadow-md flex flex-col justify-between"
-            >
-              <div className="aspect-video w-full">
-                <iframe
-                  title="Reception Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.433433618485!2d77.73359677590827!3d8.74526689408665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b041160ce3959c5%3A0x88981f33f7c4c379!2sUbahara%20Matha%20Mahal!5e0!3m2!1sen!2sin!4v1711200000001!5m2!1sen!2sin"
-                  className="w-full h-full border-0"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="font-serif text-2xl font-bold text-[#526442] mb-2">Grand Reception</h3>
-                <p className="text-xs text-[#44483f] mb-4">Ubahara Matha Mahal, Kaval Kinaru</p>
-                <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#526442] font-bold text-xs hover:text-[#6c5b4e]">
-                  <MapPin className="w-4 h-4" /> Get Directions
-                </a>
-              </div>
-            </motion.div>
+            {(props.locations && props.locations.length > 0
+              ? props.locations
+              : [
+                  {
+                    name: "Marriage Ceremony",
+                    venueLabel: props.venuePlace || "St. Antony Church, Kaval Kinaru",
+                    address: props.venuePlace || "St. Antony Church, Kaval Kinaru",
+                    mapLink: "https://maps.google.com",
+                  },
+                  {
+                    name: "Grand Reception",
+                    venueLabel: "Ubahara Matha Mahal, Kaval Kinaru",
+                    address: "Ubahara Matha Mahal, Kaval Kinaru",
+                    mapLink: "https://maps.google.com",
+                  },
+                ]
+            ).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-2xl overflow-hidden border border-[#c5c8bc]/30 shadow-md flex flex-col justify-between"
+              >
+                <div className="aspect-video w-full">
+                  <iframe
+                    title={loc.name}
+                    src={loc.mapLink && loc.mapLink.includes("embed") ? loc.mapLink : (idx === 0 ? "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15764.041530932822!2d77.7249339!3d8.7135063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b0411ed00645069%3A0xcb13e9a4440f93ff!2sSt.%20Antony's%20Church!5e0!3m2!1sen!2sin!4v1711200000000!5m2!1sen!2sin" : "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.433433618485!2d77.73359677590827!3d8.74526689408665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b041160ce3959c5%3A0x88981f33f7c4c379!2sUbahara%20Matha%20Mahal!5e0!3m2!1sen!2sin!4v1711200000001!5m2!1sen!2sin")}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-8">
+                  <h3 className="font-serif text-2xl font-bold text-[#526442] mb-2">
+                    {loc.venueLabel || loc.name || props.venuePlace}
+                  </h3>
+                  <p className="text-xs text-[#44483f] mb-4">
+                    {loc.address && loc.address !== (loc.venueLabel || loc.name)
+                      ? loc.address
+                      : loc.name !== (loc.venueLabel || loc.name)
+                      ? loc.name
+                      : props.venuePlace}
+                  </p>
+                  <a href={loc.mapLink || "https://maps.google.com"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#526442] font-bold text-xs hover:text-[#6c5b4e]">
+                    <MapPin className="w-4 h-4" /> Get Directions
+                  </a>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -324,7 +347,7 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
             {isPlayingVideo ? (
               <iframe
                 title="Love story video"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
                 className="w-full h-full"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
