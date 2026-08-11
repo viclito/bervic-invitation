@@ -188,13 +188,18 @@ export default function Navbar() {
 
           {/* Mobile Hamburger Toggle Button */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`p-2 rounded-full focus:outline-none transition-all ${
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMobileMenuOpen((prev) => !prev);
+            }}
+            className={`p-2.5 rounded-full focus:outline-none transition-all cursor-pointer z-50 touch-manipulation active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px] ${
               mobileMenuOpen
                 ? "bg-[#7A1F2B] text-[#D9A441] shadow-lg"
                 : isLightNav
-                ? "text-[#221C17] hover:bg-[#7A1F2B]/10"
-                : "text-[#F8F3EA] hover:bg-[#F8F3EA]/10"
+                ? "text-[#221C17] hover:bg-[#7A1F2B]/10 active:bg-[#7A1F2B]/20"
+                : "text-[#F8F3EA] hover:bg-[#F8F3EA]/10 active:bg-[#F8F3EA]/20"
             }`}
             aria-label="Toggle Navigation Menu"
           >
@@ -209,7 +214,7 @@ export default function Navbar() {
 
       {/* Modern, Glassmorphic Mobile Slide-Down Popup Screen */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-0 z-50 bg-[#221C17]/60 backdrop-blur-md flex flex-col justify-start animate-in fade-in duration-200">
+        <div className="md:hidden fixed inset-0 top-0 left-0 right-0 bottom-0 z-[100] bg-[#221C17]/60 backdrop-blur-md flex flex-col justify-start animate-in fade-in duration-200">
           <div className="bg-[#F8F3EA] border-b-4 border-[#D9A441] rounded-b-[2.5rem] shadow-2xl p-6 overflow-y-auto max-h-[92vh] animate-in slide-in-from-top-6 duration-300 flex flex-col space-y-6">
             
             {/* Top Bar inside Popup */}

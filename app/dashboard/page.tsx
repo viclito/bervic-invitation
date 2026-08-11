@@ -235,19 +235,84 @@ function DashboardContent() {
     return rawDate.length > 30 ? rawDate.slice(0, 30) + "..." : rawDate;
   };
 
-  if (status === "loading" || loading) {
-    return (
-      <div className="min-h-screen bg-[#FDF6F0] flex flex-col justify-between">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#7A1F2B] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[#2B2320] font-serif text-lg">Loading your invitation suite...</p>
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#FDF6F0] flex flex-col font-sans">
+      <Navbar />
+
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-20 sm:pt-28 md:pt-32 pb-16">
+        {/* Top Welcome Card Skeleton */}
+        <div className="bg-white border border-[#D9A441]/20 rounded-3xl p-4 sm:p-6 mb-6 shadow-xs animate-pulse flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 w-full">
+            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-[#7A1F2B]/10 shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="w-20 h-3 rounded-md bg-[#D9A441]/20" />
+              <div className="w-40 sm:w-56 h-5 rounded-lg bg-[#7A1F2B]/15" />
+              <div className="w-32 h-3 rounded-md bg-slate-200" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full md:w-auto pt-2 sm:pt-0">
+            <div className="h-9 rounded-xl bg-[#F6F0E6] w-full sm:w-28" />
+            <div className="h-9 rounded-xl bg-[#7A1F2B]/15 w-full sm:w-36" />
           </div>
         </div>
-        <Footer />
-      </div>
-    );
+
+        {/* Segmented Tabs Skeleton */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-[#D9A441]/20 mb-8 pb-3 animate-pulse">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1.5 sm:pb-0">
+            <div className="w-36 h-10 rounded-2xl bg-[#7A1F2B]/15 shrink-0" />
+            <div className="w-36 h-10 rounded-2xl bg-[#EFE7D8] shrink-0" />
+            <div className="w-40 h-10 rounded-2xl bg-[#EFE7D8] shrink-0" />
+          </div>
+          <div className="w-48 h-4 rounded-md bg-[#D9A441]/20" />
+        </div>
+
+        {/* Section Header Skeleton */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 animate-pulse">
+          <div className="space-y-2">
+            <div className="w-48 h-6 rounded-lg bg-[#7A1F2B]/15" />
+            <div className="w-72 sm:w-96 h-3.5 rounded-md bg-slate-200" />
+          </div>
+          <div className="w-36 h-9 rounded-xl bg-[#7A1F2B]/10 shrink-0" />
+        </div>
+
+        {/* Cards Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 animate-pulse space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-20 h-5 rounded-full bg-amber-100" />
+                <div className="w-24 h-5 rounded-full bg-[#7A1F2B]/10" />
+              </div>
+              <div className="space-y-2 py-2">
+                <div className="w-3/4 h-5 rounded-lg bg-[#7A1F2B]/20" />
+                <div className="w-1/2 h-4 rounded-md bg-slate-200" />
+              </div>
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="w-full h-3 rounded bg-slate-100" />
+                <div className="w-5/6 h-3 rounded bg-slate-100" />
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-3">
+                <div className="h-8 rounded-xl bg-[#EFE7D8]" />
+                <div className="h-8 rounded-xl bg-[#EFE7D8]" />
+                <div className="h-8 rounded-xl bg-[#7A1F2B]/15" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
+  if (status === "loading" || loading) {
+    return <DashboardSkeleton />;
   }
 
   const daysRemaining = subData.planExpiresAt
@@ -258,24 +323,27 @@ function DashboardContent() {
     <div className="min-h-screen bg-[#FDF6F0] flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-36 sm:pt-40 pb-16">
-        {/* Sleek & Neat Dashboard Top Bar Header */}
-        <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 mb-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-20 sm:pt-28 md:pt-32 pb-16">
+        {/* Luxury Modern Mobile & Desktop Top Welcome Header */}
+        <div className="bg-white border border-[#D9A441]/30 rounded-3xl p-4 sm:p-6 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3.5 w-full">
             {/* User Avatar */}
-            <div className="w-14 h-14 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center text-xl font-serif font-bold shadow-md shrink-0">
+            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-[#7A1F2B] to-[#5C1620] text-[#D9A441] flex items-center justify-center text-base sm:text-lg font-bold shadow-sm shrink-0 border border-[#D9A441]/40">
               {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "B"}
             </div>
 
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#221C17]">
-                Welcome back, {session?.user?.name || "Bride & Groom"}
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#8C6227] block">
+                WELCOME BACK
+              </span>
+              <h1 className="text-base sm:text-xl md:text-2xl font-bold text-[#1E1915] truncate leading-tight">
+                {session?.user?.name || "Bride & Groom"}
               </h1>
               {activeProfile && (
-                <p className="text-xs font-semibold text-[#7A1F2B] flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 fill-current text-[#D9A441]" />
-                  <span>
-                    Active Profile: <strong>{activeProfile.hostNameOne}{activeProfile.hostNameTwo ? ` & ${activeProfile.hostNameTwo}` : ""}</strong>
+                <p className="text-[11px] sm:text-xs font-semibold text-[#7A1F2B] flex items-center gap-1 mt-0.5 truncate">
+                  <Star className="w-3 h-3 fill-current text-[#D9A441] shrink-0" />
+                  <span className="truncate">
+                    Active: <strong>{activeProfile.hostNameOne}{activeProfile.hostNameTwo ? ` & ${activeProfile.hostNameTwo}` : ""}</strong>
                     {activeProfile.eventDate ? ` (${activeProfile.eventDate})` : ""}
                   </span>
                 </p>
@@ -283,14 +351,14 @@ function DashboardContent() {
             </div>
           </div>
 
-          {/* Quick Header Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          {/* Compact Responsive Action Buttons */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2.5 w-full md:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
             {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
               <Link
                 href="/admin"
-                className="px-4 py-2.5 rounded-xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm hover:bg-[#680E17] transition-all border border-[#D9A441]/40 w-full sm:w-auto"
+                className="col-span-2 sm:col-span-1 px-3.5 py-2.5 rounded-xl bg-[#7A1F2B] text-[#D9A441] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#680E17] transition-all border border-[#D9A441]/40"
               >
-                <Crown className="w-4 h-4 fill-current" />
+                <Crown className="w-3.5 h-3.5 fill-current text-[#D9A441]" />
                 <span>Admin Panel</span>
               </Link>
             )}
@@ -305,29 +373,27 @@ function DashboardContent() {
                   router.push("/checkout?plan=BASIC_599");
                 }
               }}
-              className="px-4 py-2.5 rounded-xl bg-[#EFE7D8] text-[#7A1F2B] text-xs font-bold border border-[#D9A441]/40 flex items-center justify-center gap-2 hover:bg-[#D9A441]/20 transition-all w-full sm:w-auto shadow-xs"
+              className="px-3 py-2.5 rounded-xl bg-[#F6F0E6] text-[#7A1F2B] text-xs font-bold border border-[#D9A441]/30 flex items-center justify-center gap-1.5 hover:bg-[#EFE7D8] transition-all shadow-xs"
             >
-              <Plus className="w-4 h-4 text-[#7A1F2B]" />
-              <span>+ Add Event Profile</span>
+              <Plus className="w-3.5 h-3.5 text-[#7A1F2B]" />
+              <span>Add Profile</span>
             </Link>
             <Link
               href="/templates"
-              className="btn-maroon px-5 py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all w-full sm:w-auto"
+              className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
             >
-              <Sparkles className="w-4 h-4 text-[#D9A441]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
               <span>Create Invitation</span>
             </Link>
           </div>
         </div>
 
-
-
         {/* Segmented Tab Navigation */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-[#D9A441]/20 mb-8 pb-3">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-[#D9A441]/20 mb-8 pb-3">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1.5 sm:pb-0 w-full sm:w-auto">
             <button
               onClick={() => handleTabChange("profiles")}
-              className={`flex-1 sm:flex-initial px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
                 activeTab === "profiles"
                   ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                   : "bg-[#EFE7D8]/60 text-[#221C17]/70 hover:bg-[#EFE7D8]"
@@ -339,7 +405,7 @@ function DashboardContent() {
 
             <button
               onClick={() => handleTabChange("invitations")}
-              className={`flex-1 sm:flex-initial px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
                 activeTab === "invitations"
                   ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                   : "bg-[#EFE7D8]/60 text-[#221C17]/70 hover:bg-[#EFE7D8]"
@@ -351,7 +417,7 @@ function DashboardContent() {
 
             <button
               onClick={() => handleTabChange("subscription")}
-              className={`flex-1 sm:flex-initial px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
                 activeTab === "subscription"
                   ? "bg-[#7A1F2B] text-[#F8F3EA] shadow-md"
                   : "bg-[#EFE7D8]/60 text-[#221C17]/70 hover:bg-[#EFE7D8]"
@@ -363,7 +429,7 @@ function DashboardContent() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-xs text-[#221C17]/60 font-semibold pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9A441]/10">
+          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-xs text-[#221C17]/70 font-semibold pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9A441]/10">
             <span>Template Slots: <strong className="text-[#7A1F2B]">{session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited" : `${subData.remainingTemplateSlots} left`}</strong></span>
             <span>Card Credits: <strong className="text-[#8B6519]">{session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited" : `${subData.remainingCardSlots} left`}</strong></span>
           </div>
@@ -372,10 +438,10 @@ function DashboardContent() {
         {/* TAB 0: EVENT PROFILES MANAGEMENT */}
         {activeTab === "profiles" && (
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
               <div>
                 <h3 className="text-xl font-serif font-bold text-[#221C17]">My Event Profiles</h3>
-                <p className="text-xs text-[#221C17]/70">
+                <p className="text-xs text-[#221C17]/70 leading-relaxed">
                   Manage multiple celebration profiles. Click <strong>&quot;Set as Active&quot;</strong> to set which profile populates all template previews.
                 </p>
                 <p className="text-[11px] font-bold text-[#8C6227] mt-1">
@@ -394,7 +460,7 @@ function DashboardContent() {
                     router.push("/checkout?plan=BASIC_599");
                   }
                 }}
-                className="px-4 py-2.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#9B2C3B] transition-all"
+                className="px-4 py-2.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#9B2C3B] transition-all shrink-0 w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 text-[#D9A441]" />
                 <span>Add New Event Profile</span>
