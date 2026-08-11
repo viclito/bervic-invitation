@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +26,22 @@ export default function Navbar() {
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -213,8 +230,8 @@ export default function Navbar() {
       </div>
 
       {/* Modern, Glassmorphic Mobile Slide-Down Popup Screen */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-0 left-0 right-0 bottom-0 z-[100] bg-[#221C17]/60 backdrop-blur-md flex flex-col justify-start animate-in fade-in duration-200">
+      {mounted && mobileMenuOpen && createPortal(
+        <div className="md:hidden fixed inset-0 z-[99999] bg-[#221C17]/70 backdrop-blur-md flex flex-col justify-start animate-in fade-in duration-200">
           <div className="bg-[#F8F3EA] border-b-4 border-[#D9A441] rounded-b-[2.5rem] shadow-2xl p-6 overflow-y-auto max-h-[92vh] animate-in slide-in-from-top-6 duration-300 flex flex-col space-y-6">
             
             {/* Top Bar inside Popup */}
@@ -227,6 +244,7 @@ export default function Navbar() {
               </Link>
 
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-9 h-9 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] flex items-center justify-center hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-colors"
                 aria-label="Close Menu"
@@ -374,11 +392,12 @@ export default function Navbar() {
                     <span>Go to My Dashboard</span>
                   </Link>
                   <button
+                    type="button"
                     onClick={() => {
                       setMobileMenuOpen(false);
                       signOut({ callbackUrl: "/" });
                     }}
-                    className="w-full py-2.5 text-center text-xs font-bold text-[#7A1F2B] hover:bg-[#7A1F2B]/10 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 text-center text-xs font-bold text-[#7A1F2B] hover:bg-[#7A1F2B]/10 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
@@ -414,7 +433,8 @@ export default function Navbar() {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
