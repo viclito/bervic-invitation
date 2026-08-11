@@ -207,50 +207,62 @@ export async function GET(req: Request) {
       if (c?.userId) cardCountMap[c.userId] = (cardCountMap[c.userId] || 0) + 1;
     });
 
-    // Group subscriptions & payments history per user
+    // Group subscriptions & payments history per user (Deduplicating matched Payment & Subscription rows)
     const userSubscriptionsMap: Record<string, any[]> = {};
     const userPurchasedPlansMap: Record<string, Set<string>> = {};
 
+    const rawTxMap: Record<string, { payments: any[]; subscriptions: any[] }> = {};
+
     (payments || []).forEach((p: any) => {
       if (p?.userId) {
-        if (!userSubscriptionsMap[p.userId]) userSubscriptionsMap[p.userId] = [];
-        if (!userPurchasedPlansMap[p.userId]) userPurchasedPlansMap[p.userId] = new Set<string>();
-
-        const created = p.createdAt ? new Date(p.createdAt) : new Date();
-        const expires = new Date(created);
-        expires.setDate(expires.getDate() + 30);
-
-        const isSucc = p.status === "SUCCESS" || p.status === "COMPLETED";
-        if (isSucc && p.plan && p.plan !== "NONE") {
-          userPurchasedPlansMap[p.userId].add(p.plan);
-        }
-
-        userSubscriptionsMap[p.userId].push({
-          id: p.id,
-          type: "PAYMENT",
-          plan: p.plan || "UNKNOWN",
-          amount: Number(p.amount) || 0,
-          status: p.status || "UNKNOWN",
-          createdAt: created.toISOString(),
-          expiresAt: expires.toISOString(),
-          isExpired: now > expires,
-        });
+        if (!rawTxMap[p.userId]) rawTxMap[p.userId] = { payments: [], subscriptions: [] };
+        rawTxMap[p.userId].payments.push(p);
       }
     });
 
     (subscriptions || []).forEach((sub: any) => {
       if (sub?.userId) {
-        if (!userSubscriptionsMap[sub.userId]) userSubscriptionsMap[sub.userId] = [];
-        if (!userPurchasedPlansMap[sub.userId]) userPurchasedPlansMap[sub.userId] = new Set<string>();
+        if (!rawTxMap[sub.userId]) rawTxMap[sub.userId] = { payments: [], subscriptions: [] };
+        rawTxMap[sub.userId].subscriptions.push(sub);
+      }
+    });
 
+    Object.keys(rawTxMap).forEach((uId) => {
+      const uPayments = rawTxMap[uId].payments;
+      const uSubs = rawTxMap[uId].subscriptions;
+
+      userSubscriptionsMap[uId] = [];
+      userPurchasedPlansMap[uId] = new Set<string>();
+
+      const processedOrders = new Set<string>();
+
+      // 1. Process canonical Subscriptions first (holds accurate expiresAt and status)
+      uSubs.forEach((sub: any) => {
         const created = sub.createdAt ? new Date(sub.createdAt) : new Date();
-        const expires = sub.expiresAt ? new Date(sub.expiresAt) : new Date(created.getTime() + 30 * 86400000);
 
-        if (sub.plan && sub.plan !== "NONE") {
-          userPurchasedPlansMap[sub.userId].add(sub.plan);
+        // Skip duplicate subscriptions for the same razorpay order ID or created within 2 minutes
+        if (sub.razorpayOrderId && processedOrders.has(sub.razorpayOrderId)) {
+          return;
         }
 
-        userSubscriptionsMap[sub.userId].push({
+        const isDupSub = userSubscriptionsMap[uId].some((existing: any) => {
+          const exCreated = new Date(existing.createdAt);
+          const diffMs = Math.abs(created.getTime() - exCreated.getTime());
+          return diffMs < 2 * 60 * 1000 && existing.plan === sub.plan;
+        });
+        if (isDupSub) return;
+
+        const expires = sub.expiresAt ? new Date(sub.expiresAt) : new Date(created.getTime() + 180 * 86400000);
+
+        if (sub.plan && sub.plan !== "NONE") {
+          userPurchasedPlansMap[uId].add(sub.plan);
+        }
+
+        if (sub.razorpayOrderId) {
+          processedOrders.add(sub.razorpayOrderId);
+        }
+
+        userSubscriptionsMap[uId].push({
           id: sub.id,
           type: "SUBSCRIPTION",
           plan: sub.plan || "UNKNOWN",
@@ -260,7 +272,43 @@ export async function GET(req: Request) {
           expiresAt: expires.toISOString(),
           isExpired: now > expires,
         });
-      }
+      });
+
+      // 2. Include Payments ONLY IF no matching Subscription exists for that order / timestamp
+      uPayments.forEach((p: any) => {
+        const created = p.createdAt ? new Date(p.createdAt) : new Date();
+        const orderId = p.razorpayOrderId;
+
+        if (orderId && processedOrders.has(orderId)) return;
+
+        const isDuplicateTime = uSubs.some((sub: any) => {
+          const subCreated = sub.createdAt ? new Date(sub.createdAt) : new Date();
+          const diffMs = Math.abs(created.getTime() - subCreated.getTime());
+          return diffMs < 5 * 60 * 1000 && (sub.plan === p.plan || Number(sub.amount) === Number(p.amount));
+        });
+        if (isDuplicateTime) return;
+
+        const pPlan = p.plan || "BASIC_599";
+        const validityMonths = pPlan === "BASIC_599" ? 6 : 12;
+        const expires = new Date(created);
+        expires.setMonth(expires.getMonth() + validityMonths);
+
+        const isSucc = p.status === "SUCCESS" || p.status === "COMPLETED";
+        if (isSucc && p.plan && p.plan !== "NONE") {
+          userPurchasedPlansMap[uId].add(p.plan);
+        }
+
+        userSubscriptionsMap[uId].push({
+          id: p.id,
+          type: "PAYMENT",
+          plan: p.plan || "UNKNOWN",
+          amount: Number(p.amount) || 0,
+          status: p.status || "UNKNOWN",
+          createdAt: created.toISOString(),
+          expiresAt: expires.toISOString(),
+          isExpired: now > expires,
+        });
+      });
     });
 
     // Group revenue per user from Payments & Subscriptions (SUM ONLY SUCCESSFUL TRANSACTIONS)

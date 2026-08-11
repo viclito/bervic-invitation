@@ -18,6 +18,32 @@ export async function POST(req: Request) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = "PRO_1799" } = await req.json();
 
+    // Idempotency Check: if this order has already been verified, return success without creating duplicate subscriptions
+    if (razorpay_order_id) {
+      const existingPayment = await prisma.payment.findFirst({
+        where: { razorpayOrderId: razorpay_order_id },
+      });
+      const existingSub = await prisma.subscription.findFirst({
+        where: { razorpayOrderId: razorpay_order_id },
+      });
+
+      if (existingPayment || existingSub) {
+        const existingUser = await prisma.user.findUnique({
+          where: { id: userId || undefined },
+          select: { plan: true, planExpiresAt: true, allowedTemplatesCount: true, allowedCardsCount: true },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Payment already verified for order ${razorpay_order_id}.`,
+          plan: existingUser?.plan || plan,
+          planExpiresAt: existingUser?.planExpiresAt,
+          allowedTemplatesCount: (existingUser as any)?.allowedTemplatesCount || 0,
+          allowedCardsCount: (existingUser as any)?.allowedCardsCount || 0,
+        });
+      }
+    }
+
     const user = await prisma.user.findFirst({
       where: {
         OR: [

@@ -31,17 +31,6 @@ const AboutSection = dynamic(() => import("@/components/AboutSection"), {
   loading: () => <SectionSkeleton height="h-[600px]" />,
 });
 
-const StatsSection = dynamic(() => import("@/components/StatsSection"), {
-  loading: () => <SectionSkeleton height="h-[450px]" />,
-});
-
-const TemplateCategories = dynamic(
-  () => import("@/components/TemplateCategories"),
-  {
-    loading: () => <SectionSkeleton height="h-[800px]" />,
-  }
-);
-
 const HowItWorks = dynamic(() => import("@/components/HowItWorks"), {
   loading: () => <SectionSkeleton height="h-[650px]" />,
 });
@@ -78,8 +67,6 @@ export default function Home() {
 
       {/* Lazy-Loaded Below the Fold Sections */}
       <AboutSection />
-      <StatsSection />
-      <TemplateCategories />
       <HowItWorks />
       <PricingSection />
       <FAQSection />

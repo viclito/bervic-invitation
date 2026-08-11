@@ -40,8 +40,7 @@ const showcaseTemplates = [
     title: "Veridian Garden Suite",
     category: "Royal Wedding",
     tagline: "Rich Veridian Green & Floral Gold",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLvEA0405ZwtZbtm7Xj3i9zk8KeBMcJjOtVQT3vtPAFYPD4LPU5hSXW4CnSBcsKy_9BwJZyqjeTWMw_t4AU8S8SqFCAQBEKtmbfaQT_6ALmB1YanE54rk9BVT8xl2YicE6t8u63NN-GGbrfq9kzusp9CCcPXg1Uy6RwtwhOHc0XAh-ojk_nQQCZhOaVctMOIP7PHWzxVX5HDnIO7DTKPgtadfiipc3G54cVXsNNZJ1etdFnVAdnY1SoAGQ",
+    image: "/images/templates/floral-hero.jpg",
     partnerOne: "Sophia",
     partnerTwo: "Alexander",
     date: "Saturday, 28th Nov 2026",
@@ -59,8 +58,7 @@ const showcaseTemplates = [
     title: "Royal Maharani & Gold",
     category: "Heritage Wedding",
     tagline: "Velvet Burgundy & Royal Gold Arch",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLsV7ymMpKzrxITcVEIXj7PYMCfII8RkFj-dPsC9V6S5yg7Eo1gvAnRV-gF-RvYrnuiYxQyW72DXy3kPnIancgfQYK-wQkLt_3SC1aCHtX1qQQj9SNVM16ZCwTJl3ReyGG0nQ0WfIcCUEC69vs6sy1idET8wkvN8iJpl40C3_8ciz4WQK9hj8hqNsHVnhfYyHaSTSbGlyUha8OUVkM5f-vGkW0c564HtTsRSDE3gUKrSArZpqsmoM1edHQ",
+    image: "/images/templates/venue-ceremony.jpg",
     partnerOne: "Priya",
     partnerTwo: "Rahul",
     date: "Sunday, 14th Dec 2026",
@@ -78,8 +76,7 @@ const showcaseTemplates = [
     title: "Olive & Ochre Suite",
     category: "Modern Minimalist",
     tagline: "Mediterranean Grove & Golden Ochre",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLvSoIYkCm3eB7eNpHg5-c5Q1aTxNjTJKPYpbDObIlbXh2t3Pg-oYHp0cXegRicI-ZorPt3XLzCU7rcg0GL22HVzqLUR1Ox1Gy5SnbYFjjet_FQxu1M16e_wxLlFUEi9NWoAeS2WQJM7E9XNVbD7qo4lPpMmJ6tmlFUbIYAPgtmwRWqsCvLRC4CfwJeXYeJNhWgHNVrkHy9e_9JJnBITsuTBTXL6n7wMlLgxjKB9BfgefM5SOO0xYDf935Y",
+    image: "/images/templates/groom-bride-2.jpg",
     partnerOne: "Aarav",
     partnerTwo: "Meera",
     date: "Friday, 18th Sept 2026",
@@ -97,8 +94,7 @@ const showcaseTemplates = [
     title: "Bohemian Sun Suite",
     category: "Rustic Boho",
     tagline: "Terracotta Arches & Sunburst Motifs",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLvOSFVwDwskg_pJePvsiIJ5qOVC6WXzofNDviADCHyUB9xUy4jeTGCKwq9FTHsNV8nccKux9ZSJWGPZZaYG9meQU6y34DaR58PUlF-M5ZhrPbadIoMbE4VMaHcAvfI9ys0cYaWaoIIzjaKENF8XEYZ6q56_xTlLm5y9v-kJeT_KYUOz1vEcPBaG0AtbpCSZq0YWFXlAbg55fxTbcXPTHjchCMzwT0m8z_tVgqbuTc31Hjv8WWlAF1Laul4",
+    image: "/images/templates/venue-reception.jpg",
     partnerOne: "Ancy",
     partnerTwo: "Terance",
     date: "Saturday, 10th Oct 2026",
@@ -116,8 +112,7 @@ const showcaseTemplates = [
     title: "Celestial Night & Gold",
     category: "Starlight Glam",
     tagline: "Midnight Navy & Glittering Constellations",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBpm4j-t6RMihRtGmM9BhDv4mA8cc80g2Gps4_cJa3CerbcYtH4lMbejonFYa25EunL-XZeXmhPP-_2I1lwaiQo-a4nhAYX7OAe3JdDaQvslcPrLk5sPtrDp5UzLmJ0eFX1h_SWxL1obiYSlKtXwkIpvk-xRzLrcTSK0M84D4f9YiS9Q9SBcSYrBg_NtLF78PMqb_wzFYCreqA7y0Gd5DOeYdbXdQn8IYQZXz6bhpnSZAHarQsf77e0",
+    image: "/images/templates/couple-photo.jpg",
     partnerOne: "Rhea",
     partnerTwo: "Karan",
     date: "Thursday, 31st Dec 2026",
@@ -135,8 +130,7 @@ const showcaseTemplates = [
     title: "Classic Floral Suite",
     category: "Pastel Romance",
     tagline: "Blush Roses & Ivory Gold Elegance",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLtbp5bSS6d2US6GyrKl6Go2yevSQE379rZ1wnEIkTuQp_lDhJd54fGLgdyRipQYPofHt2yKx4-usV8m4oMCxVCaLmIa3GAim6Y0KzTC9wm_8qfZfQMNqjzIPXG9IhAAdRrED2PzgUQsrJoCXb2JQ047fIIqCEPpDbANRO8eXfCxw96ga2nYy5OuTKZNtSSwXWe69bLMWg5ZAfDfFEJLOObyURoM32VmpxPzhrnQzsjWwMLJ33k0EnsEPg",
+    image: "/images/templates/gallery-1.jpg",
     partnerOne: "Diya",
     partnerTwo: "Vikram",
     date: "Sunday, 22nd Nov 2026",
@@ -154,8 +148,7 @@ const showcaseTemplates = [
     title: "Art Deco Revival",
     category: "1920s Gatsby",
     tagline: "Obsidian Black & Geometric Gold Arches",
-    image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLv3FU8MvgN3FBB2E-oMQ38w-VJDc_6jt1yGJ8HrR0bDlYej22bomE90uOSWUlk6StQ5UXhS5-2Tsw5MeVdqRhZPRmmozvd2PpCsK5e_jQrhZAELYDGUdL3XoNsoVUAiiBbMNMTToqNOLGGp-5QFCSBuoH7nkJ7SDCWtoelvrqhtEly9K3k-HPzik-RTP1lohia4zXuT_BJrxk571QKYUu1IWkW0OZKJEtVjW8ewTjWLT-zPbD-HaJsWrw",
+    image: "/images/templates/gallery-2.jpg",
     partnerOne: "Nisha",
     partnerTwo: "Aditya",
     date: "Saturday, 12th Dec 2026",
@@ -315,6 +308,7 @@ export default function PopularTemplatesShowcase() {
                           alt={template.title}
                           fill
                           sizes="340px"
+                          unoptimized
                           className="object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3 text-center">
