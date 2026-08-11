@@ -990,7 +990,7 @@ export default function QuickStartDetailsWizard({
     <section
       id="details-form"
       className={`text-[#221C17] relative scroll-mt-24 ${
-        onClose ? "py-2 sm:py-4 bg-transparent" : "py-16 md:py-24 bg-[#F8F3EA] border-t border-b border-[#D9A441]/20"
+        onClose ? "py-2 sm:py-4 bg-transparent" : "py-16 md:py-24 bg-white sm:bg-[#F8F3EA] border-t border-b border-[#D9A441]/20"
       }`}
     >
       {/* BEFORE LOGIN DULLED OVERLAY BANNER */}
