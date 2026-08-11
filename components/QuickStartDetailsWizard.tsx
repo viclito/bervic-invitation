@@ -1147,11 +1147,30 @@ export default function QuickStartDetailsWizard({
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left Column: Smart File Auto-Extractor Upload Box */}
-          <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#D9A441]/40 shadow-sm flex flex-col justify-between min-h-[520px] relative overflow-hidden">
+        {/* Top Bar Header for Close Action */}
+        {onClose && (
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/80 bg-white/60 backdrop-blur-xs p-3 rounded-2xl">
+            <span className="text-xs sm:text-sm font-extrabold text-[#7E121D] uppercase tracking-wider">
+              {isNewProfile ? "Add New Event Profile" : "Edit Event Profile Details"}
+            </span>
 
-            <div className="space-y-4 flex-1 flex flex-col pt-1">
+            <button
+              type="button"
+              onClick={handleCloseClick}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200 shadow-xs"
+              title="Close & Return to Dashboard"
+            >
+              <X className="w-4 h-4 text-slate-500" />
+              <span>Close</span>
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
+          {/* Left Column: Smart File Auto-Extractor Upload Box */}
+          <div className="lg:col-span-4 bg-white rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 shadow-xs flex flex-col justify-between min-h-0 lg:min-h-[480px] relative overflow-hidden">
+
+            <div className="space-y-3 flex-1 flex flex-col pt-1">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EA580C]/10 text-[#EA580C] text-[10px] font-extrabold uppercase tracking-wider">
                   <Sparkles className="w-3 h-3 text-[#EA580C]" />
@@ -1161,13 +1180,13 @@ export default function QuickStartDetailsWizard({
                   Have an Invitation Card?
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                  Upload your card image, PDF, or Word doc — our AI will instantly fetch & populate your details into the form on the right!
+                  Upload your card image, PDF, or Word doc — our AI will instantly fetch &amp; populate your details into the form below!
                 </p>
               </div>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1 min-h-[220px] border-2 border-dashed border-[#D9A441]/50 hover:border-[#EA580C] bg-gradient-to-b from-[#FFFDF9] to-[#FAF5ED] hover:bg-[#FFF7ED] rounded-2xl p-5 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center space-y-3 shadow-xs"
+                className="min-h-[120px] sm:min-h-[180px] border-2 border-dashed border-[#D9A441]/50 hover:border-[#EA580C] bg-gradient-to-b from-[#FFFDF9] to-[#FAF5ED] hover:bg-[#FFF7ED] rounded-2xl p-3.5 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center space-y-2 shadow-xs"
               >
                 <input
                   ref={fileInputRef}
@@ -1181,23 +1200,21 @@ export default function QuickStartDetailsWizard({
                 />
 
                 {extracting ? (
-                  <div className="py-4 flex flex-col items-center gap-2 text-[#EA580C]">
-                    <Loader2 className="w-8 h-8 animate-spin" />
+                  <div className="py-2 flex flex-col items-center gap-1.5 text-[#EA580C]">
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     <span className="text-xs font-bold animate-pulse">Extracting Details with AI...</span>
-                    <span className="text-[11px] text-slate-500">Auto-filling form on the right...</span>
                   </div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7E121D] to-[#5C1620] text-[#FED7AA] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                      <Upload className="w-6 h-6" />
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#7E121D] to-[#5C1620] text-[#FED7AA] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                      <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-[#0F172A]">Drop Invitation Card or PDF Here</p>
-                      <p className="text-[11px] text-[#EA580C] font-semibold">⚡ Instantly populates form on the right</p>
-                      <p className="text-[10px] text-slate-400">Supports PNG, JPG, PDF & Word Docs</p>
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-[#0F172A]">Drop Card or PDF Here</p>
+                      <p className="text-[10px] text-[#EA580C] font-semibold">⚡ Auto-fills form below</p>
                     </div>
-                    <span className="px-4 py-1.5 rounded-xl bg-[#7E121D] text-white text-xs font-bold shadow-xs group-hover:bg-[#680E17] transition-all flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#FED7AA]" />
+                    <span className="px-3 py-1 rounded-lg bg-[#7E121D] text-white text-[11px] font-bold shadow-xs group-hover:bg-[#680E17] transition-all flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-[#FED7AA]" />
                       <span>Upload Card / Doc</span>
                     </span>
                   </>
@@ -1205,38 +1222,20 @@ export default function QuickStartDetailsWizard({
               </div>
             </div>
 
-            <div className="bg-[#FAF8F5] rounded-2xl p-3.5 border border-[#D9A441]/20 text-[11px] text-slate-600 space-y-1 mt-4">
-              <div className="flex items-center gap-1.5 font-bold text-[#0F172A]">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="bg-[#FAF8F5] rounded-xl p-2.5 border border-[#D9A441]/20 text-[11px] text-slate-600 space-y-0.5 mt-2">
+              <div className="flex items-center gap-1 font-bold text-[#0F172A]">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>Zero Typing Needed!</span>
               </div>
-              <p className="leading-relaxed">
-                Our smart parser reads host names, dates, venues, and schedule functions directly into your profile!
+              <p className="leading-tight text-[10.5px]">
+                Smart parser reads host names, dates, venues, and schedule functions directly into your profile!
               </p>
             </div>
           </div>
 
-          {/* Right Column: Complete Step Wizard Form (Steps 1 to 8) */}
-          <div className="lg:col-span-8 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col justify-between min-h-[520px]">
-            {/* Top Bar Header for Close Action */}
-            {onClose && (
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-                <span className="text-xs font-extrabold text-[#7E121D] uppercase tracking-wider">
-                  {isNewProfile ? "Add New Event Profile" : "Edit Event Profile Details"}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={handleCloseClick}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
-                  title="Close & Return to Dashboard"
-                >
-                  <X className="w-4 h-4 text-slate-500" />
-                  <span>Close</span>
-                </button>
-              </div>
-            )}
-            {/* Progress Bar & Step Tracker */}
+          {/* Right Column: Clean Form Container (Steps 1 to 9) */}
+          <div className="lg:col-span-8 bg-transparent sm:bg-white rounded-2xl p-0.5 sm:p-6 border-0 sm:border sm:border-slate-200/80 shadow-none sm:shadow-xs flex flex-col justify-between min-h-0 sm:min-h-[440px]">
+            {/* Minimal Step Tracker Header */}
             {(() => {
               const currentStatus = getStepStatus(draft.currentStep, draft);
               const allPendingSteps = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -1244,9 +1243,9 @@ export default function QuickStartDetailsWizard({
                 .filter((s) => s.isPending);
 
               return (
-                <div className="space-y-3 mb-6 pb-2 border-b border-slate-100">
-                  {/* Step Navigation Pills */}
-                  <div className="flex items-center justify-between gap-1.5 pb-1 overflow-x-auto">
+                <div className="space-y-2.5 mb-4 pb-2 border-b border-slate-100">
+                  {/* Horizontally Scrollable Step Navigation Pills */}
+                  <div className="flex items-center gap-1.5 pb-1 overflow-x-auto no-scrollbar scroll-smooth">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((stepNum) => {
                       const isActive = draft.currentStep === stepNum;
                       const { isComplete, isPending } = getStepStatus(stepNum, draft);
@@ -1256,20 +1255,20 @@ export default function QuickStartDetailsWizard({
                           key={stepNum}
                           type="button"
                           onClick={() => saveStepData(draft, stepNum)}
-                          className={`flex-1 py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold text-center transition-all cursor-pointer border flex items-center justify-center gap-1 ${
+                          className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             isActive
                               ? "bg-[#7E121D] text-white border-[#7E121D] shadow-sm"
                               : isComplete
-                              ? "bg-emerald-50/90 text-emerald-800 border-emerald-300 hover:bg-emerald-100/90"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
                               : "bg-amber-50/80 text-amber-900 border-amber-200/90 hover:bg-amber-100/80"
                           }`}
                           title={isComplete ? `Step ${stepNum}: Complete` : `Step ${stepNum}: Pending (${getStepStatus(stepNum, draft).summary})`}
                         >
                           {isComplete && !isActive && (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           )}
                           {isPending && !isActive && (
-                            <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                           )}
                           <span>Step {stepNum}</span>
                         </button>
@@ -1277,50 +1276,34 @@ export default function QuickStartDetailsWizard({
                     })}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs sm:text-sm font-semibold gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                  {/* Minimal Inline Step Title & Minimal Pending Badge */}
+                  <div className="flex items-center justify-between gap-2 text-xs sm:text-sm font-semibold">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="text-[#EA580C] uppercase tracking-wider font-bold truncate">
                         Step {draft.currentStep} of 9: {STEP_TITLES[draft.currentStep]}
                       </span>
-                      {currentStatus.isComplete ? (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide shrink-0">
-                          ✓ Complete
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase tracking-wide shrink-0">
-                          ⚠️ Pending Required Info
-                        </span>
-                      )}
                     </div>
-                    <span className="text-slate-600 font-bold shrink-0">{progressPercent}% Required Completed</span>
-                  </div>
 
-                  <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#7E121D] to-[#EA580C] transition-all duration-500 rounded-full"
-                      style={{ width: `${Math.max(progressPercent, 12)}%` }}
-                    />
-                  </div>
-
-                  {/* Pending Steps Banner if there are any incomplete steps */}
-                  {allPendingSteps.length > 0 && (
-                    <div className="mt-2.5 px-3.5 py-2 rounded-xl bg-amber-50/90 border border-amber-200/80 text-[11px] text-amber-950 flex items-center justify-between gap-2 shadow-2xs">
-                      <div className="flex items-center gap-1.5 font-medium truncate">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span className="font-bold shrink-0">Pending steps to complete:</span>
-                        <span className="truncate text-amber-900 font-semibold">
-                          {allPendingSteps.map((s) => `Step ${s.stepNum} (${s.summary})`).join(", ")}
-                        </span>
-                      </div>
+                    {/* Minimal Pending Status Chip */}
+                    {currentStatus.isComplete ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide shrink-0">
+                        ✓ Complete
+                      </span>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => saveStepData(draft, allPendingSteps[0].stepNum)}
-                        className="px-2.5 py-1 rounded-lg bg-[#7E121D] hover:bg-[#680E17] text-white text-[10px] font-bold shrink-0 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (allPendingSteps.length > 0) {
+                            saveStepData(draft, allPendingSteps[0].stepNum);
+                          }
+                        }}
+                        className="px-2.5 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-extrabold uppercase tracking-wide shrink-0 transition-colors cursor-pointer"
+                        title={allPendingSteps.map((s) => `Step ${s.stepNum} (${s.summary})`).join(", ")}
                       >
-                        Go to Step {allPendingSteps[0].stepNum}
+                        ⚠️ {allPendingSteps.length} Pending
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })()}
@@ -1573,9 +1556,20 @@ export default function QuickStartDetailsWizard({
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
+                    {/* Catchy Location Tab Header */}
+                    <div className="flex items-center justify-between gap-2 px-0.5">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7E121D] flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#EA580C]" />
+                        <span>Venue Location Tabs (Tap tab to switch venue)</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {draft.locations.length} {draft.locations.length === 1 ? "Venue" : "Venues"}
+                      </span>
+                    </div>
+
                     {/* Location Segmented Tab Bar */}
-                    <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
-                      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+                    <div className="p-1.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                         {draft.locations.map((loc, idx) => (
                           <button
                             key={loc.id || idx}
@@ -1583,12 +1577,15 @@ export default function QuickStartDetailsWizard({
                             onClick={() => setActiveLocationIndex(idx)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
                               safeIdx === idx
-                                ? "bg-white text-[#7E121D] shadow-xs border-slate-200/60"
-                                : "bg-transparent border-transparent text-slate-600 hover:text-slate-900"
+                                ? "bg-white text-[#7E121D] shadow-sm border-[#7E121D]/40 ring-2 ring-[#7E121D]/15 font-extrabold"
+                                : "bg-slate-200/50 border-transparent text-slate-600 hover:text-slate-900"
                             }`}
                           >
                             <MapPin className={`w-3.5 h-3.5 ${safeIdx === idx ? "text-[#7E121D]" : "text-slate-400"}`} />
                             <span>{loc.mainTitle || `Location #${idx + 1}`}</span>
+                            {safeIdx === idx && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#7E121D] inline-block animate-pulse" />
+                            )}
                           </button>
                         ))}
                       </div>
@@ -1792,9 +1789,20 @@ export default function QuickStartDetailsWizard({
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
+                    {/* Catchy Function Tab Header */}
+                    <div className="flex items-center justify-between gap-2 px-0.5">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7E121D] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#EA580C]" />
+                        <span>Schedule Function Tabs (Tap tab to switch function)</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {draft.functions.length} {draft.functions.length === 1 ? "Function" : "Functions"}
+                      </span>
+                    </div>
+
                     {/* Function Segmented Tab Bar */}
-                    <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
-                      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+                    <div className="p-1.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                         {draft.functions.map((fn, idx) => (
                           <button
                             key={idx}
@@ -1802,12 +1810,15 @@ export default function QuickStartDetailsWizard({
                             onClick={() => setActiveFunctionIndex(idx)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
                               safeFnIdx === idx
-                                ? "bg-white text-[#7E121D] shadow-xs border-slate-200/60"
-                                : "bg-transparent border-transparent text-slate-600 hover:text-slate-900"
+                                ? "bg-white text-[#7E121D] shadow-sm border-[#7E121D]/40 ring-2 ring-[#7E121D]/15 font-extrabold"
+                                : "bg-slate-200/50 border-transparent text-slate-600 hover:text-slate-900"
                             }`}
                           >
                             <span>{ICON_OPTIONS.find((o) => o.id === fn.icon)?.emoji || "✨"}</span>
                             <span>{fn.title || `Function #${idx + 1}`}</span>
+                            {safeFnIdx === idx && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#7E121D] inline-block animate-pulse" />
+                            )}
                           </button>
                         ))}
                       </div>
@@ -2539,46 +2550,48 @@ export default function QuickStartDetailsWizard({
 
             {/* Navigation Buttons */}
             {draft.currentStep < 9 && (
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-2 pt-4 mt-2 border-t border-slate-100 w-full">
                 <button
                   type="button"
                   onClick={prevStep}
                   disabled={draft.currentStep === 1}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                  className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap shrink-0 border ${
                     draft.currentStep === 1
-                      ? "text-slate-300 cursor-not-allowed"
-                      : "text-slate-700 hover:bg-slate-100"
+                      ? "text-slate-300 border-slate-100 bg-slate-50 cursor-not-allowed"
+                      : "text-slate-700 bg-slate-100 hover:bg-slate-200 border-slate-200"
                   }`}
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back</span>
+                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">Back</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     disabled={isSavingProfile}
                     onClick={handleInPlaceSave}
-                    className="px-3.5 py-2.5 rounded-xl bg-[#EFE7D8] hover:bg-[#D9A441]/30 text-[#7E121D] text-xs font-bold border border-[#D9A441]/40 flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                    className="px-3 sm:px-4 py-2.5 rounded-xl bg-[#EFE7D8] hover:bg-[#D9A441]/30 text-[#7E121D] text-xs font-bold border border-[#D9A441]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50 whitespace-nowrap shrink-0"
                     title="Save changes on this step without leaving the page"
                   >
                     {isSavingProfile ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7E121D]" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7E121D] shrink-0" />
                     ) : isSaveSuccess ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     ) : (
-                      <Save className="w-3.5 h-3.5 text-[#7E121D]" />
+                      <Save className="w-3.5 h-3.5 text-[#7E121D] shrink-0" />
                     )}
-                    <span>{isSavingProfile ? "Saving..." : isSaveSuccess ? "Saved ✓" : "Save Details"}</span>
+                    <span className="whitespace-nowrap">
+                      {isSavingProfile ? "Saving..." : isSaveSuccess ? "Saved ✓" : "Save Details"}
+                    </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => nextStep()}
-                    className="px-5 py-2.5 rounded-xl bg-[#7E121D] hover:bg-[#680E17] text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                    className="px-3.5 sm:px-5 py-2.5 rounded-xl bg-[#7E121D] hover:bg-[#680E17] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
                   >
-                    <span>Next Question</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#FED7AA]" />
+                    <span className="whitespace-nowrap">Next Question</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#FED7AA] shrink-0" />
                   </button>
                 </div>
               </div>

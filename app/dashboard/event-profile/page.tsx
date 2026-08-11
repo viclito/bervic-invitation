@@ -19,18 +19,16 @@ function EventProfileContent() {
     <div className="min-h-screen bg-[#FDF6F0] flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-20 sm:pt-28 md:pt-32 pb-16">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-2 sm:px-4 pt-20 sm:pt-28 md:pt-32 pb-16">
         {/* Dedicated Event Profile Wizard */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
-          <QuickStartDetailsWizard
-            profileId={profileId}
-            invitationId={invitationId}
-            isNewProfile={isNewProfile}
-            startAtStepOne={false}
-            onClose={() => router.push(`/dashboard?tab=${fromTab}`)}
-            onComplete={() => router.push(`/dashboard?tab=${fromTab}`)}
-          />
-        </div>
+        <QuickStartDetailsWizard
+          profileId={profileId}
+          invitationId={invitationId}
+          isNewProfile={isNewProfile}
+          startAtStepOne={false}
+          onClose={() => router.push(`/dashboard?tab=${fromTab}`)}
+          onComplete={() => router.push(`/dashboard?tab=${fromTab}`)}
+        />
       </main>
 
       <Footer />
