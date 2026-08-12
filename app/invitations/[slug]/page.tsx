@@ -43,13 +43,31 @@ const THEME_CARD_MAP: Record<string, string> = {
   "scroll-scrubber": "/templates/ceremony-wedding-bg.png",
 };
 
+function resolveTemplatePreviewImage(templateSlug: string | null | undefined): string {
+  if (!templateSlug) return "/templates/ceremony-wedding-bg.png";
+  const slug = templateSlug.toLowerCase().trim();
+
+  if (THEME_CARD_MAP[slug]) return THEME_CARD_MAP[slug];
+
+  if (slug.includes("haldi") || slug.includes("olive")) return "/templates/haldi-wedding-bg.png";
+  if (slug.includes("hindu") || slug.includes("rajwada") || slug.includes("mandap")) return "/templates/hindu-wedding-bg.png";
+  if (slug.includes("islamic") || slug.includes("nikah")) return "/templates/islamic-wedding-bg.png";
+  if (slug.includes("church") || slug.includes("noir") || slug.includes("deco")) return "/templates/church-wedding-bg.png";
+  if (slug.includes("peach") || slug.includes("gold") || slug.includes("champagne")) return "/templates/peach-mandap-bg.png";
+
+  return "/templates/ceremony-wedding-bg.png";
+}
+
 const isGenericStockPhoto = (url: string | null | undefined): boolean => {
   if (!url) return true;
   const lower = url.toLowerCase();
   return (
     lower.includes("couple-photo.jpg") ||
     lower.includes("floral-hero.jpg") ||
-    lower.includes("unsplash.com")
+    lower.includes("unsplash.com") ||
+    lower.includes("unsplash") ||
+    lower.includes("stylecast") ||
+    lower.includes("photo-")
   );
 };
 
@@ -86,10 +104,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
-  // Always resolve to a reliable local hosted PNG image (never external Unsplash URLs or couple-photo stock photos)
-  let rawImagePath = THEME_CARD_MAP[invitation.templateSlug] || "/templates/ceremony-wedding-bg.png";
+  // Always resolve to a reliable local hosted PNG image (never external Unsplash stock photos)
+  let rawImagePath = resolveTemplatePreviewImage(invitation.templateSlug);
 
-  // Override with custom user photo ONLY if user uploaded a custom Cloudinary / HTTP image (not stock placeholder)
+  // Override with custom user photo ONLY if user uploaded a custom Cloudinary / user image (not stock placeholder)
   if (invitation.coupleImage && !isGenericStockPhoto(invitation.coupleImage)) {
     rawImagePath = invitation.coupleImage;
   } else if (invitation.heroImage && !isGenericStockPhoto(invitation.heroImage)) {
