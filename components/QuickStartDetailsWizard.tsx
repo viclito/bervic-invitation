@@ -223,13 +223,13 @@ function getStepStatus(stepNum: number, draft: DraftData) {
     const primaryName =
       draft.venueName?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as Record<string, string>)?.mainTitle?.trim() || (draft.locations[0] as Record<string, string>)?.name?.trim() || (draft.locations[0] as Record<string, string>)?.venueLabel?.trim()
+        ? (draft.locations[0] as unknown as Record<string, string>)?.mainTitle?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.name?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.venueLabel?.trim()
         : "");
 
     const primaryAddress =
       draft.venueAddress?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as Record<string, string>)?.address?.trim() || (draft.locations[0] as Record<string, string>)?.subLabel?.trim()
+        ? (draft.locations[0] as unknown as Record<string, string>)?.address?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.subLabel?.trim()
         : "");
 
     if (!primaryName) missing.push("Venue Name");
