@@ -67,6 +67,7 @@ export interface VenueLocationItem {
 
 export interface DraftData {
   id?: string;
+  invitationId?: string;
   eventType: string;
   hostNameOne: string;
   hostNameTwo: string;
@@ -344,9 +345,19 @@ export default function QuickStartDetailsWizard({
       try {
         let profileFound = false;
 
-        // Restore from localStorage first so unsaved typing is NEVER lost across page navigation!
+        // Restore from form-isolated localStorage key first so state NEVER leaks across different invitation forms!
+        const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const paramInvId = invitationId || searchParams?.get("invitationId") || "";
+        const paramProfId = profileId || searchParams?.get("id") || "";
+
+        const formLocalStorageKey = paramInvId
+          ? `bervic_invitation_draft_${paramInvId}`
+          : paramProfId
+          ? `bervic_profile_draft_${paramProfId}`
+          : `bervic_quick_start_draft`;
+
         const localSaved = typeof window !== "undefined"
-          ? localStorage.getItem("bervic_quick_start_draft") || localStorage.getItem("bervic_user_draft_details")
+          ? localStorage.getItem(formLocalStorageKey) || (!paramInvId && !paramProfId ? localStorage.getItem("bervic_user_draft_details") : null)
           : null;
         let localParsed: Partial<DraftData> | null = null;
 
@@ -515,10 +526,17 @@ export default function QuickStartDetailsWizard({
       }
     });
 
+    if (draftToSave.showVideo === false) {
+      filledKeys.push("showVideo:false");
+    } else {
+      filledKeys.push("showVideo:true");
+    }
+
     const payload = {
       ...draftToSave,
       invitationId,
       isInvitationInstance: Boolean(invitationId),
+      loveStoryVideoUrl: draftToSave.showVideo === false ? "" : draftToSave.loveStoryVideoUrl,
       completedFields: filledKeys,
       isNewProfile: Boolean(isNewProfile && !draftToSave.id && !invitationId),
     };
@@ -587,18 +605,37 @@ export default function QuickStartDetailsWizard({
       }
     });
 
+    if (updatedDraft.showVideo === false) {
+      filledKeys.push("showVideo:false");
+    } else {
+      filledKeys.push("showVideo:true");
+    }
+
     const newDraftState = {
       ...updatedDraft,
+      loveStoryVideoUrl: updatedDraft.showVideo === false ? "" : updatedDraft.loveStoryVideoUrl,
       completedFields: filledKeys,
       currentStep: stepNumber,
     };
 
     setDraft(newDraftState);
 
-    // Save to localStorage after every Next Question / step transition for 100% reliable quick resume
+    // Save to form-isolated localStorage key after every step transition so state NEVER leaks across different invitation forms!
     if (typeof window !== "undefined") {
-      localStorage.setItem("bervic_quick_start_draft", JSON.stringify(newDraftState));
-      localStorage.setItem("bervic_user_draft_details", JSON.stringify(newDraftState));
+      const searchParams = new URLSearchParams(window.location.search);
+      const paramInvId = updatedDraft.invitationId || invitationId || searchParams.get("invitationId") || "";
+      const paramProfId = updatedDraft.id || profileId || searchParams.get("id") || "";
+
+      const key = paramInvId
+        ? `bervic_invitation_draft_${paramInvId}`
+        : paramProfId
+        ? `bervic_profile_draft_${paramProfId}`
+        : `bervic_quick_start_draft`;
+
+      localStorage.setItem(key, JSON.stringify(newDraftState));
+      if (!paramInvId && !paramProfId) {
+        localStorage.setItem("bervic_user_draft_details", JSON.stringify(newDraftState));
+      }
     }
 
     // Auto-save to DB ONLY for existing profiles with a valid DB id

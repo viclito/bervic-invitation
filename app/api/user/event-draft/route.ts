@@ -57,6 +57,16 @@ export async function GET(req: Request) {
           galleryImages = JSON.parse(inv.galleryImagesJson || "[]");
         } catch {}
 
+        let socialLinksObj: Record<string, unknown> = {};
+        try {
+          socialLinksObj = JSON.parse(inv.socialLinksJson || "{}");
+        } catch {}
+
+        const showVideo =
+          socialLinksObj.showVideo !== undefined
+            ? Boolean(socialLinksObj.showVideo)
+            : Boolean(inv.loveStoryVideoUrl && inv.loveStoryVideoUrl.trim() !== "");
+
         const draft = {
           id: inv.id,
           invitationId: inv.id,
@@ -77,6 +87,8 @@ export async function GET(req: Request) {
           galleryImages,
           loveStoryText: inv.loveStoryText || "",
           loveStoryVideoUrl: inv.loveStoryVideoUrl || "",
+          showVideo,
+          completedFields: showVideo ? ["showVideo:true"] : ["showVideo:false"],
           coverImage: inv.heroImage || "",
           coupleImage: inv.coupleImage || "",
           partnerTwoImage: inv.partnerTwoImage || "",
@@ -295,6 +307,15 @@ export async function POST(req: Request) {
       });
 
       if (existingInv) {
+        let existingSocialLinks: Record<string, unknown> = {};
+        try {
+          existingSocialLinks = JSON.parse(existingInv.socialLinksJson || "{}");
+        } catch {}
+
+        if (body.showVideo !== undefined) {
+          existingSocialLinks.showVideo = Boolean(body.showVideo);
+        }
+
         const updatedInv = await prisma.userInvitation.update({
           where: { id: targetInvId },
           data: {
@@ -310,8 +331,9 @@ export async function POST(req: Request) {
             ...(coupleImage !== undefined && { coupleImage }),
             ...(partnerTwoImage !== undefined && { partnerTwoImage }),
             ...(loveStoryText !== undefined && { loveStoryText }),
-            ...(loveStoryVideoUrl !== undefined && { loveStoryVideoUrl }),
+            ...(loveStoryVideoUrl !== undefined && { loveStoryVideoUrl: body.showVideo === false ? "" : loveStoryVideoUrl }),
             ...(rsvpContact !== undefined && { contactPhone: rsvpContact }),
+            socialLinksJson: JSON.stringify(existingSocialLinks),
             ...(hasLocations && { locationsJson }),
             ...(hasFunctions && { eventsJson: functionsJson }),
             ...(hasGallery && { galleryImagesJson }),

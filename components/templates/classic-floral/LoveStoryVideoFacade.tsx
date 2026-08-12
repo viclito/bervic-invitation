@@ -59,13 +59,15 @@ export default function LoveStoryVideoFacade({
 }: LoveStoryVideoFacadeProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // If user disabled or deleted video section from Form Editor, do not render
-  if (showVideoSection === false) {
+  const hasVideo = showVideoSection !== false && Boolean(loveStoryVideoUrl && loveStoryVideoUrl.trim() !== "");
+  const hasText = Boolean(loveStoryText && loveStoryText.trim() !== "");
+
+  if (!hasVideo && !hasText) {
     return null;
   }
 
-  const videoId = getYouTubeVideoId(loveStoryVideoUrl);
-  const embedUrl = parseYouTubeEmbedUrl(loveStoryVideoUrl);
+  const videoId = getYouTubeVideoId(loveStoryVideoUrl || "");
+  const embedUrl = parseYouTubeEmbedUrl(loveStoryVideoUrl || "");
   const directWatchUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
   return (
@@ -94,7 +96,7 @@ export default function LoveStoryVideoFacade({
         </motion.div>
 
         {/* Narrative Text Card */}
-        {loveStoryText && (
+        {hasText && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -107,78 +109,82 @@ export default function LoveStoryVideoFacade({
         )}
 
         {/* Video Facade (Click-to-Load YouTube Embed) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative max-w-3xl mx-auto aspect-video rounded-3xl overflow-hidden card-shadow border-2 border-[#C9A15A]/40 bg-[#2B2320]"
-        >
-          {isPlaying ? (
-            <div className="relative w-full h-full">
-              <iframe
-                src={embedUrl}
-                title={`${partnerOne} & ${partnerTwo}'s Love Story Video`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full border-0"
-              />
-              {/* Direct Watch Button Fallback (If creator disabled embedding on YouTube) */}
-              <div className="absolute top-2 right-2 z-20">
-                <a
-                  href={directWatchUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-[#2B2320]/80 hover:bg-[#B85C6B] text-[#FDF6F3] text-[11px] font-bold px-3 py-1.5 rounded-full border border-[#C9A15A]/50 flex items-center gap-1.5 backdrop-blur-sm transition-all shadow-md"
-                  title="Open video on YouTube app/browser if embedding is restricted"
-                >
-                  <span>Watch on YouTube</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={() => setIsPlaying(true)}
-              className="relative w-full h-full cursor-pointer group"
+        {hasVideo && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative max-w-3xl mx-auto aspect-video rounded-3xl overflow-hidden card-shadow border-2 border-[#C9A15A]/40 bg-[#2B2320]"
             >
-              {/* Facade Poster Image */}
-              <Image
-                src={coverImage || coupleImage || "/images/templates/couple-photo.jpg"}
-                alt={`${partnerOne} & ${partnerTwo} Video Thumbnail`}
-                fill
-                loading="lazy"
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
-              />
-
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2B2320]/80 via-[#2B2320]/30 to-transparent flex flex-col items-center justify-center p-6">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#B85C6B] text-[#FDF6F3] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-2 border-[#C9A15A]">
-                  <Play className="w-8 h-8 fill-current ml-1 text-[#C9A15A]" />
+              {isPlaying ? (
+                <div className="relative w-full h-full">
+                  <iframe
+                    src={embedUrl}
+                    title={`${partnerOne} & ${partnerTwo}'s Love Story Video`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                  {/* Direct Watch Button Fallback */}
+                  <div className="absolute top-2 right-2 z-20">
+                    <a
+                      href={directWatchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-[#2B2320]/80 hover:bg-[#B85C6B] text-[#FDF6F3] text-[11px] font-bold px-3 py-1.5 rounded-full border border-[#C9A15A]/50 flex items-center gap-1.5 backdrop-blur-sm transition-all shadow-md"
+                      title="Open video on YouTube app/browser if embedding is restricted"
+                    >
+                      <span>Watch on YouTube</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
+              ) : (
+                <div
+                  onClick={() => setIsPlaying(true)}
+                  className="relative w-full h-full cursor-pointer group"
+                >
+                  {/* Facade Poster Image */}
+                  <Image
+                    src={coverImage || coupleImage || "/images/templates/couple-photo.jpg"}
+                    alt={`${partnerOne} & ${partnerTwo} Video Thumbnail`}
+                    fill
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                  />
 
-                <div className="mt-4 flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#FDF6F3] uppercase tracking-wider bg-[#2B2320]/60 px-4 py-1.5 rounded-full backdrop-blur-sm border border-[#C9A15A]/30">
-                  <Film className="w-4 h-4 text-[#C9A15A]" />
-                  <span>Watch Our Journey Film</span>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2B2320]/80 via-[#2B2320]/30 to-transparent flex flex-col items-center justify-center p-6">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#B85C6B] text-[#FDF6F3] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-2 border-[#C9A15A]">
+                      <Play className="w-8 h-8 fill-current ml-1 text-[#C9A15A]" />
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#FDF6F3] uppercase tracking-wider bg-[#2B2320]/60 px-4 py-1.5 rounded-full backdrop-blur-sm border border-[#C9A15A]/30">
+                      <Film className="w-4 h-4 text-[#C9A15A]" />
+                      <span>Watch Our Journey Film</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+            </motion.div>
+
+            {/* Fallback Direct Link Bar */}
+            <div className="mt-3 max-w-3xl mx-auto text-center">
+              <a
+                href={directWatchUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B85C6B] hover:underline"
+              >
+                <span>Having playback issues? Click to watch directly on YouTube</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
-          )}
-        </motion.div>
-
-        {/* Fallback Direct Link Bar */}
-        <div className="mt-3 max-w-3xl mx-auto text-center">
-          <a
-            href={directWatchUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B85C6B] hover:underline"
-          >
-            <span>Having playback issues? Click to watch directly on YouTube</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
+          </>
+        )}
       </div>
     </section>
   );

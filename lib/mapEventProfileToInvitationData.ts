@@ -36,6 +36,9 @@ export interface UserEventDraft {
   familyMembers?: string | unknown[];
   contactPhone?: string;
   rsvpDeadline?: string;
+  showVideo?: boolean;
+  showVideoSection?: boolean;
+  completedFields?: string[] | string;
 }
 
 interface ScheduleItem {
@@ -95,16 +98,36 @@ export function mapEventProfileToInvitationData(
       : baseData.partnerTwoImage;
 
   // Love Story Video URL & Video Section Visibility
+  let isShowVideoExplicit = true;
+  if (draft) {
+    if (
+      (draft as Record<string, unknown>).showVideo === false ||
+      (draft as Record<string, unknown>).showVideoSection === false
+    ) {
+      isShowVideoExplicit = false;
+    }
+    if (draft.completedFields) {
+      try {
+        const fields =
+          typeof draft.completedFields === "string"
+            ? JSON.parse(draft.completedFields)
+            : draft.completedFields;
+        if (Array.isArray(fields) && fields.includes("showVideo:false")) {
+          isShowVideoExplicit = false;
+        }
+      } catch {}
+    }
+  }
+
   const isVideoEnabled =
-    (draft as Record<string, unknown>).showVideo !== false &&
-    (draft as Record<string, unknown>).showVideoSection !== false &&
+    isShowVideoExplicit &&
     Boolean(
-      (draft.loveStoryVideoUrl && draft.loveStoryVideoUrl.trim() !== "") ||
-        (draft.videoUrl && draft.videoUrl.trim() !== "")
+      (draft?.loveStoryVideoUrl && draft.loveStoryVideoUrl.trim() !== "") ||
+        (draft?.videoUrl && draft.videoUrl.trim() !== "")
     );
 
   const loveStoryVideoUrl = isVideoEnabled
-    ? draft.loveStoryVideoUrl?.trim() || draft.videoUrl?.trim() || baseData.loveStoryVideoUrl
+    ? draft?.loveStoryVideoUrl?.trim() || draft?.videoUrl?.trim() || ""
     : "";
 
   const showVideoSection = isVideoEnabled;

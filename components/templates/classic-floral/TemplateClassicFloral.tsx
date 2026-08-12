@@ -60,6 +60,7 @@ export default function TemplateClassicFloral(props: TemplateClassicFloralProps)
         coupleImage={props.coupleImage}
         partnerOne={props.partnerOne}
         partnerTwo={props.partnerTwo}
+        showVideoSection={props.showVideoSection}
       />
 
       {/* Section 6: Locations & Venues */}

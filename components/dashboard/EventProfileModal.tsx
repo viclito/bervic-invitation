@@ -104,10 +104,16 @@ export default function EventProfileModal({
     setErrorMsg("");
 
     try {
+      const payload = {
+        ...formData,
+        loveStoryVideoUrl: formData.showVideo === false ? "" : formData.loveStoryVideoUrl,
+        completedFields: formData.showVideo === false ? ["showVideo:false"] : ["showVideo:true"],
+      };
+
       const res = await fetch("/api/user/event-draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
