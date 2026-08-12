@@ -297,31 +297,33 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
       </section>
 
       {/* Love Story Video Facade */}
-      <section className="py-24 bg-[#e8e8e6] px-6 md:px-16">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-serif text-4xl font-bold text-[#1a1c1b] mb-3">A Glimpse of Us</h2>
-          <div className="w-20 h-1 bg-[#56642b] mx-auto mb-10" />
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-24 bg-[#e8e8e6] px-6 md:px-16">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-serif text-4xl font-bold text-[#1a1c1b] mb-3">A Glimpse of Us</h2>
+            <div className="w-20 h-1 bg-[#56642b] mx-auto mb-10" />
 
-          <div className="relative w-full aspect-video border-4 border-[#76786b] bg-[#eeeeec] p-2 sm:p-4 rounded shadow-xl">
-            {isPlayingVideo ? (
-              <iframe
-                title="Love story video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="w-full h-full bg-[#dadad8] flex items-center justify-center relative overflow-hidden group cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                <img src={galleryList[4]} alt="Video Cover" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" />
-                <div className="relative z-10 w-20 h-20 bg-[#56642b] rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-xl">
-                  <Play className="w-8 h-8 fill-current ml-1" />
+            <div className="relative w-full aspect-video border-4 border-[#76786b] bg-[#eeeeec] p-2 sm:p-4 rounded shadow-xl">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="w-full h-full bg-[#dadad8] flex items-center justify-center relative overflow-hidden group cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                  <img src={galleryList[4]} alt="Video Cover" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                  <div className="relative z-10 w-20 h-20 bg-[#56642b] rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-xl">
+                    <Play className="w-8 h-8 fill-current ml-1" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RSVP Section */}
       <div id="rsvp">

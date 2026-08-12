@@ -472,47 +472,49 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
         </section>
 
         {/* Video Proposal Feature */}
-        <section className="py-28 relative min-h-[500px] flex items-center justify-center overflow-hidden bg-[#040e1f] border-t border-[#45474b]/30 text-center" id="video">
-          <div className="relative z-10 flex flex-col items-center gap-6 px-6 max-w-4xl mx-auto w-full">
-            <h2 className="font-serif text-4xl font-bold text-[#d8e3fb]">
-              The <span className="text-[#c1c7cf] italic font-normal">Proposal &amp; Film</span>
-            </h2>
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+          <section className="py-28 relative min-h-[500px] flex items-center justify-center overflow-hidden bg-[#040e1f] border-t border-[#45474b]/30 text-center" id="video">
+            <div className="relative z-10 flex flex-col items-center gap-6 px-6 max-w-4xl mx-auto w-full">
+              <h2 className="font-serif text-4xl font-bold text-[#d8e3fb]">
+                The <span className="text-[#c1c7cf] italic font-normal">Proposal &amp; Film</span>
+              </h2>
 
-            {isVideoPlaying ? (
-              <div className="relative w-full aspect-video rounded-3xl overflow-hidden border-2 border-[#c1c7cf]/40 shadow-2xl bg-black">
-                <iframe
-                  src={parseYouTubeEmbedUrl(props.loveStoryVideoUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
-                  title="Wedding Journey Film"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0"
-                />
-                <button
-                  onClick={() => setIsVideoPlaying(false)}
-                  className="absolute top-4 right-4 bg-[#081425]/90 hover:bg-[#c1c7cf] text-white hover:text-[#081425] px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-[#c1c7cf]/40"
-                >
-                  Close Video ✕
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                <motion.button
-                  onClick={() => setIsVideoPlaying(true)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-20 h-20 rounded-full border-2 border-[#c1c7cf] flex items-center justify-center group bg-[#081425]/80 backdrop-blur-sm hover:bg-[#c1c7cf] transition-all duration-500 relative shadow-2xl cursor-pointer"
-                >
-                  <span className="absolute inset-0 rounded-full border border-[#c1c7cf] animate-ping opacity-30 pointer-events-none" />
-                  <Play className="w-8 h-8 text-[#c1c7cf] group-hover:text-[#081425] ml-1 transition-colors fill-current" />
-                </motion.button>
+              {isVideoPlaying ? (
+                <div className="relative w-full aspect-video rounded-3xl overflow-hidden border-2 border-[#c1c7cf]/40 shadow-2xl bg-black">
+                  <iframe
+                    src={parseYouTubeEmbedUrl(props.loveStoryVideoUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
+                    title="Wedding Journey Film"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                  <button
+                    onClick={() => setIsVideoPlaying(false)}
+                    className="absolute top-4 right-4 bg-[#081425]/90 hover:bg-[#c1c7cf] text-white hover:text-[#081425] px-3 py-1.5 rounded-full text-xs font-bold transition-all border border-[#c1c7cf]/40"
+                  >
+                    Close Video ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <motion.button
+                    onClick={() => setIsVideoPlaying(true)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-20 h-20 rounded-full border-2 border-[#c1c7cf] flex items-center justify-center group bg-[#081425]/80 backdrop-blur-sm hover:bg-[#c1c7cf] transition-all duration-500 relative shadow-2xl cursor-pointer"
+                  >
+                    <span className="absolute inset-0 rounded-full border border-[#c1c7cf] animate-ping opacity-30 pointer-events-none" />
+                    <Play className="w-8 h-8 text-[#c1c7cf] group-hover:text-[#081425] ml-1 transition-colors fill-current" />
+                  </motion.button>
 
-                <span className="text-xs font-bold text-[#c1c7cf] uppercase tracking-widest mt-2">
-                  Watch The Motion Film
-                </span>
-              </div>
-            )}
-          </div>
-        </section>
+                  <span className="text-xs font-bold text-[#c1c7cf] uppercase tracking-widest mt-2">
+                    Watch The Motion Film
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* RSVP Section */}
         <div id="rsvp">

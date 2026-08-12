@@ -344,32 +344,34 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
       </section>
 
       {/* Teaser Video Facade */}
-      <section className="py-24 px-6 md:px-16 bg-[#1b1c17]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-serif text-4xl font-bold text-[#d0e9d4] mb-8">Wedding Teaser</h2>
-          <div className="relative aspect-video rounded-xl overflow-hidden border border-[#434843]/30 shadow-2xl group cursor-pointer">
-            {isPlayingVideo ? (
-              <iframe
-                title="Love story video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="w-full h-full relative" onClick={() => setIsPlayingVideo(true)}>
-                <img src={videoCoverImg} alt="Video Teaser" className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-700" />
-                <div className="absolute inset-0 bg-[#13140f]/50 group-hover:bg-[#13140f]/30 transition-colors flex flex-col items-center justify-center">
-                  <div className="w-20 h-20 bg-[#b4cdb8] text-[#203527] rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform mb-3">
-                    <Play className="w-8 h-8 fill-current ml-1" />
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-24 px-6 md:px-16 bg-[#1b1c17]">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-serif text-4xl font-bold text-[#d0e9d4] mb-8">Wedding Teaser</h2>
+            <div className="relative aspect-video rounded-xl overflow-hidden border border-[#434843]/30 shadow-2xl group cursor-pointer">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="w-full h-full relative" onClick={() => setIsPlayingVideo(true)}>
+                  <img src={videoCoverImg} alt="Video Teaser" className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <div className="absolute inset-0 bg-[#13140f]/50 group-hover:bg-[#13140f]/30 transition-colors flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 bg-[#b4cdb8] text-[#203527] rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform mb-3">
+                      <Play className="w-8 h-8 fill-current ml-1" />
+                    </div>
+                    <span className="text-xs font-bold text-[#ffdcbd] uppercase tracking-widest">Play Teaser</span>
                   </div>
-                  <span className="text-xs font-bold text-[#ffdcbd] uppercase tracking-widest">Play Teaser</span>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RSVP Section */}
       <div id="rsvp">

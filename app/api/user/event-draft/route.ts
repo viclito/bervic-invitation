@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 
+import { checkInvitationLockStatus } from "@/lib/lockCheck";
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -67,6 +69,13 @@ export async function GET(req: Request) {
             ? Boolean(socialLinksObj.showVideo)
             : Boolean(inv.loveStoryVideoUrl && inv.loveStoryVideoUrl.trim() !== "");
 
+        const lockRes = checkInvitationLockStatus({
+          createdAt: inv.createdAt,
+          weddingDate: inv.weddingDate || inv.weddingTime,
+          isUnlockedByAdmin: inv.isUnlockedByAdmin,
+          isLockedByAdmin: inv.isLockedByAdmin,
+        });
+
         const draft = {
           id: inv.id,
           invitationId: inv.id,
@@ -93,6 +102,9 @@ export async function GET(req: Request) {
           coupleImage: inv.coupleImage || "",
           partnerTwoImage: inv.partnerTwoImage || "",
           rsvpContact: inv.contactPhone || "",
+          isLocked: lockRes.isLocked,
+          lockReason: lockRes.lockReason,
+          timeUntilLockText: lockRes.timeUntilLockText,
         };
 
         return NextResponse.json({
@@ -104,9 +116,22 @@ export async function GET(req: Request) {
 
     // 2. Fetch all profiles or specific profile
     if (fetchAll) {
-      const profiles = await prisma.userDraftDetails.findMany({
+      const rawProfiles = await prisma.userDraftDetails.findMany({
         where: { userId: user.id },
         orderBy: { updatedAt: "desc" },
+      });
+
+      const profiles = rawProfiles.map((p) => {
+        const lockRes = checkInvitationLockStatus({
+          createdAt: p.createdAt,
+          weddingDate: p.eventDate || p.eventTime || "",
+        });
+        return {
+          ...p,
+          isLocked: lockRes.isLocked,
+          lockReason: lockRes.lockReason,
+          timeUntilLockText: lockRes.timeUntilLockText,
+        };
       });
 
       const activeProfile = profiles.find((p) => p.isActive) || profiles[0] || null;
@@ -120,13 +145,27 @@ export async function GET(req: Request) {
     }
 
     if (profileId) {
-      const draft = await prisma.userDraftDetails.findFirst({
+      const rawDraft = await prisma.userDraftDetails.findFirst({
         where: { id: profileId, userId: user.id },
+      });
+
+      if (!rawDraft) {
+        return NextResponse.json({ success: true, draft: null });
+      }
+
+      const lockRes = checkInvitationLockStatus({
+        createdAt: rawDraft.createdAt,
+        weddingDate: rawDraft.eventDate || rawDraft.eventTime || "",
       });
 
       return NextResponse.json({
         success: true,
-        draft: draft || null,
+        draft: {
+          ...rawDraft,
+          isLocked: lockRes.isLocked,
+          lockReason: lockRes.lockReason,
+          timeUntilLockText: lockRes.timeUntilLockText,
+        },
       });
     }
 
@@ -168,6 +207,11 @@ export async function GET(req: Request) {
         completedFields = JSON.parse(draft.completedFields || "[]");
       } catch {}
 
+      const lockRes = checkInvitationLockStatus({
+        createdAt: draft.createdAt,
+        weddingDate: draft.eventDate || draft.eventTime || "",
+      });
+
       const formattedDraft = {
         ...draft,
         locations,
@@ -175,6 +219,9 @@ export async function GET(req: Request) {
         timelineItems,
         galleryImages,
         completedFields,
+        isLocked: lockRes.isLocked,
+        lockReason: lockRes.lockReason,
+        timeUntilLockText: lockRes.timeUntilLockText,
       };
 
       return NextResponse.json({

@@ -32,6 +32,7 @@ import {
   Star,
   Trash2,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 interface SavedInvitation {
@@ -47,6 +48,9 @@ interface SavedInvitation {
   heroImage?: string;
   coupleImage?: string;
   tagline?: string;
+  isLocked?: boolean;
+  lockReason?: string;
+  timeUntilLockText?: string;
 }
 
 interface SavedCard {
@@ -622,13 +626,24 @@ function DashboardSkeleton() {
 
                     {/* Bottom Action Button (Compact) */}
                     <div>
-                      <Link
-                        href={`/dashboard/event-profile?id=${prof.id}`}
-                        className="w-full py-2 px-3 rounded-lg bg-[#8C6227] hover:bg-[#75501F] text-white font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-[1.01]"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-[#FFE088]" />
-                        <span>Edit Details</span>
-                      </Link>
+                      {prof.isLocked ? (
+                        <button
+                          disabled
+                          className="w-full py-2 px-3 rounded-lg bg-[#EAE7E1] text-[#78716A] font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 border border-[#D5CF00]/30 shadow-xs cursor-not-allowed opacity-80"
+                          title={prof.lockReason || "Editing is locked 2 hours pre-event."}
+                        >
+                          <Lock className="w-3.5 h-3.5 text-[#78716A]" />
+                          <span>Locked</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/dashboard/event-profile?id=${prof.id}`}
+                          className="w-full py-2 px-3 rounded-lg bg-[#8C6227] hover:bg-[#75501F] text-white font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-[1.01]"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-[#FFE088]" />
+                          <span>Edit Details</span>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -726,13 +741,24 @@ function DashboardSkeleton() {
 
                     {/* Primary Card Actions */}
                     <div className="grid grid-cols-3 gap-2 pt-4 border-t border-[#D9A441]/20">
-                      <Link
-                        href={`/dashboard/event-profile?invitationId=${inv.id}`}
-                        className="py-2 px-2 rounded-xl bg-[#EFE7D8] text-[#221C17] text-[11px] font-bold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-[#7A1F2B]" />
-                        <span>Edit Details</span>
-                      </Link>
+                      {inv.isLocked ? (
+                        <button
+                          disabled
+                          className="py-2 px-2 rounded-xl bg-[#E8E4DD] text-[#736C63] text-[11px] font-bold border border-[#D0C8BC] transition-all flex items-center justify-center gap-1 cursor-not-allowed opacity-85"
+                          title={inv.lockReason || "Editing is locked 2 hours pre-event to protect invitation data."}
+                        >
+                          <Lock className="w-3.5 h-3.5 text-[#736C63]" />
+                          <span>Locked</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/dashboard/event-profile?invitationId=${inv.id}`}
+                          className="py-2 px-2 rounded-xl bg-[#EFE7D8] text-[#221C17] text-[11px] font-bold hover:bg-[#D9A441]/20 transition-all flex items-center justify-center gap-1"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-[#7A1F2B]" />
+                          <span>Edit Details</span>
+                        </Link>
+                      )}
 
                       <Link
                         href={`/invitations/${inv.slug}`}

@@ -40,13 +40,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Template static detail pages from registry
-  const templateRoutes: MetadataRoute.Sitemap = templatesRegistry.map((tpl) => ({
-    url: `${baseUrl}/templates/${tpl.slug}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  // Template static detail pages from registry (Wedding only)
+  const templateRoutes: MetadataRoute.Sitemap = templatesRegistry
+    .filter((tpl) => tpl.category === "wedding" || !["birthday", "religious", "anniversary"].includes(tpl.category))
+    .map((tpl) => ({
+      url: `${baseUrl}/templates/${tpl.slug}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
 
   // Public user invitations from database
   let invitationRoutes: MetadataRoute.Sitemap = [];

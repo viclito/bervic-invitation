@@ -117,11 +117,21 @@ export async function GET(req: Request) {
       } catch {}
     }
 
-    // Enforce lock status
-    invitations = invitations.map((inv) => ({
-      ...inv,
-      isLocked: !checkInvitationLockStatus(inv),
-    }));
+    // Enforce lock status using lockCheck utility
+    invitations = invitations.map((inv) => {
+      const lockRes = checkInvitationLockStatus({
+        createdAt: inv.createdAt,
+        weddingDate: inv.weddingDate,
+        isUnlockedByAdmin: inv.isUnlockedByAdmin,
+        isLockedByAdmin: inv.isLockedByAdmin,
+      });
+      return {
+        ...inv,
+        isLocked: lockRes.isLocked,
+        timeUntilLockText: lockRes.timeUntilLockText,
+        lockReason: lockRes.lockReason,
+      };
+    });
 
     try {
       cards = await prisma.userCard.findMany({

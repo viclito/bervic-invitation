@@ -32,19 +32,27 @@ export default function TemplatePreviewBottomBar({
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [userSubscription, setUserSubscription] = useState<any>(null);
 
+  // Filter templates list to wedding category ONLY (excluding birthday, religious, anniversary)
+  const activeWeddingTemplates = templatesRegistry.filter(
+    (t) => t.category === "wedding" || !["birthday", "religious", "anniversary"].includes(t.category)
+  );
+
   const targetTemplate =
+    activeWeddingTemplates.find((t) => t.slug === slug) ||
     templatesRegistry.find((t) => t.slug === slug) ||
-    templatesRegistry.find((t) => t.slug === "scroll-scrubber");
+    activeWeddingTemplates[0];
 
-  const currentIndex = templatesRegistry.findIndex((t) => t.slug === slug);
-  const prevIndex = (currentIndex - 1 + templatesRegistry.length) % templatesRegistry.length;
-  const nextIndex = (currentIndex + 1) % templatesRegistry.length;
+  const currentIndex = activeWeddingTemplates.findIndex((t) => t.slug === slug);
+  const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
 
-  const prevTemplate = templatesRegistry[prevIndex];
-  const nextTemplate = templatesRegistry[nextIndex];
+  const prevIndex = (safeCurrentIndex - 1 + activeWeddingTemplates.length) % activeWeddingTemplates.length;
+  const nextIndex = (safeCurrentIndex + 1) % activeWeddingTemplates.length;
 
-  const prevSlug = prevTemplate ? prevTemplate.slug : "scroll-scrubber";
-  const nextSlug = nextTemplate ? nextTemplate.slug : "olive-ochre";
+  const prevTemplate = activeWeddingTemplates[prevIndex];
+  const nextTemplate = activeWeddingTemplates[nextIndex];
+
+  const prevSlug = prevTemplate ? prevTemplate.slug : activeWeddingTemplates[0].slug;
+  const nextSlug = nextTemplate ? nextTemplate.slug : activeWeddingTemplates[0].slug;
 
   const resolvedTitle = templateTitle || targetTemplate?.title || "Wedding Invitation";
   const resolvedIsPremium = Boolean(

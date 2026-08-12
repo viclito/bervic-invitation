@@ -433,42 +433,44 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
         </section>
 
         {/* Video Film Section */}
-        <section className="py-24 px-6 md:px-16 bg-[#f4f3f1]" id="video">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="text-center mb-14">
-              <h2 className="font-serif text-4xl font-light text-[#735c00]">A Glimpse</h2>
-              <div className="h-0.5 w-24 bg-[#d0c5af] mx-auto mt-4" />
-            </div>
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+          <section className="py-24 px-6 md:px-16 bg-[#f4f3f1]" id="video">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="text-center mb-14">
+                <h2 className="font-serif text-4xl font-light text-[#735c00]">A Glimpse</h2>
+                <div className="h-0.5 w-24 bg-[#d0c5af] mx-auto mt-4" />
+              </div>
 
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              className="relative w-full rounded-2xl overflow-hidden shadow-xl aspect-video bg-black group cursor-pointer border border-[#d0c5af]/40"
-            >
-              {isPlayingVideo ? (
-                <iframe
-                  title="Love story video"
-                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
-                  <img
-                    src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
-                    alt="Video Cover Photo"
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                className="relative w-full rounded-2xl overflow-hidden shadow-xl aspect-video bg-black group cursor-pointer border border-[#d0c5af]/40"
+              >
+                {isPlayingVideo ? (
+                  <iframe
+                    title="Love story video"
+                    src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
                   />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 bg-white/80 text-[#735c00] rounded-full flex items-center justify-center backdrop-blur-md transition-transform duration-500 group-hover:scale-110 border border-white/60 shadow-lg">
-                      <Play className="w-8 h-8 ml-1 fill-current" />
+                ) : (
+                  <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                    <img
+                      src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
+                      alt="Video Cover Photo"
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 bg-white/80 text-[#735c00] rounded-full flex items-center justify-center backdrop-blur-md transition-transform duration-500 group-hover:scale-110 border border-white/60 shadow-lg">
+                        <Play className="w-8 h-8 ml-1 fill-current" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </section>
+                )}
+              </motion.div>
+            </div>
+          </section>
+        )}
 
         {/* RSVP Section */}
         <div id="rsvp">

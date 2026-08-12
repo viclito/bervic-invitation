@@ -333,6 +333,8 @@ export default function QuickStartDetailsWizard({
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [hasExistingSavedProfile, setHasExistingSavedProfile] = useState(false);
+  const [isLockedState, setIsLockedState] = useState(false);
+  const [lockReasonState, setLockReasonState] = useState("");
   const [alertMessage, setAlertMessage] = useState<{
     type: "error" | "success";
     title: string;
@@ -389,6 +391,12 @@ export default function QuickStartDetailsWizard({
           if (data.success && data.draft) {
             profileFound = true;
             const apiDraft = data.draft;
+
+            if (apiDraft.isLocked) {
+              setIsLockedState(true);
+              setLockReasonState(apiDraft.lockReason || "Editing for this invitation is locked starting 2 hours before your event date to protect invitation data.");
+            }
+
             let completedList: string[] = [];
             let parsedGallery: string[] = [];
             let parsedFunctions: EventSubFunction[] | null = null;
@@ -517,6 +525,14 @@ export default function QuickStartDetailsWizard({
 
   // Explicit save function for second / new profile creation
   const saveProfileToDb = async (draftToSave: DraftData) => {
+    if (isLockedState) {
+      setAlertMessage({
+        type: "error",
+        title: "Editing Locked",
+        description: lockReasonState || "Editing for this invitation is locked starting 2 hours before your event date.",
+      });
+      return;
+    }
     setIsSavingProfile(true);
     const filledKeys: string[] = [];
     Object.keys(draftToSave).forEach((k) => {
@@ -1204,6 +1220,26 @@ export default function QuickStartDetailsWizard({
               <X className="w-4 h-4 text-slate-500" />
               <span>Close</span>
             </button>
+          </div>
+        )}
+
+        {/* Locked Details Callout Banner */}
+        {isLockedState && (
+          <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 mb-6 flex items-start gap-3.5 text-rose-950 shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-rose-200 text-rose-800 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-sm sm:text-base flex items-center gap-2 text-rose-900">
+                <span>Event Details Are Locked</span>
+                <span className="px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 text-[10px] font-mono uppercase tracking-wider">
+                  Locked (2H Pre-Event)
+                </span>
+              </h4>
+              <p className="text-xs sm:text-sm text-rose-800/90 leading-relaxed font-medium">
+                {lockReasonState || "Editing for this invitation is locked (starts 2 hours before event date) to protect invitation data and prevent multi-event reuse. Contact Admin to request unlock access."}
+              </p>
+            </div>
           </div>
         )}
 
@@ -2609,7 +2645,16 @@ export default function QuickStartDetailsWizard({
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                    {isNewProfile || profileId || onClose ? (
+                    {isLockedState ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full py-3.5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-80"
+                      >
+                        <Lock className="w-4 h-4 text-slate-500" />
+                        <span>Event Details Locked (2H Pre-Event)</span>
+                      </button>
+                    ) : isNewProfile || profileId || onClose ? (
                       <>
                         <button
                           type="button"
@@ -2680,20 +2725,26 @@ export default function QuickStartDetailsWizard({
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
-                    disabled={isSavingProfile}
+                    disabled={isSavingProfile || isLockedState}
                     onClick={handleInPlaceSave}
-                    className="px-3 sm:px-4 py-2.5 rounded-xl bg-[#EFE7D8] hover:bg-[#D9A441]/30 text-[#7E121D] text-xs font-bold border border-[#D9A441]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50 whitespace-nowrap shrink-0"
-                    title="Save changes on this step without leaving the page"
+                    className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all whitespace-nowrap shrink-0 ${
+                      isLockedState
+                        ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                        : "bg-[#EFE7D8] hover:bg-[#D9A441]/30 text-[#7E121D] border-[#D9A441]/40 cursor-pointer shadow-xs"
+                    }`}
+                    title={isLockedState ? "Editing locked 2 hours pre-event" : "Save changes on this step without leaving the page"}
                   >
                     {isSavingProfile ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7E121D] shrink-0" />
                     ) : isSaveSuccess ? (
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : isLockedState ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     ) : (
                       <Save className="w-3.5 h-3.5 text-[#7E121D] shrink-0" />
                     )}
                     <span className="whitespace-nowrap">
-                      {isSavingProfile ? "Saving..." : isSaveSuccess ? "Saved ✓" : "Save Details"}
+                      {isSavingProfile ? "Saving..." : isSaveSuccess ? "Saved ✓" : isLockedState ? "Locked" : "Save Details"}
                     </span>
                   </button>
 

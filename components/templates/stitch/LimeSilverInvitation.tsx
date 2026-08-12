@@ -321,32 +321,34 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
       </section>
 
       {/* Video Teaser Facade */}
-      <section className="px-6 md:px-16 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-black text-white uppercase mb-8 tracking-tight">Save the Date Video</h2>
-          <div className="bg-[#1a1c1c]/80 backdrop-blur-md p-2 border-l-4 border-[#32CD32] border-t border-r border-b border-white/10 relative aspect-video group cursor-pointer overflow-hidden shadow-2xl">
-            {isPlayingVideo ? (
-              <iframe
-                title="Save the date video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
-                <img src={heroBgImg} alt="Video cover" className="w-full h-full object-cover grayscale opacity-40 group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
-                  <div className="w-20 h-20 bg-[#32CD32] rounded-full flex items-center justify-center shadow-[0_0_30px_#32CD32] group-hover:scale-110 transition-transform">
-                    <Play className="w-8 h-8 text-[#0A0A0A] fill-current ml-1" />
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="px-6 md:px-16 py-20">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-black text-white uppercase mb-8 tracking-tight">Save the Date Video</h2>
+            <div className="bg-[#1a1c1c]/80 backdrop-blur-md p-2 border-l-4 border-[#32CD32] border-t border-r border-b border-white/10 relative aspect-video group cursor-pointer overflow-hidden shadow-2xl">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Save the date video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                  <img src={heroBgImg} alt="Video cover" className="w-full h-full object-cover grayscale opacity-40 group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 bg-[#32CD32] rounded-full flex items-center justify-center shadow-[0_0_30px_#32CD32] group-hover:scale-110 transition-transform">
+                      <Play className="w-8 h-8 text-[#0A0A0A] fill-current ml-1" />
+                    </div>
+                    <p className="text-xs font-bold text-[#32CD32] uppercase tracking-widest mt-4">Watch Teaser</p>
                   </div>
-                  <p className="text-xs font-bold text-[#32CD32] uppercase tracking-widest mt-4">Watch Teaser</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RSVP Section */}
       <div id="rsvp">

@@ -33,6 +33,9 @@ export interface EventProfileData {
   loveStoryText?: string;
   loveStoryVideoUrl?: string;
   showVideo?: boolean;
+  isLocked?: boolean;
+  lockReason?: string;
+  timeUntilLockText?: string;
 }
 
 interface EventProfileModalProps {

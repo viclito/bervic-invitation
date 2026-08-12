@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
+import { checkInvitationLockStatus } from "@/lib/lockCheck";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -79,7 +80,22 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ invitations: invitations || [] });
+    const mappedInvitations = (invitations || []).map((inv: any) => {
+      const lockRes = checkInvitationLockStatus({
+        createdAt: inv.createdAt,
+        weddingDate: inv.weddingDate || inv.weddingTime,
+        isUnlockedByAdmin: inv.isUnlockedByAdmin,
+        isLockedByAdmin: inv.isLockedByAdmin,
+      });
+      return {
+        ...inv,
+        isLocked: lockRes.isLocked,
+        timeUntilLockText: lockRes.timeUntilLockText,
+        lockReason: lockRes.lockReason,
+      };
+    });
+
+    return NextResponse.json({ invitations: mappedInvitations });
   } catch (error: any) {
     console.error("Fetch User Invitations Error:", error);
     return NextResponse.json(

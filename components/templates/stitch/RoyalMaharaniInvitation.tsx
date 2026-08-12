@@ -362,33 +362,35 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
       </section>
 
       {/* Love Story Video Facade */}
-      <section className="py-24 px-6 md:px-16 bg-[#210917] text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-serif text-4xl font-bold text-[#e6c280] mb-3">Royal Film</h2>
-          <div className="w-20 h-0.5 bg-[#e6c280] mx-auto mb-10" />
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-24 px-6 md:px-16 bg-[#210917] text-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-serif text-4xl font-bold text-[#e6c280] mb-3">Royal Film</h2>
+            <div className="w-20 h-0.5 bg-[#e6c280] mx-auto mb-10" />
 
-          <div className="relative aspect-video rounded-xl overflow-hidden border border-[#e6c280]/40 shadow-2xl group cursor-pointer">
-            {isPlayingVideo ? (
-              <iframe
-                title="Love story video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
-                <img src={videoCoverImg} alt="Video Cover" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
-                <div className="absolute inset-0 flex items-center justify-center bg-[#1a0812]/50">
-                  <div className="w-20 h-20 bg-[#e6c280] rounded-full flex items-center justify-center text-[#1a0812] group-hover:scale-110 transition-transform shadow-xl">
-                    <Play className="w-8 h-8 fill-current ml-1" />
+            <div className="relative aspect-video rounded-xl overflow-hidden border border-[#e6c280]/40 shadow-2xl group cursor-pointer">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                  <img src={videoCoverImg} alt="Video Cover" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#1a0812]/50">
+                    <div className="w-20 h-20 bg-[#e6c280] rounded-full flex items-center justify-center text-[#1a0812] group-hover:scale-110 transition-transform shadow-xl">
+                      <Play className="w-8 h-8 fill-current ml-1" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RSVP Section */}
       <div id="rsvp">

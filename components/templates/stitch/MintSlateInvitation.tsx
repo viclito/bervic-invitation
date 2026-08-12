@@ -224,50 +224,52 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
       </section>
 
       {/* Our Celebration Film Video Section */}
-      <section className="py-20 border-b border-[#191c1d] bg-[#191c1d] text-white relative" id="video">
-        <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
-          <div>
-            <span className="font-mono text-xs font-semibold uppercase tracking-[0.25em] text-[#aaf0d1] block mb-2">
-              Cinematic Preview
-            </span>
-            <h2 className="text-3xl md:text-5xl font-extrabold uppercase text-white">
-              Our Celebration Film
-            </h2>
-            <p className="font-mono text-xs text-white/70 mt-2 uppercase tracking-wider">
-              Watch a preview of our journey &amp; precious moments together
-            </p>
-          </div>
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-20 border-b border-[#191c1d] bg-[#191c1d] text-white relative" id="video">
+          <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
+            <div>
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.25em] text-[#aaf0d1] block mb-2">
+                Cinematic Preview
+              </span>
+              <h2 className="text-3xl md:text-5xl font-extrabold uppercase text-white">
+                Our Celebration Film
+              </h2>
+              <p className="font-mono text-xs text-white/70 mt-2 uppercase tracking-wider">
+                Watch a preview of our journey &amp; precious moments together
+              </p>
+            </div>
 
-          <div className="relative rounded border-2 border-[#246a52] overflow-hidden shadow-2xl aspect-video bg-black group">
-            {isPlayingVideo ? (
-              <iframe
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                title="Love Story Video"
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                <img
-                  src={coverImg}
-                  alt="Video Poster"
-                  className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500 opacity-70"
+            <div className="relative rounded border-2 border-[#246a52] overflow-hidden shadow-2xl aspect-video bg-black group">
+              {isPlayingVideo ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  title="Love Story Video"
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full bg-[#246a52] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                    <Play className="w-8 h-8 fill-current ml-1" />
+              ) : (
+                <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                  <img
+                    src={coverImg}
+                    alt="Video Poster"
+                    className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500 opacity-70"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-[#246a52] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                      <Play className="w-8 h-8 fill-current ml-1" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-6 left-6 text-white text-left font-mono">
+                    <p className="text-[10px] uppercase tracking-widest text-[#aaf0d1] font-bold">Watch Video</p>
+                    <p className="text-xl font-bold uppercase">{partner1} &amp; {partner2}</p>
                   </div>
                 </div>
-                <div className="absolute bottom-6 left-6 text-white text-left font-mono">
-                  <p className="text-[10px] uppercase tracking-widest text-[#aaf0d1] font-bold">Watch Video</p>
-                  <p className="text-xl font-bold uppercase">{partner1} &amp; {partner2}</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Countdown Grid */}
       <section className="py-20 border-b border-[#191c1d] bg-white">

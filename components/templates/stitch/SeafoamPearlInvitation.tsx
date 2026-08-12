@@ -427,45 +427,47 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
       </section>
 
       {/* Love Story Video Film Section */}
-      <section className="py-24 bg-[#faf9f6] border-t border-[#046c4a]/10" id="video">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#046c4a] block mb-2">
-            Cherished Highlights
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#046c4a] mb-12">
-            Our Celebration Film
-          </h2>
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-24 bg-[#faf9f6] border-t border-[#046c4a]/10" id="video">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#046c4a] block mb-2">
+              Cherished Highlights
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-[#046c4a] mb-12">
+              Our Celebration Film
+            </h2>
 
-          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/90 bg-black group cursor-pointer flex items-center justify-center">
-            {isPlayingVideo ? (
-              <iframe
-                title="Seafoam Pearl Celebration Video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                <img
-                  alt="Video poster thumbnail"
-                  className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-700"
-                  src={
-                    props.coverImage ||
-                    props.heroImage ||
-                    props.coupleImage ||
-                    "/images/templates/couple-photo.jpg"
-                  }
+            <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-white/90 bg-black group cursor-pointer flex items-center justify-center">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Seafoam Pearl Celebration Video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
-                <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#046c4a] group-hover:scale-110 transition-transform shadow-lg border border-[#93e9be]">
-                  <Play className="w-10 h-10 fill-[#046c4a] ml-1" />
+              ) : (
+                <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
+                  <img
+                    alt="Video poster thumbnail"
+                    className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-700"
+                    src={
+                      props.coverImage ||
+                      props.heroImage ||
+                      props.coupleImage ||
+                      "/images/templates/couple-photo.jpg"
+                    }
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
+                  <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#046c4a] group-hover:scale-110 transition-transform shadow-lg border border-[#93e9be]">
+                    <Play className="w-10 h-10 fill-[#046c4a] ml-1" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RSVP Section */}
       <div id="rsvp">

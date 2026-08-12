@@ -340,31 +340,33 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
       </section>
 
       {/* Love Story Video Facade */}
-      <section className="py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="font-serif text-4xl font-bold text-[#526442] mb-8">Save the Date Video</h2>
-          <div className="aspect-video bg-[#efeded] rounded-2xl shadow-xl border border-[#c5c8bc]/40 flex items-center justify-center relative overflow-hidden group cursor-pointer">
-            {isPlayingVideo ? (
-              <iframe
-                title="Love story video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="w-full h-full relative" onClick={() => setIsPlayingVideo(true)}>
-                <img src={videoCoverImg} alt="Video Cover" className="w-full h-full object-cover opacity-70 group-hover:opacity-80 transition-opacity" />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                  <div className="w-20 h-20 bg-white/90 text-[#526442] rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
-                    <Play className="w-8 h-8 fill-current ml-1" />
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        <section className="py-24 bg-white">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <h2 className="font-serif text-4xl font-bold text-[#526442] mb-8">Save the Date Video</h2>
+            <div className="aspect-video bg-[#efeded] rounded-2xl shadow-xl border border-[#c5c8bc]/40 flex items-center justify-center relative overflow-hidden group cursor-pointer">
+              {isPlayingVideo ? (
+                <iframe
+                  title="Love story video"
+                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="w-full h-full relative" onClick={() => setIsPlayingVideo(true)}>
+                  <img src={videoCoverImg} alt="Video Cover" className="w-full h-full object-cover opacity-70 group-hover:opacity-80 transition-opacity" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <div className="w-20 h-20 bg-white/90 text-[#526442] rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
+                      <Play className="w-8 h-8 fill-current ml-1" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Our Moments Gallery */}
       <section className="py-24 bg-[#f5f3f3]" id="gallery">
