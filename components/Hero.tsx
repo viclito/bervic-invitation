@@ -15,6 +15,7 @@ export default function Hero() {
           alt="Warm Cream Silk & Floral Background"
           fill
           priority
+          fetchPriority="high"
           className="object-cover object-center opacity-95"
           sizes="100vw"
         />
@@ -29,6 +30,7 @@ export default function Hero() {
           alt="Tilted Background Watermark Mockup"
           width={550}
           height={1100}
+          loading="lazy"
           className="w-[290px] sm:w-[420px] lg:w-[480px] max-w-none transform -rotate-12 translate-y-2 drop-shadow-md"
         />
       </div>

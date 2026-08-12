@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import QuickStartDetailsWizard from "@/components/QuickStartDetailsWizard";
 import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -15,6 +14,13 @@ function SectionSkeleton({ height = "h-[400px]" }: { height?: string }) {
     </div>
   );
 }
+
+const QuickStartDetailsWizard = dynamic(
+  () => import("@/components/QuickStartDetailsWizard"),
+  {
+    loading: () => <SectionSkeleton height="h-[600px]" />,
+  }
+);
 
 // Below the Fold Sections — Dynamic Imports with Skeletons
 const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTemplatesShowcase"), {
