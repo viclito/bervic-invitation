@@ -56,7 +56,8 @@ interface GuestRsvpModalProps {
   partnerTwo: string;
   weddingDate: string;
   venuePlace: string;
-  onClose: () => void;
+  onClose?: () => void;
+  isFullPage?: boolean;
 }
 
 const COUNTRY_CODES = [
@@ -127,6 +128,7 @@ export default function GuestRsvpModal({
   weddingDate,
   venuePlace,
   onClose,
+  isFullPage = false,
 }: GuestRsvpModalProps) {
   const [activeTab, setActiveTab] = useState<"guests" | "broadcast" | "import">("guests");
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -465,28 +467,28 @@ export default function GuestRsvpModal({
     return matchesSearch && matchesStatus;
   });
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in" data-lenis-prevent>
-      <div data-lenis-prevent className="bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-[#221C17] overscroll-contain">
-        {/* Modal Header */}
-        <div className="p-3.5 sm:p-6 border-b border-[#D9A441]/20 bg-[#EFE7D8] flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md shrink-0">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm sm:text-xl font-bold text-[#221C17] flex flex-wrap items-center gap-1.5 leading-tight">
-                <span>Guest RSVP & WhatsApp Suite</span>
-                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] font-semibold border border-[#7A1F2B]/20">
-                  {stats.totalGuests} Guests
-                </span>
-              </h2>
-              <p className="text-[11px] sm:text-xs text-[#221C17]/70 font-medium truncate max-w-[210px] sm:max-w-none mt-0.5">
-                {partnerOne} & {partnerTwo}&apos;s Guestlist & WhatsApp Engine
-              </p>
-            </div>
+  const modalContent = (
+    <div data-lenis-prevent className={`bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl w-full flex flex-col shadow-xl overflow-hidden text-[#221C17] ${isFullPage ? "" : "max-w-5xl max-h-[92vh] shadow-2xl overscroll-contain"}`}>
+      {/* Modal Header */}
+      <div className="p-3.5 sm:p-6 border-b border-[#D9A441]/20 bg-[#EFE7D8] flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md shrink-0">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-xl font-bold text-[#221C17] flex flex-wrap items-center gap-1.5 leading-tight">
+              <span>Invite via WhatsApp</span>
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] font-semibold border border-[#7A1F2B]/20">
+                {stats.totalGuests} Guests
+              </span>
+            </h2>
+            <p className="text-[11px] sm:text-xs text-[#221C17]/70 font-medium truncate max-w-[210px] sm:max-w-none mt-0.5">
+              {partnerOne} & {partnerTwo}&apos;s Guestlist & WhatsApp Engine
+            </p>
+          </div>
+        </div>
 
+        {onClose && (
           <button
             onClick={() => {
               stopAutoStream();
@@ -497,7 +499,8 @@ export default function GuestRsvpModal({
           >
             <X className="w-5 h-5" />
           </button>
-        </div>
+        )}
+      </div>
 
         {/* Analytics Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-2.5 sm:p-4 bg-[#F8F3EA] border-b border-[#D9A441]/20">
@@ -1252,6 +1255,15 @@ export default function GuestRsvpModal({
           </div>
         )}
       </div>
+    );
+
+  if (isFullPage) {
+    return modalContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in" data-lenis-prevent>
+      {modalContent}
     </div>
   );
 }

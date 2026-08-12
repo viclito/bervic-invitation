@@ -35,70 +35,76 @@ export function useRequireLoginAndDetails(callbackUrl: string = "/templates") {
   const { status } = useSession();
   const router = useRouter();
 
-  // Instant Cookie + LocalStorage cache check for 0ms loading delay
-  const [checkingDetails, setCheckingDetails] = useState(() => {
-    const cached = readProfileHasDetailsCache();
-    return cached === null; // Only true on first-time uncached check
-  });
-
+  const [checkingDetails, setCheckingDetails] = useState(true);
   const [hasCompletedDetails, setHasCompletedDetails] = useState(() => {
     const cached = readProfileHasDetailsCache();
     return cached === true;
   });
 
   useEffect(() => {
+    if (status === "loading") return;
+
     if (status === "unauthenticated") {
       router.replace(`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
 
-    if (status === "authenticated") {
-      const cached = readProfileHasDetailsCache();
-      
-      // If cache explicitly says false, redirect instantly without delay
-      if (cached === false) {
-        setHasCompletedDetails(false);
-        setCheckingDetails(false);
-        router.replace("/#details-form");
-        return;
-      }
+    let isMounted = true;
 
-      // Quiet background sync with database to keep cache fresh
-      fetch("/api/user/event-draft")
-        .then((res) => res.json())
-        .then((data) => {
-          const draft = data.draft;
-          const hasDbDetails = Boolean(
-            draft && (draft.hostNameOne || draft.eventDate || draft.venueName || draft.rsvpContact || draft.eventTitle)
-          );
+    // Verify event profile in database without premature redirection
+    fetch("/api/user/event-draft")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isMounted) return;
+        const draft = data.draft;
+        const hasDbDetails = Boolean(
+          draft &&
+            (draft.id ||
+              draft.hostNameOne ||
+              draft.hostNameTwo ||
+              draft.eventDate ||
+              draft.weddingDate ||
+              draft.venueName ||
+              draft.venuePlace ||
+              draft.rsvpContact ||
+              draft.contactPhone ||
+              draft.eventTitle ||
+              draft.coupleInitials)
+        );
 
-          if (hasDbDetails) {
-            setProfileHasDetailsCache(true);
-            setHasCompletedDetails(true);
-            setCheckingDetails(false);
-          } else {
-            // No saved profile -> update cache to false & redirect
-            setProfileHasDetailsCache(false);
-            setHasCompletedDetails(false);
-            setCheckingDetails(false);
-            router.replace("/#details-form");
-          }
-        })
-        .catch(() => {
-          const currentCache = readProfileHasDetailsCache();
-          if (currentCache === true) {
-            setHasCompletedDetails(true);
-            setCheckingDetails(false);
-          } else {
-            setCheckingDetails(false);
-            router.replace("/#details-form");
-          }
-        });
-    }
+        if (hasDbDetails) {
+          setProfileHasDetailsCache(true);
+          setHasCompletedDetails(true);
+        } else {
+          // No saved profile -> update cache to false & redirect to details form
+          setProfileHasDetailsCache(false);
+          setHasCompletedDetails(false);
+          router.replace("/#details-form");
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        const currentCache = readProfileHasDetailsCache();
+        if (currentCache === true) {
+          setHasCompletedDetails(true);
+        } else {
+          setHasCompletedDetails(false);
+          router.replace("/#details-form");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setCheckingDetails(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [status, router, callbackUrl]);
 
   return {
-    isLoading: status === "loading" ? true : checkingDetails,
+    isLoading: status === "loading" || checkingDetails,
     isAuthenticated: status === "authenticated",
     hasCompletedDetails,
   };

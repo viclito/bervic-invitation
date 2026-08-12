@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GuestRsvpModal from "@/components/dashboard/GuestRsvpModal";
 import PdfCardExportModal from "@/components/dashboard/PdfCardExportModal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { setProfileHasDetailsCache } from "@/lib/useRequireLoginAndDetails";
 import type { EventProfileData } from "@/components/dashboard/EventProfileModal";
 import {
@@ -242,39 +243,39 @@ function DashboardSkeleton() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 pt-20 sm:pt-28 md:pt-32 pb-16">
         {/* Top Welcome Card Skeleton */}
-        <div className="bg-white border border-[#D9A441]/20 rounded-3xl p-4 sm:p-6 mb-6 shadow-xs animate-pulse flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-6 mb-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 w-full">
-            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-[#7A1F2B]/10 shrink-0" />
+            <Skeleton className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl shrink-0" />
             <div className="space-y-2 flex-1">
-              <div className="w-20 h-3 rounded-md bg-[#D9A441]/20" />
-              <div className="w-40 sm:w-56 h-5 rounded-lg bg-[#7A1F2B]/15" />
-              <div className="w-32 h-3 rounded-md bg-slate-200" />
+              <Skeleton className="w-20 h-3 rounded-md" />
+              <Skeleton className="w-40 sm:w-56 h-5 rounded-lg" />
+              <Skeleton className="w-32 h-3 rounded-md" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full md:w-auto pt-2 sm:pt-0">
-            <div className="h-9 rounded-xl bg-[#F6F0E6] w-full sm:w-28" />
-            <div className="h-9 rounded-xl bg-[#7A1F2B]/15 w-full sm:w-36" />
+            <Skeleton className="h-9 rounded-xl w-full sm:w-28" />
+            <Skeleton className="h-9 rounded-xl w-full sm:w-36" />
           </div>
         </div>
 
         {/* Segmented Tabs Skeleton */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-[#D9A441]/20 mb-8 pb-3 animate-pulse">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200/60 mb-8 pb-3">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1.5 sm:pb-0">
-            <div className="w-36 h-10 rounded-2xl bg-[#7A1F2B]/15 shrink-0" />
-            <div className="w-36 h-10 rounded-2xl bg-[#EFE7D8] shrink-0" />
-            <div className="w-40 h-10 rounded-2xl bg-[#EFE7D8] shrink-0" />
+            <Skeleton className="w-36 h-10 rounded-2xl shrink-0" />
+            <Skeleton className="w-36 h-10 rounded-2xl shrink-0" />
+            <Skeleton className="w-40 h-10 rounded-2xl shrink-0" />
           </div>
-          <div className="w-48 h-4 rounded-md bg-[#D9A441]/20" />
+          <Skeleton className="w-48 h-4 rounded-md" />
         </div>
 
         {/* Section Header Skeleton */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 animate-pulse">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <div className="space-y-2">
-            <div className="w-48 h-6 rounded-lg bg-[#7A1F2B]/15" />
-            <div className="w-72 sm:w-96 h-3.5 rounded-md bg-slate-200" />
+            <Skeleton className="w-48 h-6 rounded-lg" />
+            <Skeleton className="w-72 sm:w-96 h-3.5 rounded-md" />
           </div>
-          <div className="w-36 h-9 rounded-xl bg-[#7A1F2B]/10 shrink-0" />
+          <Skeleton className="w-36 h-9 rounded-xl shrink-0" />
         </div>
 
         {/* Cards Grid Skeleton */}
@@ -282,24 +283,24 @@ function DashboardSkeleton() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 animate-pulse space-y-4"
+              className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 space-y-4"
             >
               <div className="flex items-center justify-between">
-                <div className="w-20 h-5 rounded-full bg-amber-100" />
-                <div className="w-24 h-5 rounded-full bg-[#7A1F2B]/10" />
+                <Skeleton className="w-20 h-5 rounded-full" />
+                <Skeleton className="w-24 h-5 rounded-full" />
               </div>
               <div className="space-y-2 py-2">
-                <div className="w-3/4 h-5 rounded-lg bg-[#7A1F2B]/20" />
-                <div className="w-1/2 h-4 rounded-md bg-slate-200" />
+                <Skeleton className="w-3/4 h-5 rounded-lg" />
+                <Skeleton className="w-1/2 h-4 rounded-md" />
               </div>
               <div className="space-y-2 pt-2 border-t border-slate-100">
-                <div className="w-full h-3 rounded bg-slate-100" />
-                <div className="w-5/6 h-3 rounded bg-slate-100" />
+                <Skeleton className="w-full h-3 rounded" />
+                <Skeleton className="w-5/6 h-3 rounded" />
               </div>
               <div className="grid grid-cols-3 gap-2 pt-3">
-                <div className="h-8 rounded-xl bg-[#EFE7D8]" />
-                <div className="h-8 rounded-xl bg-[#EFE7D8]" />
-                <div className="h-8 rounded-xl bg-[#7A1F2B]/15" />
+                <Skeleton className="h-8 rounded-xl" />
+                <Skeleton className="h-8 rounded-xl" />
+                <Skeleton className="h-8 rounded-xl" />
               </div>
             </div>
           ))}
@@ -695,13 +696,13 @@ function DashboardSkeleton() {
 
                       {/* Suite Action Buttons */}
                       <div className="flex flex-col gap-2 mb-6">
-                        <button
-                          onClick={() => setActiveRsvpInv(inv)}
+                        <Link
+                          href={`/dashboard/invite-whatsapp/${inv.id}`}
                           className="w-full py-2.5 px-3 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold hover:bg-[#9B2C3B] transition-all flex items-center justify-center gap-2 shadow-sm"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-[#D9A441]" />
-                          <span>Guest RSVP & WhatsApp Suite</span>
-                        </button>
+                          <span>Invite via WhatsApp</span>
+                        </Link>
 
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -969,18 +970,7 @@ function DashboardSkeleton() {
 
 
 
-      {/* Render Active Modals */}
-      {activeRsvpInv && (
-        <GuestRsvpModal
-          invitationId={activeRsvpInv.id}
-          invitationSlug={activeRsvpInv.slug}
-          partnerOne={activeRsvpInv.partnerOne}
-          partnerTwo={activeRsvpInv.partnerTwo}
-          weddingDate={activeRsvpInv.weddingTime || activeRsvpInv.weddingDate}
-          venuePlace={activeRsvpInv.venuePlace || "Our Wedding Venue"}
-          onClose={() => setActiveRsvpInv(null)}
-        />
-      )}
+
 
       {activePdfInv && (
         <PdfCardExportModal

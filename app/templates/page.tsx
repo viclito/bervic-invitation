@@ -2,12 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
-import { Search, ExternalLink, Edit3, Crown, Palette, Sparkles } from "lucide-react";
+import { Search, ExternalLink, Palette, Sparkles } from "lucide-react";
 
 import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import TemplateGallerySkeleton from "@/components/skeletons/TemplateGallerySkeleton";
@@ -23,7 +22,7 @@ function TemplateGalleryContent() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || "all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [highlightedSlug, setHighlightedSlug] = useState<string | null>(viewedParam);
+  const [highlightedSlug] = useState<string | null>(viewedParam);
 
   const [selectedTemplateForModal, setSelectedTemplateForModal] = useState<{
     slug: string;
@@ -76,18 +75,11 @@ function TemplateGalleryContent() {
     { id: "all", label: "All Templates" },
     { id: "cinematic", label: "🎬 Cinematic (₹2000 Exclusive)" },
     { id: "wedding", label: "Weddings" },
-    { id: "birthday", label: "Birthdays" },
-    { id: "religious", label: "Religious & Pujas" },
-    { id: "anniversary", label: "Anniversaries" },
   ];
 
-  // Auto-select category and scroll to last viewed template
+  // Scroll to last viewed template if specified
   useEffect(() => {
-    if (categoryParam) {
-      setSelectedCategory(categoryParam);
-    }
     if (viewedParam) {
-      setHighlightedSlug(viewedParam);
       const timer = setTimeout(() => {
         const el = document.getElementById(`template-card-${viewedParam}`);
         if (el) {
@@ -96,9 +88,13 @@ function TemplateGalleryContent() {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [categoryParam, viewedParam]);
+  }, [viewedParam]);
 
   const filteredTemplates = templatesRegistry.filter((tpl) => {
+    // Hide non-wedding categories for now
+    if (["birthday", "religious", "anniversary"].includes(tpl.category)) {
+      return false;
+    }
     const matchesCategory =
       selectedCategory === "all"
         ? true

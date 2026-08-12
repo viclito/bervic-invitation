@@ -130,15 +130,56 @@ export async function GET(req: Request) {
       });
     }
 
+    if (draft) {
+      let locations = [];
+      try {
+        locations = JSON.parse(draft.locationsJson || "[]");
+      } catch {}
+
+      let functions = [];
+      try {
+        functions = JSON.parse(draft.functionsJson || "[]");
+      } catch {}
+
+      let timelineItems = [];
+      try {
+        timelineItems = JSON.parse(draft.dayTimelineJson || "[]");
+      } catch {}
+
+      let galleryImages = [];
+      try {
+        galleryImages = JSON.parse(draft.galleryImagesJson || "[]");
+      } catch {}
+
+      let completedFields = [];
+      try {
+        completedFields = JSON.parse(draft.completedFields || "[]");
+      } catch {}
+
+      const formattedDraft = {
+        ...draft,
+        locations,
+        functions,
+        timelineItems,
+        galleryImages,
+        completedFields,
+      };
+
+      return NextResponse.json({
+        success: true,
+        draft: formattedDraft,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      draft: draft || null,
+      draft: null,
     });
   } catch (error: unknown) {
     console.error("GET /api/user/event-draft error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch event draft" },
-      { status: 500 }
+      { success: false, draft: null, error: (error as Error)?.message || "Failed to fetch event draft" },
+      { status: 200 }
     );
   }
 }
@@ -168,7 +209,6 @@ export async function POST(req: Request) {
       venueTwoName,
       venueTwoAddress,
       venueTwoMapUrl,
-      locations,
       tagline,
       turningAge,
       dressCode,
@@ -179,9 +219,6 @@ export async function POST(req: Request) {
       coupleImage,
       partnerTwoImage,
       venueImage,
-      galleryImages = [],
-      functions = [],
-      timelineItems = [],
       additionalNotes,
       extractedFromDoc = false,
       completedFields = [],
@@ -352,7 +389,7 @@ export async function POST(req: Request) {
         where: { userId: user.id },
       });
 
-      const totalAllowedTemplates = Math.max(0, (user.allowedTemplatesCount || 0) + ((user as any).allowedCinematicCount || 0));
+      const totalAllowedTemplates = Math.max(0, (user.allowedTemplatesCount || 0) + ((user as unknown as { allowedCinematicCount?: number }).allowedCinematicCount || 0));
       const isAdmin = user.email === "berglin1998@gmail.com" || user.role === "ADMIN";
       const maxAllowedProfiles = isAdmin ? 99 : Math.max(1, totalAllowedTemplates);
 
