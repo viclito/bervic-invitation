@@ -58,19 +58,6 @@ function resolveTemplatePreviewImage(templateSlug: string | null | undefined): s
   return "/templates/ceremony-wedding-bg.png";
 }
 
-const isGenericStockPhoto = (url: string | null | undefined): boolean => {
-  if (!url) return true;
-  const lower = url.toLowerCase();
-  return (
-    lower.includes("couple-photo.jpg") ||
-    lower.includes("floral-hero.jpg") ||
-    lower.includes("unsplash.com") ||
-    lower.includes("unsplash") ||
-    lower.includes("stylecast") ||
-    lower.includes("photo-")
-  );
-};
-
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -104,15 +91,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
-  // Always resolve to a reliable local hosted PNG image (never external Unsplash stock photos)
-  let rawImagePath = resolveTemplatePreviewImage(invitation.templateSlug);
+  let cardThemeFromDb = "";
+  try {
+    const social = JSON.parse(invitation.socialLinksJson || "{}");
+    if (social.cardTheme) cardThemeFromDb = social.cardTheme;
+  } catch {}
 
-  // Override with custom user photo ONLY if user uploaded a custom Cloudinary / user image (not stock placeholder)
-  if (invitation.coupleImage && !isGenericStockPhoto(invitation.coupleImage)) {
-    rawImagePath = invitation.coupleImage;
-  } else if (invitation.heroImage && !isGenericStockPhoto(invitation.heroImage)) {
-    rawImagePath = invitation.heroImage;
-  }
+  const activeThemeSlug = cardThemeFromDb || invitation.templateSlug;
+  const rawImagePath = resolveTemplatePreviewImage(activeThemeSlug);
 
   // Ensure fully-qualified absolute URL
   const shareImage = rawImagePath.startsWith("http://") || rawImagePath.startsWith("https://")

@@ -162,6 +162,27 @@ export default function GuestRsvpShadcnPage({
 
   // Card Image Theme (Stitch Designs)
   const [selectedCardTheme, setSelectedCardTheme] = useState<"peach" | "church" | "islamic" | "hindu" | "haldi" | "ceremony">("peach");
+
+  const handleSelectCardTheme = async (theme: "peach" | "church" | "islamic" | "hindu" | "haldi" | "ceremony") => {
+    setSelectedCardTheme(theme);
+    try {
+      await fetch(`/api/invitations/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitationId,
+          templateSlug: invitationSlug,
+          partnerOne,
+          partnerTwo,
+          weddingDate,
+          venuePlace,
+          socialLinks: { cardTheme: theme },
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save card theme:", err);
+    }
+  };
   const [, setSentGuestIds] = useState<string[]>([]);
   const [showMetrics, setShowMetrics] = useState(false);
 
@@ -1668,7 +1689,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 1: Soft Peach Mandap */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("peach")}
+                      onClick={() => handleSelectCardTheme("peach")}
                       style={{ backgroundImage: "url('/templates/peach-mandap-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center space-y-1.5 relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "peach"
@@ -1708,7 +1729,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 2: Church Wedding Overlay */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("church")}
+                      onClick={() => handleSelectCardTheme("church")}
                       style={{ backgroundImage: "url('/templates/church-wedding-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "church"
@@ -1744,7 +1765,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 3: Islamic Arch Overlay */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("islamic")}
+                      onClick={() => handleSelectCardTheme("islamic")}
                       style={{ backgroundImage: "url('/templates/islamic-wedding-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "islamic"
@@ -1782,7 +1803,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 4: Hindu Mandap Overlay */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("hindu")}
+                      onClick={() => handleSelectCardTheme("hindu")}
                       style={{ backgroundImage: "url('/templates/hindu-wedding-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "hindu"
@@ -1820,7 +1841,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 5: Haldi Ceremony Overlay */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("haldi")}
+                      onClick={() => handleSelectCardTheme("haldi")}
                       style={{ backgroundImage: "url('/templates/haldi-wedding-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "haldi"
@@ -1858,7 +1879,7 @@ export default function GuestRsvpShadcnPage({
                     {/* Card 6: Golden Ceremony Overlay */}
                     <button
                       type="button"
-                      onClick={() => setSelectedCardTheme("ceremony")}
+                      onClick={() => handleSelectCardTheme("ceremony")}
                       style={{ backgroundImage: "url('/templates/ceremony-wedding-bg.png')" }}
                       className={`p-6 rounded-2xl border-2 text-left bg-cover bg-center flex flex-col items-center justify-center text-center relative overflow-hidden transition-all min-h-[220px] ${
                         selectedCardTheme === "ceremony"
