@@ -30,6 +30,7 @@ import {
   Plus,
   Trash2,
   Video,
+  VideoOff,
   X,
   Save,
   LayoutDashboard,
@@ -87,6 +88,7 @@ export interface DraftData {
   rsvpContact: string;
   loveStoryText: string;
   loveStoryVideoUrl: string;
+  showVideo: boolean;
   coverImage: string;
   coupleImage: string;
   partnerTwoImage: string;
@@ -102,6 +104,7 @@ export interface DraftData {
 
 const initialDraft: DraftData = {
   eventType: "WEDDING",
+  showVideo: true,
   hostNameOne: "",
   hostNameTwo: "",
   coupleInitials: "",
@@ -448,6 +451,7 @@ export default function QuickStartDetailsWizard({
               rsvpContact: apiDraft.rsvpContact || localParsed?.rsvpContact || "",
               loveStoryText: apiDraft.loveStoryText || localParsed?.loveStoryText || "",
               loveStoryVideoUrl: apiDraft.loveStoryVideoUrl || localParsed?.loveStoryVideoUrl || "",
+              showVideo: apiDraft.showVideo !== undefined ? Boolean(apiDraft.showVideo) : localParsed?.showVideo !== undefined ? Boolean(localParsed?.showVideo) : true,
               coverImage: apiDraft.coverImage || localParsed?.coverImage || "",
               coupleImage: apiDraft.coupleImage || localParsed?.coupleImage || "",
               partnerTwoImage: apiDraft.partnerTwoImage || localParsed?.partnerTwoImage || "",
@@ -2388,25 +2392,64 @@ export default function QuickStartDetailsWizard({
                     </ol>
                   </div>
 
-                  {/* Paste YouTube Video Link */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-                      Paste YouTube Video Link
-                    </label>
-                    <div className="relative">
-                      <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="text"
-                        placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                        value={draft.loveStoryVideoUrl}
-                        onChange={(e) => setDraft({ ...draft, loveStoryVideoUrl: e.target.value })}
-                        className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
-                      />
+                  {/* Shadcn Toggle Switch: Show / Hide Video Section */}
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
+                        <Video className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
+                        <p className="text-[11px] text-slate-500">
+                          Toggle ON to display your wedding teaser video, or OFF to hide the video section completely from your invitation card.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-1">
-                      Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
-                    </p>
+
+                    {/* Shadcn Switch Toggle */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={draft.showVideo !== false}
+                      onClick={() => setDraft({ ...draft, showVideo: !(draft.showVideo !== false) })}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        draft.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          draft.showVideo !== false ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
                   </div>
+
+                  {/* Paste YouTube Video Link (Conditional on Toggle) */}
+                  {draft.showVideo !== false ? (
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                        Paste YouTube Video Link
+                      </label>
+                      <div className="relative">
+                        <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                          value={draft.loveStoryVideoUrl}
+                          onChange={(e) => setDraft({ ...draft, loveStoryVideoUrl: e.target.value })}
+                          className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl border border-dashed border-slate-300 bg-slate-100/60 text-slate-500 text-xs flex items-center gap-2">
+                      <VideoOff className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span>Video section is currently <strong>Hidden</strong>. Toggle the switch ON above if you wish to display a wedding video on your invitation card.</span>
+                    </div>
+                  )}
 
                   {/* Love Story Narrative Text */}
                   <div>

@@ -32,6 +32,7 @@ export interface EventProfileData {
   rsvpContact?: string;
   loveStoryText?: string;
   loveStoryVideoUrl?: string;
+  showVideo?: boolean;
 }
 
 interface EventProfileModalProps {
@@ -337,22 +338,56 @@ export default function EventProfileModal({
             </div>
           </div>
 
-          {/* YouTube Video URL */}
-          <div>
-            <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              YouTube Video URL
-            </label>
-            <div className="relative">
-              <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="e.g. https://www.youtube.com/watch?v=..."
-                value={formData.loveStoryVideoUrl}
-                onChange={(e) => setFormData({ ...formData, loveStoryVideoUrl: e.target.value })}
-                className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
-              />
+          {/* Shadcn Toggle Switch: Show / Hide Video Section */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
+                <Video className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
+                <p className="text-[11px] text-slate-500">
+                  Toggle ON to display your wedding teaser video, or OFF to hide the video section from your invitation card.
+                </p>
+              </div>
             </div>
+
+            {/* Shadcn Switch Toggle */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={formData.showVideo !== false}
+              onClick={() => setFormData({ ...formData, showVideo: !(formData.showVideo !== false) })}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                formData.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  formData.showVideo !== false ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
+
+          {/* YouTube Video URL */}
+          {formData.showVideo !== false ? (
+            <div>
+              <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                YouTube Video URL
+              </label>
+              <div className="relative">
+                <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="e.g. https://www.youtube.com/watch?v=..."
+                  value={formData.loveStoryVideoUrl}
+                  onChange={(e) => setFormData({ ...formData, loveStoryVideoUrl: e.target.value })}
+                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                />
+              </div>
+            </div>
+          ) : null}
 
           {/* Love Story Narrative */}
           <div>

@@ -341,65 +341,67 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
         </section>
 
         {/* Love Story Section */}
-        <section className="py-24 max-w-[1280px] mx-auto px-6 md:px-16" id="story">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="flex flex-col gap-6"
-            >
-              <h2 className="text-4xl font-bold text-[#5f5f00]">Our Love Story</h2>
-              <div className="w-16 h-1 bg-[#904d00] rounded-full" />
-              <blockquote className="text-xl italic text-[#1b1c1c] pl-6 border-l-4 border-[#5f5f00]/40 leading-relaxed bg-[#5f5f00]/5 py-3 rounded-r-xl">
-                &ldquo;Every love story is beautiful, but ours is my favorite.&rdquo;
-              </blockquote>
-              <p className="font-sans text-sm text-[#484837] leading-relaxed">
-                {props.loveStoryText ||
-                  "From a chance encounter to a lifetime of promises, our journey has been filled with laughter, shared dreams, and endless love. We are thrilled to take this next step surrounded by the people who mean the most to us."}
-              </p>
-              <a
-                href={props.loveStoryVideoUrl || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="self-start mt-2 px-6 py-3 border-2 border-[#904d00] text-[#904d00] rounded-lg font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#904d00] hover:text-white transition-all shadow-sm inline-flex items-center gap-2"
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+          <section className="py-24 max-w-[1280px] mx-auto px-6 md:px-16" id="story">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="flex flex-col gap-6"
               >
-                <PlayCircle className="w-4 h-4" />
-                <span>Watch Full Video</span>
-              </a>
-            </motion.div>
+                <h2 className="text-4xl font-bold text-[#5f5f00]">Our Love Story</h2>
+                <div className="w-16 h-1 bg-[#904d00] rounded-full" />
+                <blockquote className="text-xl italic text-[#1b1c1c] pl-6 border-l-4 border-[#5f5f00]/40 leading-relaxed bg-[#5f5f00]/5 py-3 rounded-r-xl">
+                  &ldquo;Every love story is beautiful, but ours is my favorite.&rdquo;
+                </blockquote>
+                <p className="font-sans text-sm text-[#484837] leading-relaxed">
+                  {props.loveStoryText ||
+                    "From a chance encounter to a lifetime of promises, our journey has been filled with laughter, shared dreams, and endless love. We are thrilled to take this next step surrounded by the people who mean the most to us."}
+                </p>
+                <a
+                  href={props.loveStoryVideoUrl || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-start mt-2 px-6 py-3 border-2 border-[#904d00] text-[#904d00] rounded-lg font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#904d00] hover:text-white transition-all shadow-sm inline-flex items-center gap-2"
+                >
+                  <PlayCircle className="w-4 h-4" />
+                  <span>Watch Full Video</span>
+                </a>
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#cac7b1]/40 shadow-xl group cursor-pointer bg-black"
-            >
-              {isPlayingVideo ? (
-                <iframe
-                  title="Love story video"
-                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
-                  <img
-                    src={coupleImg}
-                    alt="Couple Love Story Photo"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#cac7b1]/40 shadow-xl group cursor-pointer bg-black"
+              >
+                {isPlayingVideo ? (
+                  <iframe
+                    title="Love story video"
+                    src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
                   />
-                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/15 transition-colors">
-                    <PlayCircle className="w-16 h-16 text-white drop-shadow-2xl group-hover:scale-110 transition-transform" />
+                ) : (
+                  <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
+                    <img
+                      src={coupleImg}
+                      alt="Couple Love Story Photo"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/25 flex items-center justify-center group-hover:bg-black/15 transition-colors">
+                      <PlayCircle className="w-16 h-16 text-white drop-shadow-2xl group-hover:scale-110 transition-transform" />
+                    </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </section>
+                )}
+              </motion.div>
+            </div>
+          </section>
+        )}
 
         {/* Wedding Events Section */}
         <section className="py-24 bg-[#ffffff]" id="events">

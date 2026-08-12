@@ -94,13 +94,20 @@ export function mapEventProfileToInvitationData(
       ? draft.partnerTwoImage
       : baseData.partnerTwoImage;
 
-  // Love Story Video URL
-  const loveStoryVideoUrl =
-    draft.loveStoryVideoUrl && draft.loveStoryVideoUrl.trim() !== ""
-      ? draft.loveStoryVideoUrl
-      : draft.videoUrl && draft.videoUrl.trim() !== ""
-      ? draft.videoUrl
-      : baseData.loveStoryVideoUrl;
+  // Love Story Video URL & Video Section Visibility
+  const isVideoEnabled =
+    (draft as Record<string, unknown>).showVideo !== false &&
+    (draft as Record<string, unknown>).showVideoSection !== false &&
+    Boolean(
+      (draft.loveStoryVideoUrl && draft.loveStoryVideoUrl.trim() !== "") ||
+        (draft.videoUrl && draft.videoUrl.trim() !== "")
+    );
+
+  const loveStoryVideoUrl = isVideoEnabled
+    ? draft.loveStoryVideoUrl?.trim() || draft.videoUrl?.trim() || baseData.loveStoryVideoUrl
+    : "";
+
+  const showVideoSection = isVideoEnabled;
 
   // Gallery images
   let galleryImages = baseData.galleryImages;
