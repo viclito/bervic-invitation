@@ -38,10 +38,21 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "beasties": "^0.4.3",
+    "critters": "^0.0.25",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "prisma": "5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "chrome >= 80",
+    "edge >= 80",
+    "firefox >= 74",
+    "safari >= 13",
+    "not dead",
+    "not op_mini all"
+  ]
 }
+
