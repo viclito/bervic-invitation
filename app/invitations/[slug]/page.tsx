@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
-import { templatesRegistry } from "@/data/templatesRegistry";
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
@@ -14,11 +13,31 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 
 const THEME_CARD_MAP: Record<string, string> = {
   ceremony: "/templates/ceremony-wedding-bg.png",
+  "ceremony-wedding": "/templates/ceremony-wedding-bg.png",
+  "ceremony-overlay": "/templates/ceremony-wedding-bg.png",
   haldi: "/templates/haldi-wedding-bg.png",
+  "haldi-wedding": "/templates/haldi-wedding-bg.png",
+  "haldi-ceremony": "/templates/haldi-wedding-bg.png",
   hindu: "/templates/hindu-wedding-bg.png",
+  "hindu-wedding": "/templates/hindu-wedding-bg.png",
+  "hindu-mandap": "/templates/hindu-wedding-bg.png",
   islamic: "/templates/islamic-wedding-bg.png",
+  "islamic-wedding": "/templates/islamic-wedding-bg.png",
+  "islamic-nikah": "/templates/islamic-wedding-bg.png",
   church: "/templates/church-wedding-bg.png",
+  "church-wedding": "/templates/church-wedding-bg.png",
   peach: "/templates/peach-mandap-bg.png",
+  "peach-mandap": "/templates/peach-mandap-bg.png",
+};
+
+const isGenericStockPhoto = (url: string | null | undefined): boolean => {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes("couple-photo.jpg") ||
+    lower.includes("floral-hero.jpg") ||
+    lower.includes("unsplash.com")
+  );
 };
 
 interface Props {
@@ -26,8 +45,11 @@ interface Props {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const sParams = (await searchParams) || {};
+  const guestName = (sParams.to || sParams.guest) as string | undefined;
+
   const invitation = await prisma.userInvitation.findUnique({
     where: { slug },
   });
@@ -43,40 +65,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `${invitation.partnerOne} & ${invitation.partnerTwo}`
     : `${invitation.partnerOne}`;
 
-  const title = `${nameHeader}'s Celebration Invitation | Bervic`;
+  const title = guestName
+    ? `${guestName}, ${nameHeader} cordially invite you to their Wedding!`
+    : `${nameHeader}'s Celebration Invitation | Bervic`;
+
   const description =
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
   // Resolve template preview / card theme graphic image
-  const templateObj = templatesRegistry.find(
-    (t) => t.slug === invitation.templateSlug || t.layoutVariant === invitation.templateSlug
-  );
+  let shareImage = THEME_CARD_MAP[invitation.templateSlug] || "/templates/ceremony-wedding-bg.png";
 
-  const themeGraphicPath = THEME_CARD_MAP[invitation.templateSlug] || templateObj?.previewImage || "/templates/ceremony-wedding-bg.png";
-
-  // Use custom user photo if uploaded (and not the generic couple-photo placeholder)
-  const hasCustomUserImage =
-    invitation.coupleImage &&
-    !invitation.coupleImage.includes("couple-photo.jpg") &&
-    invitation.coupleImage.trim() !== "";
-
-  const hasCustomHeroImage =
-    invitation.heroImage &&
-    !invitation.heroImage.includes("couple-photo.jpg") &&
-    invitation.heroImage.trim() !== "";
-
-  let shareImage = themeGraphicPath;
-  if (hasCustomUserImage) {
-    shareImage = invitation.coupleImage!;
-  } else if (hasCustomHeroImage) {
-    shareImage = invitation.heroImage!;
+  // Override with custom user photo ONLY if user uploaded a custom image (not stock placeholder)
+  if (invitation.coupleImage && !isGenericStockPhoto(invitation.coupleImage)) {
+    shareImage = invitation.coupleImage;
+  } else if (invitation.heroImage && !isGenericStockPhoto(invitation.heroImage)) {
+    shareImage = invitation.heroImage;
   }
 
   // Absolute URL formatting for WhatsApp / OpenGraph metadata
   if (!shareImage.startsWith("http://") && !shareImage.startsWith("https://")) {
     shareImage = `${baseUrl}${shareImage.startsWith("/") ? "" : "/"}${shareImage}`;
   }
+
+  const canonicalUrl = `${baseUrl}/invitations/${slug}${guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
 
   return {
     title,
@@ -89,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       invitation.venuePlace || "wedding venue",
     ],
     alternates: {
-      canonical: `${baseUrl}/invitations/${slug}`,
+      canonical: canonicalUrl,
     },
     robots: {
       index: true,
@@ -103,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `${baseUrl}/invitations/${slug}`,
+      url: canonicalUrl,
       siteName: "Bervic Invitations",
       images: [
         {
