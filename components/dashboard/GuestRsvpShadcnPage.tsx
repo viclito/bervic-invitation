@@ -163,25 +163,176 @@ export default function GuestRsvpShadcnPage({
   // Card Image Theme (Stitch Designs)
   const [selectedCardTheme, setSelectedCardTheme] = useState<"peach" | "church" | "islamic" | "hindu" | "haldi" | "ceremony">("peach");
 
+  const generateAndUploadCard = async (theme: "peach" | "church" | "islamic" | "hindu" | "haldi" | "ceremony") => {
+    try {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src =
+        theme === "ceremony"
+          ? "/templates/ceremony-wedding-bg.png"
+          : theme === "haldi"
+          ? "/templates/haldi-wedding-bg.png"
+          : theme === "hindu"
+          ? "/templates/hindu-wedding-bg.png"
+          : theme === "islamic"
+          ? "/templates/islamic-wedding-bg.png"
+          : theme === "church"
+          ? "/templates/church-wedding-bg.png"
+          : "/templates/peach-mandap-bg.png";
+
+      img.onload = async () => {
+        canvas.width = img.naturalWidth || 1000;
+        canvas.height = img.naturalHeight || 800;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        if (theme === "ceremony") {
+          ctx.fillStyle = "#58440C";
+          ctx.font = "600 18px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("TOGETHER WITH THEIR FAMILIES", centerX, centerY - 50);
+
+          ctx.fillStyle = "#58440C";
+          ctx.font = "bold 56px serif";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, centerY + 10);
+
+          ctx.fillStyle = "#725C22";
+          ctx.font = "italic 20px serif";
+          ctx.fillText('"A journey of love and faith begins"', centerX, centerY + 55);
+
+          ctx.fillStyle = "#1A1C1C";
+          ctx.font = "bold 18px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, centerY + 95);
+        } else if (theme === "haldi") {
+          ctx.fillStyle = "#725C22";
+          ctx.font = "600 18px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("TOGETHER WITH THEIR FAMILIES", centerX, centerY - 50);
+
+          ctx.fillStyle = "#725C22";
+          ctx.font = "bold 52px serif";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, centerY + 10);
+
+          ctx.fillStyle = "#5F5E5E";
+          ctx.font = "italic 20px serif";
+          ctx.fillText("A journey of love and faith begins", centerX, centerY + 55);
+
+          ctx.fillStyle = "#1A1C1C";
+          ctx.font = "bold 18px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, centerY + 95);
+        } else if (theme === "hindu") {
+          ctx.fillStyle = "#E1C37F";
+          ctx.font = "bold 56px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, centerY - 40);
+
+          ctx.fillStyle = "#E1C37F";
+          ctx.font = "600 20px sans-serif";
+          ctx.fillText("ARE GETTING MARRIED", centerX, centerY + 10);
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "bold 20px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, centerY + 55);
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "italic 18px serif";
+          ctx.fillText('"A journey of love and faith begins"', centerX, centerY + 95);
+        } else if (theme === "islamic") {
+          ctx.fillStyle = "#725C22";
+          ctx.font = "600 18px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("TOGETHER WITH THEIR FAMILIES", centerX, centerY - 50);
+
+          ctx.fillStyle = "#725C22";
+          ctx.font = "bold 52px serif";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, centerY + 10);
+
+          ctx.fillStyle = "#5F5E5E";
+          ctx.font = "italic 20px serif";
+          ctx.fillText("A journey of love and faith begins", centerX, centerY + 55);
+
+          ctx.fillStyle = "#1A1C1C";
+          ctx.font = "bold 18px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, centerY + 95);
+        } else if (theme === "church") {
+          const pillWidth = Math.min(640, canvas.width * 0.75);
+          const pillHeight = Math.min(340, canvas.height * 0.55);
+          const pillX = centerX - pillWidth / 2;
+          const pillY = centerY - pillHeight / 2;
+
+          ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+          ctx.beginPath();
+          ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 160);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = "#725C22";
+          ctx.font = "bold 52px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, centerY - 25);
+
+          ctx.strokeStyle = "rgba(114, 92, 34, 0.4)";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(centerX - 40, centerY + 10);
+          ctx.lineTo(centerX + 40, centerY + 10);
+          ctx.stroke();
+
+          ctx.fillStyle = "#5F5E5E";
+          ctx.font = "600 18px sans-serif";
+          ctx.fillText("SAVE THE DATE", centerX, centerY + 45);
+
+          ctx.fillStyle = "#1A1C1C";
+          ctx.font = "bold 18px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, centerY + 85);
+        } else {
+          ctx.fillStyle = "#5C4033";
+          ctx.font = "600 18px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("TOGETHER WITH THEIR FAMILIES", centerX, 140);
+
+          ctx.fillStyle = "#4A2E1B";
+          ctx.font = "bold 56px serif";
+          ctx.fillText(`${partnerOne} & ${partnerTwo}`, centerX, 235);
+
+          ctx.fillStyle = "#5C4033";
+          ctx.font = "600 18px sans-serif";
+          ctx.fillText("ARE GETTING MARRIED", centerX, 280);
+
+          ctx.fillStyle = "#1A1C1C";
+          ctx.font = "bold 18px serif";
+          ctx.fillText(`📅 ${weddingDate}`, centerX, 360);
+        }
+
+        const dataUrl = canvas.toDataURL("image/png");
+
+        await fetch("/api/invitations/upload-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            invitationId,
+            cardImageBase64: dataUrl,
+            cardTheme: theme,
+          }),
+        });
+      };
+    } catch (err) {
+      console.error("Failed to generate and upload card preview:", err);
+    }
+  };
+
   const handleSelectCardTheme = async (theme: "peach" | "church" | "islamic" | "hindu" | "haldi" | "ceremony") => {
     setSelectedCardTheme(theme);
-    try {
-      await fetch(`/api/invitations/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invitationId,
-          templateSlug: invitationSlug,
-          partnerOne,
-          partnerTwo,
-          weddingDate,
-          venuePlace,
-          socialLinks: { cardTheme: theme },
-        }),
-      });
-    } catch (err) {
-      console.error("Failed to save card theme:", err);
-    }
+    await generateAndUploadCard(theme);
   };
   const [, setSentGuestIds] = useState<string[]>([]);
   const [showMetrics, setShowMetrics] = useState(false);

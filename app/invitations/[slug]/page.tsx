@@ -44,8 +44,29 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
-  const updatedTs = invitation.updatedAt ? new Date(invitation.updatedAt).getTime() : Date.now();
-  const shareImage = `${baseUrl}/api/og/invitation/${slug}?v=${updatedTs}`;
+  let cardImageUrlFromDb = "";
+  let cardThemeFromDb = "peach";
+  try {
+    const social = JSON.parse(invitation.socialLinksJson || "{}");
+    if (social.cardImageUrl) cardImageUrlFromDb = social.cardImageUrl;
+    if (social.cardTheme) cardThemeFromDb = social.cardTheme;
+  } catch {}
+
+  const themeFallbackMap: Record<string, string> = {
+    ceremony: "/templates/ceremony-wedding-bg.png",
+    haldi: "/templates/haldi-wedding-bg.png",
+    hindu: "/templates/hindu-wedding-bg.png",
+    islamic: "/templates/islamic-wedding-bg.png",
+    church: "/templates/church-wedding-bg.png",
+    peach: "/templates/peach-mandap-bg.png",
+  };
+
+  const fallbackPath = themeFallbackMap[cardThemeFromDb] || themeFallbackMap[invitation.templateSlug] || "/templates/peach-mandap-bg.png";
+  const rawImagePath = cardImageUrlFromDb || fallbackPath;
+
+  const shareImage = rawImagePath.startsWith("http://") || rawImagePath.startsWith("https://")
+    ? rawImagePath
+    : `${baseUrl}${rawImagePath.startsWith("/") ? "" : "/"}${rawImagePath}`;
 
   const canonicalUrl = `${baseUrl}/invitations/${slug}${guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
 
