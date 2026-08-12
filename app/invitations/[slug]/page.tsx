@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
+import { templatesRegistry } from "@/data/templatesRegistry";
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
@@ -10,6 +11,15 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
+
+const THEME_CARD_MAP: Record<string, string> = {
+  ceremony: "/templates/ceremony-wedding-bg.png",
+  haldi: "/templates/haldi-wedding-bg.png",
+  hindu: "/templates/hindu-wedding-bg.png",
+  islamic: "/templates/islamic-wedding-bg.png",
+  church: "/templates/church-wedding-bg.png",
+  peach: "/templates/peach-mandap-bg.png",
+};
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -37,7 +47,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
-  const shareImage = invitation.coupleImage || invitation.heroImage || `${baseUrl}/images/templates/couple-photo.jpg`;
+
+  // Resolve template preview / card theme graphic image
+  const templateObj = templatesRegistry.find(
+    (t) => t.slug === invitation.templateSlug || t.layoutVariant === invitation.templateSlug
+  );
+
+  const themeGraphicPath = THEME_CARD_MAP[invitation.templateSlug] || templateObj?.previewImage || "/templates/ceremony-wedding-bg.png";
+
+  // Use custom user photo if uploaded (and not the generic couple-photo placeholder)
+  const hasCustomUserImage =
+    invitation.coupleImage &&
+    !invitation.coupleImage.includes("couple-photo.jpg") &&
+    invitation.coupleImage.trim() !== "";
+
+  const hasCustomHeroImage =
+    invitation.heroImage &&
+    !invitation.heroImage.includes("couple-photo.jpg") &&
+    invitation.heroImage.trim() !== "";
+
+  let shareImage = themeGraphicPath;
+  if (hasCustomUserImage) {
+    shareImage = invitation.coupleImage!;
+  } else if (hasCustomHeroImage) {
+    shareImage = invitation.heroImage!;
+  }
+
+  // Absolute URL formatting for WhatsApp / OpenGraph metadata
+  if (!shareImage.startsWith("http://") && !shareImage.startsWith("https://")) {
+    shareImage = `${baseUrl}${shareImage.startsWith("/") ? "" : "/"}${shareImage}`;
+  }
 
   return {
     title,
