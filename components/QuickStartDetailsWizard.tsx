@@ -223,13 +223,13 @@ function getStepStatus(stepNum: number, draft: DraftData) {
     const primaryName =
       draft.venueName?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as any)?.mainTitle?.trim() || (draft.locations[0] as any)?.name?.trim() || (draft.locations[0] as any)?.venueLabel?.trim()
+        ? (draft.locations[0] as Record<string, string>)?.mainTitle?.trim() || (draft.locations[0] as Record<string, string>)?.name?.trim() || (draft.locations[0] as Record<string, string>)?.venueLabel?.trim()
         : "");
 
     const primaryAddress =
       draft.venueAddress?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as any)?.address?.trim() || (draft.locations[0] as any)?.subLabel?.trim()
+        ? (draft.locations[0] as Record<string, string>)?.address?.trim() || (draft.locations[0] as Record<string, string>)?.subLabel?.trim()
         : "");
 
     if (!primaryName) missing.push("Venue Name");
@@ -2465,34 +2465,66 @@ export default function QuickStartDetailsWizard({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <div className="bg-[#FAF8F5] rounded-xl p-4 border border-[#D9A441]/30 space-y-2 text-xs">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-                      <span className="text-slate-500">Event Type:</span>
-                      <span className="font-bold text-[#0F172A]">{draft.eventType}</span>
+                  <div className="bg-[#FAF8F5] rounded-2xl p-5 border border-[#D9A441]/30 space-y-3 text-xs shadow-2xs">
+                    {/* Event Type */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/60 pb-2">
+                      <span className="text-slate-500 font-semibold text-[11px]">Event Type:</span>
+                      <span className="font-bold text-[#0F172A] sm:text-right uppercase tracking-wider">{draft.eventType}</span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-                      <span className="text-slate-500">Names:</span>
-                      <span className="font-bold text-[#0F172A]">
-                        {draft.hostNameOne} {draft.hostNameTwo ? `& ${draft.hostNameTwo}` : ""} ({draft.coupleInitials || "N/A"})
+
+                    {/* Names */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/60 pb-2">
+                      <span className="text-slate-500 font-semibold text-[11px]">Names:</span>
+                      <span className="font-bold text-[#0F172A] sm:text-right">
+                        {draft.hostNameOne} {draft.hostNameTwo ? `& ${draft.hostNameTwo}` : ""} {draft.coupleInitials ? `(${draft.coupleInitials})` : ""}
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-                      <span className="text-slate-500">Date & Time:</span>
-                      <span className="font-bold text-[#0F172A]">
-                        {draft.eventDate || "Not set"} ({draft.eventTime || "TBD"})
+
+                    {/* Date & Time */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/60 pb-2">
+                      <span className="text-slate-500 font-semibold text-[11px] shrink-0">Date & Time:</span>
+                      <span className="font-bold text-[#0F172A] sm:text-right">
+                        {(() => {
+                          const dateStr = draft.eventDate || "";
+                          let formattedDate = dateStr;
+                          if (dateStr.includes("T")) {
+                            try {
+                              const d = new Date(dateStr);
+                              formattedDate = d.toLocaleDateString("en-US", {
+                                weekday: "short",
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              });
+                            } catch {
+                              formattedDate = dateStr.split("T")[0];
+                            }
+                          }
+                          return formattedDate || "Not set";
+                        })()} {draft.eventTime ? `(${draft.eventTime})` : ""}
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-                      <span className="text-slate-500">Venue:</span>
-                      <span className="font-bold text-[#0F172A]">{draft.venueName} - {draft.venueAddress}</span>
+
+                    {/* Venue */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-4 border-b border-slate-200/60 pb-2">
+                      <span className="text-slate-500 font-semibold text-[11px] shrink-0 pt-0.5">Venue:</span>
+                      <span className="font-semibold text-[#0F172A] sm:text-right leading-relaxed max-w-lg">
+                        {Array.from(new Set([draft.venueName, draft.venueAddress].filter(Boolean))).join(" — ") || "Not set"}
+                      </span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-                      <span className="text-slate-500">Schedule Functions:</span>
-                      <span className="font-bold text-[#0F172A]">{draft.functions.length} functions configured</span>
+
+                    {/* Schedule Functions */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/60 pb-2">
+                      <span className="text-slate-500 font-semibold text-[11px]">Schedule Functions:</span>
+                      <span className="font-bold text-[#0F172A] sm:text-right">
+                        {draft.functions?.length || 0} functions configured
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">RSVP Contact:</span>
-                      <span className="font-bold text-[#0F172A]">{draft.rsvpContact || "Not set"}</span>
+
+                    {/* RSVP Contact */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <span className="text-slate-500 font-semibold text-[11px]">RSVP Contact:</span>
+                      <span className="font-bold text-[#0F172A] sm:text-right">{draft.rsvpContact || "Not set"}</span>
                     </div>
                   </div>
 
