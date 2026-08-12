@@ -11,53 +11,6 @@ export const revalidate = 0;
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 
-const THEME_CARD_MAP: Record<string, string> = {
-  // Theme aliases & card variants
-  ceremony: "/templates/ceremony-wedding-bg.png",
-  "ceremony-wedding": "/templates/ceremony-wedding-bg.png",
-  "ceremony-overlay": "/templates/ceremony-wedding-bg.png",
-  haldi: "/templates/haldi-wedding-bg.png",
-  "haldi-wedding": "/templates/haldi-wedding-bg.png",
-  "haldi-ceremony": "/templates/haldi-wedding-bg.png",
-  hindu: "/templates/hindu-wedding-bg.png",
-  "hindu-wedding": "/templates/hindu-wedding-bg.png",
-  "hindu-mandap": "/templates/hindu-wedding-bg.png",
-  "royal-rajwada": "/templates/hindu-wedding-bg.png",
-  islamic: "/templates/islamic-wedding-bg.png",
-  "islamic-wedding": "/templates/islamic-wedding-bg.png",
-  "islamic-nikah": "/templates/islamic-wedding-bg.png",
-  church: "/templates/church-wedding-bg.png",
-  "church-wedding": "/templates/church-wedding-bg.png",
-  peach: "/templates/peach-mandap-bg.png",
-  "peach-mandap": "/templates/peach-mandap-bg.png",
-
-  // Registry Template Slugs
-  "classic-floral": "/templates/ceremony-wedding-bg.png",
-  "gold-royal": "/templates/peach-mandap-bg.png",
-  "champagne-luxe": "/templates/peach-mandap-bg.png",
-  "midnight-noir": "/templates/church-wedding-bg.png",
-  "modern-minimalist": "/templates/ceremony-wedding-bg.png",
-  "olive-ochre": "/templates/haldi-wedding-bg.png",
-  "seafoam-pearl": "/templates/ceremony-wedding-bg.png",
-  "art-deco-revival": "/templates/church-wedding-bg.png",
-  "scroll-scrubber": "/templates/ceremony-wedding-bg.png",
-};
-
-function resolveTemplatePreviewImage(templateSlug: string | null | undefined): string {
-  if (!templateSlug) return "/templates/ceremony-wedding-bg.png";
-  const slug = templateSlug.toLowerCase().trim();
-
-  if (THEME_CARD_MAP[slug]) return THEME_CARD_MAP[slug];
-
-  if (slug.includes("haldi") || slug.includes("olive")) return "/templates/haldi-wedding-bg.png";
-  if (slug.includes("hindu") || slug.includes("rajwada") || slug.includes("mandap")) return "/templates/hindu-wedding-bg.png";
-  if (slug.includes("islamic") || slug.includes("nikah")) return "/templates/islamic-wedding-bg.png";
-  if (slug.includes("church") || slug.includes("noir") || slug.includes("deco")) return "/templates/church-wedding-bg.png";
-  if (slug.includes("peach") || slug.includes("gold") || slug.includes("champagne")) return "/templates/peach-mandap-bg.png";
-
-  return "/templates/ceremony-wedding-bg.png";
-}
-
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -91,19 +44,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
-  let cardThemeFromDb = "";
-  try {
-    const social = JSON.parse(invitation.socialLinksJson || "{}");
-    if (social.cardTheme) cardThemeFromDb = social.cardTheme;
-  } catch {}
-
-  const activeThemeSlug = cardThemeFromDb || invitation.templateSlug;
-  const rawImagePath = resolveTemplatePreviewImage(activeThemeSlug);
-
-  // Ensure fully-qualified absolute URL
-  const shareImage = rawImagePath.startsWith("http://") || rawImagePath.startsWith("https://")
-    ? rawImagePath
-    : `${baseUrl}${rawImagePath.startsWith("/") ? "" : "/"}${rawImagePath}`;
+  const updatedTs = invitation.updatedAt ? new Date(invitation.updatedAt).getTime() : Date.now();
+  const shareImage = `${baseUrl}/api/og/invitation/${slug}?v=${updatedTs}`;
 
   const canonicalUrl = `${baseUrl}/invitations/${slug}${guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
 
