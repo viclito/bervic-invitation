@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Menu,
   X,
@@ -77,10 +78,13 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 shadow-md border border-[#D9A441]/40 group-hover:scale-105 transition-transform duration-300">
-            <img
-              src="/logo.png"
+            <Image
+              src="/images/logo.png"
               alt="Bervic Logo"
+              width={80}
+              height={80}
               className="w-full h-full object-contain"
+              priority
             />
           </div>
           <span
@@ -238,7 +242,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between border-b border-[#D9A441]/20 pb-4">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-0.5 shadow-sm border border-[#D9A441]/40">
-                  <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
+                  <Image src="/images/logo.png" alt="Bervic Logo" width={80} height={80} className="w-full h-full object-contain" />
                 </div>
                 <span className="text-xl font-bold text-[#221C17]">Bervic</span>
               </Link>

@@ -307,8 +307,7 @@ export default function PopularTemplatesShowcase() {
                           src={template.image}
                           alt={template.title}
                           fill
-                          sizes="340px"
-                          unoptimized
+                          sizes="(max-width: 640px) 90vw, 340px"
                           className="object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3 text-center">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkles, Heart, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {
@@ -13,7 +14,7 @@ export default function Footer() {
           <div className="md:col-span-1 space-y-4">
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 shadow-md border border-[#D9A441]/40 group-hover:scale-105 transition-transform duration-300">
-                <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
+                <Image src="/images/logo.png" alt="Bervic Logo" width={80} height={80} className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-bold text-[#F8F3EA] tracking-tight">Bervic</span>
             </Link>
