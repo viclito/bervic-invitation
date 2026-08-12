@@ -367,22 +367,7 @@ function DashboardSkeleton() {
                 <span>Admin Panel</span>
               </Link>
             )}
-            <Link
-              href="/dashboard/event-profile?new=true"
-              onClick={(e) => {
-                const isAdmin = session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
-                const totalAllowed = Math.max(0, (subData.allowedTemplatesCount || 0) + (subData.allowedCinematicCount || 0));
-                const maxAllowed = isAdmin ? 99 : Math.max(1, totalAllowed);
-                if (eventProfiles.length >= maxAllowed) {
-                  e.preventDefault();
-                  router.push("/checkout?plan=BASIC_599");
-                }
-              }}
-              className="px-3 py-2.5 rounded-xl bg-[#F6F0E6] text-[#7A1F2B] text-xs font-bold border border-[#D9A441]/30 flex items-center justify-center gap-1.5 hover:bg-[#EFE7D8] transition-all shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#7A1F2B]" />
-              <span>Add Profile</span>
-            </Link>
+
             <Link
               href="/templates"
               className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
@@ -405,7 +390,7 @@ function DashboardSkeleton() {
               }`}
             >
               <User className="w-4 h-4 text-[#D9A441]" />
-              <span>Event Profiles ({eventProfiles.length})</span>
+              <span>Event Profile</span>
             </button>
 
             <button
@@ -445,31 +430,14 @@ function DashboardSkeleton() {
           <div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
               <div>
-                <h3 className="text-xl font-serif font-bold text-[#221C17]">My Event Profiles</h3>
+                <h3 className="text-xl font-serif font-bold text-[#221C17]">My Event Profile</h3>
                 <p className="text-xs text-[#221C17]/70 leading-relaxed">
-                  Manage multiple celebration profiles. Click <strong>&quot;Set as Active&quot;</strong> to set which profile populates all template previews.
+                  This profile populates all template previews. Fill in your event details to see how your invitation looks across every template.
                 </p>
                 <p className="text-[11px] font-bold text-[#8C6227] mt-1">
-                  Profiles Allowed: {eventProfiles.length} of {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" ? "Unlimited" : Math.max(1, (subData.allowedTemplatesCount || 0) + (subData.allowedCinematicCount || 0))} (1 profile per template purchased)
+                  Your active profile is used for template preview only — each purchased invitation has its own dedicated form.
                 </p>
               </div>
-
-              <Link
-                href="/dashboard/event-profile?new=true"
-                onClick={(e) => {
-                  const isAdmin = session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
-                  const totalAllowed = Math.max(0, (subData.allowedTemplatesCount || 0) + (subData.allowedCinematicCount || 0));
-                  const maxAllowed = isAdmin ? 99 : Math.max(1, totalAllowed);
-                  if (eventProfiles.length >= maxAllowed) {
-                    e.preventDefault();
-                    router.push("/checkout?plan=BASIC_599");
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-[#7A1F2B] text-[#F8F3EA] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#9B2C3B] transition-all shrink-0 w-full sm:w-auto"
-              >
-                <Plus className="w-4 h-4 text-[#D9A441]" />
-                <span>Add New Event Profile</span>
-              </Link>
             </div>
 
             {eventProfiles.length === 0 ? (
@@ -624,26 +592,15 @@ function DashboardSkeleton() {
                       </div>
                     </div>
 
-                    {/* Bottom Action Button (Compact) */}
+                    {/* Bottom Action Button — Event Profile is never locked, it's only for template preview */}
                     <div>
-                      {prof.isLocked ? (
-                        <button
-                          disabled
-                          className="w-full py-2 px-3 rounded-lg bg-[#EAE7E1] text-[#78716A] font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 border border-[#D5CF00]/30 shadow-xs cursor-not-allowed opacity-80"
-                          title={prof.lockReason || "Editing is locked 2 hours pre-event."}
-                        >
-                          <Lock className="w-3.5 h-3.5 text-[#78716A]" />
-                          <span>Locked</span>
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/dashboard/event-profile?id=${prof.id}`}
-                          className="w-full py-2 px-3 rounded-lg bg-[#8C6227] hover:bg-[#75501F] text-white font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-[1.01]"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-[#FFE088]" />
-                          <span>Edit Details</span>
-                        </Link>
-                      )}
+                      <Link
+                        href={`/dashboard/event-profile?id=${prof.id}`}
+                        className="w-full py-2 px-3 rounded-lg bg-[#8C6227] hover:bg-[#75501F] text-white font-bold text-xs tracking-wide flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-[1.01]"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-[#FFE088]" />
+                        <span>Edit Details</span>
+                      </Link>
                     </div>
                   </div>
                 ))}
