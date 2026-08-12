@@ -12,6 +12,7 @@ export const revalidate = 0;
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 
 const THEME_CARD_MAP: Record<string, string> = {
+  // Theme aliases & card variants
   ceremony: "/templates/ceremony-wedding-bg.png",
   "ceremony-wedding": "/templates/ceremony-wedding-bg.png",
   "ceremony-overlay": "/templates/ceremony-wedding-bg.png",
@@ -21,6 +22,7 @@ const THEME_CARD_MAP: Record<string, string> = {
   hindu: "/templates/hindu-wedding-bg.png",
   "hindu-wedding": "/templates/hindu-wedding-bg.png",
   "hindu-mandap": "/templates/hindu-wedding-bg.png",
+  "royal-rajwada": "/templates/hindu-wedding-bg.png",
   islamic: "/templates/islamic-wedding-bg.png",
   "islamic-wedding": "/templates/islamic-wedding-bg.png",
   "islamic-nikah": "/templates/islamic-wedding-bg.png",
@@ -28,6 +30,17 @@ const THEME_CARD_MAP: Record<string, string> = {
   "church-wedding": "/templates/church-wedding-bg.png",
   peach: "/templates/peach-mandap-bg.png",
   "peach-mandap": "/templates/peach-mandap-bg.png",
+
+  // Registry Template Slugs
+  "classic-floral": "/templates/ceremony-wedding-bg.png",
+  "gold-royal": "/templates/peach-mandap-bg.png",
+  "champagne-luxe": "/templates/peach-mandap-bg.png",
+  "midnight-noir": "/templates/church-wedding-bg.png",
+  "modern-minimalist": "/templates/ceremony-wedding-bg.png",
+  "olive-ochre": "/templates/haldi-wedding-bg.png",
+  "seafoam-pearl": "/templates/ceremony-wedding-bg.png",
+  "art-deco-revival": "/templates/church-wedding-bg.png",
+  "scroll-scrubber": "/templates/ceremony-wedding-bg.png",
 };
 
 const isGenericStockPhoto = (url: string | null | undefined): boolean => {
@@ -73,20 +86,20 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     invitation.inviteLine ||
     `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
 
-  // Resolve template preview / card theme graphic image
-  let shareImage = THEME_CARD_MAP[invitation.templateSlug] || "/templates/ceremony-wedding-bg.png";
+  // Always resolve to a reliable local hosted PNG image (never external Unsplash URLs or couple-photo stock photos)
+  let rawImagePath = THEME_CARD_MAP[invitation.templateSlug] || "/templates/ceremony-wedding-bg.png";
 
-  // Override with custom user photo ONLY if user uploaded a custom image (not stock placeholder)
+  // Override with custom user photo ONLY if user uploaded a custom Cloudinary / HTTP image (not stock placeholder)
   if (invitation.coupleImage && !isGenericStockPhoto(invitation.coupleImage)) {
-    shareImage = invitation.coupleImage;
+    rawImagePath = invitation.coupleImage;
   } else if (invitation.heroImage && !isGenericStockPhoto(invitation.heroImage)) {
-    shareImage = invitation.heroImage;
+    rawImagePath = invitation.heroImage;
   }
 
-  // Absolute URL formatting for WhatsApp / OpenGraph metadata
-  if (!shareImage.startsWith("http://") && !shareImage.startsWith("https://")) {
-    shareImage = `${baseUrl}${shareImage.startsWith("/") ? "" : "/"}${shareImage}`;
-  }
+  // Ensure fully-qualified absolute URL
+  const shareImage = rawImagePath.startsWith("http://") || rawImagePath.startsWith("https://")
+    ? rawImagePath
+    : `${baseUrl}${rawImagePath.startsWith("/") ? "" : "/"}${rawImagePath}`;
 
   const canonicalUrl = `${baseUrl}/invitations/${slug}${guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
 
@@ -120,13 +133,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       images: [
         {
           url: shareImage,
+          secureUrl: shareImage,
           width: 1200,
           height: 630,
+          type: shareImage.endsWith(".png") ? "image/png" : "image/jpeg",
           alt: `${nameHeader} Invitation`,
         },
       ],
       locale: "en_IN",
-      type: "article",
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",
