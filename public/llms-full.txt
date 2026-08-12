@@ -1,0 +1,69 @@
+# Bervic Invitations — Comprehensive Knowledge Base & Technical Specification
+
+> Domain: https://www.bervic.in  
+> Platform Type: Web Application / SaaS  
+> Specialty: Indian Digital Invitation Card & Web Page Generator, Instagram Announcement Studio, WhatsApp Event Management  
+
+---
+
+## About Bervic Invitations
+
+Bervic (https://www.bervic.in) is an all-in-one digital invitation suite built specifically for Indian weddings, birthdays, religious ceremonies (Griha Pravesh, Annaprashan, Puja), and milestone anniversaries. It replaces traditional paper invites and static PDFs with elegant, high-performance web invitations that look breathtaking on desktop and mobile browsers.
+
+---
+
+## Detailed Feature Matrix
+
+### 1. Web Invitation Builder (`/templates`)
+- **Responsive Layouts:** Mobile-first, luxury designs crafted with custom typography (Cormorant Garamond, Poppins, Playfair Display).
+- **Interactive Multi-Section Pages:**
+  - Hero Header with Couple / Host Photo & Countdowns
+  - Our Love Story / Host Journey Timeline & Video Embeds
+  - Event Schedule (Haldi, Mehendi, Sangeet, Wedding Reception, Birthday Bash)
+  - Interactive Google Maps Directions & Venue Details
+  - Photo Gallery Grid
+  - Background Audio Music Player
+  - Instant RSVP Guest Form
+
+### 2. Instagram & WhatsApp Announcement Card Generator (`/cards`)
+- Generates square 1080x1080px high-resolution graphics for Instagram Posts, Stories, and WhatsApp Statuses.
+- 31+ design presets including Pink Floral, Boho Earthy, Classic Mono, Verdant Gold, Art Deco, Whimsical Garden, and Minimalist.
+- One-click export to PNG or high-quality PDF.
+
+### 3. Guest List & RSVP Management (`/dashboard`)
+- Generate unique guest invite URLs with personalized greeting tags (`?to=GuestName`).
+- Track attendance status (Attending, Declined, Pending), plus-ones, and dietary restrictions.
+- Automated cleanup of past invitations after event completion.
+
+---
+
+## Template Catalog Highlights (31 Presets)
+
+1. **Botanical Luxe (`botanical-luxe`):** Deep emerald green with metallic gold leaf motifs & serif typography.
+2. **Royal Gold (`royal-gold`):** Traditional Indian wedding aesthetic in maroon and antique gold.
+3. **Classic Floral (`classic-floral`):** Soft pastel pink & ivory floral frames for romantic celebrations.
+4. **Boho Chic (`boho-chic`):** Terracotta, cream, and dry palm aesthetic for contemporary couples.
+5. **Modern Minimal (`modern-minimal`):** High-fashion monochrome typography layout.
+6. **Cinematic Motion (`cinematic-royal`):** Full-screen video background support & audio track player.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Q: How do guests receive the invitation?
+A: Users copy their unique Bervic invitation link (`https://www.bervic.in/invitations/your-custom-slug`) and share it directly on WhatsApp, iMessage, Instagram, or Email.
+
+### Q: Can guests RSVP directly on the web page?
+A: Yes! Guests can select their attendance status, add plus-ones, and submit notes, which instantly reflect in the host's private dashboard.
+
+### Q: Are Bervic invitations mobile friendly?
+A: Bervic invitations are 100% responsive and optimized for instant loading on iOS, Android, tablets, and desktop browsers.
+
+---
+
+## Contact & Business Details
+
+- Platform Name: Bervic Invitations
+- Domain: https://www.bervic.in
+- Support Email: support@bervic.in
+- Target Regions: India, NRI Community worldwide, Global Event Organizers

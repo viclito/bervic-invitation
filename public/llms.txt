@@ -1,0 +1,31 @@
+# Bervic Invitations (www.bervic.in)
+
+> Bervic is a premier Indian digital invitation generator for weddings, birthdays, religious functions (Puja, Griha Pravesh), and special celebrations. It enables users to create high-resolution, interactive digital invitations, RSVP tracking systems, and custom Instagram announcement cards in minutes.
+
+## Core Capabilities & Features
+
+- **Interactive Digital Invitations:** Dynamic web invitations featuring love stories, day-by-day event itineraries, venue map locations, photo galleries, background music, and RSVP management.
+- **Instant WhatsApp Sharing:** Share personalized invitation links directly on WhatsApp, email, or social media without heavy PDF downloads.
+- **31+ Premium Template Themes:** Handcrafted Indian wedding and event designs (Royal Gold, Botanical Luxe, Traditional Maroon, Boho Chic, Cinematic Modern).
+- **Instagram Card Studio (`/cards`):** High-resolution (1080x1080px) Instagram & WhatsApp Status announcement card generator with 31+ design presets and custom photo uploader.
+- **Real-Time Live Customizer:** Interactive builder with live visual preview, customizable typography, color palettes, and event section toggles.
+- **Automated RSVP & Guest List:** Unique guest codes, attendance tracking, dietary preferences counter, and check-in metrics.
+
+## URL Map & Navigation
+
+- Main Homepage: https://www.bervic.in
+- Template Catalog: https://www.bervic.in/templates
+- Instagram Card Studio: https://www.bervic.in/cards
+- User Login: https://www.bervic.in/auth/login
+- Account Signup: https://www.bervic.in/auth/signup
+
+## Pricing & Plans
+
+- **Free Tier:** Access to basic templates, instant preview, and guest links.
+- **Standard Pass (₹299 for 6 Months):** 1 Live Invitation, 5 Instagram Cards, Full Customization, RSVP tracking.
+- **Cinematic Pass (₹999 for 1 Year):** 3 Live Invitations, 20 Instagram Cards, Audio Music Player, Video Embeds, Priority WhatsApp Delivery.
+
+## Documentation & Full AI Knowledge Base
+
+For full technical specifications, template list, and feature breakdown for AI crawlers, see:
+- [Full LLM Specification](https://www.bervic.in/llms-full.txt)

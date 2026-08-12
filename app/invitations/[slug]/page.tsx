@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
@@ -9,6 +8,8 @@ import { Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!invitation) {
     return {
       title: "Invitation Not Found | Bervic",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -31,13 +33,55 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `${invitation.partnerOne} & ${invitation.partnerTwo}`
     : `${invitation.partnerOne}`;
 
+  const title = `${nameHeader}'s Celebration Invitation | Bervic`;
+  const description =
+    invitation.inviteLine ||
+    `Together with their families, ${nameHeader} invite you to celebrate on ${invitation.weddingTime} at ${invitation.venuePlace}.`;
+  const shareImage = invitation.coupleImage || invitation.heroImage || `${baseUrl}/images/templates/couple-photo.jpg`;
+
   return {
-    title: `${nameHeader}'s Celebration Invitation | Bervic`,
-    description: invitation.inviteLine || `Join us in celebrating with ${nameHeader} on ${invitation.weddingTime}.`,
+    title,
+    description,
+    keywords: [
+      `${nameHeader} invitation`,
+      "wedding invitation link",
+      "digital event invitation",
+      "Bervic invitation",
+      invitation.venuePlace || "wedding venue",
+    ],
+    alternates: {
+      canonical: `${baseUrl}/invitations/${slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      },
+    },
     openGraph: {
-      title: `${nameHeader}'s Celebration Invitation`,
-      description: `Celebrate with ${nameHeader} on their special day.`,
-      images: [{ url: invitation.coupleImage || "/images/templates/couple-photo.jpg" }],
+      title,
+      description,
+      url: `${baseUrl}/invitations/${slug}`,
+      siteName: "Bervic Invitations",
+      images: [
+        {
+          url: shareImage,
+          width: 1200,
+          height: 630,
+          alt: `${nameHeader} Invitation`,
+        },
+      ],
+      locale: "en_IN",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [shareImage],
     },
   };
 }
@@ -45,8 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicInvitationPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sParams = (await searchParams) || {};
-  const guestName = (sParams.to || sParams.guest || sParams.name) as string | undefined;
-  const guestPhone = (sParams.phone || sParams.tel || sParams.mobile) as string | undefined;
+  const guestName = (sParams.to || sParams.guest) as string | undefined;
 
   // Run automatic cleanup for expired invitations
   await cleanupExpiredInvitations();
@@ -73,8 +116,6 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
   }
 
   const props = {
-    invitationId: invitation.id,
-    slug: invitation.slug,
     templateSlug: invitation.templateSlug,
     coupleInitials: invitation.coupleInitials,
     partnerOne: invitation.partnerOne,
@@ -83,9 +124,8 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     inviteLine: invitation.inviteLine,
     weddingDate: invitation.weddingDate,
     weddingTime: invitation.weddingTime,
-    heroImage: invitation.heroImage || "/images/templates/floral-hero.jpg",
-    coupleImage: invitation.coupleImage || "/images/templates/couple-photo.jpg",
-    partnerTwoImage: invitation.partnerTwoImage || undefined,
+    heroImage: invitation.heroImage,
+    coupleImage: invitation.coupleImage,
     venuePlace: invitation.venuePlace,
     events: invitation.eventsJson ? JSON.parse(invitation.eventsJson) : [],
     timelineDay: invitation.timelineDayJson ? JSON.parse(invitation.timelineDayJson) : [],
@@ -97,10 +137,38 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     contactAddress: invitation.contactAddress,
     socialLinks: invitation.socialLinksJson ? JSON.parse(invitation.socialLinksJson) : {},
     guestName,
-    guestPhone,
   };
 
-  return <DynamicTemplateCard {...props} />;
+  const nameHeader = invitation.partnerTwo
+    ? `${invitation.partnerOne} & ${invitation.partnerTwo}`
+    : `${invitation.partnerOne}`;
+
+  // Structured Data for Google Event Search & AI Chat Summarizer
+  const jsonLdEvent = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: `${nameHeader}'s Celebration`,
+    description: invitation.inviteLine,
+    startDate: invitation.weddingDate || new Date().toISOString(),
+    location: {
+      "@type": "Place",
+      name: invitation.venuePlace || "Event Venue",
+      address: invitation.contactAddress || invitation.venuePlace || "India",
+    },
+    image: [invitation.coupleImage || invitation.heroImage],
+    organizer: {
+      "@type": "Person",
+      name: nameHeader,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdEvent) }}
+      />
+      <DynamicTemplateCard {...props} />
+    </>
+  );
 }
-
-
