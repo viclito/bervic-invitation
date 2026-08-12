@@ -1,15 +1,17 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 
 const THEME_BG_MAP: Record<string, string> = {
-  peach: "/templates/peach-mandap-bg.png",
-  church: "/templates/church-wedding-bg.png",
-  islamic: "/templates/islamic-wedding-bg.png",
-  hindu: "/templates/hindu-wedding-bg.png",
-  haldi: "/templates/haldi-wedding-bg.png",
-  ceremony: "/templates/ceremony-wedding-bg.png",
+  peach: "templates/peach-mandap-bg.png",
+  church: "templates/church-wedding-bg.png",
+  islamic: "templates/islamic-wedding-bg.png",
+  hindu: "templates/hindu-wedding-bg.png",
+  haldi: "templates/haldi-wedding-bg.png",
+  ceremony: "templates/ceremony-wedding-bg.png",
 };
 
 export async function GET(
@@ -47,9 +49,17 @@ export async function GET(
       if (social.cardTheme) cardTheme = social.cardTheme;
     } catch {}
 
-    const bgPath = THEME_BG_MAP[cardTheme] || "/templates/peach-mandap-bg.png";
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
-    const bgUrl = `${baseUrl}${bgPath}`;
+    const relPath = THEME_BG_MAP[cardTheme] || "templates/peach-mandap-bg.png";
+    
+    // Read local PNG directly from disk into Base64 Data URI
+    let bgDataUrl = "";
+    try {
+      const filePath = path.join(process.cwd(), "public", relPath);
+      const fileBuffer = fs.readFileSync(filePath);
+      bgDataUrl = `data:image/png;base64,${fileBuffer.toString("base64")}`;
+    } catch (e) {
+      console.error("Failed to read theme image from disk:", e);
+    }
 
     // Theme specific color styling
     let nameColor = "#58440C";
@@ -59,11 +69,11 @@ export async function GET(
     if (cardTheme === "hindu") {
       nameColor = "#E1C37F";
       subColor = "#F7E7C4";
-      dateBg = "rgba(0, 0, 0, 0.7)";
+      dateBg = "rgba(0, 0, 0, 0.75)";
     } else if (cardTheme === "church") {
       nameColor = "#725C22";
       subColor = "#5F5E5E";
-      dateBg = "rgba(255, 255, 255, 0.8)";
+      dateBg = "rgba(255, 255, 255, 0.85)";
     } else if (cardTheme === "peach") {
       nameColor = "#4A2E1B";
       subColor = "#5C4033";
@@ -74,20 +84,31 @@ export async function GET(
       (
         <div
           style={{
-            height: "100%",
-            width: "100%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            backgroundImage: `url(${bgUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            padding: "40px",
-            textAlign: "center",
             position: "relative",
+            width: "1200px",
+            height: "630px",
           }}
         >
+          {bgDataUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={bgDataUrl}
+              alt="Background"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "1200px",
+                height: "630px",
+                objectFit: "cover",
+              }}
+            />
+          ) : null}
+
           <div
             style={{
               display: "flex",
@@ -97,16 +118,19 @@ export async function GET(
               backgroundColor: cardTheme === "church" ? "rgba(255, 255, 255, 0.45)" : "transparent",
               borderRadius: cardTheme === "church" ? "120px" : "0px",
               padding: cardTheme === "church" ? "30px 60px" : "0px",
+              position: "relative",
+              zIndex: 10,
+              textAlign: "center",
             }}
           >
             <p
               style={{
-                fontSize: "18px",
+                fontSize: "20px",
                 fontWeight: 600,
                 letterSpacing: "4px",
                 color: subColor,
                 textTransform: "uppercase",
-                margin: "0 0 10px 0",
+                margin: "0 0 12px 0",
               }}
             >
               TOGETHER WITH THEIR FAMILIES
@@ -114,11 +138,11 @@ export async function GET(
 
             <h1
               style={{
-                fontSize: "64px",
+                fontSize: "68px",
                 fontWeight: 800,
                 fontFamily: "serif",
                 color: nameColor,
-                margin: "0 0 10px 0",
+                margin: "0 0 12px 0",
                 lineHeight: 1.1,
               }}
             >
@@ -127,10 +151,10 @@ export async function GET(
 
             <p
               style={{
-                fontSize: "22px",
+                fontSize: "24px",
                 fontStyle: "italic",
                 color: subColor,
-                margin: "0 0 20px 0",
+                margin: "0 0 24px 0",
               }}
             >
               invite you to celebrate their wedding
@@ -142,10 +166,10 @@ export async function GET(
                 alignItems: "center",
                 gap: "10px",
                 backgroundColor: dateBg,
-                padding: "12px 28px",
+                padding: "14px 32px",
                 borderRadius: "30px",
                 border: "1px solid rgba(114, 92, 34, 0.3)",
-                fontSize: "20px",
+                fontSize: "22px",
                 fontWeight: 700,
                 color: nameColor,
               }}
