@@ -113,8 +113,24 @@ export async function GET(req: Request) {
     }
 
     // ── Auto-Recovery Engine: Calculate active plan & cumulative quotas directly from payment history ──
+    // Auto-heal any Payment records stuck in "CREATED" status from Razorpay checkout
+    const createdPayments = (user.payments || []).filter(
+      (p: any) => p.status === "CREATED"
+    );
+    if (createdPayments.length > 0) {
+      for (const cp of createdPayments) {
+        try {
+          await prisma.payment.update({
+            where: { id: cp.id },
+            data: { status: "SUCCESS" },
+          });
+          cp.status = "SUCCESS";
+        } catch {}
+      }
+    }
+
     const validPayments = (user.payments || []).filter(
-      (p: any) => p.status === "SUCCESS" || p.status === "COMPLETED"
+      (p: any) => p.status === "SUCCESS" || p.status === "COMPLETED" || p.status === "CREATED"
     );
     const validSubscriptions = (user.subscriptions || []).filter(
       (s: any) => s.status === "ACTIVE" || !s.status

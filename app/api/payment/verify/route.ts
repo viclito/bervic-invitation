@@ -18,10 +18,10 @@ export async function POST(req: Request) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = "PRO_1799" } = await req.json();
 
-    // Idempotency Check: if this order has already been verified, return success without creating duplicate subscriptions
+    // Idempotency Check: if this order has already been verified & succeeded, return success without creating duplicate subscriptions
     if (razorpay_order_id) {
       const existingPayment = await prisma.payment.findFirst({
-        where: { razorpayOrderId: razorpay_order_id },
+        where: { razorpayOrderId: razorpay_order_id, status: "SUCCESS" },
       });
       const existingSub = await prisma.subscription.findFirst({
         where: { razorpayOrderId: razorpay_order_id },
