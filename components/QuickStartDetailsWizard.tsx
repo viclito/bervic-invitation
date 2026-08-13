@@ -1402,7 +1402,7 @@ export default function QuickStartDetailsWizard({
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
                       { type: "WEDDING", label: "Wedding", icon: Heart, disabled: false },
-                      { type: "BIRTHDAY", label: "Birthday", icon: Cake, disabled: false },
+                      { type: "BIRTHDAY", label: "Birthday", icon: Cake, disabled: true },
                       { type: "RELIGIOUS", label: "Religious / Home", icon: Home, disabled: true },
                       { type: "ANNIVERSARY", label: "Anniversary", icon: Sparkles, disabled: true },
                       { type: "PARTY", label: "Party / Gala", icon: PartyPopper, disabled: true },
