@@ -112,99 +112,152 @@ export async function GET(req: Request) {
       });
     }
 
-    // Auto-calculate cinematic pass count from actual paid payments or subscriptions if DB column was missed
-    const paidCinematicPayments = (user.payments || []).filter(
-      (p: any) => p.plan === "CINEMATIC_2000" || p.amount >= 2000
-    ).length;
-    const paidCinematicSubs = (user.subscriptions || []).filter(
-      (s: any) => s.plan === "CINEMATIC_2000" || s.amount >= 2000
-    ).length;
-    const countFromHistory = Math.max(paidCinematicPayments, paidCinematicSubs);
+    // ── Auto-Recovery Engine: Calculate active plan & cumulative quotas directly from payment history ──
+    const validPayments = (user.payments || []).filter(
+      (p: any) => p.status === "SUCCESS" || p.status === "COMPLETED"
+    );
+    const validSubscriptions = (user.subscriptions || []).filter(
+      (s: any) => s.status === "ACTIVE" || !s.status
+    );
 
-    let rawDbCinematicCount = (user as any).allowedCinematicCount || 0;
-    if (rawDbCinematicCount === 0 && countFromHistory > 0) {
-      rawDbCinematicCount = countFromHistory;
-      // Auto-heal the DB record
-      try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { allowedCinematicCount: countFromHistory },
-        });
-      } catch {
-        await prisma.$executeRawUnsafe(
-          `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
-          countFromHistory,
-          user.id
-        );
+    let computedPlan = user.plan && user.plan !== "NONE" ? user.plan : "NONE";
+    let computedExpiresAt: Date | null = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
+    let computedTemplatesCount = user.allowedTemplatesCount || 0;
+    let computedCinematicCount = (user as any).allowedCinematicCount || 0;
+    let computedCardsCount = user.allowedCardsCount || 0;
+
+    if (validPayments.length > 0 || validSubscriptions.length > 0) {
+      let totalTemplatesFromHistory = 0;
+      let totalCinematicFromHistory = 0;
+      let totalCardsFromHistory = 0;
+      let highestPlanFromHistory = "NONE";
+      let maxExpiryFromHistory: Date | null = null;
+
+      validPayments.forEach((p: any) => {
+        const pPlan = p.plan || (p.amount >= 2000 ? "CINEMATIC_2000" : p.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+        const created = p.createdAt ? new Date(p.createdAt) : new Date();
+        const months = pPlan === "BASIC_599" ? 6 : 12;
+        const exp = new Date(created);
+        exp.setMonth(exp.getMonth() + months);
+
+        if (!maxExpiryFromHistory || exp > maxExpiryFromHistory) {
+          maxExpiryFromHistory = exp;
+        }
+
+        if (pPlan === "BASIC_599") {
+          totalTemplatesFromHistory += 1;
+          totalCardsFromHistory += 2;
+          if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "BASIC_599";
+        } else if (pPlan === "PRO_1799") {
+          totalTemplatesFromHistory += 4;
+          totalCardsFromHistory += 6;
+          if (highestPlanFromHistory !== "CINEMATIC_2000") highestPlanFromHistory = "PRO_1799";
+        } else if (pPlan === "CINEMATIC_2000") {
+          totalCinematicFromHistory += 1;
+          totalCardsFromHistory += 10;
+          if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "CINEMATIC_2000";
+        }
+      });
+
+      const paymentOrderIds = new Set(validPayments.map((p: any) => p.razorpayOrderId).filter(Boolean));
+      validSubscriptions.forEach((s: any) => {
+        if (s.razorpayOrderId && paymentOrderIds.has(s.razorpayOrderId)) return;
+
+        const sPlan = s.plan || (s.amount >= 2000 ? "CINEMATIC_2000" : s.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+        const exp = s.expiresAt ? new Date(s.expiresAt) : new Date(Date.now() + 180 * 86400000);
+
+        if (!maxExpiryFromHistory || exp > maxExpiryFromHistory) {
+          maxExpiryFromHistory = exp;
+        }
+
+        if (sPlan === "BASIC_599") {
+          totalTemplatesFromHistory += 1;
+          totalCardsFromHistory += 2;
+          if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "BASIC_599";
+        } else if (sPlan === "PRO_1799") {
+          totalTemplatesFromHistory += 4;
+          totalCardsFromHistory += 6;
+          if (highestPlanFromHistory !== "CINEMATIC_2000") highestPlanFromHistory = "PRO_1799";
+        } else if (sPlan === "CINEMATIC_2000") {
+          totalCinematicFromHistory += 1;
+          totalCardsFromHistory += 10;
+          if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "CINEMATIC_2000";
+        }
+      });
+
+      if (computedPlan === "NONE" && highestPlanFromHistory !== "NONE") {
+        computedPlan = highestPlanFromHistory;
+      }
+
+      const existingExpiryTime = user.planExpiresAt ? new Date(user.planExpiresAt).getTime() : 0;
+      const historyExpiryTime = maxExpiryFromHistory ? (maxExpiryFromHistory as Date).getTime() : 0;
+
+      if (historyExpiryTime > existingExpiryTime) {
+        computedExpiresAt = maxExpiryFromHistory;
+      } else if (user.planExpiresAt) {
+        computedExpiresAt = new Date(user.planExpiresAt);
+      }
+
+      computedTemplatesCount = Math.max(computedTemplatesCount, totalTemplatesFromHistory);
+      computedCinematicCount = Math.max(computedCinematicCount, totalCinematicFromHistory);
+      computedCardsCount = Math.max(computedCardsCount, totalCardsFromHistory);
+
+      // Auto-heal the User DB record if stale or unassigned
+      if (
+        user.plan !== computedPlan ||
+        user.allowedTemplatesCount !== computedTemplatesCount ||
+        (user as any).allowedCinematicCount !== computedCinematicCount ||
+        user.allowedCardsCount !== computedCardsCount
+      ) {
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              plan: computedPlan,
+              planExpiresAt: computedExpiresAt,
+              allowedTemplatesCount: computedTemplatesCount,
+              allowedCinematicCount: computedCinematicCount,
+              allowedCardsCount: computedCardsCount,
+            },
+          });
+        } catch {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              plan: computedPlan,
+              planExpiresAt: computedExpiresAt,
+              allowedTemplatesCount: computedTemplatesCount,
+              allowedCardsCount: computedCardsCount,
+            },
+          });
+          await prisma.$executeRawUnsafe(
+            `UPDATE "User" SET "allowedCinematicCount" = $1 WHERE "id" = $2;`,
+            computedCinematicCount,
+            user.id
+          );
+        }
       }
     }
-    const dbCinematicCount = rawDbCinematicCount;
-
-    // Check if user has real paid payments or active subscriptions
-    const hasSuccessfulPayment = (user.payments || []).length > 0;
-    const hasActiveSubscription = (user.subscriptions || []).some(
-      (sub: any) => new Date(sub.expiresAt) > now
-    );
-    const hasAdminGrantedQuotas = (user.allowedTemplatesCount || 0) > 0 || dbCinematicCount > 0 || (user.allowedCardsCount || 0) > 0;
 
     const isSubscribed =
-      ((user.plan && user.plan !== "NONE" && user.planExpiresAt && new Date(user.planExpiresAt) > now) || dbCinematicCount > 0) &&
-      (hasSuccessfulPayment || hasActiveSubscription || hasAdminGrantedQuotas);
+      (computedPlan !== "NONE" && computedExpiresAt && new Date(computedExpiresAt) > now) ||
+      validPayments.length > 0 ||
+      validSubscriptions.length > 0 ||
+      computedTemplatesCount > 0 ||
+      computedCinematicCount > 0;
 
-    // If user has not paid and has no subscription, clean up mock free quotas
-    if (!isSubscribed && user.plan !== "NONE") {
-      try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            plan: "NONE",
-            planExpiresAt: null,
-            allowedTemplatesCount: 0,
-            allowedCardsCount: 0,
-          },
-        });
-        await prisma.$executeRawUnsafe(
-          `UPDATE "User" SET "allowedCinematicCount" = 0 WHERE "id" = $1;`,
-          user.id
-        );
-      } catch {
-        // Ignore cleanup warning
-      }
-      user.plan = "NONE";
-      user.planExpiresAt = null;
-    }
-
-    let allowedTemplates = 0;
-    let allowedCinematic = 0;
-    let allowedCards = 0;
-
-    if (isSubscribed) {
-      const defaultTemplates = user.plan === "PRO_1799" ? 4 : user.plan === "BASIC_599" ? 1 : 0;
-      const defaultCinematic = dbCinematicCount > 0 ? dbCinematicCount : (user.plan === "CINEMATIC_2000" ? 1 : 0);
-      const defaultCards = (dbCinematicCount > 0 ? dbCinematicCount * 10 : 0) + (user.plan === "PRO_1799" ? 6 : user.plan === "BASIC_599" ? 2 : 0);
-
-      allowedTemplates = user.allowedTemplatesCount > 0 ? user.allowedTemplatesCount : defaultTemplates;
-      allowedCinematic = dbCinematicCount > 0 ? dbCinematicCount : defaultCinematic;
-      allowedCards = user.allowedCardsCount > 0 ? user.allowedCardsCount : defaultCards;
-
-      // Fix legacy mock 99 values for non-admin users
-      if (allowedTemplates === 99) allowedTemplates = defaultTemplates;
-      if (allowedCinematic === 99) allowedCinematic = defaultCinematic;
-      if (allowedCards === 99) allowedCards = defaultCards;
-    }
-
-    const remainingTemplateSlots = Math.max(0, allowedTemplates - usedTemplatesCount);
-    const remainingCinematicSlots = Math.max(0, allowedCinematic - usedCinematicCount);
-    const remainingCardSlots = Math.max(0, allowedCards - usedCardsCount);
+    const remainingTemplateSlots = Math.max(0, computedTemplatesCount - usedTemplatesCount);
+    const remainingCinematicSlots = Math.max(0, computedCinematicCount - usedCinematicCount);
+    const remainingCardSlots = Math.max(0, computedCardsCount - usedCardsCount);
 
     return NextResponse.json({
-      plan: isSubscribed ? user.plan : "NONE",
-      hasCinematicPass: dbCinematicCount > 0,
-      planExpiresAt: isSubscribed ? user.planExpiresAt : null,
+      plan: isSubscribed ? computedPlan : "NONE",
+      hasCinematicPass: computedCinematicCount > 0,
+      planExpiresAt: isSubscribed ? computedExpiresAt : null,
       isActive: isSubscribed,
-      allowedTemplatesCount: allowedTemplates,
-      allowedCinematicCount: allowedCinematic,
-      allowedCardsCount: allowedCards,
+      allowedTemplatesCount: computedTemplatesCount,
+      allowedCinematicCount: computedCinematicCount,
+      allowedCardsCount: computedCardsCount,
       usedTemplatesCount,
       usedCinematicCount,
       usedCardsCount,

@@ -379,21 +379,55 @@ export async function GET(req: Request) {
         }
       }
 
-      // Allowed quotas
+      // Allowed quotas calculation from DB columns & transaction history
       let allowedTemplates = user.allowedTemplatesCount || 0;
       let allowedCinematic = user.allowedCinematicCount || 0;
       let allowedCards = user.allowedCardsCount || 0;
+      let userPlan = user.plan || "NONE";
 
       if (!isUserAdmin) {
-        if (user.plan === "BASIC_599") {
-          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 1;
-          allowedCards = allowedCards > 0 ? allowedCards : 2;
-        } else if (user.plan === "PRO_1799") {
-          allowedTemplates = allowedTemplates > 0 ? allowedTemplates : 4;
-          allowedCards = allowedCards > 0 ? allowedCards : 6;
-        } else if (user.plan === "CINEMATIC_2000") {
-          allowedCinematic = allowedCinematic > 0 ? allowedCinematic : 1;
-          allowedCards = allowedCards > 0 ? allowedCards : 10;
+        const uPayments = (payments || []).filter((p: any) => p.userId === user.id && (p.status === "SUCCESS" || p.status === "COMPLETED"));
+        const uSubs = (subscriptions || []).filter((sub: any) => sub.userId === user.id);
+
+        let histTemplates = 0;
+        let histCinematic = 0;
+        let histCards = 0;
+        let histPlan = "NONE";
+
+        uPayments.forEach((p: any) => {
+          const pPlan = p.plan || (p.amount >= 2000 ? "CINEMATIC_2000" : p.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+          if (pPlan === "BASIC_599") {
+            histTemplates += 1;
+            histCards += 2;
+            if (histPlan === "NONE") histPlan = "BASIC_599";
+          } else if (pPlan === "PRO_1799") {
+            histTemplates += 4;
+            histCards += 6;
+            if (histPlan !== "CINEMATIC_2000") histPlan = "PRO_1799";
+          } else if (pPlan === "CINEMATIC_2000") {
+            histCinematic += 1;
+            histCards += 10;
+            if (histPlan === "NONE") histPlan = "CINEMATIC_2000";
+          }
+        });
+
+        if (userPlan === "NONE" && histPlan !== "NONE") {
+          userPlan = histPlan;
+        }
+
+        allowedTemplates = Math.max(allowedTemplates, histTemplates);
+        allowedCinematic = Math.max(allowedCinematic, histCinematic);
+        allowedCards = Math.max(allowedCards, histCards);
+
+        if (userPlan === "BASIC_599") {
+          allowedTemplates = Math.max(allowedTemplates, 1);
+          allowedCards = Math.max(allowedCards, 2);
+        } else if (userPlan === "PRO_1799") {
+          allowedTemplates = Math.max(allowedTemplates, 4);
+          allowedCards = Math.max(allowedCards, 6);
+        } else if (userPlan === "CINEMATIC_2000") {
+          allowedCinematic = Math.max(allowedCinematic, 1);
+          allowedCards = Math.max(allowedCards, 10);
         }
       }
 
@@ -411,7 +445,7 @@ export async function GET(req: Request) {
         email: user.email || "N/A",
         phone: user.phone || "N/A",
         role: isUserAdmin ? "ADMIN" : "USER",
-        plan: isUserAdmin ? "CINEMATIC_2000" : user.plan || "NONE",
+        plan: isUserAdmin ? "CINEMATIC_2000" : userPlan || "NONE",
         purchasedPlansList: isUserAdmin ? ["CINEMATIC_2000"] : purchasedPlansList,
         subscriptionsHistory: history,
         planExpiresAt: user.planExpiresAt,
