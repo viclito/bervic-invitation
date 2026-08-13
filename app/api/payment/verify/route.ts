@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "yKcYouyXJ3a5XrYxk4EJolau";
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
     let isSignatureValid = false;
 
     if (razorpay_order_id && razorpay_payment_id && razorpay_signature) {
