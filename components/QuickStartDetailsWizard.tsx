@@ -395,6 +395,9 @@ export default function QuickStartDetailsWizard({
             if (apiDraft.isLocked) {
               setIsLockedState(true);
               setLockReasonState(apiDraft.lockReason || "Editing for this invitation is locked starting 2 hours before your event date to protect invitation data.");
+            } else {
+              setIsLockedState(false);
+              setLockReasonState("");
             }
 
             let completedList: string[] = [];

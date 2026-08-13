@@ -114,7 +114,7 @@ export async function GET(req: Request) {
       }
     }
 
-    // 2. Fetch all profiles or specific profile
+    // 2. Fetch all profiles or specific profile (UserDraftDetails is for template previews — NEVER locked)
     if (fetchAll) {
       const rawProfiles = await prisma.userDraftDetails.findMany({
         where: { userId: user.id },
@@ -122,15 +122,11 @@ export async function GET(req: Request) {
       });
 
       const profiles = rawProfiles.map((p) => {
-        const lockRes = checkInvitationLockStatus({
-          createdAt: p.createdAt,
-          weddingDate: p.eventDate || p.eventTime || "",
-        });
         return {
           ...p,
-          isLocked: lockRes.isLocked,
-          lockReason: lockRes.lockReason,
-          timeUntilLockText: lockRes.timeUntilLockText,
+          isLocked: false,
+          lockReason: "",
+          timeUntilLockText: "",
         };
       });
 
@@ -153,18 +149,13 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: true, draft: null });
       }
 
-      const lockRes = checkInvitationLockStatus({
-        createdAt: rawDraft.createdAt,
-        weddingDate: rawDraft.eventDate || rawDraft.eventTime || "",
-      });
-
       return NextResponse.json({
         success: true,
         draft: {
           ...rawDraft,
-          isLocked: lockRes.isLocked,
-          lockReason: lockRes.lockReason,
-          timeUntilLockText: lockRes.timeUntilLockText,
+          isLocked: false,
+          lockReason: "",
+          timeUntilLockText: "",
         },
       });
     }
@@ -207,11 +198,6 @@ export async function GET(req: Request) {
         completedFields = JSON.parse(draft.completedFields || "[]");
       } catch {}
 
-      const lockRes = checkInvitationLockStatus({
-        createdAt: draft.createdAt,
-        weddingDate: draft.eventDate || draft.eventTime || "",
-      });
-
       const formattedDraft = {
         ...draft,
         locations,
@@ -219,9 +205,9 @@ export async function GET(req: Request) {
         timelineItems,
         galleryImages,
         completedFields,
-        isLocked: lockRes.isLocked,
-        lockReason: lockRes.lockReason,
-        timeUntilLockText: lockRes.timeUntilLockText,
+        isLocked: false,
+        lockReason: "",
+        timeUntilLockText: "",
       };
 
       return NextResponse.json({

@@ -607,7 +607,7 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
     isUnlockedByAdmin: invitationUnlockedByAdmin,
   });
 
-  const isEditingLockedForUser = lockStatus.isLocked && session?.user?.email?.toLowerCase() !== "berglin1998@gmail.com";
+  const isEditingLockedForUser = Boolean(invitationId) && lockStatus.isLocked && session?.user?.email?.toLowerCase() !== "berglin1998@gmail.com";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
