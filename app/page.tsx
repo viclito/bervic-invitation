@@ -54,9 +54,12 @@ const FinalCTA = dynamic(() => import("@/components/FinalCTA"), {
   loading: () => <SectionSkeleton height="h-[500px]" />,
 });
 
+import AutoScrollToForm from "@/components/AutoScrollToForm";
+
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17] selection:bg-[#D9A441] selection:text-[#221C17]">
+      <AutoScrollToForm />
       {/* Sticky Navbar */}
       <Navbar />
 

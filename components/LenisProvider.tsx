@@ -35,6 +35,7 @@ export default function LenisProvider({
       autoResize: true,
     });
     lenisRef.current = lenis;
+    (window as any).lenis = lenis;
 
     function raf(time: number) {
       lenis.raf(time);
@@ -47,6 +48,7 @@ export default function LenisProvider({
       cancelAnimationFrame(rafId);
       lenis.destroy();
       lenisRef.current = null;
+      (window as any).lenis = null;
     };
   }, [pathname]);
 
