@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Reusable Skeleton Component for Lazy Loaded Sections
-function SectionSkeleton({ height = "h-[400px]" }: { height?: string }) {
+function SectionSkeleton({ height = "h-[400px]", id }: { height?: string; id?: string }) {
   return (
-    <div className={`w-full ${height} bg-[#12100E] flex items-center justify-center p-8`}>
+    <div id={id} className={`w-full ${height} bg-[#12100E] flex items-center justify-center p-8 scroll-mt-24`}>
       <Skeleton className="w-full max-w-[1200px] h-full rounded-3xl border border-[#D9A441]/20 bg-[#1A1815]/40 flex items-center justify-center">
         <div className="w-10 h-10 rounded-full border-2 border-[#D9A441] border-t-transparent animate-spin" />
       </Skeleton>
@@ -18,7 +18,7 @@ function SectionSkeleton({ height = "h-[400px]" }: { height?: string }) {
 const QuickStartDetailsWizard = dynamic(
   () => import("@/components/QuickStartDetailsWizard"),
   {
-    loading: () => <SectionSkeleton height="h-[600px]" />,
+    loading: () => <SectionSkeleton id="details-form" height="h-[600px]" />,
   }
 );
 

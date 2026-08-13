@@ -335,11 +335,33 @@ export default function QuickStartDetailsWizard({
   const [hasExistingSavedProfile, setHasExistingSavedProfile] = useState(false);
   const [isLockedState, setIsLockedState] = useState(false);
   const [lockReasonState, setLockReasonState] = useState("");
+  const [isRedirectedFromTemplates, setIsRedirectedFromTemplates] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{
     type: "error" | "success";
     title: string;
     description: string;
   } | null>(null);
+
+  // Auto-scroll & catch banner if redirected from templates or accessing #details-form
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const isRedirected =
+      searchParams.get("redirectFromTemplates") === "true" ||
+      searchParams.get("fromTemplates") === "true" ||
+      window.location.hash.includes("details-form");
+
+    if (isRedirected) {
+      setIsRedirectedFromTemplates(true);
+      const timer = setTimeout(() => {
+        const el = document.getElementById("details-form");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Load saved draft on mount (API or localStorage resume)
   useEffect(() => {
@@ -1206,6 +1228,35 @@ export default function QuickStartDetailsWizard({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Catchy Redirect Callout Banner when accessing form for templates */}
+        {isRedirectedFromTemplates && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#7A1F2B] via-[#631822] to-[#7A1F2B] text-white border-2 border-[#D9A441]/60 shadow-xl flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#D9A441]/20 text-[#D9A441] flex items-center justify-center shrink-0 border border-[#D9A441]/50 shadow-inner">
+                <Sparkles className="w-6 h-6 text-[#D9A441]" />
+              </div>
+              <div>
+                <h4 className="font-serif font-bold text-base sm:text-lg text-[#F8F3EA] leading-tight">
+                  Please fill in your details below to view your desired template! ✨
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F8F3EA]/85 mt-0.5 leading-relaxed">
+                  Add your event date, host names & venue to unlock live personalized previews across all template designs.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsRedirectedFromTemplates(false)}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#F8F3EA] transition-colors shrink-0 border border-white/20"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
 
         {/* Top Bar Header for Close Action */}
         {onClose && (

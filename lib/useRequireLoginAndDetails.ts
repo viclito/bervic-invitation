@@ -79,7 +79,7 @@ export function useRequireLoginAndDetails(callbackUrl: string = "/templates") {
           // No saved profile -> update cache to false & redirect to details form
           setProfileHasDetailsCache(false);
           setHasCompletedDetails(false);
-          router.replace("/#details-form");
+          router.replace("/?redirectFromTemplates=true#details-form");
         }
       })
       .catch(() => {
@@ -89,7 +89,7 @@ export function useRequireLoginAndDetails(callbackUrl: string = "/templates") {
           setHasCompletedDetails(true);
         } else {
           setHasCompletedDetails(false);
-          router.replace("/#details-form");
+          router.replace("/?redirectFromTemplates=true#details-form");
         }
       })
       .finally(() => {
