@@ -58,7 +58,7 @@ export default function MakeItYoursModal({
   const isCurrentPassActive = isPremium ? hasCinematicPass : hasStandardPass;
   const currentRemainingSlots = isPremium ? remainingCinematicSlots : remainingStandardSlots;
 
-  const canOwn = currentRemainingSlots > 0 || (isPremium ? hasCinematicPass : hasStandardPass);
+  const canOwn = currentRemainingSlots > 0;
 
   const activeSubscriptionText = isPremium
     ? hasCinematicPass
