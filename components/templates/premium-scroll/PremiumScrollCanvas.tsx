@@ -461,12 +461,10 @@ export default function PremiumScrollCanvas({
       let progress = 0;
 
       if (targetScrollParent === window) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const totalScrollable = rect.height - window.innerHeight;
-
+        const totalScrollable = containerRef.current.offsetHeight - window.innerHeight;
         if (totalScrollable <= 0) return;
 
-        const scrolled = -rect.top;
+        const scrolled = window.scrollY || window.pageYOffset || 0;
         progress = Math.min(Math.max(scrolled / totalScrollable, 0), 1);
       } else {
         const parent = targetScrollParent as HTMLElement;
@@ -552,7 +550,7 @@ export default function PremiumScrollCanvas({
     }
   };
 
-  // Helper for scroll section range styles
+  // Flicker-free smooth interpolation helper with hardware acceleration guards for mobile
   const calculateRangeStyle = (
     start: number,
     end: number,
@@ -566,10 +564,13 @@ export default function PremiumScrollCanvas({
     if (p < start || p > end) {
       return {
         opacity: 0,
-        transform: isMobile ? "translate3d(0, 20px, 0)" : "translate3d(0, 40px, 0)",
+        transform: isMobile ? "none" : "translate3d(0, 30px, 0)",
         pointerEvents: "none" as const,
         display: "none" as const,
         visibility: "hidden" as const,
+        willChange: isMobile ? "auto" : "opacity, transform",
+        WebkitBackfaceVisibility: "hidden" as const,
+        backfaceVisibility: "hidden" as const,
       };
     }
 
@@ -600,10 +601,13 @@ export default function PremiumScrollCanvas({
 
     return {
       opacity,
-      transform: "none",
+      transform: isMobile ? "none" : "translate3d(0, 0px, 0)",
       pointerEvents: isVisible ? ("auto" as const) : ("none" as const),
       display: opacity < 0.02 ? ("none" as const) : ("flex" as const),
       visibility: isVisible ? ("visible" as const) : ("hidden" as const),
+      willChange: isMobile ? "auto" : "opacity, transform",
+      WebkitBackfaceVisibility: "hidden" as const,
+      backfaceVisibility: "hidden" as const,
     };
   };
 
