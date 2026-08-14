@@ -65,7 +65,12 @@ function TemplateGalleryContent() {
     });
     const data = await res.json();
     if (data.success) {
-      router.push(`/invitations/${selectedTemplateForModal.slug}`);
+      const targetSlug = data.slug || data.invitation?.slug;
+      if (targetSlug) {
+        router.push(`/invitations/${targetSlug}`);
+      } else {
+        router.push("/dashboard");
+      }
     } else {
       throw new Error(data.message || "Failed to activate template.");
     }
