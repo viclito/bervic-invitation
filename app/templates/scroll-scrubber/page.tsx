@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
@@ -9,7 +9,7 @@ import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { TemplateClassicFloralProps } from "@/types/template";
 
-export default function ScrollScrubberPage() {
+function ScrollScrubberContent() {
   const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates/scroll-scrubber");
   const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
 
@@ -42,10 +42,6 @@ export default function ScrollScrubberPage() {
       });
   }, []);
 
-  if (isLoading || !hasCompletedDetails) {
-    return <TemplatePreviewSkeleton />;
-  }
-
   return (
     <div className="relative min-h-screen">
       <DynamicTemplateCard {...invitationData} templateSlug="scroll-scrubber" />
@@ -57,5 +53,13 @@ export default function ScrollScrubberPage() {
         displayData={invitationData}
       />
     </div>
+  );
+}
+
+export default function ScrollScrubberPage() {
+  return (
+    <Suspense fallback={<TemplatePreviewSkeleton />}>
+      <ScrollScrubberContent />
+    </Suspense>
   );
 }

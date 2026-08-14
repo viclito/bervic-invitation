@@ -559,6 +559,8 @@ export default function ScrollScrubberCanvas({
         opacity: 0,
         transform: isMobile ? "translate3d(0, 20px, 0)" : "translate3d(0, 40px, 0)",
         pointerEvents: "none" as const,
+        display: "none" as const,
+        visibility: "hidden" as const,
         willChange: isMobile ? "auto" : "opacity, transform",
       };
     }
@@ -587,6 +589,7 @@ export default function ScrollScrubberCanvas({
     }
 
     opacity = Math.max(0, Math.min(1, opacity));
+    const isVisible = opacity > 0.05;
 
     const rangeProgress = (p - start) / duration;
     let translateY = 0;
@@ -611,7 +614,9 @@ export default function ScrollScrubberCanvas({
     return {
       opacity,
       transform: isMobile ? "none" : `translate3d(0, ${translateY}px, 0)`,
-      pointerEvents: opacity > 0.3 ? ("auto" as const) : ("none" as const),
+      pointerEvents: isVisible ? ("auto" as const) : ("none" as const),
+      display: opacity < 0.02 ? ("none" as const) : ("flex" as const),
+      visibility: isVisible ? ("visible" as const) : ("hidden" as const),
       willChange: isMobile ? "auto" : "opacity, transform",
       WebkitBackfaceVisibility: "hidden" as const,
       backfaceVisibility: "hidden" as const,
@@ -812,13 +817,22 @@ export default function ScrollScrubberCanvas({
           </div>
         )}
 
-        {/* Live Scroll Metrics HUD Badge */}
-        <div className="fixed bottom-4 right-6 z-40 hidden sm:flex items-center gap-2 text-[11px] font-mono text-[#D9A441] bg-[#070707]/80 px-3 py-1.5 rounded-xl border border-[#D9A441]/30 backdrop-blur-md pointer-events-none shadow-lg">
+        {/* Right Corner Scroll Height & Progress HUD Badge */}
+        <div className="fixed top-20 right-3 sm:top-24 sm:right-6 z-40 flex items-center gap-2 text-[10px] sm:text-xs font-mono text-[#D9A441] bg-[#070707]/90 px-3 py-1.5 rounded-full border border-[#D9A441]/40 backdrop-blur-md shadow-[0_0_15px_rgba(217,164,65,0.25)] pointer-events-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#D9A441] animate-pulse" />
           <span>Y: {Math.round(scrollProgress * 7000)}px</span>
           <span className="text-[#D9A441]/40">•</span>
-          <span>{Math.round(scrollProgress * 100)}%</span>
-          <span className="text-[#D9A441]/40">•</span>
-          <span>Frame: {Math.round(scrollProgress * 479)}/479</span>
+          <span className="font-bold">{Math.round(scrollProgress * 100)}%</span>
+          <span className="text-[#D9A441]/40 hidden sm:inline">•</span>
+          <span className="hidden sm:inline text-[10px] text-[#FDF6F3]/70">Frame: {Math.round(scrollProgress * (TOTAL_FRAMES - 1))}/{TOTAL_FRAMES - 1}</span>
+        </div>
+
+        {/* Right Screen Edge Vertical Scroll Progress Indicator Track */}
+        <div className="fixed right-1 sm:right-2 top-1/2 -translate-y-1/2 h-44 sm:h-64 w-1 sm:w-1.5 rounded-full bg-white/10 border border-[#D9A441]/20 z-40 pointer-events-none overflow-hidden">
+          <div
+            className="w-full bg-gradient-to-b from-[#D9A441] via-[#F7E7C4] to-[#D9A441] rounded-full transition-all duration-75 shadow-[0_0_8px_#D9A441]"
+            style={{ height: `${scrollProgress * 100}%` }}
+          />
         </div>
 
         {/* 3. Layered Content Overlays (Inside the single sticky viewport box) */}

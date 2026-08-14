@@ -15,7 +15,7 @@ function CheckoutContent() {
   const initialPlan = searchParams.get("plan") || "BASIC_599";
   const isRequired = searchParams.get("required") === "true";
   const templateSlug = searchParams.get("template") || "";
-  const isCinematicRequired = templateSlug === "scroll-scrubber" || initialPlan === "CINEMATIC_2000";
+  const isCinematicRequired = templateSlug === "scroll-scrubber" || templateSlug === "premium-scroll" || initialPlan === "CINEMATIC_2000";
 
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

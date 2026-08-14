@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import TemplateClassicFloral from "@/components/templates/classic-floral/TemplateClassicFloral";
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
@@ -9,7 +9,7 @@ import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { TemplateClassicFloralProps } from "@/types/template";
 
-export default function ClassicFloralTemplatePage() {
+function ClassicFloralContent() {
   const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates/classic-floral");
   const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
 
@@ -42,10 +42,6 @@ export default function ClassicFloralTemplatePage() {
       });
   }, []);
 
-  if (isLoading || !hasCompletedDetails) {
-    return <TemplatePreviewSkeleton />;
-  }
-
   return (
     <div className="relative min-h-screen">
       <TemplateClassicFloral {...invitationData} />
@@ -58,5 +54,13 @@ export default function ClassicFloralTemplatePage() {
         displayData={invitationData}
       />
     </div>
+  );
+}
+
+export default function ClassicFloralTemplatePage() {
+  return (
+    <Suspense fallback={<TemplatePreviewSkeleton />}>
+      <ClassicFloralContent />
+    </Suspense>
   );
 }

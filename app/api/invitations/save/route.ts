@@ -157,14 +157,14 @@ export async function POST(req: Request) {
     }
 
     // 2. Cinematic Template Exclusive Tier Check
-    const isCinematicTemplate = templateSlug === "scroll-scrubber";
+    const isCinematicTemplate = templateSlug === "scroll-scrubber" || templateSlug === "premium-scroll";
     const hasCinematicPass = dbUser.plan === "CINEMATIC_2000" || dbCinematicCount > 0;
 
     if (isCinematicTemplate && dbUser.role !== "ADMIN" && !hasCinematicPass) {
       return NextResponse.json(
         {
           error: "CINEMATIC_PLAN_REQUIRED",
-          message: "The 480-Frame Cinematic Scroll Sequence template requires the ₹2000 Cinematic Masterpiece Pass. Please upgrade your plan to unlock this exclusive template!",
+          message: "The Cinematic Scroll Sequence template requires the ₹2000 Cinematic Masterpiece Pass. Please upgrade your plan to unlock this exclusive template!",
         },
         { status: 402 }
       );
