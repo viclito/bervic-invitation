@@ -17,6 +17,8 @@ interface MakeItYoursModalProps {
     isActive?: boolean;
     remainingTemplateSlots?: number;
     remainingCinematicSlots?: number;
+    allowedTemplatesCount?: number;
+    allowedCinematicCount?: number;
     hasCinematicPass?: boolean;
   } | null;
   onConfirmActivate: () => Promise<void>;
@@ -38,12 +40,41 @@ export default function MakeItYoursModal({
 
   if (!isOpen) return null;
 
-  const isActive = userSubscription?.isActive ?? false;
-  const remainingSlots = isPremium
-    ? userSubscription?.remainingCinematicSlots ?? 0
-    : userSubscription?.remainingTemplateSlots ?? 1;
+  const remainingStandardSlots = userSubscription?.remainingTemplateSlots ?? 0;
+  const remainingCinematicSlots = userSubscription?.remainingCinematicSlots ?? 0;
 
-  const canOwn = !isPremium || (isActive && (remainingSlots > 0 || userSubscription?.plan === "CINEMATIC_2000" || userSubscription?.hasCinematicPass));
+  const hasStandardPass =
+    remainingStandardSlots > 0 ||
+    userSubscription?.plan === "BASIC_599" ||
+    userSubscription?.plan === "PRO_1799" ||
+    (userSubscription?.allowedTemplatesCount ?? 0) > 0;
+
+  const hasCinematicPass =
+    remainingCinematicSlots > 0 ||
+    Boolean(userSubscription?.hasCinematicPass) ||
+    userSubscription?.plan === "CINEMATIC_2000" ||
+    (userSubscription?.allowedCinematicCount ?? 0) > 0;
+
+  const isCurrentPassActive = isPremium ? hasCinematicPass : hasStandardPass;
+  const currentRemainingSlots = isPremium ? remainingCinematicSlots : remainingStandardSlots;
+
+  const canOwn = currentRemainingSlots > 0 || (isPremium ? hasCinematicPass : hasStandardPass);
+
+  const activeSubscriptionText = isPremium
+    ? hasCinematicPass
+      ? "Premium Cinematic Pass (₹2000) Active"
+      : "No Active Premium Package"
+    : hasStandardPass
+    ? `Standard Pass (${userSubscription?.plan === "PRO_1799" ? "₹1799" : "₹599"}) Active`
+    : "No Active Standard Package";
+
+  const quotaAvailableText = isPremium
+    ? currentRemainingSlots > 0
+      ? `${currentRemainingSlots} Premium Slot${currentRemainingSlots > 1 ? "s" : ""} Available ✨`
+      : "0 Premium Slots Remaining"
+    : currentRemainingSlots > 0
+    ? `${currentRemainingSlots} Standard Slot${currentRemainingSlots > 1 ? "s" : ""} Available ✨`
+    : "0 Standard Slots Remaining";
 
   const handleActivate = async () => {
     try {
@@ -109,15 +140,15 @@ export default function MakeItYoursModal({
           <div className="bg-white/80 border border-[#D9A441]/40 rounded-2xl p-4 mb-6 space-y-3">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-[#54433d] uppercase tracking-wider">Active Subscription:</span>
-              <span className={`px-2.5 py-0.5 rounded-full ${isActive ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}`}>
-                {isActive ? (userSubscription?.plan || "Paid Plan Active") : "No Active Package"}
+              <span className={`px-2.5 py-0.5 rounded-full ${isCurrentPassActive ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}`}>
+                {activeSubscriptionText}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs font-bold border-t border-[#D9A441]/20 pt-2.5">
               <span className="text-[#54433d] uppercase tracking-wider">Template Quota Available:</span>
-              <span className="text-[#7A1F2B]">
-                {canOwn ? "Quota Available ✨" : "0 Slots Remaining"}
+              <span className={canOwn ? "text-emerald-700 font-bold" : "text-[#7A1F2B]"}>
+                {quotaAvailableText}
               </span>
             </div>
           </div>

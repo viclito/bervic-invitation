@@ -88,14 +88,17 @@ export async function GET(req: Request) {
 
     const now = new Date();
     const allInvs = user.invitations || [];
-    const usedCinematicCount = allInvs.filter((inv: any) => inv.templateSlug === "scroll-scrubber").length;
-    const usedTemplatesCount = allInvs.filter((inv: any) => inv.templateSlug !== "scroll-scrubber").length;
+    const isCinematicSlug = (s: string) => s === "scroll-scrubber" || s === "premium-scroll";
+    const usedCinematicCount = allInvs.filter((inv: any) => isCinematicSlug(inv.templateSlug)).length;
+    const usedTemplatesCount = allInvs.filter((inv: any) => !isCinematicSlug(inv.templateSlug)).length;
     const usedCardsCount = (user.cards || []).length;
 
     // Admin always gets full pass
     if (isAdmin) {
       return NextResponse.json({
+        success: true,
         plan: "CINEMATIC_2000",
+        hasCinematicPass: true,
         planExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         isActive: true,
         allowedTemplatesCount: 99,
@@ -267,6 +270,7 @@ export async function GET(req: Request) {
     const remainingCardSlots = Math.max(0, computedCardsCount - usedCardsCount);
 
     return NextResponse.json({
+      success: true,
       plan: isSubscribed ? computedPlan : "NONE",
       hasCinematicPass: computedCinematicCount > 0,
       planExpiresAt: isSubscribed ? computedExpiresAt : null,

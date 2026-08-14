@@ -43,13 +43,13 @@ function TemplateGalleryContent() {
     fetch("/api/user/subscription")
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) {
+        if (data) {
           setSubData({
-            plan: data.subscription?.planType || data.subscription?.plan,
-            isActive: Boolean(data.subscription?.isActive || data.subscription?.status === "ACTIVE"),
-            remainingTemplateSlots: data.allowedTemplatesCount ?? 1,
-            remainingCinematicSlots: data.allowedCinematicCount ?? 0,
-            hasCinematicPass: Boolean(data.subscription?.hasCinematicPass),
+            plan: data.plan || data.subscription?.plan || "NONE",
+            isActive: Boolean(data.isActive || data.subscription?.isActive),
+            remainingTemplateSlots: data.remainingTemplateSlots ?? 0,
+            remainingCinematicSlots: data.remainingCinematicSlots ?? 0,
+            hasCinematicPass: Boolean(data.hasCinematicPass || (data.remainingCinematicSlots ?? 0) > 0),
           });
         }
       })
