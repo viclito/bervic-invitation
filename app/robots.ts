@@ -9,6 +9,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: [
           "/",
+          "/shop",
+          "/pricing",
           "/templates",
           "/templates/*",
           "/cards",
@@ -43,6 +45,8 @@ export default function robots(): MetadataRoute.Robots {
         ],
         allow: [
           "/",
+          "/shop",
+          "/pricing",
           "/templates",
           "/templates/*",
           "/cards",

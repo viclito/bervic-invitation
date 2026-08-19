@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description:
     "Shop handcrafted physical wedding invitation cards, luxury gold foil suites, 350+ GSM textured boards, and boxed wedding cards with express doorstep delivery across India.",
   keywords: [
+    "canva printed cards",
+    "digital invite printing",
+    "digital studio print shop",
     "traditional wedding cards",
     "physical wedding invitations India",
     "gold foil wedding cards",

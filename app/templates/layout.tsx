@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description:
     "Browse our curated collection of 31+ luxury Indian invitation templates for weddings, birthdays, puja ceremonies, and anniversaries. Customize and preview in real-time.",
   keywords: [
+    "canva invitation templates",
+    "digital invite templates",
+    "digital studio templates",
+    "canva wedding studio",
     "Indian wedding invitation templates",
     "digital invitation designs",
     "WhatsApp invitation templates",

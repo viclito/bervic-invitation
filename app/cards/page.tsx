@@ -9,11 +9,16 @@ export const metadata: Metadata = {
   description:
     "Create high-resolution (1080x1080px) Instagram & WhatsApp wedding announcement cards. Select from 31+ design presets, customize couple photos & details, and export to PNG or PDF.",
   keywords: [
+    "canva card generator",
+    "digital studio",
+    "canva style invitation maker",
+    "digital invite creator",
     "Instagram wedding card generator",
     "WhatsApp status invite maker",
     "wedding announcement graphic creator",
     "square invitation card designer",
     "Bervic card studio",
+    "canva wedding studio",
   ],
   alternates: {
     canonical: `${baseUrl}/cards`,

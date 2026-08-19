@@ -15,6 +15,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/shop`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/templates`,
       lastModified: now,
       changeFrequency: "daily",
@@ -22,6 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/cards`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/pricing`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
@@ -40,15 +52,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Template static detail pages from registry (Wedding only)
-  const templateRoutes: MetadataRoute.Sitemap = templatesRegistry
-    .filter((tpl) => tpl.category === "wedding" || !["birthday", "religious", "anniversary"].includes(tpl.category))
-    .map((tpl) => ({
-      url: `${baseUrl}/templates/${tpl.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
+  // Template static detail pages from registry (All categories: Wedding, Birthday, Religious, Anniversary)
+  const templateRoutes: MetadataRoute.Sitemap = templatesRegistry.map((tpl) => ({
+    url: `${baseUrl}/templates/${tpl.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
 
   // Public user invitations from database
   let invitationRoutes: MetadataRoute.Sitemap = [];
