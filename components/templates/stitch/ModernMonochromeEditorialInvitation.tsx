@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -38,9 +39,7 @@ export default function ModernMonochromeEditorialInvitation(
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T19:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -59,23 +58,13 @@ export default function ModernMonochromeEditorialInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items fallback matching exact Stitch screen 337baa07dcde4ebab2bf262ada7e55b3
-  const isWeddingGallery = props.galleryImages?.some(
-    (img) =>
-      typeof img === "string" &&
-      (img.includes("wedding") ||
-        img.includes("AB6AXuDh4Z4xW8jzsbsKdg5ia6FglPse") ||
-        img.includes("AB6AXuBHAT2ujkSkrVrFXNwYxZGWYhPp") ||
-        img.includes("AB6AXuCkq4ouHRpN0B0WcEm_ER0duJsq"))
-  );
-
+  const validUserGallery = (props.galleryImages || []).filter(img => Boolean(Boolean(img && String(img).trim())));
   const galleryList =
-    props.galleryImages &&
-    props.galleryImages.length >= 3 &&
-    !isWeddingGallery
-      ? props.galleryImages
+    validUserGallery.length > 0
+      ? validUserGallery
       : [
           {
             url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Xt4nFO26JrgTkI976YIDXHb56VeLqLydsYlcbtdeg_t5AI2CKES1uDYlqOJmPrYjZ4faFh8oEQ7CIcY2TQX68bH7c6HWcz2WMUoIzXlrNflserp1HTMp-u_9xP3kulIHX6syv458dE4N5JtmXGTV3TpqRyo_3to-np2uA5PLzYaiF46P9Tb9DtBHShDRtx6e8SdKiAyZIlCmhFfQ5V-zcZKA5mwfICOsKIfqXbmKTSpsul9Wby3s",
@@ -565,7 +554,11 @@ export default function ModernMonochromeEditorialInvitation(
                 <img
                   alt="Venue map location"
                   className="w-full h-full object-cover opacity-80"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
+                  src={
+                    (mainVenue as { image?: string }).image ||
+                    props.coverImage ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
+                  }
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg flex items-center gap-3 border border-[#cac7b1]">

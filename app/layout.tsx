@@ -1,24 +1,8 @@
 import type { Metadata } from "next";
-import { Poppins, Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-83TR44K9KN";
@@ -179,11 +163,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${poppins.variable} ${cormorant.variable} h-full antialiased`}
-    >
+    <html lang="en" className="h-full antialiased">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alex+Brush&family=Amatic+SC:wght@700&family=Bodoni+Moda:ital,wght@0,400..900;1,400..900&family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400..900&family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Dancing+Script:wght@700&family=Fredericka+the+Great&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800;900&family=Marcellus&family=Monoton&family=Montserrat:wght@400..900&family=Outfit:wght@400..900&family=Pacifico&family=Parisienne&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poiret+One&family=Prata&family=Rozha+One&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&family=Special+Elite&family=UnifrakturMaguntia&display=swap"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
@@ -197,7 +184,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#F8F3EA] text-[#221C17] font-sans selection:bg-[#D9A441] selection:text-[#221C17]">
+      <body className="min-h-full flex flex-col bg-white text-slate-900 font-sans selection:bg-[#991B1B] selection:text-white">
         {/* Google Analytics (gtag.js) */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
@@ -216,6 +203,12 @@ export default function RootLayout({
         <SessionProviderWrapper>
           <LenisProvider>{children}</LenisProvider>
         </SessionProviderWrapper>
+
+        {/* Razorpay Official Checkout SDK */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

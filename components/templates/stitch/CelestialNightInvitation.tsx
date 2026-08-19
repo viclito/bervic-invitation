@@ -20,7 +20,7 @@ import {
   Heart,
 } from "lucide-react";
 
-import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 
 export default function CelestialNightInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -366,7 +366,7 @@ export default function CelestialNightInvitation(props: TemplateClassicFloralPro
       </section>
 
       {/* Love Story Video Facade */}
-      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
         <section className="py-24 px-6 md:px-16 bg-[#0e1018] text-white">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-serif text-4xl font-bold text-[#d4af37] mb-3">Celestial Story</h2>

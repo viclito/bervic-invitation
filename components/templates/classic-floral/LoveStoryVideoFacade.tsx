@@ -17,7 +17,7 @@ interface LoveStoryVideoFacadeProps {
 
 // Extracts clean YouTube Video ID from any URL (watch, shorts, youtu.be, embed)
 export function getYouTubeVideoId(url: string): string {
-  if (!url) return "dQw4w9WgXcQ";
+  if (!url || !url.trim()) return "";
 
   try {
     if (url.includes("youtu.be/")) {
@@ -40,11 +40,12 @@ export function getYouTubeVideoId(url: string): string {
     console.error("Error parsing YouTube Video ID:", e);
   }
 
-  return "dQw4w9WgXcQ";
+  return "";
 }
 
 export function parseYouTubeEmbedUrl(url: string): string {
   const videoId = getYouTubeVideoId(url);
+  if (!videoId) return "";
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 }
 

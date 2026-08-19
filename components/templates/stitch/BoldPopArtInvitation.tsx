@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -114,7 +114,7 @@ export default function BoldPopArtInvitation(
 
   // Gallery images fallback
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {

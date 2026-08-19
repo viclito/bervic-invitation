@@ -7,14 +7,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { setProfileHasDetailsCache } from "@/lib/useRequireLoginAndDetails";
 import WizardDetailsSkeleton from "@/components/skeletons/WizardDetailsSkeleton";
+import LoginModal from "@/components/auth/LoginModal";
 import {
   Upload,
+  UploadCloud,
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
   Sparkles,
+  Wand2,
   Calendar,
   Clock,
   MapPin,
@@ -37,6 +40,8 @@ import {
   Lock,
   LogIn,
   UserPlus,
+  Globe,
+  Edit3,
 } from "lucide-react";
 
 export interface EventSubFunction {
@@ -68,6 +73,7 @@ export interface VenueLocationItem {
 export interface DraftData {
   id?: string;
   invitationId?: string;
+  customSlug?: string;
   eventType: string;
   hostNameOne: string;
   hostNameTwo: string;
@@ -103,9 +109,70 @@ export interface DraftData {
   currentStep: number;
 }
 
+export const WEDDING_DEFAULT_LOCATIONS: VenueLocationItem[] = [
+  {
+    id: "loc-1",
+    mainTitle: "Marriage Ceremony Venue",
+    subLabel: "Your Ceremony Hall",
+    venuePhoto: "/images/templates/venue-ceremony.jpg",
+    address: "Your Full Address, City, State 000000",
+    mapUrl: "https://maps.google.com",
+  },
+  {
+    id: "loc-2",
+    mainTitle: "Grand Reception Venue",
+    subLabel: "Grand Reception Hall",
+    venuePhoto: "/images/templates/venue-reception.jpg",
+    address: "Your Full Address, City, State 000000",
+    mapUrl: "https://maps.google.com",
+  },
+];
+
+export const BIRTHDAY_DEFAULT_LOCATIONS: VenueLocationItem[] = [
+  {
+    id: "loc-1",
+    mainTitle: "Birthday Celebration Venue",
+    subLabel: "Celebration Hall & Lawn",
+    venuePhoto: "/images/templates/venue-reception.jpg",
+    address: "Your Full Address, City, State 000000",
+    mapUrl: "https://maps.google.com",
+  },
+];
+
+export const WEDDING_DEFAULT_FUNCTIONS: EventSubFunction[] = [
+  { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30", venue: "Marriage Ceremony Hall" },
+  { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00", venue: "Grand Ballroom" },
+];
+
+export const BIRTHDAY_DEFAULT_FUNCTIONS: EventSubFunction[] = [
+  { icon: "cocktail", title: "Welcome Drinks & Mocktails", date: "", time: "18:00", venue: "Celebration Hall" },
+  { icon: "cake", title: "Cake Cutting & Cheers", date: "", time: "19:30", venue: "Main Party Area" },
+  { icon: "feast", title: "Grand Birthday Dinner", date: "", time: "20:30", venue: "Banquet Lawn" },
+  { icon: "music", title: "DJ & Dance Party", date: "", time: "21:30", venue: "Party Floor" },
+];
+
+export const WEDDING_DEFAULT_TIMELINE: DayTimelineItem[] = [
+  { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30" },
+  { icon: "feast", title: "Traditional Lunch", date: "", time: "13:00" },
+  { icon: "home", title: "Welcome at Home", date: "", time: "16:00" },
+  { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00" },
+  { icon: "cake", title: "Cake Cutting Ceremony", date: "", time: "20:00" },
+  { icon: "cocktail", title: "Gala Dinner", date: "", time: "20:30" },
+  { icon: "car", title: "Send Off & Blessings", date: "", time: "22:30" },
+];
+
+export const BIRTHDAY_DEFAULT_TIMELINE: DayTimelineItem[] = [
+  { icon: "cocktail", title: "Welcome Drinks & Mocktails", date: "", time: "18:00" },
+  { icon: "sparkles", title: "Fun Games & Photobooth", date: "", time: "18:30" },
+  { icon: "cake", title: "Cake Cutting & Cheers", date: "", time: "19:30" },
+  { icon: "feast", title: "Artisanal Dinner", date: "", time: "20:30" },
+  { icon: "music", title: "DJ & Dance Floor", date: "", time: "21:30" },
+];
+
 const initialDraft: DraftData = {
   eventType: "WEDDING",
   showVideo: true,
+  customSlug: "",
   hostNameOne: "",
   hostNameTwo: "",
   coupleInitials: "",
@@ -119,24 +186,7 @@ const initialDraft: DraftData = {
   venueTwoName: "Grand Reception Hall",
   venueTwoAddress: "Your Full Address, City, State 000000",
   venueTwoMapUrl: "https://maps.google.com",
-  locations: [
-    {
-      id: "loc-1",
-      mainTitle: "Marriage Ceremony Venue",
-      subLabel: "Your Ceremony Hall",
-      venuePhoto: "/images/templates/venue-ceremony.jpg",
-      address: "Your Full Address, City, State 000000",
-      mapUrl: "https://maps.google.com",
-    },
-    {
-      id: "loc-2",
-      mainTitle: "Grand Reception Venue",
-      subLabel: "Grand Reception Hall",
-      venuePhoto: "/images/templates/venue-reception.jpg",
-      address: "Your Full Address, City, State 000000",
-      mapUrl: "https://maps.google.com",
-    },
-  ],
+  locations: WEDDING_DEFAULT_LOCATIONS,
   tagline: "",
   turningAge: "",
   dressCode: "Traditional / Cocktail Attire",
@@ -148,19 +198,8 @@ const initialDraft: DraftData = {
   partnerTwoImage: "",
   venueImage: "",
   galleryImages: [],
-  functions: [
-    { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30", venue: "Marriage Ceremony Hall" },
-    { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00", venue: "Grand Ballroom" },
-  ],
-  timelineItems: [
-    { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30" },
-    { icon: "feast", title: "Traditional Lunch", date: "", time: "13:00" },
-    { icon: "home", title: "Welcome at Home", date: "", time: "16:00" },
-    { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00" },
-    { icon: "cake", title: "Cake Cutting Ceremony", date: "", time: "20:00" },
-    { icon: "cocktail", title: "Gala Dinner", date: "", time: "20:30" },
-    { icon: "car", title: "Send Off & Blessings", date: "", time: "22:30" },
-  ],
+  functions: WEDDING_DEFAULT_FUNCTIONS,
+  timelineItems: WEDDING_DEFAULT_TIMELINE,
   additionalNotes: "",
   extractedFromDoc: false,
   completedFields: [],
@@ -177,6 +216,35 @@ const STEP_TITLES: Record<number, string> = {
   7: "Bride, Groom & Gallery Photos",
   8: "Love Story, Video, Dress Code & RSVP",
   9: "Review All Details",
+};
+
+const getStepTitle = (step: number, eventType?: string): string => {
+  const isBirthday = eventType?.toUpperCase() === "BIRTHDAY";
+  if (isBirthday) {
+    switch (step) {
+      case 1:
+        return "Select Celebration Type";
+      case 2:
+        return "Birthday Person Details";
+      case 3:
+        return "Event Date, Time & Invitation Message";
+      case 4:
+        return "Party Venue & Maps";
+      case 5:
+        return "Event Schedule & Activities";
+      case 6:
+        return "Party Timeline";
+      case 7:
+        return "Celebrant & Gallery Photos";
+      case 8:
+        return "Celebration Story, Dress Code & RSVP";
+      case 9:
+        return "Review All Details";
+      default:
+        return STEP_TITLES[step] || "";
+    }
+  }
+  return STEP_TITLES[step] || "";
 };
 
 const calculateMonogram = (name1: string, name2: string): string => {
@@ -302,6 +370,7 @@ interface QuickStartDetailsWizardProps {
   profileId?: string;
   invitationId?: string;
   isNewProfile?: boolean;
+  initialEventType?: string;
   onClose?: () => void;
   onComplete?: () => void;
   startAtStepOne?: boolean;
@@ -311,6 +380,7 @@ export default function QuickStartDetailsWizard({
   profileId,
   invitationId,
   isNewProfile,
+  initialEventType,
   onClose,
   onComplete,
   startAtStepOne = true,
@@ -329,13 +399,48 @@ export default function QuickStartDetailsWizard({
   const [draft, setDraft] = useState<DraftData>(initialDraft);
   const [extracting, setExtracting] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [hasExistingSavedProfile, setHasExistingSavedProfile] = useState(false);
+  const [isEditingLandingProfile, setIsEditingLandingProfile] = useState(false);
   const [isLockedState, setIsLockedState] = useState(false);
   const [lockReasonState, setLockReasonState] = useState("");
   const [isRedirectedFromTemplates, setIsRedirectedFromTemplates] = useState(false);
+  const isDedicatedInvitationForm = Boolean(invitationId || draft.invitationId);
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const slugDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCustomSlugChange = (val: string) => {
+    const formatted = val.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+    setDraft((prev) => ({ ...prev, customSlug: formatted }));
+
+    if (slugDebounceTimerRef.current) clearTimeout(slugDebounceTimerRef.current);
+
+    if (!formatted.trim()) {
+      setSlugStatus("idle");
+      return;
+    }
+
+    setSlugStatus("checking");
+    slugDebounceTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/invitations/check-slug?slug=${encodeURIComponent(formatted)}&invitationId=${invitationId || draft.invitationId || ""}`);
+        const data = await res.json();
+        if (data.available) {
+          setSlugStatus("available");
+        } else {
+          setSlugStatus("taken");
+        }
+      } catch {
+        setSlugStatus("idle");
+      }
+    }, 400);
+  };
+
+  const [existingProfiles, setExistingProfiles] = useState<{ id: string; eventType?: string }[]>([]);
   const [alertMessage, setAlertMessage] = useState<{
     type: "error" | "success";
     title: string;
@@ -352,8 +457,8 @@ export default function QuickStartDetailsWizard({
       window.location.hash.includes("details-form");
 
     if (isRedirected) {
-      setIsRedirectedFromTemplates(true);
       const timer = setTimeout(() => {
+        setIsRedirectedFromTemplates(true);
         const el = document.getElementById("details-form");
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -373,6 +478,43 @@ export default function QuickStartDetailsWizard({
         const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
         const paramInvId = invitationId || searchParams?.get("invitationId") || "";
         const paramProfId = profileId || searchParams?.get("id") || "";
+
+        if (status === "authenticated") {
+          try {
+            const allRes = await fetch("/api/user/event-draft?all=true");
+            const allData = await allRes.json();
+            if (allData.success && Array.isArray(allData.profiles)) {
+              setExistingProfiles(allData.profiles);
+              if (isNewProfile || !profileId) {
+                const hasWedding = allData.profiles.some((p: { eventType?: string }) => !p.eventType || p.eventType.toUpperCase() === "WEDDING");
+                const hasBirthday = allData.profiles.some((p: { eventType?: string }) => p.eventType && p.eventType.toUpperCase() === "BIRTHDAY");
+                if (hasWedding && !hasBirthday) {
+                  setDraft((prev) => ({
+                    ...prev,
+                    eventType: "BIRTHDAY",
+                    venueName: "Birthday Celebration Venue",
+                    locations: BIRTHDAY_DEFAULT_LOCATIONS,
+                    functions: BIRTHDAY_DEFAULT_FUNCTIONS,
+                    timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
+                    dressCode: "Smart Casual / Party Chic",
+                    inviteLine: "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!",
+                  }));
+                } else if (hasBirthday && !hasWedding) {
+                  setDraft((prev) => ({
+                    ...prev,
+                    eventType: "WEDDING",
+                    venueName: "Marriage Ceremony Hall",
+                    locations: WEDDING_DEFAULT_LOCATIONS,
+                    functions: WEDDING_DEFAULT_FUNCTIONS,
+                    timelineItems: WEDDING_DEFAULT_TIMELINE,
+                    dressCode: "Traditional / Cocktail Attire",
+                    inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
+                  }));
+                }
+              }
+            }
+          } catch {}
+        }
 
         const formLocalStorageKey = paramInvId
           ? `bervic_invitation_draft_${paramInvId}`
@@ -403,10 +545,13 @@ export default function QuickStartDetailsWizard({
         }
 
         if (status === "authenticated" && !isNewProfile) {
+          const eventTypeSearch = searchParams?.get("eventType") || initialEventType;
           const endpoint = invitationId
             ? `/api/user/event-draft?invitationId=${invitationId}`
             : profileId
             ? `/api/user/event-draft?id=${profileId}`
+            : eventTypeSearch
+            ? `/api/user/event-draft?eventType=${eventTypeSearch}`
             : "/api/user/event-draft";
           const res = await fetch(endpoint);
           const data = await res.json();
@@ -593,6 +738,9 @@ export default function QuickStartDetailsWizard({
         if (data.success && data.draft?.id) {
           setDraft((prev) => ({ ...prev, id: data.draft.id }));
           setProfileHasDetailsCache(true);
+        } else if (data.error === "SUBSCRIPTION_REQUIRED" || data.error === "PROFILE_LIMIT_REACHED") {
+          alert(data.message || "An active subscription plan is required to create multiple celebration profiles. Please upgrade to unlock multiple event profiles.");
+          router.push("/checkout");
         }
       } catch (err) {
         console.error("Save profile error:", err);
@@ -709,6 +857,7 @@ export default function QuickStartDetailsWizard({
       const res = await fetch("/api/user/event-draft/extract", {
         method: "POST",
         body: formData,
+        signal: AbortSignal.timeout(25000),
       });
 
       const data = await res.json();
@@ -752,16 +901,8 @@ export default function QuickStartDetailsWizard({
               return {
                 ...loc,
                 mainTitle: loc.mainTitle || "Marriage Ceremony Venue",
-                subLabel: extractedVenue || loc.subLabel,
-                address: extractedAddress || extractedVenue || loc.address,
-              };
-            }
-            if (idx === 1) {
-              return {
-                ...loc,
-                mainTitle: loc.mainTitle || "Grand Reception Venue",
-                subLabel: "UBAHARA MATHA MAHAL",
-                address: "kavalkinaru",
+                subLabel: extractedVenue || loc.subLabel || "",
+                address: extractedAddress || extractedVenue || loc.address || "",
               };
             }
             return loc;
@@ -770,38 +911,37 @@ export default function QuickStartDetailsWizard({
             {
               id: "loc-1",
               mainTitle: "Marriage Ceremony Venue",
-              subLabel: extractedVenue || "ST. ANTONY'S CHURCH",
+              subLabel: extractedVenue || "",
               venuePhoto: "/images/templates/venue-ceremony.jpg",
-              address: extractedAddress || "Tirunelveli",
-              mapUrl: "https://maps.google.com",
-            },
-            {
-              id: "loc-2",
-              mainTitle: "Grand Reception Venue",
-              subLabel: "UBAHARA MATHA MAHAL",
-              venuePhoto: "/images/templates/venue-reception.jpg",
-              address: "kavalkinaru",
+              address: extractedAddress || "",
               mapUrl: "https://maps.google.com",
             },
           ]);
 
+      const h1 = ext.hostNameOne || "";
+      const h2 = ext.hostNameTwo || "";
+      const updatedInitials = (h1 && h2)
+        ? `${h1[0].toUpperCase()} & ${h2[0].toUpperCase()}`
+        : (h1 ? `${h1[0].toUpperCase()}` : (h2 ? `${h2[0].toUpperCase()}` : ""));
+
       const updatedDraft: DraftData = {
         ...draft,
         eventType: ext.eventType || draft.eventType,
-        hostNameOne: ext.hostNameOne || draft.hostNameOne,
-        hostNameTwo: ext.hostNameTwo || draft.hostNameTwo,
-        eventTitle: ext.eventTitle || draft.eventTitle,
-        eventDate: extractedDate,
-        eventTime: extractedTime,
-        venueName: extractedVenue,
-        venueAddress: extractedAddress,
+        hostNameOne: h1 || draft.hostNameOne,
+        hostNameTwo: h2 || draft.hostNameTwo,
+        coupleInitials: updatedInitials || draft.coupleInitials,
+        eventTitle: ext.eventTitle || (h1 && h2 ? `${h1} & ${h2}'s Wedding` : draft.eventTitle),
+        eventDate: ext.eventDate || draft.eventDate,
+        eventTime: ext.eventTime || draft.eventTime,
+        venueName: ext.venueName || draft.venueName,
+        venueAddress: ext.venueAddress || draft.venueAddress,
         locations: updatedLocations,
         rsvpContact: ext.rsvpContact || draft.rsvpContact,
         functions: updatedFunctions,
         extractedFromDoc: true,
       };
 
-      await saveStepData(updatedDraft, 3);
+      await saveStepData(updatedDraft, 2);
 
       setAlertMessage({
         type: "success",
@@ -976,34 +1116,25 @@ export default function QuickStartDetailsWizard({
 
   if (isLoadingDraft) {
     return (
-      <section className="py-12 bg-[#F8F3EA] text-[#221C17] border-b border-[#D9C88A]/30">
+      <section className="py-12 bg-white text-slate-900 border-b border-slate-200">
         <WizardDetailsSkeleton />
       </section>
     );
   }
 
   const isLandingPageWithProfile = Boolean(
-    hasExistingSavedProfile && !isNewProfile && !profileId && !onClose
+    hasExistingSavedProfile && !isNewProfile && !profileId && !onClose && !isEditingLandingProfile
   );
 
   if (isLandingPageWithProfile) {
     return (
-      <section className="py-16 md:py-24 bg-white text-[#221C17] relative border-t border-b border-slate-100 overflow-hidden">
+      <section className="py-16 md:py-24 bg-white text-slate-900 relative border-t border-b border-slate-100 overflow-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
-          {/* Sparkles Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D9A441]/15 text-[#7E121D] text-xs font-extrabold uppercase tracking-wider border border-[#D9A441]/30 shadow-xs">
-            <Sparkles className="w-4 h-4 text-[#D9A441]" />
-            <span>YOUR CELEBRATION PROFILE IS READY!</span>
-          </div>
-
           {/* Catchy Headline */}
           <div className="space-y-3 max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
-              Ready to Design Your <span className="italic text-[#7E121D]">Dream Invitation</span>?
+            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-slate-900 leading-tight">
+              Ready to Design Your <span className="italic text-[#991B1B]">Dream Invitation</span>?
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-medium max-w-2xl mx-auto">
-              Your celebration profile for <strong>{draft.hostNameOne || "your celebration"}{draft.hostNameTwo ? ` & ${draft.hostNameTwo}` : ""}</strong> is saved! Experience your interactive invitation suite rendered live across Desktop, Laptop, Tablet, and Mobile screens.
-            </p>
           </div>
 
           {/* Multi-Device Luxury Showcase Image */}
@@ -1019,51 +1150,218 @@ export default function QuickStartDetailsWizard({
           </div>
 
           {/* Active Saved Profile Badge Card */}
-          <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#D9A441]/30 max-w-md mx-auto flex items-center justify-between text-xs text-[#0F172A] shadow-xs">
-            <div className="flex items-center gap-3 text-left">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7E121D] to-[#5C1620] text-[#FED7AA] flex items-center justify-center font-serif font-bold text-sm shrink-0">
+          <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-slate-900 shadow-xs">
+            <div className="flex items-center gap-3 text-left w-full sm:w-auto">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#991B1B] to-[#7F1D1D] text-white flex items-center justify-center font-serif font-bold text-sm shrink-0 shadow-xs">
                 {draft.coupleInitials || "S & A"}
               </div>
-              <div>
-                <p className="font-bold text-[#7E121D]">
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-[#991B1B] text-sm truncate">
                   {draft.hostNameOne || "Celebration Details"} {draft.hostNameTwo ? `& ${draft.hostNameTwo}` : ""}
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 mt-0.5">
                   {draft.eventDate ? `Date: ${draft.eventDate}` : "Details saved to account"}
                 </p>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase shrink-0">
-              ✓ Profile Saved
-            </span>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-200/80 pt-2.5 sm:pt-0">
+              <button
+                type="button"
+                onClick={() => setIsEditingLandingProfile(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-red-50 text-[#991B1B] hover:text-[#7F1D1D] font-bold text-xs border border-slate-200 hover:border-red-200 transition-all shadow-xs cursor-pointer flex-1 sm:flex-none"
+                title="Edit Celebration Details"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Details</span>
+              </button>
+              <span className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold uppercase shrink-0 flex items-center gap-1">
+                ✓ Profile Saved
+              </span>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-lg mx-auto w-full">
             <button
               type="button"
               onClick={() => router.push("/templates")}
-              className="w-full sm:w-auto px-9 py-4 rounded-xl bg-[#7E121D] hover:bg-[#680E17] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-rose-900/25 transition-all cursor-pointer group"
+              className="w-full sm:w-auto flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-red-900/25 transition-all cursor-pointer group"
             >
-              <Sparkles className="w-4 h-4 text-[#FED7AA] group-hover:rotate-12 transition-transform" />
-              <span>Choose Template & Build Website →</span>
+              <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
+              <span>Choose Template &amp; Build Website →</span>
             </button>
 
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#EFE7D8] hover:bg-[#D9A441]/30 text-[#7E121D] font-bold text-xs sm:text-sm border border-[#D9A441]/40 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#991B1B] font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
-              <LayoutDashboard className="w-4 h-4 text-[#7E121D]" />
+              <LayoutDashboard className="w-4 h-4 text-[#991B1B]" />
               <span>Go to Dashboard</span>
             </button>
           </div>
 
           {/* Bottom note for creating extra profiles */}
           <p className="text-[11px] sm:text-xs text-slate-500 pt-2 font-medium">
-            Want to add another event profile or edit current details? Visit your <button type="button" onClick={() => router.push("/dashboard")} className="font-bold text-[#7E121D] underline hover:opacity-80">Private Dashboard</button>.
+            Want to add another event profile or edit current details? Visit your <button type="button" onClick={() => router.push("/dashboard")} className="font-bold text-[#991B1B] underline hover:opacity-80">Private Dashboard</button>.
           </p>
         </div>
+      </section>
+    );
+  }
+
+  if (status !== "authenticated") {
+    return (
+      <section
+        id="details-form"
+        className={`text-slate-900 relative scroll-mt-24 ${
+          onClose ? "py-2 sm:py-4 bg-transparent" : "py-12 md:py-20 bg-white border-t border-b border-slate-200"
+        }`}
+      >
+        <div className="max-w-[1020px] mx-auto px-4 sm:px-6">
+          {/* Header matching Image 2 */}
+          <div className="flex items-center gap-3.5 mb-5">
+            <div className="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#991B1B] shadow-2xs shrink-0">
+              <UploadCloud className="w-5 h-5 text-[#991B1B]" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold font-serif text-slate-900 leading-tight">
+                Upload Your Wedding Invitation
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
+                Upload your invitation and our AI will automatically fill your wedding details.
+              </p>
+            </div>
+          </div>
+
+          {/* Luxury Dashed Floral Upload Card matching Image 2 */}
+          <div
+            onClick={() => setShowLoginModal(true)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragging(false);
+              setShowLoginModal(true);
+            }}
+            className={`relative rounded-3xl border-2 border-dashed transition-all duration-300 p-8 sm:p-14 text-center cursor-pointer overflow-hidden group shadow-xs ${
+              isDragging
+                ? "border-[#991B1B] bg-red-50/40 ring-4 ring-red-100"
+                : "border-rose-300 hover:border-[#991B1B]/70 bg-gradient-to-b from-white via-rose-50/30 to-white hover:shadow-md"
+            }`}
+          >
+            {/* Top-Right Floral Decorative Art */}
+            <div className="absolute top-0 right-0 w-36 sm:w-56 h-36 sm:h-56 pointer-events-none opacity-80 select-none transition-transform duration-500 group-hover:scale-105">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <g fill="none">
+                  <circle cx="170" cy="45" r="28" fill="#FFE4E6" opacity="0.8" />
+                  <circle cx="170" cy="45" r="20" fill="#FECDD3" opacity="0.9" />
+                  <circle cx="170" cy="45" r="8" fill="#BE123C" opacity="0.6" />
+                  <circle cx="130" cy="70" r="18" fill="#FFF1F2" opacity="0.85" />
+                  <circle cx="130" cy="70" r="12" fill="#FECDD3" opacity="0.9" />
+                  <circle cx="130" cy="70" r="5" fill="#E11D48" opacity="0.7" />
+                  <path d="M145 25 Q160 10 170 30 Q155 45 145 25 Z" fill="#FDA4AF" opacity="0.7" />
+                  <path d="M190 30 Q205 45 185 60 Q170 45 190 30 Z" fill="#FDA4AF" opacity="0.7" />
+                  <path d="M160 70 Q180 85 160 95 Q145 80 160 70 Z" fill="#FDA4AF" opacity="0.7" />
+                  <path d="M110 50 Q125 35 135 55 Q120 70 110 50 Z" fill="#FECDD3" opacity="0.8" />
+                  <path d="M180 110 Q150 120 135 150" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M150 125 Q140 115 130 122 Q140 135 150 125 Z" fill="#E2E8F0" opacity="0.8" />
+                  <path d="M165 140 Q175 145 170 155 Q160 150 165 140 Z" fill="#E2E8F0" opacity="0.8" />
+                </g>
+              </svg>
+            </div>
+
+            {/* Bottom-Left Floral Decorative Art */}
+            <div className="absolute bottom-0 left-0 w-36 sm:w-56 h-36 sm:h-56 pointer-events-none opacity-80 select-none transition-transform duration-500 group-hover:scale-105">
+              <svg viewBox="0 0 200 200" className="w-full h-full transform -scale-x-100 -scale-y-100">
+                <g fill="none">
+                  <circle cx="170" cy="45" r="28" fill="#FFE4E6" opacity="0.8" />
+                  <circle cx="170" cy="45" r="20" fill="#FECDD3" opacity="0.9" />
+                  <circle cx="170" cy="45" r="8" fill="#BE123C" opacity="0.6" />
+                  <circle cx="130" cy="70" r="18" fill="#FFF1F2" opacity="0.85" />
+                  <circle cx="130" cy="70" r="12" fill="#FECDD3" opacity="0.9" />
+                  <circle cx="130" cy="70" r="5" fill="#E11D48" opacity="0.7" />
+                  <path d="M145 25 Q160 10 170 30 Q155 45 145 25 Z" fill="#FDA4AF" opacity="0.7" />
+                  <path d="M190 30 Q205 45 185 60 Q170 45 190 30 Z" fill="#FDA4AF" opacity="0.7" />
+                  <path d="M110 50 Q125 35 135 55 Q120 70 110 50 Z" fill="#FECDD3" opacity="0.8" />
+                  <path d="M180 110 Q150 120 135 150" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M150 125 Q140 115 130 122 Q140 135 150 125 Z" fill="#E2E8F0" opacity="0.8" />
+                </g>
+              </svg>
+            </div>
+
+            {/* Floating Petals Sparkles */}
+            <div className="absolute top-1/4 left-1/5 w-3 h-4 rounded-full bg-rose-200/60 rotate-45 pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/5 w-2.5 h-3.5 rounded-full bg-rose-200/50 -rotate-12 pointer-events-none" />
+            <div className="absolute top-1/3 right-1/4 text-amber-400/70 text-xs pointer-events-none">✦</div>
+            <div className="absolute bottom-1/3 left-1/4 text-rose-300/80 text-xs pointer-events-none">✨</div>
+
+            {/* Center Content */}
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-4 max-w-lg mx-auto py-2">
+              {/* Circular Upload Cloud Badge */}
+              <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-rose-50/90 border border-rose-200 flex items-center justify-center text-[#991B1B] shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <UploadCloud className="w-10 sm:w-12 h-10 sm:h-12 text-[#991B1B]" strokeWidth={1.75} />
+              </div>
+
+              {/* Title Text */}
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-bold font-serif text-slate-900 tracking-tight">
+                  Drag &amp; Drop Your File Here
+                </h3>
+              </div>
+
+              {/* Divider: or */}
+              <div className="flex items-center gap-3 w-44 opacity-60 my-1">
+                <div className="h-[1px] bg-rose-300 flex-1" />
+                <span className="text-xs text-rose-900/60 font-medium">or</span>
+                <div className="h-[1px] bg-rose-300 flex-1" />
+              </div>
+
+              {/* Choose File Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowLoginModal(true);
+                }}
+                className="px-8 py-3 rounded-full bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer group-hover:scale-[1.02]"
+              >
+                <Upload className="w-4 h-4 text-white" />
+                <span>Choose File</span>
+              </button>
+
+              {/* Format Spec */}
+              <p className="text-xs text-slate-500 font-medium pt-0.5">
+                JPG, PNG, PDF, DOCX • Max file size 25MB
+              </p>
+
+              {/* AI Bottom Pill Banner */}
+              <div className="mt-4 pt-2 w-full">
+                <div className="bg-rose-50/90 border border-rose-200/80 rounded-full px-4 sm:px-6 py-2.5 flex items-center gap-3 text-left shadow-2xs max-w-xl mx-auto">
+                  <div className="w-7 h-7 rounded-full bg-white text-[#991B1B] flex items-center justify-center shrink-0 shadow-2xs border border-rose-100">
+                    <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-700 font-medium leading-tight">
+                    Our AI will automatically read names, dates, venues &amp; events from your invitation and fill the form instantly.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Reusable Login Modal */}
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          callbackUrl="/#details-form"
+          title="Sign In to Auto-Fill Details"
+          subtitle="Log in or create an account to upload your invitation and let our AI personalize your digital suite."
+        />
       </section>
     );
   }
@@ -1071,54 +1369,10 @@ export default function QuickStartDetailsWizard({
   return (
     <section
       id="details-form"
-      className={`text-[#221C17] relative scroll-mt-24 ${
-        onClose ? "py-2 sm:py-4 bg-transparent" : "py-16 md:py-24 bg-white sm:bg-[#F8F3EA] border-t border-b border-[#D9A441]/20"
+      className={`text-slate-900 relative scroll-mt-24 ${
+        onClose ? "py-2 sm:py-4 bg-transparent" : "py-16 md:py-24 bg-white border-t border-b border-slate-200"
       }`}
     >
-      {/* BEFORE LOGIN DULLED OVERLAY BANNER */}
-      {status !== "authenticated" && (
-        <div className="absolute inset-0 z-30 bg-[#F8F3EA]/75 backdrop-blur-[2px] flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl border-2 border-[#D9A441]/50 text-center space-y-5 transform transition-all">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7A1F2B] to-[#5C1620] text-[#D9A441] mx-auto flex items-center justify-center border-2 border-[#D9A441]/60 shadow-md">
-              <Lock className="w-8 h-8 text-[#D9A441]" />
-            </div>
-
-            <div className="space-y-2">
-              <span className="px-3.5 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-[10px] font-extrabold uppercase tracking-wider">
-                Authentication Required
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 leading-tight">
-                Please Login to Fill Event Details
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-                Log in or register your free Bervic account to enter your wedding/celebration details, upload invitation cards, and preview live templates personalized for you!
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => router.push("/auth/login?callbackUrl=/#details-form")}
-                className="flex-1 py-3.5 px-5 rounded-xl bg-[#7A1F2B] hover:bg-[#680E17] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
-              >
-                <LogIn className="w-4 h-4 text-[#D9A441]" />
-                <span>Log In to Continue</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => router.push("/auth/register?callbackUrl=/#details-form")}
-                className="flex-1 py-3.5 px-5 rounded-xl bg-white hover:bg-slate-50 text-[#7A1F2B] font-bold text-xs sm:text-sm border-2 border-[#7A1F2B]/30 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
-              >
-                <UserPlus className="w-4 h-4 text-[#7A1F2B]" />
-                <span>Create Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className={status !== "authenticated" ? "filter blur-[1.5px] opacity-35 grayscale-[25%] pointer-events-none select-none" : ""}>
       {/* UNSAVED DRAFT CONFIRMATION MODAL */}
       <AnimatePresence>
         {showUnsavedModal && (
@@ -1191,6 +1445,28 @@ export default function QuickStartDetailsWizard({
       </AnimatePresence>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative z-10">
 
+        {/* Banner when editing profile from landing page */}
+        {isEditingLandingProfile && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3 text-center sm:text-left">
+              <div className="w-9 h-9 rounded-xl bg-[#991B1B] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                <Edit3 className="w-4 h-4 text-amber-300" />
+              </div>
+              <div>
+                <h4 className="text-sm font-serif font-bold text-slate-900">Editing Celebration Profile Details</h4>
+                <p className="text-xs text-slate-600">Update your event details below and save your changes.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEditingLandingProfile(false)}
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 transition-colors shadow-2xs shrink-0 cursor-pointer"
+            >
+              Back to Overview
+            </button>
+          </div>
+        )}
+
         {/* Top Alert Callout Message */}
         <AnimatePresence>
           {alertMessage && (
@@ -1261,9 +1537,41 @@ export default function QuickStartDetailsWizard({
         {/* Top Bar Header for Close Action */}
         {onClose && (
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/80 bg-white/60 backdrop-blur-xs p-3 rounded-2xl">
-            <span className="text-xs sm:text-sm font-extrabold text-[#7E121D] uppercase tracking-wider">
-              {isNewProfile ? "Add New Event Profile" : "Edit Event Profile Details"}
-            </span>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <span className="text-xs sm:text-sm font-extrabold text-[#7E121D] uppercase tracking-wider">
+                {invitationId
+                  ? draft.eventType?.toUpperCase() === "BIRTHDAY"
+                    ? "Edit Birthday Invitation"
+                    : "Edit Wedding Invitation"
+                  : isNewProfile
+                  ? draft.eventType?.toUpperCase() === "BIRTHDAY"
+                    ? "Add New Birthday Profile"
+                    : "Add New Wedding Profile"
+                  : draft.eventType?.toUpperCase() === "BIRTHDAY"
+                  ? "Edit Birthday Profile"
+                  : "Edit Wedding Profile"}
+              </span>
+
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-white text-[10px] font-extrabold uppercase tracking-wider shadow-xs flex items-center gap-1 ${
+                  draft.eventType?.toUpperCase() === "BIRTHDAY"
+                    ? "bg-[#EA580C]"
+                    : "bg-[#7A1F2B]"
+                }`}
+              >
+                {draft.eventType?.toUpperCase() === "BIRTHDAY" ? (
+                  <>
+                    <Cake className="w-3 h-3 fill-current text-white/90" />
+                    <span>Birthday Form</span>
+                  </>
+                ) : (
+                  <>
+                    <Heart className="w-3 h-3 fill-current text-white/90" />
+                    <span>Wedding Form</span>
+                  </>
+                )}
+              </span>
+            </div>
 
             <button
               type="button"
@@ -1299,12 +1607,12 @@ export default function QuickStartDetailsWizard({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
           {/* Left Column: Smart File Auto-Extractor Upload Box */}
-          <div className="lg:col-span-4 bg-white rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 shadow-xs flex flex-col justify-between min-h-0 lg:min-h-[480px] relative overflow-hidden">
+          <div className="lg:col-span-4 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col justify-between min-h-0 lg:min-h-[480px] relative overflow-hidden">
 
             <div className="space-y-3 flex-1 flex flex-col pt-1">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EA580C]/10 text-[#EA580C] text-[10px] font-extrabold uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3 text-[#EA580C]" />
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-50 text-[#991B1B] text-[10px] font-extrabold uppercase tracking-wider border border-red-200">
+                  <Sparkles className="w-3 h-3 text-[#991B1B]" />
                   <span>AI MAGIC AUTO-FILL</span>
                 </div>
                 <h3 className="text-base font-serif font-bold text-[#0F172A] leading-tight">
@@ -1317,7 +1625,7 @@ export default function QuickStartDetailsWizard({
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="min-h-[120px] sm:min-h-[180px] border-2 border-dashed border-[#D9A441]/50 hover:border-[#EA580C] bg-gradient-to-b from-[#FFFDF9] to-[#FAF5ED] hover:bg-[#FFF7ED] rounded-2xl p-3.5 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center space-y-2 shadow-xs"
+                className="min-h-[120px] sm:min-h-[180px] border-2 border-dashed border-red-200 hover:border-[#991B1B] bg-red-50/20 hover:bg-red-50/50 rounded-2xl p-3.5 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center space-y-2 shadow-xs"
               >
                 <input
                   ref={fileInputRef}
@@ -1331,21 +1639,21 @@ export default function QuickStartDetailsWizard({
                 />
 
                 {extracting ? (
-                  <div className="py-2 flex flex-col items-center gap-1.5 text-[#EA580C]">
+                  <div className="py-2 flex flex-col items-center gap-1.5 text-[#991B1B]">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span className="text-xs font-bold animate-pulse">Extracting Details with AI...</span>
                   </div>
                 ) : (
                   <>
-                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#7E121D] to-[#5C1620] text-[#FED7AA] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#991B1B] to-[#7F1D1D] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                       <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-xs font-bold text-[#0F172A]">Drop Card or PDF Here</p>
-                      <p className="text-[10px] text-[#EA580C] font-semibold">⚡ Auto-fills form below</p>
+                      <p className="text-[10px] text-[#991B1B] font-semibold">⚡ Auto-fills form below</p>
                     </div>
-                    <span className="px-3 py-1 rounded-lg bg-[#7E121D] text-white text-[11px] font-bold shadow-xs group-hover:bg-[#680E17] transition-all flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-[#FED7AA]" />
+                    <span className="px-3 py-1 rounded-lg bg-[#991B1B] text-white text-[11px] font-bold shadow-xs group-hover:bg-[#7F1D1D] transition-all flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-white" />
                       <span>Upload Card / Doc</span>
                     </span>
                   </>
@@ -1353,7 +1661,7 @@ export default function QuickStartDetailsWizard({
               </div>
             </div>
 
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5 border border-[#D9A441]/20 text-[11px] text-slate-600 space-y-0.5 mt-2">
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 text-[11px] text-slate-600 space-y-0.5 mt-2">
               <div className="flex items-center gap-1 font-bold text-[#0F172A]">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>Zero Typing Needed!</span>
@@ -1388,10 +1696,10 @@ export default function QuickStartDetailsWizard({
                           onClick={() => saveStepData(draft, stepNum)}
                           className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             isActive
-                              ? "bg-[#7E121D] text-white border-[#7E121D] shadow-sm"
+                              ? "bg-[#991B1B] text-white border-[#991B1B] shadow-sm"
                               : isComplete
                               ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                              : "bg-amber-50/80 text-amber-900 border-amber-200/90 hover:bg-amber-100/80"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                           title={isComplete ? `Step ${stepNum}: Complete` : `Step ${stepNum}: Pending (${getStepStatus(stepNum, draft).summary})`}
                         >
@@ -1409,9 +1717,29 @@ export default function QuickStartDetailsWizard({
 
                   {/* Minimal Inline Step Title & Minimal Pending Badge */}
                   <div className="flex items-center justify-between gap-2 text-xs sm:text-sm font-semibold">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="text-[#EA580C] uppercase tracking-wider font-bold truncate">
-                        Step {draft.currentStep} of 9: {STEP_TITLES[draft.currentStep]}
+                    <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+                      <span className="text-[#991B1B] uppercase tracking-wider font-bold truncate">
+                        Step {draft.currentStep} of 9: {getStepTitle(draft.currentStep, draft.eventType)}
+                      </span>
+
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-white text-[10px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1 ${
+                          draft.eventType?.toUpperCase() === "BIRTHDAY"
+                            ? "bg-[#EA580C]"
+                            : "bg-[#991B1B]"
+                        }`}
+                      >
+                        {draft.eventType?.toUpperCase() === "BIRTHDAY" ? (
+                          <>
+                            <Cake className="w-3 h-3 text-white" />
+                            <span>Birthday</span>
+                          </>
+                        ) : (
+                          <>
+                            <Heart className="w-3 h-3 text-white" />
+                            <span>Wedding</span>
+                          </>
+                        )}
                       </span>
                     </div>
 
@@ -1428,7 +1756,7 @@ export default function QuickStartDetailsWizard({
                             saveStepData(draft, allPendingSteps[0].stepNum);
                           }
                         }}
-                        className="px-2.5 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-extrabold uppercase tracking-wide shrink-0 transition-colors cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full bg-red-50 hover:bg-red-100 text-[#991B1B] border border-red-200 text-[10px] font-extrabold uppercase tracking-wide shrink-0 transition-colors cursor-pointer"
                         title={allPendingSteps.map((s) => `Step ${s.stepNum} (${s.summary})`).join(", ")}
                       >
                         ⚠️ {allPendingSteps.length} Pending
@@ -1450,45 +1778,99 @@ export default function QuickStartDetailsWizard({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      { type: "WEDDING", label: "Wedding", icon: Heart, disabled: false },
-                      { type: "BIRTHDAY", label: "Birthday", icon: Cake, disabled: true },
-                      { type: "RELIGIOUS", label: "Religious / Home", icon: Home, disabled: true },
-                      { type: "ANNIVERSARY", label: "Anniversary", icon: Sparkles, disabled: true },
-                      { type: "PARTY", label: "Party / Gala", icon: PartyPopper, disabled: true },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      const isSelected = draft.eventType === item.type;
-                      return (
-                        <button
-                          key={item.type}
-                          type="button"
-                          disabled={item.disabled}
-                          onClick={() => {
-                            if (item.disabled) return;
-                            const updated = { ...draft, eventType: item.type };
-                            saveStepData(updated, 2);
-                          }}
-                          className={`p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col items-center justify-center gap-2 text-center relative ${
-                            item.disabled
-                              ? "bg-slate-100/60 border-slate-200 text-slate-400 cursor-not-allowed opacity-60"
-                              : isSelected
-                              ? "bg-[#FFF7ED] border-[#EA580C] text-[#EA580C] font-bold shadow-md ring-2 ring-[#EA580C]/20"
-                              : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 font-medium"
-                          }`}
-                        >
-                          {item.disabled && (
-                            <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-slate-200 text-[10px] font-bold text-slate-500">
-                              Soon
-                            </span>
-                          )}
-                          <Icon className={`w-6 h-6 ${item.disabled ? "text-slate-400" : isSelected ? "text-[#EA580C]" : "text-slate-500"}`} />
-                          <span className="text-xs sm:text-sm">{item.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {(() => {
+                    const existingTypes = isNewProfile || !draft.id
+                      ? existingProfiles.map((p) => (p.eventType || "WEDDING").toUpperCase())
+                      : existingProfiles.filter((p) => p.id !== draft.id).map((p) => (p.eventType || "WEDDING").toUpperCase());
+
+                    const hasExistingWedding = existingTypes.includes("WEDDING");
+                    const hasExistingBirthday = existingTypes.includes("BIRTHDAY");
+
+                    const items = [
+                      {
+                        type: "WEDDING",
+                        label: "Wedding",
+                        icon: Heart,
+                        disabled: (isNewProfile || !draft.id) && hasExistingWedding,
+                        badgeText: (isNewProfile || !draft.id) && hasExistingWedding ? "Created" : undefined,
+                      },
+                      {
+                        type: "BIRTHDAY",
+                        label: "Birthday",
+                        icon: Cake,
+                        disabled: (isNewProfile || !draft.id) && hasExistingBirthday,
+                        badgeText: (isNewProfile || !draft.id) && hasExistingBirthday ? "Created" : undefined,
+                      },
+                      { type: "RELIGIOUS", label: "Religious / Home", icon: Home, disabled: true, badgeText: "Soon" },
+                      { type: "ANNIVERSARY", label: "Anniversary", icon: Sparkles, disabled: true, badgeText: "Soon" },
+                      { type: "PARTY", label: "Party / Gala", icon: PartyPopper, disabled: true, badgeText: "Soon" },
+                    ];
+
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {items.map((item) => {
+                          const Icon = item.icon;
+                          const isSelected = draft.eventType === item.type;
+                          return (
+                            <button
+                              key={item.type}
+                              type="button"
+                              disabled={item.disabled}
+                              onClick={() => {
+                                if (item.disabled) return;
+                                const isBirthday = item.type === "BIRTHDAY";
+                                const updated: DraftData = {
+                                  ...draft,
+                                  eventType: item.type,
+                                  ...(isBirthday
+                                    ? {
+                                        venueName: draft.venueName === "Marriage Ceremony Hall" ? "Birthday Celebration Venue" : draft.venueName,
+                                        locations: BIRTHDAY_DEFAULT_LOCATIONS,
+                                        functions: BIRTHDAY_DEFAULT_FUNCTIONS,
+                                        timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
+                                        dressCode: draft.dressCode === "Traditional / Cocktail Attire" ? "Smart Casual / Party Chic" : draft.dressCode,
+                                        inviteLine: draft.inviteLine?.includes("wedding")
+                                          ? "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!"
+                                          : draft.inviteLine,
+                                      }
+                                    : {
+                                        venueName: draft.venueName === "Birthday Celebration Venue" ? "Marriage Ceremony Hall" : draft.venueName,
+                                        locations: WEDDING_DEFAULT_LOCATIONS,
+                                        functions: WEDDING_DEFAULT_FUNCTIONS,
+                                        timelineItems: WEDDING_DEFAULT_TIMELINE,
+                                        dressCode: draft.dressCode === "Smart Casual / Party Chic" ? "Traditional / Cocktail Attire" : draft.dressCode,
+                                        inviteLine: draft.inviteLine?.includes("birthday")
+                                          ? "Together with their families, request the pleasure of your company at the celebration of their wedding"
+                                          : draft.inviteLine,
+                                      }),
+                                };
+                                saveStepData(updated, 2);
+                              }}
+                              className={`p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col items-center justify-center gap-2 text-center relative ${
+                                item.disabled
+                                  ? "bg-slate-100/70 border-slate-200 text-slate-400 cursor-not-allowed opacity-60"
+                                  : isSelected
+                                  ? "bg-[#FFF7ED] border-[#EA580C] text-[#EA580C] font-bold shadow-md ring-2 ring-[#EA580C]/20"
+                                  : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 font-medium cursor-pointer"
+                              }`}
+                            >
+                              {item.badgeText && (
+                                <span className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold ${
+                                  item.badgeText === "Created"
+                                    ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                    : "bg-slate-200 text-slate-500"
+                                }`}>
+                                  {item.badgeText}
+                                </span>
+                              )}
+                              <Icon className={`w-6 h-6 ${item.disabled ? "text-slate-400" : isSelected ? "text-[#EA580C]" : "text-slate-500"}`} />
+                              <span className="text-xs sm:text-sm">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </motion.div>
               )}
 
@@ -1593,6 +1975,73 @@ export default function QuickStartDetailsWizard({
                           className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
                         />
                       </div>
+                    </div>
+                  )}
+
+                  {/* Dedicated Invitation Template Form Only: Desired Custom URL Route Availability Field */}
+                  {isDedicatedInvitationForm && (
+                    <div className="mt-4 pt-3.5 border-t border-slate-200 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80">
+                      <label className="block text-[11px] font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[#7A1F2B]">
+                          <Globe className="w-3.5 h-3.5 text-[#D9A441]" />
+                          Desired Custom URL Route
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-normal lowercase">
+                          /invitations/<span className="font-semibold text-[#7A1F2B]">{draft.customSlug || "desired-route"}</span>
+                        </span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400 select-none">
+                          bervic.com/invitations/
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. priya-rahul-wedding"
+                          value={draft.customSlug || ""}
+                          onChange={(e) => handleCustomSlugChange(e.target.value)}
+                          className={`w-full h-9 pl-44 pr-9 rounded-lg border text-xs font-medium focus:outline-none transition-colors ${
+                            slugStatus === "checking"
+                              ? "border-slate-300 bg-slate-50 text-slate-800"
+                              : slugStatus === "available"
+                              ? "border-emerald-500 bg-emerald-50/30 text-emerald-950 focus:border-emerald-600 ring-1 ring-emerald-500/30"
+                              : slugStatus === "taken"
+                              ? "border-rose-500 bg-rose-50/30 text-rose-950 focus:border-rose-600 ring-1 ring-rose-500/30"
+                              : "border-slate-200 bg-white focus:border-[#7A1F2B]"
+                          }`}
+                        />
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
+                          {slugStatus === "checking" && <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />}
+                          {slugStatus === "available" && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                          {slugStatus === "taken" && <X className="w-4 h-4 text-rose-600" />}
+                        </div>
+                      </div>
+
+                      {/* Availability Status Notification */}
+                      {draft.customSlug ? (
+                        <div className="mt-1.5 text-[11px] font-medium">
+                          {slugStatus === "checking" && (
+                            <span className="text-slate-500 flex items-center gap-1">
+                              <Loader2 className="w-3 h-3 animate-spin inline" /> Checking route availability...
+                            </span>
+                          )}
+                          {slugStatus === "available" && (
+                            <span className="text-emerald-700 font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" />
+                              Route available! Your shareable link will be: <code className="bg-emerald-100/80 px-1 py-0.5 rounded text-emerald-900 font-mono text-[10px]">bervic.com/invitations/{draft.customSlug}</code>
+                            </span>
+                          )}
+                          {slugStatus === "taken" && (
+                            <span className="text-rose-700 font-bold flex items-center gap-1">
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 inline" />
+                              Route &ldquo;{draft.customSlug}&rdquo; is already taken by another invitation. Please try a different name!
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-[10px] text-slate-500">
+                          Enter your preferred custom link URL. If left empty, an automatic link will be generated.
+                        </p>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -1772,7 +2221,7 @@ export default function QuickStartDetailsWizard({
                             </label>
                             <input
                               type="text"
-                              placeholder="e.g. Marriage Ceremony Venue"
+                              placeholder={draft.eventType === "BIRTHDAY" ? "e.g. Birthday Party Venue" : "e.g. Marriage Ceremony Venue"}
                               value={currentLoc.mainTitle}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
@@ -1789,7 +2238,7 @@ export default function QuickStartDetailsWizard({
                             </label>
                             <input
                               type="text"
-                              placeholder="e.g. JW Marriott Grand Ballroom"
+                              placeholder={draft.eventType === "BIRTHDAY" ? "e.g. Celebration Hall & Lawn" : "e.g. JW Marriott Grand Ballroom"}
                               value={currentLoc.subLabel}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
@@ -2032,7 +2481,7 @@ export default function QuickStartDetailsWizard({
                                 />
                               </div>
 
-                              <div className="h-9 px-3 rounded-lg bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
+                              <div className="h-9 px-3 rounded-lg bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
                                 {formatDatePill(currentFn.date || draft.eventDate || "")}
                               </div>
                             </div>
@@ -2054,7 +2503,7 @@ export default function QuickStartDetailsWizard({
                                 />
                               </div>
 
-                              <div className="h-9 px-3 rounded-lg bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
+                              <div className="h-9 px-3 rounded-lg bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
                                 {formatTimePill(currentFn.time)}
                               </div>
                             </div>
@@ -2203,7 +2652,7 @@ export default function QuickStartDetailsWizard({
                                 />
                               </div>
 
-                              <div className="h-9 px-3 rounded-lg bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
+                              <div className="h-9 px-3 rounded-lg bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
                                 {formatDatePill(currentItem.date || draft.eventDate || "")}
                               </div>
                             </div>
@@ -2225,7 +2674,7 @@ export default function QuickStartDetailsWizard({
                                 />
                               </div>
 
-                              <div className="h-9 px-3 rounded-lg bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
+                              <div className="h-9 px-3 rounded-lg bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold flex items-center justify-center shrink-0 min-w-[105px]">
                                 {formatTimePill(currentItem.time)}
                               </div>
                             </div>
@@ -2246,7 +2695,7 @@ export default function QuickStartDetailsWizard({
                             onClick={() => setActiveTimelineIndex(idx)}
                             className={`p-2.5 rounded-xl border text-xs flex items-center justify-between cursor-pointer transition-all ${
                               safeTlIdx === idx
-                                ? "bg-amber-50/90 border-amber-300 text-amber-950 font-bold shadow-2xs"
+                                ? "bg-red-50 border-red-300 text-[#991B1B] font-bold shadow-2xs"
                                 : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                             }`}
                           >
@@ -2305,26 +2754,34 @@ export default function QuickStartDetailsWizard({
                     onChange={handleGalleryUpload}
                   />
 
-                  {/* Bride & Groom Compact Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Bride Photo */}
+                  {/* Bride / Celebrant / Groom Compact Cards */}
+                  <div className={`grid ${draft.eventType === "BIRTHDAY" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"} gap-3`}>
+                    {/* Bride / Celebrant Photo */}
                     <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#EA580C]/30 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
                         {draft.coupleImage ? (
                           <img
                             src={draft.coupleImage}
-                            alt="Bride"
+                            alt={draft.eventType === "BIRTHDAY" ? "Celebrant" : "Bride"}
                             className="w-12 h-12 rounded-full object-cover border border-[#EA580C]/40 shrink-0"
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-rose-50 border border-dashed border-rose-200 flex items-center justify-center text-rose-500 shrink-0">
-                            <Heart className="w-5 h-5 text-rose-400" />
+                            {draft.eventType === "BIRTHDAY" ? (
+                              <User className="w-5 h-5 text-rose-500" />
+                            ) : (
+                              <Heart className="w-5 h-5 text-rose-400" />
+                            )}
                           </div>
                         )}
 
                         <div className="min-w-0">
                           <span className="text-[11px] font-bold text-[#0F172A] uppercase tracking-wider block truncate">
-                            {draft.eventType === "WEDDING" ? "Bride Photo" : "Host #1 Photo"}
+                            {draft.eventType === "BIRTHDAY"
+                              ? "Celebrant Photo"
+                              : draft.eventType === "WEDDING"
+                              ? "Bride Photo"
+                              : "Host #1 Photo"}
                           </span>
                           <p className="text-xs text-slate-500 truncate font-medium">
                             {draft.hostNameOne || "Not specified"}
@@ -2346,7 +2803,7 @@ export default function QuickStartDetailsWizard({
                             type="button"
                             onClick={() => setDraft({ ...draft, coupleImage: "" })}
                             className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
-                            title="Delete Bride Photo"
+                            title={draft.eventType === "BIRTHDAY" ? "Delete Celebrant Photo" : "Delete Bride Photo"}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -2354,52 +2811,54 @@ export default function QuickStartDetailsWizard({
                       </div>
                     </div>
 
-                    {/* Groom Photo */}
-                    <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#EA580C]/30 transition-all">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {draft.partnerTwoImage ? (
-                          <img
-                            src={draft.partnerTwoImage}
-                            alt="Groom"
-                            className="w-12 h-12 rounded-full object-cover border border-[#EA580C]/40 shrink-0"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-amber-50 border border-dashed border-amber-200 flex items-center justify-center text-amber-500 shrink-0">
-                            <User className="w-5 h-5 text-amber-500" />
+                    {/* Groom / Host #2 Photo (Wedding / Multi-host only) */}
+                    {draft.eventType !== "BIRTHDAY" && (
+                      <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs hover:border-[#EA580C]/30 transition-all">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {draft.partnerTwoImage ? (
+                            <img
+                              src={draft.partnerTwoImage}
+                              alt="Groom"
+                              className="w-12 h-12 rounded-full object-cover border border-[#EA580C]/40 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-amber-50 border border-dashed border-amber-200 flex items-center justify-center text-amber-500 shrink-0">
+                              <User className="w-5 h-5 text-amber-500" />
+                            </div>
+                          )}
+
+                          <div className="min-w-0">
+                            <span className="text-[11px] font-bold text-[#0F172A] uppercase tracking-wider block truncate">
+                              {draft.eventType === "WEDDING" ? "Groom Photo" : "Host #2 Photo"}
+                            </span>
+                            <p className="text-xs text-slate-500 truncate font-medium">
+                              {draft.hostNameTwo || "Not specified"}
+                            </p>
                           </div>
-                        )}
-
-                        <div className="min-w-0">
-                          <span className="text-[11px] font-bold text-[#0F172A] uppercase tracking-wider block truncate">
-                            {draft.eventType === "WEDDING" ? "Groom Photo" : "Host #2 Photo"}
-                          </span>
-                          <p className="text-xs text-slate-500 truncate font-medium">
-                            {draft.hostNameTwo || "Not specified"}
-                          </p>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => partnerTwoPhotoInputRef.current?.click()}
-                          className="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-[#7E121D] text-slate-700 hover:text-white text-xs font-bold transition-all flex items-center gap-1"
-                        >
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>{draft.partnerTwoImage ? "Change" : "Upload"}</span>
-                        </button>
-                        {draft.partnerTwoImage && (
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
-                            onClick={() => setDraft({ ...draft, partnerTwoImage: "" })}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
-                            title="Delete Groom Photo"
+                            onClick={() => partnerTwoPhotoInputRef.current?.click()}
+                            className="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-[#7E121D] text-slate-700 hover:text-white text-xs font-bold transition-all flex items-center gap-1"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>{draft.partnerTwoImage ? "Change" : "Upload"}</span>
                           </button>
-                        )}
+                          {draft.partnerTwoImage && (
+                            <button
+                              type="button"
+                              onClick={() => setDraft({ ...draft, partnerTwoImage: "" })}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                              title="Delete Groom Photo"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Hero Cover Photo */}
@@ -2507,85 +2966,93 @@ export default function QuickStartDetailsWizard({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  {/* YouTube Video Section Guide */}
-                  <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-xs text-amber-950 space-y-1.5 shadow-2xs">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                      <span>💡 How to Add Your YouTube Wedding Video</span>
-                    </div>
-                    <ol className="list-decimal list-inside space-y-0.5 text-[11px] text-amber-900/90 leading-relaxed font-medium">
-                      <li>Upload your wedding teaser/glimpse to <strong>YouTube</strong> (Public or Unlisted).</li>
-                      <li>In YouTube Studio under Advanced Settings, ensure <strong>&quot;Allow embedding&quot;</strong> is ON.</li>
-                      <li>Copy the YouTube video link from your browser or share button and paste it below!</li>
-                    </ol>
-                  </div>
-
-                  {/* Shadcn Toggle Switch: Show / Hide Video Section */}
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
-                        <Video className="w-4 h-4" />
+                  {/* YouTube Video Section Guide (Wedding Only) */}
+                  {draft.eventType !== "BIRTHDAY" && (
+                    <>
+                      <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-xs text-amber-950 space-y-1.5 shadow-2xs">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                          <span>💡 How to Add Your YouTube Wedding Video</span>
+                        </div>
+                        <ol className="list-decimal list-inside space-y-0.5 text-[11px] text-amber-900/90 leading-relaxed font-medium">
+                          <li>Upload your wedding teaser/glimpse to <strong>YouTube</strong> (Public or Unlisted).</li>
+                          <li>In YouTube Studio under Advanced Settings, ensure <strong>&quot;Allow embedding&quot;</strong> is ON.</li>
+                          <li>Copy the YouTube video link from your browser or share button and paste it below!</li>
+                        </ol>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
-                        <p className="text-[11px] text-slate-500">
-                          Toggle ON to display your wedding teaser video, or OFF to hide the video section completely from your invitation card.
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Shadcn Switch Toggle */}
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={draft.showVideo !== false}
-                      onClick={() => setDraft({ ...draft, showVideo: !(draft.showVideo !== false) })}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        draft.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          draft.showVideo !== false ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
+                      {/* Shadcn Toggle Switch: Show / Hide Video Section */}
+                      <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
+                            <Video className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
+                            <p className="text-[11px] text-slate-500">
+                              Toggle ON to display your wedding teaser video, or OFF to hide the video section completely from your invitation card.
+                            </p>
+                          </div>
+                        </div>
 
-                  {/* Paste YouTube Video Link (Conditional on Toggle) */}
-                  {draft.showVideo !== false ? (
-                    <div>
-                      <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-                        Paste YouTube Video Link
-                      </label>
-                      <div className="relative">
-                        <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                          value={draft.loveStoryVideoUrl}
-                          onChange={(e) => setDraft({ ...draft, loveStoryVideoUrl: e.target.value })}
-                          className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
-                        />
+                        {/* Shadcn Switch Toggle */}
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={draft.showVideo !== false}
+                          onClick={() => setDraft({ ...draft, showVideo: !(draft.showVideo !== false) })}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            draft.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                              draft.showVideo !== false ? "translate-x-5" : "translate-x-0"
+                            }`}
+                          />
+                        </button>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-xl border border-dashed border-slate-300 bg-slate-100/60 text-slate-500 text-xs flex items-center gap-2">
-                      <VideoOff className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>Video section is currently <strong>Hidden</strong>. Toggle the switch ON above if you wish to display a wedding video on your invitation card.</span>
-                    </div>
+
+                      {/* Paste YouTube Video Link (Conditional on Toggle) */}
+                      {draft.showVideo !== false ? (
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                            Paste YouTube Video Link
+                          </label>
+                          <div className="relative">
+                            <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              type="text"
+                              placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                              value={draft.loveStoryVideoUrl}
+                              onChange={(e) => setDraft({ ...draft, loveStoryVideoUrl: e.target.value })}
+                              className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-1">
+                            Supports standard YouTube watch links, shorts, shortlinks (youtu.be), and embed URLs.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-xl border border-dashed border-slate-300 bg-slate-100/60 text-slate-500 text-xs flex items-center gap-2">
+                          <VideoOff className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span>Video section is currently <strong>Hidden</strong>. Toggle the switch ON above if you wish to display a wedding video on your invitation card.</span>
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {/* Love Story Narrative Text */}
+                  {/* Story / Celebration Narrative Text */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-                      Love Story Narrative Text
+                      {draft.eventType === "BIRTHDAY" ? "Celebration Message / Story Note" : "Love Story Narrative Text"}
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Enter your love story narrative here. Share how you first met, your favorite memories together, and your excitement for your wedding day with your guests."
+                      placeholder={
+                        draft.eventType === "BIRTHDAY"
+                          ? "Enter a special birthday note or celebration message for your guests..."
+                          : "Enter your love story narrative here. Share how you first met, your favorite memories together, and your excitement for your wedding day with your guests."
+                      }
                       value={draft.loveStoryText}
                       onChange={(e) => setDraft({ ...draft, loveStoryText: e.target.value })}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
@@ -2815,7 +3282,6 @@ export default function QuickStartDetailsWizard({
             )}
           </div>
         </div>
-      </div>
       </div>
     </section>
   );

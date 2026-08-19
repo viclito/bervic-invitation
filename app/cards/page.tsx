@@ -48,7 +48,7 @@ export default function CardsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#221C17] flex items-center justify-center text-[#F8F3EA] text-sm font-bold">
+        <div className="min-h-screen bg-white flex items-center justify-center text-slate-900 text-sm font-bold">
           Loading Instagram Card Studio...
         </div>
       }

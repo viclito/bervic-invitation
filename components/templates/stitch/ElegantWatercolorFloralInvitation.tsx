@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -18,7 +19,8 @@ export default function ElegantWatercolorFloralInvitation(
       ? props.partnerOne
       : "Evelyn";
 
-  const brandName = `${celebrantName.toUpperCase()}'S 30TH`;
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
+  const brandName = ageMilestone ? `${celebrantName.toUpperCase()}'S ${ageMilestone.toUpperCase()}` : `${celebrantName.toUpperCase()}'S CELEBRATION`;
   const celebrationTitle = `${celebrantName}'s Special Day`;
 
   // Countdown timer state
@@ -30,9 +32,7 @@ export default function ElegantWatercolorFloralInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-09-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -51,11 +51,11 @@ export default function ElegantWatercolorFloralInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching 100% birthday vibe
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -297,7 +297,7 @@ export default function ElegantWatercolorFloralInvitation(
             <h1 className="text-4xl md:text-6xl text-[#7d562d] text-glow font-bold leading-tight font-serif">
               {celebrantName}'s <br />
               <span className="font-sans text-[#5d6143] text-xl md:text-2xl mx-4 italic font-normal">
-                ♥ 30th ♥
+                {ageMilestone ? `♥ ${ageMilestone} ♥` : "♥ Celebration ♥"}
               </span>{" "}
               <br />
               Special Day
@@ -360,7 +360,7 @@ export default function ElegantWatercolorFloralInvitation(
               </div>
             </div>
             <p className="text-base text-[#5d6143] mt-8 italic font-sans">
-              ✨ Get ready for {celebrantName}'s 30th Birthday Celebration! ✨
+              ✨ Get ready for {celebrantName}'s {ageMilestone ? `${ageMilestone} Birthday` : "Birthday"} Celebration! ✨
             </p>
           </div>
         </section>
@@ -488,7 +488,7 @@ export default function ElegantWatercolorFloralInvitation(
                 The Venue
               </h2>
               <p className="text-base text-[#50453b]">
-                Join us at this beautiful estate to celebrate {celebrantName}'s 30th birthday.
+                Join us at this beautiful estate to celebrate {celebrantName}'s {ageMilestone ? `${ageMilestone} birthday` : "birthday"}.
               </p>
 
               {/* Party Venue */}
@@ -623,7 +623,7 @@ export default function ElegantWatercolorFloralInvitation(
             {brandName}
           </div>
           <div>
-            © {new Date().getFullYear()} {celebrantName}'s 30th Birthday. Crafted with Love.
+            © {new Date().getFullYear()} {celebrantName}'s {ageMilestone ? `${ageMilestone} Birthday` : "Birthday"}. Crafted with Love.
           </div>
           <div className="flex gap-6 font-semibold">
             <a href="#story" className="hover:text-[#7d562d] transition-colors">

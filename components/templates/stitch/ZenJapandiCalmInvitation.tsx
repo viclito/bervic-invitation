@@ -1,11 +1,12 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, Wine, Utensils, Music, MapPin, Car, Shirt } from "lucide-react";
+import { Menu, X, Wine, Utensils, Music, MapPin, Car, Shirt, ExternalLink } from "lucide-react";
 
 export default function ZenJapandiCalmInvitation(
   props: TemplateClassicFloralProps
@@ -18,7 +19,8 @@ export default function ZenJapandiCalmInvitation(
       ? props.partnerOne
       : "Evelyn";
 
-  const celebrationHeader = `EVELYN'S 30TH`;
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
+  const celebrationHeader = ageMilestone ? `${celebrantName.toUpperCase()}'S ${ageMilestone.toUpperCase()}` : `${celebrantName.toUpperCase()}'S BIRTHDAY`;
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -28,9 +30,7 @@ export default function ZenJapandiCalmInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-11-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -48,11 +48,11 @@ export default function ZenJapandiCalmInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen a439264a19914fe392d707563594c943
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -98,13 +98,29 @@ export default function ZenJapandiCalmInvitation(
         ];
 
   // Venue location matching exact Stitch screen a439264a19914fe392d707563594c943
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "123 Calm Way, Tranquil Hills"
+  );
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Serene Estate",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Calm Way, Tranquil Hills",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
       : {
-          name: "The Serene Estate",
-          address: "123 Calm Way, Tranquil Hills",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "The Serene Estate",
+          address: props.contactAddress || props.venuePlace || "123 Calm Way, Tranquil Hills",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
         };
 
   // Hero image fallback matching Japandi serenity
@@ -331,9 +347,13 @@ export default function ZenJapandiCalmInvitation(
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 relative h-[480px] w-full rounded-lg overflow-hidden group shadow-sm">
               <img
-                alt="Abstract pampas grass still life"
+                alt="Celebrant story portrait"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxunjWYJwmyADikBYUO0hJa44BWO9mC0jhz53TzDc0_4QY_hOgHOdL6K1XCc8UVH7lSIDxMm8MG7vkjF38u_R6fAO0K7-9UZbfKFLaKPdpSVYARL5C0f2EeO6KMmpFXwClQeEMqCrDCrPLKhUUD7ZIasaw6RtkjxAv9V6oUj9EqxICq3De2a2rGpBpIwmR3pGxznubq_WScfYVFzZOtTR5lPN0NAVajFOACMAe4eIeRuKgPvAudHhq"
+                src={
+                  props.coupleImage ||
+                  props.coverImage ||
+                  "https://lh3.googleusercontent.com/aida-public/AB6AXuArG5YFkRTyG0NbTRVMqnmH7qfHqXAFAyK9JzYzo8qCgb5rl-LsBpf_yfiu6j1B5B-pS3COjC9Zvf5xCmQWnOci5lJyAwvFF6deG8F2jdka4FfDAsO2XcwegK14vWOKrCgrOjviqY8ei882FdnnfnL0fcl7-gbrMahUOousxE2MhxV44VfugAIk0O2C2UoLNZQprgDmCkbJfVVcUt5ZQ1I4lAaOlbjmPoRR5NTrOeTVk0aIg86H_iIy"
+                }
               />
               <div className="absolute inset-0 bg-[#60291e]/5 group-hover:bg-transparent transition-colors duration-500"></div>
             </div>
@@ -431,10 +451,19 @@ export default function ZenJapandiCalmInvitation(
                   <h4 className="text-xs font-semibold text-[#60291e] uppercase tracking-widest">
                     Location
                   </h4>
-                  <p className="text-sm text-[#534340] mt-1">
-                    {mainVenue.name || "The Serene Estate"}<br />
-                    {mainVenue.address || "123 Calm Way, Tranquil Hills"}
-                  </p>
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-[#534340] mt-1 hover:text-[#60291e] transition-colors block group"
+                  >
+                    <span className="font-semibold block text-[#60291e] group-hover:underline">
+                      {mainVenue.name || "The Serene Estate"}
+                    </span>
+                    <span className="text-[#534340] block">
+                      {mainVenue.address || "123 Calm Way, Tranquil Hills"}
+                    </span>
+                  </a>
                 </div>
               </div>
 
@@ -461,25 +490,54 @@ export default function ZenJapandiCalmInvitation(
                   </p>
                 </div>
               </div>
+
+              <div className="pt-2">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#60291e] text-[#fcf9f4] px-6 py-3 rounded text-xs uppercase tracking-widest font-semibold hover:bg-[#7a3426] transition-colors shadow-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions on Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                </a>
+              </div>
             </div>
 
-            {/* Map Area */}
-            <div className="relative w-full h-[380px] bg-[#fcf9f4] rounded-lg border border-[#d8c2bd]/40 flex items-center justify-center overflow-hidden shadow-sm">
+            {/* Map Area - Clickable */}
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="group relative w-full h-[380px] bg-[#fcf9f4] rounded-xl border border-[#d8c2bd]/60 flex flex-col items-center justify-center overflow-hidden shadow-sm hover:shadow-md hover:border-[#60291e]/40 transition-all p-8 text-center"
+            >
               <div
-                className="absolute inset-0 opacity-40 pointer-events-none"
+                className="absolute inset-0 opacity-40 pointer-events-none group-hover:opacity-60 transition-opacity"
                 style={{
                   backgroundImage:
                     "radial-gradient(#d8c2bd 1px, transparent 1px)",
                   backgroundSize: "20px 20px",
                 }}
               />
-              <div className="relative z-10 flex flex-col items-center text-[#6b5c4c] gap-2">
-                <MapPin className="w-10 h-10 text-[#60291e]" />
-                <span className="text-xs font-semibold tracking-widest uppercase">
-                  Map Details Provided Upon RSVP
+              <div className="relative z-10 flex flex-col items-center text-[#6b5c4c] gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#f6f3ee] border border-[#d8c2bd] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                  <MapPin className="w-7 h-7 text-[#60291e]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-serif text-lg font-bold text-[#60291e]">
+                    {mainVenue.name || "The Serene Estate"}
+                  </h3>
+                  <p className="text-xs text-[#534340] max-w-xs line-clamp-2">
+                    {mainVenue.address || "123 Calm Way, Tranquil Hills"}
+                  </p>
+                </div>
+                <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-[#60291e] bg-[#f6f3ee] px-4 py-2 rounded-full border border-[#d8c2bd]/80 group-hover:bg-[#60291e] group-hover:text-white transition-colors duration-200">
+                  <span>Open in Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </span>
               </div>
-            </div>
+            </a>
           </div>
         </section>
 

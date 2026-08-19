@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -362,7 +362,7 @@ export default function RoyalMaharaniInvitation(props: TemplateClassicFloralProp
       </section>
 
       {/* Love Story Video Facade */}
-      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
         <section className="py-24 px-6 md:px-16 bg-[#210917] text-white">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-serif text-4xl font-bold text-[#e6c280] mb-3">Royal Film</h2>

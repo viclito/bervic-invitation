@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -28,9 +29,7 @@ export default function CheerfulConfettiCarnivalInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-11-01T19:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -48,11 +47,11 @@ export default function CheerfulConfettiCarnivalInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 64ce78a8a1eb42f9a5887b466b991367
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {

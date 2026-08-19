@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -321,7 +321,7 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
       </section>
 
       {/* Video Teaser Facade */}
-      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
         <section className="px-6 md:px-16 py-20">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-black text-white uppercase mb-8 tracking-tight">Save the Date Video</h2>

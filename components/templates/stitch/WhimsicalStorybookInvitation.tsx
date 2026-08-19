@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import { Menu, X, MapPin, Car, Compass } from "lucide-react";
@@ -15,29 +15,30 @@ export default function WhimsicalStorybookInvitation(
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
 
-  // Partner names & headers
-  const partner1 = props.partnerOne || "Sasa Adi Tinah";
-  const partner2 = props.partnerTwo || "Allan Susilo";
-  const celebrationHeader = `${partner1} & ${partner2}`;
+  // Celebrant name & headers
+  const celebrantName =
+    props.celebrantName ||
+    (props.partnerOne && props.partnerOne !== "Your Name" ? props.partnerOne : "Evelyn");
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
+  const celebrationHeader = ageMilestone
+    ? `${celebrantName}'s ${ageMilestone} Birthday`
+    : `${celebrantName}'s Celebration`;
 
   // Video state
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
-  // Couple portrait images
-  const brideImg =
+  // Celebrant portrait images
+  const celebrantImg =
     props.coupleImage ||
     props.coverImage ||
-    "/images/templates/groom-bride-1.jpg";
-
-  const groomImg =
-    props.partnerTwoImage ||
-    props.coverImage ||
-    "/images/templates/groom-bride-2.jpg";
+    props.heroImage ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuAZJB7Ka0QuhOUlCq-WvrM9YMyT_qQPfo-5wStIzRDkI1rE9oGCRjHJdaWYb_Tt-1-cPvwl3V18SoideDwVuoURk_6KoaSahb4uvAzqjvjXFmcYtpduAe51zfVp1BCorfBQSLC8RNBqc0bQNLVdgOOboQj_9n5bUQOH1TNuz9dZ0-wAoMjGXonAU0jf1DHmoeXBD6f0kRy5N8hp_UHBZqxTOxq-l-hRSVSKr_AMKMmRVNBpLpeFr_Og";
 
   const coverImg =
     props.coverImage ||
     props.heroImage ||
-    "/images/templates/couple-photo.jpg";
+    props.coupleImage ||
+    celebrantImg;
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -101,7 +102,7 @@ export default function WhimsicalStorybookInvitation(
       return new Date("2026-10-15T16:00:00").getTime();
     };
 
-    const targetDate = parseTargetDate();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -163,7 +164,7 @@ export default function WhimsicalStorybookInvitation(
 
   const displayStoryText =
     props.loveStoryText ||
-    `From quiet beginnings to a lifetime of shared dreams, ${partner1} and ${partner2}'s journey together is rooted in love, laughter, and companionship. We invite you to join us as we celebrate the start of our forever chapter.`;
+    `Join us as we celebrate another magical year filled with laughter, cherished moments, and wonderful friendships. Here is to celebrating ${celebrantName}'s special milestone with those who make life beautiful!`;
 
   // Venue location fallback & sanitization
   const rawVenueName =
@@ -315,8 +316,8 @@ export default function WhimsicalStorybookInvitation(
       {/* Envelope Cover Integration */}
       <PersonalizedEnvelopeCover
         guestName={props.guestName}
-        partnerOne={partner1}
-        partnerTwo={partner2}
+        partnerOne={celebrantName}
+        partnerTwo=""
         weddingTime={props.weddingTime || "Saturday at 4:00 PM"}
         isCustomizer={props.isCustomizer}
         templateSlug="whimsical-storybook"
@@ -452,11 +453,11 @@ export default function WhimsicalStorybookInvitation(
 
           <div className="relative z-10 max-w-4xl mx-auto text-center mt-12 space-y-6">
             <div className="inline-block px-5 py-2 bg-[#5f5f00]/10 rounded-full text-[#5f5f00] text-xs font-bold uppercase tracking-[0.25em] border border-[#5f5f00]/30 shadow-sm">
-              {props.tagline || "TOGETHER WITH THEIR FAMILIES"}
+              {props.tagline || (ageMilestone ? `CELEBRATING ${ageMilestone.toUpperCase()}` : "A MAGICAL CELEBRATION")}
             </div>
 
             <h1 className="text-4xl md:text-7xl font-bold font-serif sparkle-container gold-shimmer-text leading-tight">
-              {partner1} &amp; {partner2}
+              {celebrantName}&apos;s {ageMilestone ? `${ageMilestone} Birthday` : "Special Day"}
               <div className="sparkle"></div>
               <div className="sparkle"></div>
               <div className="sparkle"></div>
@@ -464,8 +465,9 @@ export default function WhimsicalStorybookInvitation(
             </h1>
 
             <p className="text-base md:text-xl font-serif text-[#484837] max-w-2xl mx-auto leading-relaxed italic">
-              {props.inviteLine ||
-                "Request the pleasure of your company at the celebration of their wedding."}
+              {props.inviteLine && !props.inviteLine.includes("wedding")
+                ? props.inviteLine
+                : "Join us in celebrating this special birthday with an evening of music, delicious dining, and wonderful company!"}
             </p>
 
             {props.welcomeMessage && (
@@ -489,51 +491,33 @@ export default function WhimsicalStorybookInvitation(
           <div className="absolute -right-20 bottom-20 w-80 h-80 bg-[#cccc52] opacity-20 blur-3xl rounded-full mix-blend-multiply"></div>
         </section>
 
-        {/* Meet the Bride & Groom Section */}
+        {/* Meet the Celebrant Section */}
         <section className="py-20 px-6 md:px-16 bg-[#fcf9f8] border-b border-[#cac7b1]/30" id="couple">
-          <div className="max-w-5xl mx-auto text-center space-y-12">
+          <div className="max-w-4xl mx-auto text-center space-y-12">
             <div>
               <span className="text-xs font-bold text-[#904d00] uppercase tracking-[0.3em] block mb-2">
-                The Happy Couple
+                {ageMilestone ? `Celebrating ${ageMilestone}` : "The Birthday Celebrant"}
               </span>
               <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-                Meet the Bride &amp; Groom
+                Celebrating {celebrantName}
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-              {/* Bride Card */}
+            <div className="max-w-md mx-auto">
+              {/* Celebrant Card */}
               <div className="group relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#5f5f00]/30 bg-white p-3">
-                <div className="relative h-96 w-full rounded-2xl overflow-hidden">
+                <div className="relative h-[420px] w-full rounded-2xl overflow-hidden">
                   <img
-                    src={brideImg}
-                    alt={`${partner1} - Bride`}
+                    src={celebrantImg}
+                    alt={`${celebrantName} - Birthday Celebrant`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#5f5f00]/90 via-transparent to-transparent" />
                   <div className="absolute bottom-6 left-6 text-left text-white">
                     <span className="text-[10px] uppercase tracking-[0.25em] text-[#e9e86b] font-bold block mb-1">
-                      Bride
+                      {ageMilestone ? `${ageMilestone} Milestone` : "Birthday Celebrant"}
                     </span>
-                    <h3 className="text-3xl font-serif font-bold">{partner1}</h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Groom Card */}
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#5f5f00]/30 bg-white p-3">
-                <div className="relative h-96 w-full rounded-2xl overflow-hidden">
-                  <img
-                    src={groomImg}
-                    alt={`${partner2} - Groom`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#5f5f00]/90 via-transparent to-transparent" />
-                  <div className="absolute bottom-6 left-6 text-left text-white">
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-[#e9e86b] font-bold block mb-1">
-                      Groom
-                    </span>
-                    <h3 className="text-3xl font-serif font-bold">{partner2}</h3>
+                    <h3 className="text-3xl font-serif font-bold">{celebrantName}</h3>
                   </div>
                 </div>
               </div>
@@ -604,17 +588,14 @@ export default function WhimsicalStorybookInvitation(
           </div>
         </section>
 
-        {/* Our Story Section */}
+        {/* Story Section */}
         <section className="py-24 px-6 md:px-16 bg-[#fcf9f8] relative" id="about">
           <div className="max-w-[1280px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-5 md:col-start-2 order-2 md:order-1 space-y-6">
                 <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-                  Our Love Story
+                  The Journey &amp; Milestones
                 </h2>
-                <p className="text-base font-serif text-[#484837] leading-relaxed">
-                  Every great love story has its turning points, those beautiful chapters where two lives intertwine seamlessly. This celebration marks one of those unforgettable moments for {partner1} and {partner2}.
-                </p>
                 <p className="text-base font-serif text-[#484837] leading-relaxed">
                   {displayStoryText}
                 </p>
@@ -624,7 +605,7 @@ export default function WhimsicalStorybookInvitation(
                 <div className="relative">
                   <div className="organic-shape w-full aspect-square bg-[#ffdcc2] opacity-40 absolute -inset-4 z-0 pointer-events-none"></div>
                   <img
-                    alt="Couple portrait"
+                    alt={`${celebrantName} portrait`}
                     className="relative z-10 rounded-2xl w-full h-auto object-cover shadow-lg filter sepia-[.1]"
                     src={coverImg}
                   />
@@ -723,51 +704,7 @@ export default function WhimsicalStorybookInvitation(
           </div>
         </section>
 
-        {/* Our Celebration Film Video Section */}
-        <section className="py-24 px-6 md:px-16 bg-[#f6f3f2] relative border-b border-[#cac7b1]/30" id="video">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div>
-              <span className="text-xs font-bold text-[#904d00] uppercase tracking-[0.3em] block mb-2">
-                Cinematic Moments
-              </span>
-              <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-text">
-                Our Celebration Film
-              </h2>
-              <p className="text-sm font-serif text-[#484837] mt-2 max-w-xl mx-auto">
-                Watch a preview of our story and shared memories together.
-              </p>
-            </div>
 
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-[#5f5f00]/30 aspect-video bg-black group">
-              {isPlayingVideo ? (
-                <iframe
-                  src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                  title="Love Story Video"
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="relative w-full h-full cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                  <img
-                    src={coverImg}
-                    alt="Video Thumbnail"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                    <div className="w-20 h-20 rounded-full bg-[#5f5f00] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                      <div className="w-0 h-0 border-y-[12px] border-y-transparent border-l-[20px] border-l-white ml-1" />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-4 left-6 text-white text-left">
-                    <p className="text-xs uppercase tracking-widest text-[#e9e86b] font-bold">Watch Video</p>
-                    <p className="text-lg font-serif font-bold">{partner1} &amp; {partner2}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
 
         {/* Venue Section */}
         <section className="py-24 px-6 md:px-16 bg-[#fcf9f8] relative" id="venue">
@@ -920,7 +857,7 @@ export default function WhimsicalStorybookInvitation(
 
         {/* RSVP Section */}
         <section id="rsvp" className="py-20 bg-[#fcf9f8]">
-          <RsvpSection partnerOne={partner1} partnerTwo={partner2} templateSlug="whimsical-storybook" />
+          <RsvpSection partnerOne={celebrantName} partnerTwo="" templateSlug="whimsical-storybook" />
         </section>
 
         {/* Footer */}
@@ -930,7 +867,7 @@ export default function WhimsicalStorybookInvitation(
               {celebrationHeader}
             </div>
             <div className="text-xs text-[#5d5c58] font-serif">
-              © {new Date().getFullYear()} Crafted with Love for {partner1} &amp; {partner2}'s Special Day
+              © {new Date().getFullYear()} Crafted with Love for {celebrantName}&apos;s Special Day
             </div>
             <div className="flex gap-6 text-xs text-[#484837] font-semibold">
               <a href="#" className="hover:text-[#904d00] transition-colors">

@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -30,7 +31,8 @@ export default function MinimalistScandinavianInvitation(
       : "Evelyn";
 
   const celebrationHeader = `${celebrantName}'s Celebration`;
-  const celebrationTitle = `${celebrantName}'s 30th`;
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
+  const celebrationTitle = ageMilestone ? `${celebrantName}'s ${ageMilestone} Birthday` : `${celebrantName}'s Birthday`;
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -49,9 +51,7 @@ export default function MinimalistScandinavianInvitation(
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -70,11 +70,11 @@ export default function MinimalistScandinavianInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items fallback
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -615,7 +615,11 @@ export default function MinimalistScandinavianInvitation(
               <img
                 alt="Map location"
                 className="w-full h-full object-cover opacity-80"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
+                src={
+                  (mainVenue as { image?: string }).image ||
+                  props.coverImage ||
+                  "https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
+                }
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg flex items-center gap-3 border border-[#DED9D1]">

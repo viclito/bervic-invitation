@@ -42,6 +42,12 @@ export function useRequireLoginAndDetails(callbackUrl: string = "/templates") {
   });
 
   useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true") {
+      setCheckingDetails(false);
+      setHasCompletedDetails(true);
+      return;
+    }
+
     if (status === "loading") return;
 
     if (status === "unauthenticated") {

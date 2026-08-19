@@ -19,8 +19,8 @@ export default function LenisProvider({
 
     if (prefersReducedMotion) return;
 
-    // Studio route /cards uses isolated 100vh flexbox scrolling
-    if (pathname === "/cards") {
+    // Studio routes /cards and /canva use isolated 100vh flexbox scrolling
+    if (pathname === "/cards" || pathname === "/canva" || pathname.startsWith("/canva")) {
       if (lenisRef.current) {
         lenisRef.current.destroy();
         lenisRef.current = null;

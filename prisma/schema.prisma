@@ -29,6 +29,8 @@ model User {
   payments              Payment[]
   cards                 UserCard[]
   draftDetails          UserDraftDetails[]
+  cartItems             CartItem[]
+  orders                CardOrder[]
 }
 
 model Account {
@@ -219,5 +221,108 @@ model UserDraftDetails {
 
   @@index([userId])
 }
+
+model CartItem {
+  id              String   @id @default(cuid())
+  userId          String
+  itemType        String   @default("CANVA_CARD") // CANVA_CARD, etc.
+  templateId      String
+  templateName    String
+  previewImage    String?  @db.Text
+  copies          Int      @default(1)
+  cardDetailsJson String   @db.Text
+  elementsJson    String?  @db.Text
+  customNotes     String?  @db.Text
+  price           Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CardOrder {
+  id              String          @id @default(cuid())
+  orderNumber     String          @unique
+  userId          String
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  deliveryAddress String?         @db.Text
+  city            String?
+  pincode         String?
+  status          String          @default("PENDING") // PENDING, CONFIRMED, IN_PRODUCTION, SHIPPED, DELIVERED, CANCELLED
+  totalCopies     Int             @default(1)
+  totalAmount     Float           @default(0)
+  paymentStatus   String          @default("PENDING") // PENDING, PAID, COD
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           CardOrderItem[]
+  messages        OrderMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model CardOrderItem {
+  id              String    @id @default(cuid())
+  orderId         String
+  itemType        String    @default("CANVA_CARD")
+  templateId      String
+  templateName    String
+  previewImage    String?   @db.Text
+  copies          Int       @default(1)
+  cardDetailsJson String    @db.Text
+  elementsJson    String?   @db.Text
+  customNotes     String?   @db.Text
+  price           Float     @default(0)
+  createdAt       DateTime  @default(now())
+
+  order CardOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model OrderMessage {
+  id        String   @id @default(cuid())
+  orderId   String
+  sender    String   // ADMIN, USER
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  order CardOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model ShopProduct {
+  id            String   @id @default(cuid())
+  name          String
+  category      String   @default("royal") // royal, floral, vintage, modern, velvet, etc.
+  pricePerCard  Float    @default(65)
+  minCopies     Int      @default(50)
+  previewImage  String   @db.Text
+  galleryImages String?  @db.Text // JSON array of image URLs
+  badge         String?  // BESTSELLER, NEW, ROYAL LUXE, etc.
+  paperType     String   @default("350 GSM Textured Metallic Gold Cardstock")
+  dimensions    String   @default("5.5 x 8.5 inches")
+  description   String   @db.Text
+  featuresJson    String   @default("[]") @db.Text // JSON array of bullet points
+  canvaTemplateId String?  // Optional linked Canva Studio Template ID
+  rating          Float    @default(5.0)
+  reviewsCount  Int      @default(50)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
 
 

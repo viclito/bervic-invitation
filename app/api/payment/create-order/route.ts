@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     const { plan } = await req.json();
-    if (plan !== "BASIC_599" && plan !== "PRO_1799" && plan !== "CINEMATIC_2000") {
+    if (plan !== "BASIC_599" && plan !== "PRO_1799" && plan !== "CINEMATIC_2000" && plan !== "CARDS_99") {
       return NextResponse.json({ error: "Invalid plan selected." }, { status: 400 });
     }
 
@@ -36,14 +36,18 @@ export async function POST(req: Request) {
     }
 
     const amountInPaise =
-      plan === "CINEMATIC_2000"
+      plan === "CARDS_99"
+        ? 9900
+        : plan === "CINEMATIC_2000"
         ? 200000
         : plan === "PRO_1799"
         ? 179900
         : 59900; // in paise
 
     const amountInRupees =
-      plan === "CINEMATIC_2000"
+      plan === "CARDS_99"
+        ? 99
+        : plan === "CINEMATIC_2000"
         ? 2000
         : plan === "PRO_1799"
         ? 1799

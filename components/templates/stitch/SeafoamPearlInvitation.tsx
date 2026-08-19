@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -427,7 +427,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
       </section>
 
       {/* Love Story Video Film Section */}
-      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
         <section className="py-24 bg-[#faf9f6] border-t border-[#046c4a]/10" id="video">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#046c4a] block mb-2">

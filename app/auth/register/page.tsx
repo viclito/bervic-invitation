@@ -36,8 +36,8 @@ export default function RegisterPage() {
 
       // Redirect to OTP verification page
       router.push(`/auth/verify-otp?email=${encodeURIComponent(email)}`);
-    } catch (err: any) {
-      setError(err?.message || "Something went wrong during registration");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong during registration");
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export default function RegisterPage() {
           {/* Top Header */}
           <div className="text-center mb-8">
             <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto mb-3">
-              <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
+              <img src="/logo.svg" alt="Bervic Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-[#221C17]">Create Your Account</h1>
             <p className="text-sm text-[#221C17]/70 mt-1 font-medium">

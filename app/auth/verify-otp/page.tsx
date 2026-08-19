@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { KeyRound, Sparkles, CheckCircle2, RefreshCw } from "lucide-react";
+import { Sparkles, CheckCircle2, RefreshCw } from "lucide-react";
 
 function VerifyOtpContent() {
   const router = useRouter();
@@ -40,8 +40,8 @@ function VerifyOtpContent() {
       setTimeout(() => {
         router.push("/auth/login");
       }, 1500);
-    } catch (err: any) {
-      setError(err?.message || "Failed to verify OTP");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to verify OTP");
     } finally {
       setLoading(false);
     }
@@ -65,8 +65,8 @@ function VerifyOtpContent() {
       }
 
       setSuccess("New OTP code sent to your email!");
-    } catch (err: any) {
-      setError(err?.message || "Error resending OTP");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error resending OTP");
     } finally {
       setResending(false);
     }
@@ -75,7 +75,7 @@ function VerifyOtpContent() {
   return (
     <div className="w-full max-w-md bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow relative overflow-hidden text-center">
       <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto mb-4">
-        <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
+        <img src="/logo.svg" alt="Bervic Logo" className="w-full h-full object-contain" />
       </div>
 
       <h1 className="text-3xl font-bold text-[#221C17]">Enter Verification Code</h1>

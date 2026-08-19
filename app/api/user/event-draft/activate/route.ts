@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { templatesRegistry } from "@/data/templatesRegistry";
 
 export async function POST(req: Request) {
   try {
@@ -49,10 +50,23 @@ export async function POST(req: Request) {
     }
 
     if (templateSlug) {
+      const regTemplate = templatesRegistry.find((t) => t.slug === templateSlug);
+      const isBirthdayTemplate = regTemplate?.category === "birthday";
+
       // Claim/Activate Template for user: create independent UserInvitation
-      let activeDraft = await prisma.userDraftDetails.findFirst({
-        where: { userId: user.id, isActive: true },
-      });
+      let activeDraft = null;
+      if (isBirthdayTemplate) {
+        activeDraft = await prisma.userDraftDetails.findFirst({
+          where: { userId: user.id, eventType: "BIRTHDAY" },
+          orderBy: { updatedAt: "desc" },
+        });
+      }
+
+      if (!activeDraft) {
+        activeDraft = await prisma.userDraftDetails.findFirst({
+          where: { userId: user.id, isActive: true },
+        });
+      }
       if (!activeDraft) {
         activeDraft = await prisma.userDraftDetails.findFirst({
           where: { userId: user.id },
@@ -66,6 +80,19 @@ export async function POST(req: Request) {
       });
 
       if (existing) {
+        // If it was previously saved with "Partner Name" on a birthday template, clean it up
+        if (isBirthdayTemplate && (existing.partnerTwo === "Partner Name" || existing.partnerTwo === "Partner's Name")) {
+          const updated = await prisma.userInvitation.update({
+            where: { id: existing.id },
+            data: { partnerTwo: "" },
+          });
+          return NextResponse.json({
+            success: true,
+            invitation: updated,
+            slug: updated.slug,
+          });
+        }
+
         return NextResponse.json({
           success: true,
           invitation: existing,
@@ -74,13 +101,31 @@ export async function POST(req: Request) {
       }
 
       // First time creation: copy details from common profile (UserDraftDetails) to UserInvitation
-      const p1 = activeDraft?.hostNameOne || "Your Name";
-      const p2 = activeDraft?.hostNameTwo || "Partner Name";
-      const baseSlug = `${p1}-${p2}`
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "");
-      const generatedSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 7)}`;
+      let p1 = activeDraft?.hostNameOne || user.name || "Your Name";
+      let p2 = activeDraft?.hostNameTwo || "";
+      let generatedSlug = "";
+      let tagline = "TOGETHER WITH THEIR FAMILIES";
+      let inviteLine = "invite you to celebrate their wedding";
+      let initials = activeDraft?.coupleInitials || "Y & P";
+
+      if (isBirthdayTemplate) {
+        p1 = activeDraft?.hostNameOne || user.name || "Celebrant";
+        p2 = ""; // No partner name for birthday
+        const cleanName = p1.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "") || "celebrant";
+        generatedSlug = `${cleanName}-birthday-${Math.random().toString(36).substring(2, 7)}`;
+        tagline = activeDraft?.tagline || "JOIN US IN CELEBRATING";
+        inviteLine = activeDraft?.inviteLine || "invite you to celebrate this special birthday";
+        initials = cleanName.charAt(0).toUpperCase();
+      } else {
+        if (!p2 || p2.trim() === "") p2 = "Partner Name";
+        const baseSlug = `${p1}-${p2}`
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)+/g, "");
+        generatedSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 7)}`;
+        tagline = activeDraft?.tagline || "TOGETHER WITH THEIR FAMILIES";
+        inviteLine = activeDraft?.inviteLine || "invite you to celebrate their wedding";
+      }
 
       const newInvitation = await prisma.userInvitation.create({
         data: {
@@ -89,15 +134,15 @@ export async function POST(req: Request) {
           slug: generatedSlug,
           partnerOne: p1,
           partnerTwo: p2,
-          coupleInitials: activeDraft?.coupleInitials || "Y & P",
-          tagline: activeDraft?.tagline || "TOGETHER WITH THEIR FAMILIES",
-          inviteLine: activeDraft?.inviteLine || "invite you to celebrate their wedding",
+          coupleInitials: initials,
+          tagline,
+          inviteLine,
           weddingDate: activeDraft?.eventDate || "2026-11-28",
           weddingTime: activeDraft?.eventTime || "10:30 AM",
           venuePlace: `${activeDraft?.venueName || ""}${activeDraft?.venueAddress ? `, ${activeDraft.venueAddress}` : ""}`.trim() || "Your Venue Address",
-          heroImage: activeDraft?.coverImage || "/templates/ceremony-wedding-bg.png",
-          coupleImage: activeDraft?.coupleImage || "/templates/ceremony-wedding-bg.png",
-          partnerTwoImage: activeDraft?.partnerTwoImage || null,
+          heroImage: activeDraft?.coverImage || (isBirthdayTemplate ? "/templates/birthday/newspaper-hero.jpg" : "/templates/ceremony-wedding-bg.png"),
+          coupleImage: activeDraft?.coupleImage || activeDraft?.coverImage || (isBirthdayTemplate ? "/templates/birthday/newspaper-hero.jpg" : "/templates/ceremony-wedding-bg.png"),
+          partnerTwoImage: isBirthdayTemplate ? null : activeDraft?.partnerTwoImage || null,
           loveStoryText: activeDraft?.loveStoryText || "",
           loveStoryVideoUrl: activeDraft?.loveStoryVideoUrl || "",
           contactPhone: activeDraft?.rsvpContact || "",

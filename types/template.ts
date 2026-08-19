@@ -58,6 +58,7 @@ export interface TemplateClassicFloralProps {
   guestName?: string;
   guestPhone?: string;
   invitationId?: string;
+  celebrantName?: string;
+  turningAge?: string;
   slug?: string;
 }
-

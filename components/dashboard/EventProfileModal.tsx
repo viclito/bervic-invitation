@@ -23,6 +23,7 @@ export interface EventProfileData {
   eventType?: string;
   hostNameOne?: string;
   hostNameTwo?: string;
+  turningAge?: string;
   coupleInitials?: string;
   eventDate?: string;
   eventTime?: string;
@@ -58,6 +59,7 @@ export default function EventProfileModal({
     eventType: initialData?.eventType || "WEDDING",
     hostNameOne: initialData?.hostNameOne || "",
     hostNameTwo: initialData?.hostNameTwo || "",
+    turningAge: initialData?.turningAge || "",
     coupleInitials: initialData?.coupleInitials || "",
     eventDate: initialData?.eventDate || "",
     eventTime: initialData?.eventTime || "",
@@ -137,18 +139,18 @@ export default function EventProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#FDFBF7] border border-[#D9A441]/40 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="bg-[#7A1F2B] text-[#F8F3EA] px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#991B1B] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#D9A441]/20 border border-[#D9A441]/40 flex items-center justify-center text-[#D9A441]">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
+              <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg font-serif font-bold text-[#F8F3EA]">
+              <h2 className="text-lg font-serif font-bold text-white">
                 {formData.id ? "Edit Celebration Profile" : "Add New Celebration Profile"}
               </h2>
-              <p className="text-[11px] text-[#F8F3EA]/70">
+              <p className="text-[11px] text-white/80">
                 Configure your event details, venue, date, and love story
               </p>
             </div>
@@ -156,7 +158,7 @@ export default function EventProfileModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#F8F3EA]/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -179,10 +181,10 @@ export default function EventProfileModal({
               <input
                 type="text"
                 required
-                placeholder="e.g. Sasa & Allan's Wedding / Main Reception"
+                placeholder={formData.eventType === "BIRTHDAY" ? "e.g. Berglin's Birthday Celebration" : "e.g. Sarah & Alex's Wedding"}
                 value={formData.profileName}
                 onChange={(e) => setFormData({ ...formData, profileName: e.target.value })}
-                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#991B1B]"
               />
             </div>
 
@@ -193,7 +195,7 @@ export default function EventProfileModal({
               <select
                 value={formData.eventType}
                 onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#991B1B]"
               >
                 <option value="WEDDING">💍 Wedding Celebration</option>
                 <option value="BIRTHDAY">🎂 Birthday Party</option>
@@ -212,10 +214,10 @@ export default function EventProfileModal({
                 <Heart className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="e.g. Sasa Adi Tinah"
+                  placeholder={formData.eventType === "BIRTHDAY" ? "e.g. Berglin" : "e.g. Sarah"}
                   value={formData.hostNameOne}
                   onChange={(e) => handleNameOneChange(e.target.value)}
-                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#991B1B]"
                 />
               </div>
             </div>
@@ -228,26 +230,41 @@ export default function EventProfileModal({
                 <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="e.g. Allan Susilo"
+                  placeholder="e.g. Alex"
                   value={formData.hostNameTwo}
                   onChange={(e) => handleNameTwoChange(e.target.value)}
-                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#991B1B]"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-                Monogram Initials
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. S & A"
-                value={formData.coupleInitials}
-                onChange={(e) => setFormData({ ...formData, coupleInitials: e.target.value })}
-                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-bold text-[#7A1F2B] bg-white focus:outline-none focus:border-[#EA580C]"
-              />
-            </div>
+            {formData.eventType === "BIRTHDAY" ? (
+              <div>
+                <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                  Turning Age / Milestone
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 5th, 21st, 30th"
+                  value={formData.turningAge}
+                  onChange={(e) => setFormData({ ...formData, turningAge: e.target.value })}
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-bold text-[#991B1B] bg-white focus:outline-none focus:border-[#991B1B]"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                  Monogram Initials
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. S & A"
+                  value={formData.coupleInitials}
+                  onChange={(e) => setFormData({ ...formData, coupleInitials: e.target.value })}
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs font-bold text-[#991B1B] bg-white focus:outline-none focus:border-[#991B1B]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Date & Time */}
@@ -347,86 +364,95 @@ export default function EventProfileModal({
             </div>
           </div>
 
-          {/* Shadcn Toggle Switch: Show / Hide Video Section */}
-          <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
-                <Video className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
-                <p className="text-[11px] text-slate-500">
-                  Toggle ON to display your wedding teaser video, or OFF to hide the video section from your invitation card.
-                </p>
-              </div>
-            </div>
+          {/* YouTube Video Section (Wedding Only) */}
+          {formData.eventType !== "BIRTHDAY" && (
+            <>
+              {/* Shadcn Toggle Switch: Show / Hide Video Section */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center font-bold">
+                    <Video className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">Show YouTube Video Section</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Toggle ON to display your wedding teaser video, or OFF to hide the video section from your invitation card.
+                    </p>
+                  </div>
+                </div>
 
-            {/* Shadcn Switch Toggle */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={formData.showVideo !== false}
-              onClick={() => setFormData({ ...formData, showVideo: !(formData.showVideo !== false) })}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                formData.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                  formData.showVideo !== false ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* YouTube Video URL */}
-          {formData.showVideo !== false ? (
-            <div>
-              <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-                YouTube Video URL
-              </label>
-              <div className="relative">
-                <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="e.g. https://www.youtube.com/watch?v=..."
-                  value={formData.loveStoryVideoUrl}
-                  onChange={(e) => setFormData({ ...formData, loveStoryVideoUrl: e.target.value })}
-                  className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
-                />
+                {/* Shadcn Switch Toggle */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formData.showVideo !== false}
+                  onClick={() => setFormData({ ...formData, showVideo: !(formData.showVideo !== false) })}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    formData.showVideo !== false ? "bg-[#7E121D]" : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      formData.showVideo !== false ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
               </div>
-            </div>
-          ) : null}
 
-          {/* Love Story Narrative */}
+              {/* YouTube Video URL */}
+              {formData.showVideo !== false ? (
+                <div>
+                  <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
+                    YouTube Video URL
+                  </label>
+                  <div className="relative">
+                    <Video className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="e.g. https://www.youtube.com/watch?v=..."
+                      value={formData.loveStoryVideoUrl}
+                      onChange={(e) => setFormData({ ...formData, loveStoryVideoUrl: e.target.value })}
+                      className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
+
+          {/* Narrative / Celebration Note */}
           <div>
             <label className="block text-[11px] font-bold text-[#0F172A] mb-1 uppercase tracking-wider">
-              Love Story / Event Narrative
+              {formData.eventType === "BIRTHDAY" ? "Celebration Message / Story Note" : "Love Story / Event Narrative"}
             </label>
             <textarea
               rows={3}
-              placeholder="Share how you met and special notes for your guests..."
+              placeholder={
+                formData.eventType === "BIRTHDAY"
+                  ? "Enter a special birthday note or celebration message for your guests..."
+                  : "Share how you met and special notes for your guests..."
+              }
               value={formData.loveStoryText}
               onChange={(e) => setFormData({ ...formData, loveStoryText: e.target.value })}
-              className="w-full p-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#EA580C]"
+              className="w-full p-3 rounded-xl border border-slate-200 text-xs font-medium bg-white focus:outline-none focus:border-[#991B1B]"
             />
           </div>
 
           {/* Active Profile Checkbox */}
-          <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/70 flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-red-50/70 border border-red-200/70 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="isActiveCheck"
                 checked={formData.isActive}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 rounded text-[#7A1F2B] focus:ring-[#7A1F2B] cursor-pointer"
+                className="w-4 h-4 rounded text-[#991B1B] focus:ring-[#991B1B] cursor-pointer"
               />
-              <label htmlFor="isActiveCheck" className="text-xs font-bold text-[#221C17] cursor-pointer">
+              <label htmlFor="isActiveCheck" className="text-xs font-bold text-slate-900 cursor-pointer">
                 Set as Main Active Profile
               </label>
             </div>
-            <span className="text-[10px] text-amber-900 font-medium">
+            <span className="text-[10px] text-[#991B1B] font-medium">
               Populates all live template previews
             </span>
           </div>
@@ -436,7 +462,7 @@ export default function EventProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -444,7 +470,7 @@ export default function EventProfileModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 rounded-xl bg-[#7A1F2B] hover:bg-[#680E17] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+              className="btn-maroon px-5 py-2 text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {saving ? (
                 <>
@@ -453,7 +479,7 @@ export default function EventProfileModal({
                 </>
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#D9A441]" />
+                  <Check className="w-3.5 h-3.5 text-amber-300" />
                   <span>{formData.id ? "Save Profile Changes" : "Create Profile"}</span>
                 </>
               )}

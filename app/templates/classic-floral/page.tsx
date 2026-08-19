@@ -26,18 +26,26 @@ function ClassicFloralContent() {
       }
     }
 
-    fetch("/api/user/event-draft")
+    const isLocalMatching =
+      activeDraft &&
+      (!activeDraft.eventType || (activeDraft.eventType as string).toUpperCase() === "WEDDING");
+
+    fetch("/api/user/event-draft?eventType=WEDDING")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.draft) {
           setInvitationData(mapEventProfileToInvitationData(data.draft, sampleWeddingData));
-        } else if (activeDraft) {
+        } else if (isLocalMatching && activeDraft) {
           setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        } else {
+          setInvitationData(sampleWeddingData);
         }
       })
       .catch(() => {
-        if (activeDraft) {
+        if (isLocalMatching && activeDraft) {
           setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        } else {
+          setInvitationData(sampleWeddingData);
         }
       });
   }, []);

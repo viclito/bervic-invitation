@@ -1,4 +1,5 @@
 import { sampleWeddingData } from "@/data/sampleWeddingData";
+import { sampleBirthdayData } from "@/data/sampleBirthdayData";
 import { TemplateClassicFloralProps, WeddingEvent, LocationVenue } from "@/types/template";
 import { formatDateForDisplay } from "@/lib/dateUtils";
 
@@ -55,13 +56,18 @@ export function mapEventProfileToInvitationData(
 ): TemplateClassicFloralProps {
   if (!draft) return baseData;
 
-  const partnerOne = draft.hostNameOne?.trim() || baseData.partnerOne;
-  const partnerTwo = draft.hostNameTwo?.trim() || baseData.partnerTwo;
+  const isBirthday = draft.eventType?.toUpperCase() === "BIRTHDAY";
+  const defaultBase = isBirthday ? sampleBirthdayData : baseData;
+
+  const partnerOne = draft.hostNameOne?.trim() || defaultBase.partnerOne;
+  const partnerTwo = isBirthday ? (draft.hostNameTwo?.trim() || "") : (draft.hostNameTwo?.trim() || defaultBase.partnerTwo);
 
   const defaultInitials =
-    partnerOne && partnerTwo
-      ? `${partnerOne[0]?.toUpperCase() || "A"} & ${partnerTwo[0]?.toUpperCase() || "S"}`
-      : baseData.coupleInitials;
+    isBirthday
+      ? (partnerOne ? partnerOne[0]?.toUpperCase() : "B")
+      : (partnerOne && partnerTwo
+          ? `${partnerOne[0]?.toUpperCase() || "A"} & ${partnerTwo[0]?.toUpperCase() || "S"}`
+          : baseData.coupleInitials);
 
   const coupleInitials = draft.coupleInitials?.trim() || defaultInitials;
 
@@ -97,9 +103,10 @@ export function mapEventProfileToInvitationData(
       ? draft.partnerTwoImage
       : baseData.partnerTwoImage;
 
-  // Love Story Video URL & Video Section Visibility
-  let isShowVideoExplicit = true;
-  if (draft) {
+  // Love Story Video URL & Video Section Visibility (Disabled for Birthday events)
+  const isBirthdayEvent = draft?.eventType === "BIRTHDAY" || baseData === sampleBirthdayData;
+  let isShowVideoExplicit = !isBirthdayEvent;
+  if (draft && !isBirthdayEvent) {
     if (
       (draft as Record<string, unknown>).showVideo === false ||
       (draft as Record<string, unknown>).showVideoSection === false
@@ -120,6 +127,7 @@ export function mapEventProfileToInvitationData(
   }
 
   const isVideoEnabled =
+    !isBirthdayEvent &&
     isShowVideoExplicit &&
     Boolean(
       (draft?.loveStoryVideoUrl && draft.loveStoryVideoUrl.trim() !== "") ||
@@ -133,18 +141,32 @@ export function mapEventProfileToInvitationData(
   const showVideoSection = isVideoEnabled;
 
   // Gallery images
-  let galleryImages = baseData.galleryImages;
+  let galleryImages = baseData.galleryImages || [];
   if (draft.galleryImagesJson) {
     try {
       const parsed = JSON.parse(draft.galleryImagesJson);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        galleryImages = parsed;
+        const filtered = parsed.filter((img: unknown) => typeof img === "string" && img.trim() !== "");
+        if (filtered.length > 0) galleryImages = filtered;
       }
     } catch {
       // Fallback
     }
   } else if (Array.isArray(draft.galleryImages) && draft.galleryImages.length > 0) {
-    galleryImages = draft.galleryImages as string[];
+    const filtered = (draft.galleryImages as string[]).filter((img) => typeof img === "string" && img.trim() !== "");
+    if (filtered.length > 0) galleryImages = filtered;
+  } else if (typeof (draft as Record<string, unknown>).galleryImages === "string" && (draft as Record<string, unknown>).galleryImages) {
+    const rawStr = (draft as Record<string, unknown>).galleryImages as string;
+    try {
+      const parsed = JSON.parse(rawStr);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const filtered = parsed.filter((img: unknown) => typeof img === "string" && img.trim() !== "");
+        if (filtered.length > 0) galleryImages = filtered;
+      }
+    } catch {
+      const splitArr = rawStr.split(",").map((s) => s.trim()).filter(Boolean);
+      if (splitArr.length > 0) galleryImages = splitArr;
+    }
   }
 
   // Locations / Venues
@@ -304,19 +326,23 @@ export function mapEventProfileToInvitationData(
     }
   }
 
-  const coverImage = draft.coverImage?.trim() || "";
+  const celebrantName = draft.hostNameOne?.trim() || baseData.celebrantName || partnerOne;
+  const turningAge = (draft as { turningAge?: string }).turningAge?.trim() || baseData.turningAge || "";
+  const coverImage = draft.coverImage?.trim() || baseData.coverImage || "";
 
   return {
     ...baseData,
     partnerOne,
     partnerTwo,
     coupleInitials,
+    celebrantName,
+    turningAge,
     weddingDate,
     weddingTime,
     venuePlace,
     heroImage,
     coupleImage,
-    coverImage,
+    coverImage: coverImage ? String(coverImage) : undefined,
     partnerTwoImage,
     galleryImages,
     inviteLine: draft.welcomeMessage?.trim() || draft.inviteLine?.trim() || baseData.inviteLine,

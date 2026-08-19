@@ -80,17 +80,19 @@ export async function POST(req: Request) {
     }
 
     // In test mode or when signature is valid, activate subscription
-    const selectedPlan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" =
-      plan === "CINEMATIC_2000"
+    const selectedPlan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" | "CARDS_99" =
+      plan === "CARDS_99"
+        ? "CARDS_99"
+        : plan === "CINEMATIC_2000"
         ? "CINEMATIC_2000"
         : plan === "PRO_1799"
         ? "PRO_1799"
         : "BASIC_599";
 
-    const validityMonths = selectedPlan === "BASIC_599" ? 6 : 12;
-    const addTemplates = selectedPlan === "BASIC_599" ? 1 : selectedPlan === "PRO_1799" ? 4 : 1;
-    const addCards = selectedPlan === "BASIC_599" ? 2 : selectedPlan === "PRO_1799" ? 6 : 10;
-    const amount = selectedPlan === "BASIC_599" ? 599 : selectedPlan === "PRO_1799" ? 1799 : 2000;
+    const validityMonths = selectedPlan === "BASIC_599" ? 6 : selectedPlan === "CARDS_99" ? 6 : 12;
+    const addTemplates = selectedPlan === "BASIC_599" ? 1 : selectedPlan === "PRO_1799" ? 4 : 0;
+    const addCards = selectedPlan === "CARDS_99" ? 5 : selectedPlan === "BASIC_599" ? 2 : selectedPlan === "PRO_1799" ? 6 : 10;
+    const amount = selectedPlan === "CARDS_99" ? 99 : selectedPlan === "BASIC_599" ? 599 : selectedPlan === "PRO_1799" ? 1799 : 2000;
 
     // Calculate expiration date: take whichever is longer between existing remaining validity and new purchase validity
     const now = new Date();
@@ -106,7 +108,7 @@ export async function POST(req: Request) {
     }
 
     // Calculate new total accumulated template & card quotas
-    const addStandard = selectedPlan === "CINEMATIC_2000" ? 0 : addTemplates;
+    const addStandard = selectedPlan === "CINEMATIC_2000" || selectedPlan === "CARDS_99" ? 0 : addTemplates;
     const addCinematic = selectedPlan === "CINEMATIC_2000" ? 1 : 0;
 
     const newAllowedTemplates = ((user as any).allowedTemplatesCount || 0) + addStandard;

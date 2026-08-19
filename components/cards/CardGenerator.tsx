@@ -2,10 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import CloudinaryUploader from '@/components/CloudinaryUploader';
 import PricingCheckoutModal from '@/components/payment/PricingCheckoutModal';
-import { Download, Image as ImageIcon, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Image as ImageIcon, Sparkles, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 
 const CardTemplate1 = dynamic(() => import('./templates/CardTemplate1'), { ssr: false });
 const CardTemplate2 = dynamic(() => import('./templates/CardTemplate2'), { ssr: false });
@@ -143,7 +145,6 @@ export default function CardGenerator() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [exporting, setExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const exportCardRef = useRef<HTMLDivElement>(null);
   const PREVIEW_SCALE = 0.35;
 
   useEffect(() => {
@@ -176,6 +177,8 @@ export default function CardGenerator() {
     }
   }, [invitationId]);
 
+  const { status } = useSession();
+
   const handleChange = useCallback((key: keyof CardFormData, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   }, []);
@@ -191,29 +194,35 @@ export default function CardGenerator() {
     remainingCardSlots: number;
   }>({
     isActive: false,
-    allowedCardsCount: 0,
+    allowedCardsCount: 2,
     usedCardsCount: 0,
-    remainingCardSlots: 0,
+    remainingCardSlots: 2,
   });
 
   const checkSubscriptionAccess = useCallback(async () => {
     try {
       const res = await fetch('/api/user/subscription');
       const data = await res.json();
+      const isLoggedIn = !!data.isLoggedIn || status === 'authenticated';
+      const allowed = data.allowedCardsCount || (isLoggedIn ? 2 : 0);
+      const used = data.usedCardsCount || 0;
+      const remaining = data.remainingCardSlots !== undefined ? data.remainingCardSlots : Math.max(0, allowed - used);
+
       setSubscriptionData({
-        isActive: !!data.isActive,
-        allowedCardsCount: data.allowedCardsCount || 0,
-        usedCardsCount: data.usedCardsCount || 0,
-        remainingCardSlots: data.remainingCardSlots || 0,
+        isActive: !!data.isActive || remaining > 0,
+        allowedCardsCount: allowed,
+        usedCardsCount: used,
+        remainingCardSlots: remaining,
       });
 
-      if (!data.isActive) {
-        setPricingReason('An active subscription plan (₹599 for Basic, ₹1799 for Pro, or ₹2000 for Cinematic) is required to download & export High-Res Instagram Announcement Cards.');
+      if (!isLoggedIn) {
+        setPricingReason('Please log in to claim your 2 Free Instagram Card Downloads!');
         setShowPricingModal(true);
         return false;
       }
-      if (data.remainingCardSlots <= 0) {
-        setPricingReason(`You have used all ${data.allowedCardsCount} Instagram card downloads included in your plan. Please upgrade to download additional cards.`);
+
+      if (remaining <= 0) {
+        setPricingReason(`You have used all ${allowed} free card credits. Get 5 additional High-Res Instagram Card Credits for just ₹99!`);
         setShowPricingModal(true);
         return false;
       }
@@ -221,7 +230,7 @@ export default function CardGenerator() {
     } catch (e) {
       return true;
     }
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     checkSubscriptionAccess();
@@ -241,8 +250,11 @@ export default function CardGenerator() {
   };
 
   const executeDownload = async (format: 'png' | 'pdf') => {
-    const targetElement = exportCardRef.current || cardRef.current;
-    if (!targetElement) return;
+    const targetElement = cardRef.current;
+    if (!targetElement) {
+      alert('Card preview is not ready. Please try again.');
+      return;
+    }
     setExporting(true);
     try {
       // 1. Record card download in DB and deduct 1 credit slot
@@ -271,7 +283,13 @@ export default function CardGenerator() {
         return;
       }
 
-      // 2. Perform Crisp Canvas Capture on Unscaled Standalone 1080x1080 Element
+      // 2. Perform Crisp Canvas Capture on the live 1080x1080 Card Element (excluding watermarks)
+      let dataUrl = '';
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 80));
+
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(targetElement, {
         scale: 2,
@@ -281,58 +299,73 @@ export default function CardGenerator() {
         logging: false,
         width: 1080,
         height: 1080,
-        windowWidth: 1080,
-        windowHeight: 1080,
-        onclone: (clonedDoc) => {
-          // Convert any img tags with CSS grayscale filter into native B&W Data URLs for html2canvas
-          const images = clonedDoc.querySelectorAll('img');
-          images.forEach((img) => {
-            const styleFilter = img.style.filter || (img as any).computedStyleMap?.().get?.('filter')?.toString?.() || '';
-            if (styleFilter && styleFilter.includes('grayscale')) {
-              try {
-                const c = document.createElement('canvas');
-                const w = img.naturalWidth || img.width || 800;
-                const h = img.naturalHeight || img.height || 800;
-                c.width = w;
-                c.height = h;
-                const ctx = c.getContext('2d');
-                if (ctx) {
-                  ctx.filter = styleFilter;
-                  ctx.drawImage(img, 0, 0, w, h);
-                  const bwDataUrl = c.toDataURL('image/jpeg', 0.95);
-                  img.src = bwDataUrl;
-                  img.style.filter = 'none';
-                }
-              } catch (e) {
-                console.error('Grayscale canvas conversion error', e);
-              }
-            }
-          });
+        ignoreElements: (element) => element.getAttribute('data-watermark') === 'true',
+        onclone: (_clonedDoc, clonedElement) => {
+          clonedElement.style.transform = 'none';
+          clonedElement.style.transformOrigin = 'top left';
+          clonedElement.style.boxShadow = 'none';
+          clonedElement.style.margin = '0';
         },
       });
+      dataUrl = canvas.toDataURL('image/png', 1.0);
+
+      if (!dataUrl) {
+        throw new Error('Failed to generate image data.');
+      }
 
       if (format === 'png') {
-        const url = canvas.toDataURL('image/png', 1.0);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = ('wedding-card-' + formData.partnerOne + '-' + formData.partnerTwo + '.png').toLowerCase().replace(/\s+/g, '-');
+        a.href = dataUrl;
+        a.download = ('wedding-card-' + (formData.partnerOne || 'card') + '-' + (formData.partnerTwo || 'invite') + '.png')
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
       } else {
         const { jsPDF } = await import('jspdf');
-        const imgData = canvas.toDataURL('image/png', 1.0);
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [1080, 1080] });
-        pdf.addImage(imgData, 'PNG', 0, 0, 1080, 1080);
-        pdf.save(('wedding-card-' + formData.partnerOne + '-' + formData.partnerTwo + '.pdf').toLowerCase().replace(/\s+/g, '-'));
+        pdf.addImage(dataUrl, 'PNG', 0, 0, 1080, 1080);
+        pdf.save(
+          ('wedding-card-' + (formData.partnerOne || 'card') + '-' + (formData.partnerTwo || 'invite') + '.pdf')
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+        );
       }
 
       // Update remaining quota state
       checkSubscriptionAccess();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Export failed', e);
+      alert('Card export failed: ' + (e?.message || 'Please try again.'));
     } finally {
       setExporting(false);
     }
   };
+
+  const [mobileTab, setMobileTab] = useState<'details' | 'preview' | 'templates'>('details');
+  const [previewScale, setPreviewScale] = useState(0.35);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      const screenW = window.innerWidth;
+      if (screenW < 480) {
+        // Mobile (iPhone / Android)
+        const targetW = Math.min(screenW - 32, 380);
+        setPreviewScale(targetW / 1080);
+      } else if (screenW < 768) {
+        setPreviewScale(Math.min(0.38, (screenW - 48) / 1080));
+      } else if (screenW < 1200) {
+        setPreviewScale(0.35);
+      } else {
+        setPreviewScale(0.40);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const triggerDownloadConfirmation = async (format: 'png' | 'pdf') => {
     const allowed = await checkSubscriptionAccess();
@@ -357,12 +390,12 @@ export default function CardGenerator() {
 
   const inputClass = {
     width: '100%',
-    padding: '10px 14px',
+    padding: '11px 14px',
     borderRadius: 12,
-    border: '1.5px solid rgba(217,164,65,0.35)',
-    background: '#F8F3EA',
-    fontSize: 13,
-    color: '#221C17',
+    border: '1.5px solid #E2E8F0',
+    background: '#FFFFFF',
+    fontSize: 14,
+    color: '#0F172A',
     outline: 'none',
     fontFamily: 'inherit',
     boxSizing: 'border-box' as const,
@@ -371,92 +404,124 @@ export default function CardGenerator() {
   const labelClass = {
     display: 'block',
     fontSize: 11,
-    fontWeight: 600,
-    color: 'rgba(34,28,23,0.7)',
+    fontWeight: 700,
+    color: '#64748B',
     marginBottom: 5,
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
   };
 
   return (
-    <div style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden', background: '#1A1614', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="h-screen max-h-screen overflow-hidden bg-slate-100 flex flex-col font-sans">
       {/* Header */}
-      <header className="min-h-[64px] bg-[#120F0D] border-b border-[#D9A441]/20 px-3 sm:px-7 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Sparkles style={{ width: 18, height: 18, color: '#D9A441' }} />
-          <div>
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#D9A441', letterSpacing: 3, textTransform: 'uppercase', display: 'block', lineHeight: 1 }}>BERVIC</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#F8F3EA', lineHeight: 1.2 }}>Instagram Card Studio</span>
+      <header className="min-h-[56px] sm:min-h-[64px] bg-white border-b border-slate-200 px-3 sm:px-6 py-2 flex items-center justify-between gap-2 shrink-0 z-50 shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 hover:bg-[#991B1B] hover:text-white transition-all shrink-0 shadow-xs"
+            title="Return to Home"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#991B1B]" />
+            <div>
+              <span className="text-[8px] sm:text-[9px] font-extrabold text-[#991B1B] tracking-[0.2em] uppercase block leading-none">BERVIC</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Card Studio</span>
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Card Quota Display Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(217,164,65,0.12)', border: '1px solid rgba(217,164,65,0.3)', padding: '4px 10px', borderRadius: 99, color: '#D9A441', fontSize: 11, fontWeight: 700 }}>
-            <span>Cards: {subscriptionData.usedCardsCount} / {subscriptionData.allowedCardsCount}</span>
-            <button
-              onClick={handleRefreshQuota}
-              style={{ background: '#7A1F2B', color: '#F8F3EA', border: 'none', padding: '2px 6px', borderRadius: 99, fontSize: 10, cursor: 'pointer', fontWeight: 800 }}
-              title="Refresh Card Quota for Testing"
-            >
-              🔄
-            </button>
+          <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1 rounded-full text-[#991B1B] text-[11px] sm:text-xs font-bold shadow-2xs">
+            {status === "authenticated" ? (
+              <>
+                <span className="hidden sm:inline">
+                  {subscriptionData.remainingCardSlots > 0 ? (
+                    `🎁 ${subscriptionData.remainingCardSlots} Slot${subscriptionData.remainingCardSlots > 1 ? 's' : ''} Available`
+                  ) : (
+                    `⚠️ 0 Slots Left (${subscriptionData.usedCardsCount}/${subscriptionData.allowedCardsCount} used)`
+                  )}
+                </span>
+                <span className="sm:hidden">
+                  {subscriptionData.remainingCardSlots > 0 ? `🎁 ${subscriptionData.remainingCardSlots} Left` : `0 Left`}
+                </span>
+                <button
+                  onClick={() => {
+                    setPricingReason('Get 5 High-Res (1080x1080px) Instagram Announcement Post Card Credits for just ₹99!');
+                    setShowPricingModal(true);
+                  }}
+                  className="bg-[#991B1B] text-white border-none px-2 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer hover:bg-[#7F1D1D] transition-colors ml-0.5 shadow-2xs"
+                  title="Buy 5 Cards for ₹99"
+                >
+                  +5 (₹99)
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/auth/login?callbackUrl=/cards"
+                className="text-[#991B1B] font-extrabold hover:underline flex items-center gap-1"
+              >
+                <span>🎁 2 Free Slots (Login)</span>
+              </Link>
+            )}
           </div>
 
           <button
             onClick={() => triggerDownloadConfirmation('png')}
             disabled={exporting}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 99, background: '#D9A441', color: '#221C17', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 12, opacity: exporting ? 0.7 : 1, boxShadow: '0 4px 14px rgba(217,164,65,0.3)' }}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-400 text-slate-950 border-none font-bold text-xs shadow-xs hover:bg-amber-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
-            <ImageIcon style={{ width: 13, height: 13 }} />
-            {exporting ? 'Exporting…' : 'PNG'}
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>{exporting ? '...' : 'PNG'}</span>
           </button>
+
           <button
             onClick={() => triggerDownloadConfirmation('pdf')}
             disabled={exporting}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 99, background: '#7A1F2B', color: '#F8F3EA', border: 'none', cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 12, opacity: exporting ? 0.7 : 1 }}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#991B1B] text-white border-none font-bold text-xs hover:bg-[#7F1D1D] transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
-            <Download style={{ width: 13, height: 13 }} />
-            {exporting ? 'Exporting…' : 'PDF'}
+            <Download className="w-3.5 h-3.5" />
+            <span>{exporting ? '...' : 'PDF'}</span>
           </button>
         </div>
       </header>
 
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-        {/* LEFT SIDEBAR: Tabbed Controls (380px) - Independent Scroll */}
-        <div style={{ width: 380, flexShrink: 0, height: '100%', minHeight: 0, background: '#F8F3EA', borderRight: '1px solid rgba(217,164,65,0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Navigation Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid rgba(217,164,65,0.25)', background: '#EFE7D8', flexShrink: 0 }}>
+      {/* MAIN CONTAINER: Responsive 2-Column Desktop / Tabbed Single Column Mobile */}
+      <div className="flex flex-1 min-h-0 h-[calc(100vh-56px)] md:h-[calc(100vh-64px)] pb-[68px] md:pb-0 overflow-hidden">
+        {/* LEFT SIDEBAR: Edit Details / Choose Template */}
+        <div
+          className={`w-full md:w-[380px] lg:w-[400px] shrink-0 h-full min-h-0 bg-white border-r border-slate-200 flex flex-col overflow-hidden ${
+            mobileTab === 'preview' ? 'hidden md:flex' : 'flex'
+          }`}
+        >
+          {/* Desktop Tab Switcher */}
+          <div className="hidden md:flex border-b border-slate-200 bg-slate-50 shrink-0">
             <button
-              onClick={() => setActiveTab('details')}
-              style={{
-                flex: 1,
-                padding: '14px 16px',
-                border: 'none',
-                background: activeTab === 'details' ? '#F8F3EA' : 'transparent',
-                color: activeTab === 'details' ? '#7A1F2B' : '#666666',
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: 'pointer',
-                borderBottom: activeTab === 'details' ? '3px solid #7A1F2B' : '3px solid transparent',
-                transition: 'all 0.15s ease',
+              onClick={() => {
+                setActiveTab('details');
+                setMobileTab('details');
               }}
+              className={`flex-1 py-3.5 px-4 border-none font-bold text-xs sm:text-sm cursor-pointer transition-all border-b-2 ${
+                activeTab === 'details'
+                  ? 'bg-white text-[#991B1B] border-[#991B1B]'
+                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-900'
+              }`}
             >
               ✏️ Edit Details
             </button>
             <button
-              onClick={() => setActiveTab('templates')}
-              style={{
-                flex: 1,
-                padding: '14px 16px',
-                border: 'none',
-                background: activeTab === 'templates' ? '#F8F3EA' : 'transparent',
-                color: activeTab === 'templates' ? '#7A1F2B' : '#666666',
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: 'pointer',
-                borderBottom: activeTab === 'templates' ? '3px solid #7A1F2B' : '3px solid transparent',
-                transition: 'all 0.15s ease',
+              onClick={() => {
+                setActiveTab('templates');
+                setMobileTab('templates');
               }}
+              className={`flex-1 py-3.5 px-4 border-none font-bold text-xs sm:text-sm cursor-pointer transition-all border-b-2 ${
+                activeTab === 'templates'
+                  ? 'bg-white text-[#991B1B] border-[#991B1B]'
+                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-900'
+              }`}
             >
               🎨 Choose Template ({TEMPLATES.length})
             </button>
@@ -464,10 +529,46 @@ export default function CardGenerator() {
 
           {/* TAB 1: EDIT DETAILS */}
           {activeTab === 'details' && (
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <h2 style={{ fontSize: 13, fontWeight: 800, color: '#7A1F2B', textTransform: 'uppercase', letterSpacing: 2, margin: 0 }}>Wedding Invitation Details</h2>
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
+              {/* Card Quota Summary Banner */}
+              <div className="bg-red-50/70 border border-red-200/80 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg">🎁</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      {subscriptionData.remainingCardSlots} Slot{subscriptionData.remainingCardSlots !== 1 ? 's' : ''} Available
+                    </span>
+                    <span className="text-[10.5px] text-slate-500 block">
+                      {subscriptionData.usedCardsCount} of {subscriptionData.allowedCardsCount} total credits used
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPricingReason('Get 5 High-Res (1080x1080px) Instagram Announcement Post Card Credits for just ₹99!');
+                    setShowPricingModal(true);
+                  }}
+                  className="px-3 py-1 rounded-full bg-[#991B1B] text-white text-[11px] font-extrabold hover:bg-[#7F1D1D] transition-all shadow-xs shrink-0 cursor-pointer"
+                >
+                  + ₹99 (5 Slots)
+                </button>
+              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="flex items-center justify-between pt-1">
+                <h2 className="text-xs sm:text-sm font-extrabold text-[#991B1B] uppercase tracking-wider m-0">
+                  Wedding Announcement Details
+                </h2>
+                {/* Mobile quick jump to preview */}
+                <button
+                  onClick={() => setMobileTab('preview')}
+                  className="md:hidden text-xs font-bold text-[#991B1B] bg-red-50 px-2.5 py-1 rounded-full border border-red-200"
+                >
+                  Preview →
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3.5">
                 <div>
                   <label style={labelClass}>Partner One</label>
                   <input style={inputClass} value={formData.partnerOne} onChange={e => handleChange('partnerOne', e.target.value)} placeholder="Partner One Name" />
@@ -482,9 +583,9 @@ export default function CardGenerator() {
                 </div>
               </div>
 
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(217,164,65,0.25)', margin: 0 }} />
+              <hr className="border-none border-t border-[#D9A441]/25 m-0" />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="flex flex-col gap-3.5">
                 <div>
                   <label style={labelClass}>Wedding Date</label>
                   <input style={inputClass} value={formData.weddingDate} onChange={e => handleChange('weddingDate', e.target.value)} placeholder="August 14, 2025" />
@@ -495,19 +596,19 @@ export default function CardGenerator() {
                 </div>
                 <div>
                   <label style={labelClass}>Venue</label>
-                  <input style={inputClass} value={formData.venue} onChange={e => handleChange('venue', e.target.value)} placeholder="Venue Name" />
+                  <input style={inputClass} value={formData.venue} placeholder="The Grand Chapel" onChange={e => handleChange('venue', e.target.value)} />
                 </div>
                 <div>
                   <label style={labelClass}>City / Location</label>
-                  <input style={inputClass} value={formData.city} onChange={e => handleChange('city', e.target.value)} placeholder="Bangalore, India" />
+                  <input style={inputClass} value={formData.city} placeholder="Bangalore, India" onChange={e => handleChange('city', e.target.value)} />
                 </div>
                 <div>
                   <label style={labelClass}>Hashtag</label>
-                  <input style={inputClass} value={formData.hashtag} onChange={e => handleChange('hashtag', e.target.value)} placeholder="#YourHashtag" />
+                  <input style={inputClass} value={formData.hashtag} placeholder="#ForeverTogether" onChange={e => handleChange('hashtag', e.target.value)} />
                 </div>
               </div>
 
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(217,164,65,0.25)', margin: 0 }} />
+              <hr className="border-none border-t border-[#D9A441]/25 m-0" />
 
               <div>
                 <label style={labelClass}>Couple Photo</label>
@@ -518,29 +619,34 @@ export default function CardGenerator() {
                   placeholder="/images/templates/couple-photo.jpg"
                 />
               </div>
+
+              {/* Mobile Quick Action Button */}
+              <div className="md:hidden pt-2 pb-6">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab('preview')}
+                  className="w-full py-3 px-4 rounded-xl bg-[#991B1B] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                >
+                  <span>👁️ View Live Card Preview</span>
+                </button>
+              </div>
             </div>
           )}
 
           {/* TAB 2: CHOOSE TEMPLATE */}
           {activeTab === 'templates' && (
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4">
               {/* Category Filter Chips */}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div className="flex gap-1.5 flex-wrap">
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: 99,
-                      border: '1px solid ' + (selectedCategory === cat ? '#7A1F2B' : 'rgba(34,28,23,0.2)'),
-                      background: selectedCategory === cat ? '#7A1F2B' : '#EFE7D8',
-                      color: selectedCategory === cat ? '#FFFFFF' : '#221C17',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
+                    className={`py-1 px-3 rounded-full text-xs font-semibold cursor-pointer transition-all border ${
+                      selectedCategory === cat
+                        ? 'bg-[#991B1B] text-white border-[#991B1B] shadow-xs'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:border-[#991B1B]'
+                    }`}
                   >
                     {cat}
                   </button>
@@ -548,35 +654,39 @@ export default function CardGenerator() {
               </div>
 
               {/* Template Cards Grid (2 Columns) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="grid grid-cols-2 gap-3 pb-6">
                 {filteredTemplates.map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setSelectedTemplate(t.id)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      padding: 12,
-                      borderRadius: 14,
-                      border: selectedTemplate === t.id ? '2px solid #7A1F2B' : '1px solid rgba(217,164,65,0.3)',
-                      background: selectedTemplate === t.id ? '#FFFFFF' : '#EFE7D8',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                      boxShadow: selectedTemplate === t.id ? '0 4px 16px rgba(122,31,43,0.2)' : 'none',
+                    onClick={() => {
+                      setSelectedTemplate(t.id);
+                      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                        setMobileTab('preview');
+                      }
                     }}
+                    className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                      selectedTemplate === t.id
+                        ? 'border-2 border-[#991B1B] bg-white shadow-md'
+                        : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-[#991B1B]'
+                    }`}
                   >
                     {/* Visual Color Box */}
-                    <div style={{ width: '100%', height: 60, borderRadius: 10, background: t.bg, border: '2px solid ' + t.color, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: t.color, textTransform: 'uppercase', letterSpacing: 1 }}>Card #{t.id}</span>
+                    <div
+                      className="w-full h-14 sm:h-16 rounded-lg flex items-center justify-center relative border-2"
+                      style={{ background: t.bg, borderColor: t.color }}
+                    >
+                      <span className="text-[10px] font-extrabold uppercase tracking-wide" style={{ color: t.color }}>
+                        Card #{t.id}
+                      </span>
                       {selectedTemplate === t.id && (
-                        <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#7A1F2B', color: '#FFF', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#991B1B] text-white text-[10px] flex items-center justify-center font-bold">
+                          ✓
+                        </div>
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#221C17', lineHeight: 1.2 }}>{t.name}</div>
-                      <div style={{ fontSize: 10, color: '#7A1F2B', fontWeight: 600, marginTop: 2 }}>{t.tag}</div>
+                      <div className="text-xs font-bold text-slate-900 line-clamp-1">{t.name}</div>
+                      <div className="text-[10px] text-[#991B1B] font-semibold mt-0.5">{t.tag}</div>
                     </div>
                   </button>
                 ))}
@@ -586,105 +696,156 @@ export default function CardGenerator() {
         </div>
 
         {/* RIGHT MAIN WORKSPACE: Permanent Live Preview Canvas */}
-        <div style={{ flex: 1, height: '100%', background: '#1A1614', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '16px 20px', overflowY: 'auto' }}>
+        <div
+          className={`flex-1 h-full bg-slate-100 flex flex-col items-center justify-start p-3 sm:p-5 overflow-y-auto ${
+            mobileTab !== 'preview' ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           {/* Top Control Bar with Quick Arrows & Selected Template Info */}
-          <div style={{ width: '100%', maxWidth: 680, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#25201D', padding: '8px 18px', borderRadius: 14, border: '1px solid rgba(217,164,65,0.2)', marginBottom: 16, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="w-full max-w-[680px] flex items-center justify-between bg-white px-3.5 sm:px-4.5 py-2.5 rounded-2xl border border-slate-200 mb-3 sm:mb-4 shrink-0 shadow-xs">
+            <div className="flex items-center gap-2 sm:gap-2.5">
               <button
                 onClick={handlePrevTemplate}
-                style={{ width: 32, height: 32, borderRadius: '50%', background: '#332B27', border: '1px solid rgba(217,164,65,0.3)', color: '#F8F3EA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer flex items-center justify-center hover:bg-[#991B1B] hover:text-white transition-all"
                 title="Previous Template"
               >
-                <ChevronLeft style={{ width: 16, height: 16 }} />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <div>
-                <span style={{ color: '#D9A441', fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>Template {selectedTemplate} of {TEMPLATES.length}</span>
-                <div style={{ color: '#F8F3EA', fontSize: 13, fontWeight: 700 }}>{currentTemplateObj.name}</div>
+                <span className="text-[#991B1B] text-[9px] sm:text-[10px] font-bold tracking-wider uppercase block">
+                  Template {selectedTemplate} of {TEMPLATES.length}
+                </span>
+                <div className="text-slate-900 text-xs sm:text-sm font-bold">{currentTemplateObj.name}</div>
               </div>
               <button
                 onClick={handleNextTemplate}
-                style={{ width: 32, height: 32, borderRadius: '50%', background: '#332B27', border: '1px solid rgba(217,164,65,0.3)', color: '#F8F3EA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 cursor-pointer flex items-center justify-center hover:bg-[#991B1B] hover:text-white transition-all"
                 title="Next Template"
               >
-                <ChevronRight style={{ width: 16, height: 16 }} />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <button
-                onClick={() => setActiveTab('templates')}
-                style={{ padding: '5px 12px', borderRadius: 99, background: 'rgba(217,164,65,0.15)', color: '#D9A441', border: '1px solid rgba(217,164,65,0.3)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                onClick={() => {
+                  setActiveTab('templates');
+                  setMobileTab('templates');
+                }}
+                className="py-1.5 px-3 rounded-full bg-red-50 text-[#991B1B] border border-red-200 text-xs font-semibold cursor-pointer hover:bg-[#991B1B] hover:text-white transition-all"
               >
-                Browse All 31 →
+                Browse Presets →
               </button>
             </div>
           </div>
 
-          {/* Scaled Preview Canvas */}
-          <div style={{ width: 1080 * PREVIEW_SCALE, height: 1080 * PREVIEW_SCALE, flexShrink: 0, position: 'relative', boxShadow: '0 20px 70px rgba(0,0,0,0.8), 0 0 0 1px rgba(217,164,65,0.25)', borderRadius: 8, overflow: 'hidden' }}>
-            <div style={{ transformOrigin: 'top left', transform: 'scale(' + PREVIEW_SCALE + ')', width: 1080, height: 1080 }}>
+          {/* Scaled Preview Canvas Wrapper */}
+          <div
+            style={{
+              width: 1080 * previewScale,
+              height: 1080 * previewScale,
+              flexShrink: 0,
+              position: 'relative',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.08)',
+              borderRadius: 12,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                transformOrigin: 'top left',
+                transform: `scale(${previewScale})`,
+                width: 1080,
+                height: 1080,
+              }}
+            >
               <div ref={cardRef} data-card-wrapper="true" style={{ width: 1080, height: 1080, overflow: 'hidden', position: 'relative' }}>
                 <CardRenderer templateId={selectedTemplate} data={formData} />
                 {/* Bervic Watermark Overlay — 3 positions */}
                 <div data-watermark="true" aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 999 }}>
                   {/* Top-left */}
-                  <span style={{
-                    position: 'absolute', top: 80, left: -40,
-                    fontSize: 96, fontWeight: 900, fontFamily: 'serif',
-                    color: 'rgba(255,255,255,0.11)', letterSpacing: 20,
-                    textTransform: 'uppercase', transform: 'rotate(-35deg)',
-                    userSelect: 'none', whiteSpace: 'nowrap',
-                    textShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  }}>bervic</span>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 80,
+                      left: -40,
+                      fontSize: 96,
+                      fontWeight: 900,
+                      fontFamily: 'serif',
+                      color: 'rgba(255,255,255,0.11)',
+                      letterSpacing: 20,
+                      textTransform: 'uppercase',
+                      transform: 'rotate(-35deg)',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    bervic
+                  </span>
                   {/* Center */}
-                  <span style={{
-                    position: 'absolute', top: '50%', left: '50%',
-                    fontSize: 120, fontWeight: 900, fontFamily: 'serif',
-                    color: 'rgba(255,255,255,0.11)', letterSpacing: 24,
-                    textTransform: 'uppercase', transform: 'translate(-50%, -50%) rotate(-35deg)',
-                    userSelect: 'none', whiteSpace: 'nowrap',
-                    textShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  }}>bervic</span>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      fontSize: 120,
+                      fontWeight: 900,
+                      fontFamily: 'serif',
+                      color: 'rgba(255,255,255,0.11)',
+                      letterSpacing: 24,
+                      textTransform: 'uppercase',
+                      transform: 'translate(-50%, -50%) rotate(-35deg)',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    bervic
+                  </span>
                   {/* Bottom-right */}
-                  <span style={{
-                    position: 'absolute', bottom: 80, right: -40,
-                    fontSize: 96, fontWeight: 900, fontFamily: 'serif',
-                    color: 'rgba(255,255,255,0.11)', letterSpacing: 20,
-                    textTransform: 'uppercase', transform: 'rotate(-35deg)',
-                    userSelect: 'none', whiteSpace: 'nowrap',
-                    textShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  }}>bervic</span>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      bottom: 80,
+                      right: -40,
+                      fontSize: 96,
+                      fontWeight: 900,
+                      fontFamily: 'serif',
+                      color: 'rgba(255,255,255,0.11)',
+                      letterSpacing: 20,
+                      textTransform: 'uppercase',
+                      transform: 'rotate(-35deg)',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    bervic
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Bottom Swatches Horizontal Carousel */}
-          <div style={{ width: '100%', maxWidth: 680, marginTop: 16, marginBottom: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <div style={{ fontSize: 10, color: 'rgba(248,243,234,0.5)', fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase' }}>
+          <div className="w-full max-w-[680px] mt-3 sm:mt-4 mb-3 flex flex-col items-center gap-1.5 shrink-0">
+            <div className="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">
               Quick Template Selector
             </div>
-            <div style={{ display: 'flex', gap: 8, width: '100%', overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'thin' }}>
+            <div className="flex gap-2 w-full overflow-x-auto pb-1.5" style={{ scrollbarWidth: 'thin' }}>
               {TEMPLATES.map(t => (
                 <button
                   key={t.id}
                   onClick={() => setSelectedTemplate(t.id)}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 text-[9px] font-extrabold flex items-center justify-center cursor-pointer transition-all border-2 ${
+                    selectedTemplate === t.id
+                      ? 'border-[#991B1B] shadow-md scale-105'
+                      : 'border-slate-200 hover:border-[#991B1B]'
+                  }`}
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
                     background: t.bg,
-                    border: selectedTemplate === t.id ? '3px solid #D9A441' : '2px solid transparent',
-                    boxShadow: selectedTemplate === t.id ? '0 0 12px rgba(217,164,65,0.6)' : 'none',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    fontSize: 9,
-                    fontWeight: 800,
                     color: t.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.15s ease',
                   }}
                   title={t.name}
                 >
@@ -693,34 +854,59 @@ export default function CardGenerator() {
               ))}
             </div>
           </div>
+
+          {/* Mobile Download Bar at Bottom of Preview */}
+          <div className="md:hidden w-full max-w-[380px] flex gap-2 pt-1 pb-4">
+            <button
+              onClick={() => triggerDownloadConfirmation('png')}
+              disabled={exporting}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span>Download PNG</span>
+            </button>
+            <button
+              onClick={() => triggerDownloadConfirmation('pdf')}
+              disabled={exporting}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-[#991B1B] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* DOWNLOAD CONFIRMATION MODAL */}
       {showConfirmModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#F8F3EA', borderRadius: 24, border: '2px solid rgba(217,164,65,0.4)', padding: '28px 32px', maxWidth: 460, width: '100%', color: '#221C17', boxShadow: '0 25px 60px rgba(0,0,0,0.7)', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#7A1F2B', color: '#D9A441', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 8px 20px rgba(122,31,43,0.3)' }}>
-              <Download style={{ width: 28, height: 28 }} />
+        <div className="fixed inset-0 z-[9999] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-5 sm:p-7 max-w-md w-full text-slate-900 shadow-2xl text-center">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-50 text-[#991B1B] flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm border border-red-200">
+              <Download className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: '#221C17', marginBottom: 8, fontFamily: 'serif' }}>
+            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-2 font-serif">
               Confirm Card Export ({pendingFormat?.toUpperCase()})
             </h3>
-            <p style={{ fontSize: 13, color: 'rgba(34,28,23,0.8)', lineHeight: 1.5, marginBottom: 20 }}>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
               Downloading <strong>Template #{selectedTemplate} ({currentTemplateObj.name})</strong> will consume <strong>1 Instagram Card credit</strong> from your subscription quota.
             </p>
 
-            <div style={{ background: '#EFE7D8', borderRadius: 14, padding: '12px 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(217,164,65,0.3)', fontSize: 12 }}>
-              <span style={{ fontWeight: 600, color: '#7A1F2B' }}>Remaining Quota:</span>
-              <span style={{ fontWeight: 800, color: '#221C17' }}>
-                {subscriptionData.remainingCardSlots} of {subscriptionData.allowedCardsCount} Cards Left
-              </span>
+            <div className="bg-slate-50 rounded-xl p-3.5 mb-5 border border-slate-200 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-700">Available Card Credits:</span>
+                <span className="font-extrabold text-[#991B1B]">
+                  {subscriptionData.remainingCardSlots} of {subscriptionData.allowedCardsCount} Cards Left
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                ✨ Logged-in users receive 2 Free High-Res Card Downloads.
+              </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <div className="flex gap-2.5 justify-center">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                style={{ flex: 1, padding: '12px 18px', borderRadius: 99, background: 'transparent', border: '1.5px solid rgba(34,28,23,0.3)', color: '#221C17', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                className="flex-1 py-2.5 px-4 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm cursor-pointer hover:bg-slate-200 transition-all"
               >
                 Cancel
               </button>
@@ -729,31 +915,64 @@ export default function CardGenerator() {
                   setShowConfirmModal(false);
                   if (pendingFormat) executeDownload(pendingFormat);
                 }}
-                style={{ flex: 1, padding: '12px 18px', borderRadius: 99, background: '#7A1F2B', border: 'none', color: '#F8F3EA', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 14px rgba(122,31,43,0.4)' }}
+                className="flex-1 py-2.5 px-4 rounded-full bg-[#991B1B] border-none text-white font-extrabold text-xs sm:text-sm cursor-pointer shadow-md hover:bg-[#7F1D1D] transition-all"
               >
-                Confirm & Download
+                Confirm &amp; Download
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* OFF-SCREEN UNTOUCHED 1080x1080 HIGH-RES CAPTURE CONTAINER */}
-      <div
-        ref={exportCardRef}
-        style={{
-          position: "fixed",
-          top: -9999,
-          left: -9999,
-          width: 1080,
-          height: 1080,
-          overflow: "hidden",
-          zIndex: -9999,
-          pointerEvents: "none",
-        }}
-      >
-        <CardRenderer templateId={selectedTemplate} data={formData} />
-      </div>
+      {/* FIXED MOBILE BOTTOM NAVIGATION BAR */}
+      <nav aria-label="Mobile Navigation" className="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 z-50 shadow-[0_-6px_25px_rgba(0,0,0,0.1)] pb-[max(8px,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-around gap-2 max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileTab('details');
+              setActiveTab('details');
+            }}
+            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
+              mobileTab === 'details'
+                ? 'bg-red-50 text-[#991B1B] shadow-xs scale-[1.02]'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-sm">✏️</span>
+            <span className="text-[11px] leading-tight">Details</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMobileTab('preview')}
+            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
+              mobileTab === 'preview'
+                ? 'bg-[#991B1B] text-white shadow-xs scale-[1.02]'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-sm">👁️</span>
+            <span className="text-[11px] leading-tight">Live Card</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMobileTab('templates');
+              setActiveTab('templates');
+            }}
+            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
+              mobileTab === 'templates'
+                ? 'bg-red-50 text-[#991B1B] shadow-xs scale-[1.02]'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-sm">🎨</span>
+            <span className="text-[11px] leading-tight">Presets ({TEMPLATES.length})</span>
+          </button>
+        </div>
+      </nav>
 
       <PricingCheckoutModal
         isOpen={showPricingModal}

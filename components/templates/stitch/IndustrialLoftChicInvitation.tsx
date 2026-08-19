@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -13,6 +14,7 @@ export default function IndustrialLoftChicInvitation(
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Celebrant Name
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
@@ -29,9 +31,7 @@ export default function IndustrialLoftChicInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-24T19:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -50,11 +50,11 @@ export default function IndustrialLoftChicInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 7149b7865e6e4515b7981b6568922ff6
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 4
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -97,20 +97,38 @@ export default function IndustrialLoftChicInvitation(
           },
         ];
 
-  // Hero image fallback matching Industrial Loft Chic
-  const isNonIndustrialHero =
-    !props.heroImage ||
-    props.heroImage.includes("unsplash.com") ||
-    props.heroImage.includes("wedding") ||
-    props.heroImage.includes("photo-1519741497674") ||
-    props.heroImage.includes("photo-1511795409834") ||
-    props.heroImage.includes("AB6AXuCbj6E_qQBW8N2") ||
-    Boolean(props.partnerTwo && props.partnerTwo.trim() !== "");
+  // Venue fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "123 Blueprint Ave, Design District"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Architectural Loft",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Blueprint Ave, Design District",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Architectural Loft",
+          address: props.contactAddress || props.venuePlace || "123 Blueprint Ave, Design District",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
 
+  // Hero image priority: user's celebrant portrait, cover, or industrial theme
   const displayHeroImage =
-    props.heroImage && !isNonIndustrialHero
-      ? props.heroImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuBo1r1ueW0Kx3TOGR0Oq-YCekNyJJ_VR9fwQDWoXsmKCeWUGfStuSH_mDp5hVs34yn3hnoJ3CsMIVhqSp-Q08iPZ0sRcRauA0ifmDYxm7w-SlM5OajqPSz_KBJfeSZHmQBV2h_1hD23VllZKb3ZqsqcySs7zwXJzvV9Qe8OxE6cECytd015xUrN3rdJpq08Gu7LaSoGtnBD_HwBRRCaCICMbf9EgauF_dPj73XYr_wQ8Vgub7w8glRE";
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuBo1r1ueW0Kx3TOGR0Oq-YCekNyJJ_VR9fwQDWoXsmKCeWUGfStuSH_mDp5hVs34yn3hnoJ3CsMIVhqSp-Q08iPZ0sRcRauA0ifmDYxm7w-SlM5OajqPSz_KBJfeSZHmQBV2h_1hD23VllZKb3ZqsqcySs7zwXJzvV9Qe8OxE6cECytd015xUrN3rdJpq08Gu7LaSoGtnBD_HwBRRCaCICMbf9EgauF_dPj73XYr_wQ8Vgub7w8glRE";
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1] font-sans antialiased overflow-x-hidden relative selection:bg-[#b87333]/30 selection:text-[#b87333] min-h-screen flex flex-col">
@@ -280,7 +298,7 @@ export default function IndustrialLoftChicInvitation(
             <div className="md:col-span-7 space-y-6 z-10 relative">
               <h1 className="text-4xl md:text-6xl text-[#e5e2e1] uppercase tracking-widest font-extrabold leading-tight">
                 {celebrantName}'s <br />
-                <span className="text-[#b87333]">30th</span>
+                <span className="text-[#b87333]">{ageMilestone || "Birthday"}</span>
               </h1>
               <p className="text-base md:text-lg text-[#d8c3b4] max-w-lg border-l-2 border-[#b87333] pl-4 leading-relaxed">
                 A celebration of structural milestones. Join us in the foundational space as we mark the next phase of our lives together.
@@ -372,11 +390,18 @@ export default function IndustrialLoftChicInvitation(
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="relative border border-[#524439] bg-[#131313] p-4 hard-shadow">
-              <div className="aspect-video bg-[#1c1b1b] flex items-center justify-center border border-dashed border-[#524439] relative group overflow-hidden">
-                <PlayCircle className="w-16 h-16 text-[#b87333] opacity-80 group-hover:scale-110 transition-transform" />
-                <div className="absolute bottom-2 left-2 font-mono text-xs text-[#a08d80]">
-                  VIDEO_FEED_01.MP4
+            <div className="relative border border-[#524439] bg-[#131313] p-4 hard-shadow group">
+              <div className="aspect-[4/3] bg-[#1c1b1b] relative overflow-hidden border border-[#524439]">
+                <img
+                  alt={`${celebrantName} Architectural Portrait`}
+                  className="w-full h-full object-cover filter contrast-125 saturate-75 group-hover:scale-105 transition-transform duration-700"
+                  src={props.coupleImage || props.coverImage || displayHeroImage}
+                />
+                <div className="absolute top-2 right-2 bg-[#b87333] text-[#131313] font-mono text-[10px] px-2 py-0.5 font-bold uppercase">
+                  PORTRAIT_ARCHIVE // 01
+                </div>
+                <div className="absolute bottom-2 left-2 font-mono text-xs text-[#a08d80] bg-[#131313]/90 px-2.5 py-1 border border-[#524439]">
+                  {celebrantName.toUpperCase()}_FOUNDATION.RAW
                 </div>
               </div>
             </div>
@@ -386,7 +411,8 @@ export default function IndustrialLoftChicInvitation(
                 The Blueprint
               </h3>
               <p className="text-base text-[#d8c3b4] border-l-2 border-[#b87333] pl-4 leading-relaxed">
-                Every strong structure starts with a solid foundation. {celebrantName} began her journey mapping out the blueprints of her future together. Through careful planning and spontaneous design changes, she built a connection engineered to last a lifetime.
+                {props.loveStoryText ||
+                  `Every strong structure starts with a solid foundation. ${celebrantName} began her journey mapping out the blueprints of a life well-lived. Join us as we celebrate another year engineered for greatness, surrounded by cherished friends and inspiring milestones.`}
               </p>
             </div>
           </div>
@@ -463,64 +489,54 @@ export default function IndustrialLoftChicInvitation(
               {/* SITE A */}
               <div className="border border-[#524439] bg-[#131313] p-6 hard-shadow relative">
                 <div className="absolute top-0 right-0 bg-[#b87333] text-[#131313] font-mono text-xs px-2.5 py-1 font-bold">
-                  SITE A
+                  SITE A // PRIMARY
                 </div>
                 <h3 className="text-xl font-bold text-[#e5e2e1] mb-2 tracking-widest uppercase">
-                  Celebration Pavilion
+                  {mainVenue.name || "Celebration Assembly"}
                 </h3>
                 <p className="font-mono text-xs text-[#b87333] mb-4">
-                  SEP 15, 2026 // 18:00 HRS
+                  {props.weddingTime || "OCT 24, 2026 // 19:00 HRS"}
                 </p>
                 <p className="text-sm text-[#d8c3b4] mb-4 leading-relaxed">
-                  The Serene Estate<br />
-                  123 Blueprint Ave, Design District
+                  {mainVenue.address}
                 </p>
                 <a
-                  href="https://maps.google.com"
+                  href={mainVenue.mapLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-mono border-b border-[#b87333] text-[#b87333] hover:text-white transition-colors uppercase font-bold"
+                  className="inline-flex items-center gap-2 text-xs font-mono border-b border-[#b87333] text-[#b87333] hover:text-white transition-colors uppercase font-bold"
                 >
-                  GET DIRECTIONS
-                </a>
-              </div>
-
-              {/* SITE B */}
-              <div className="border border-[#524439] bg-[#131313] p-6 hard-shadow relative">
-                <div className="absolute top-0 right-0 bg-[#b87333] text-[#131313] font-mono text-xs px-2.5 py-1 font-bold">
-                  SITE B
-                </div>
-                <h3 className="text-xl font-bold text-[#e5e2e1] mb-2 tracking-widest uppercase">
-                  After-Party Assembly
-                </h3>
-                <p className="font-mono text-xs text-[#b87333] mb-4">
-                  SEP 15, 2026 // 21:30 HRS
-                </p>
-                <p className="text-sm text-[#d8c3b4] mb-4 leading-relaxed">
-                  The Ironworks Loft Assembly<br />
-                  456 Industrial Parkway, Sector 7
-                </p>
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-mono border-b border-[#b87333] text-[#b87333] hover:text-white transition-colors uppercase font-bold"
-                >
-                  GET DIRECTIONS
+                  <span>GET DIRECTIONS ON GOOGLE MAPS</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>
 
-            {/* Map Placeholder */}
-            <div className="border border-[#524439] hard-shadow min-h-[380px] bg-[#1c1b1b] flex items-center justify-center relative overflow-hidden group">
-              <div className="text-center z-10 flex flex-col items-center gap-2">
-                <Map className="w-10 h-10 text-[#a08d80]" />
-                <p className="font-mono text-xs text-[#a08d80] uppercase leading-relaxed">
-                  TOPOGRAPHIC DATA UNAVAILABLE<br />
-                  PLEASE REFER TO GPS LINK
-                </p>
+            {/* Map Area - Clickable Interactive Card */}
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="border border-[#524439] hard-shadow min-h-[320px] bg-[#1c1b1b] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden group hover:border-[#b87333] transition-colors"
+            >
+              <div className="text-center z-10 flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-none bg-[#131313] border border-[#b87333] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <MapPin className="w-8 h-8 text-[#b87333]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-mono text-sm font-bold text-[#e5e2e1] uppercase tracking-wider">
+                    {mainVenue.name || "Main Event Assembly"}
+                  </h4>
+                  <p className="font-mono text-xs text-[#a08d80] max-w-xs line-clamp-2">
+                    {mainVenue.address}
+                  </p>
+                </div>
+                <span className="mt-2 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-widest text-[#4d2700] bg-[#b87333] px-4 py-2 hover:bg-[#ffdcc2] transition-colors">
+                  <span>Open GPS Map Navigation</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
               </div>
-            </div>
+            </a>
           </div>
         </section>
 
@@ -577,7 +593,7 @@ export default function IndustrialLoftChicInvitation(
             {brandName}
           </div>
           <div>
-            © {new Date().getFullYear()} {celebrantName}'s 30th Birthday. All Rights Reserved.
+            © {new Date().getFullYear()} {celebrantName}'s {ageMilestone ? `${ageMilestone} Birthday` : "Birthday"}. All Rights Reserved.
           </div>
           <nav className="flex gap-4 uppercase font-bold">
             <a href="#concept" className="hover:text-[#b87333] transition-colors">

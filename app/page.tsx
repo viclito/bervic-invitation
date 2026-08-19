@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Reusable Skeleton Component for Lazy Loaded Sections
 function SectionSkeleton({ height = "h-[400px]", id }: { height?: string; id?: string }) {
   return (
-    <div id={id} className={`w-full ${height} bg-[#12100E] flex items-center justify-center p-8 scroll-mt-24`}>
-      <Skeleton className="w-full max-w-[1200px] h-full rounded-3xl border border-[#D9A441]/20 bg-[#1A1815]/40 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-[#D9A441] border-t-transparent animate-spin" />
+    <div id={id} className={`w-full ${height} bg-white flex items-center justify-center p-8 scroll-mt-24`}>
+      <Skeleton className="w-full max-w-[1200px] h-full rounded-3xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-[#991B1B] border-t-transparent animate-spin" />
       </Skeleton>
     </div>
   );
@@ -27,16 +27,19 @@ const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTempl
   loading: () => <SectionSkeleton height="h-[750px]" />,
 });
 
-const CinematicShowcaseSection = dynamic(
-  () => import("@/components/CinematicShowcaseSection"),
+const InstagramCardsSection = dynamic(
+  () => import("@/components/InstagramCardsSection"),
   {
-    loading: () => <SectionSkeleton height="h-[750px]" />,
+    loading: () => <SectionSkeleton height="h-[650px]" />,
   }
 );
 
-const AboutSection = dynamic(() => import("@/components/AboutSection"), {
-  loading: () => <SectionSkeleton height="h-[600px]" />,
-});
+const CanvaStudioSection = dynamic(
+  () => import("@/components/CanvaStudioSection"),
+  {
+    loading: () => <SectionSkeleton height="h-[650px]" />,
+  }
+);
 
 // const HowItWorks = dynamic(() => import("@/components/HowItWorks"), {
 //   loading: () => <SectionSkeleton height="h-[650px]" />,
@@ -58,7 +61,7 @@ import AutoScrollToForm from "@/components/AutoScrollToForm";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17] selection:bg-[#D9A441] selection:text-[#221C17]">
+    <main className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-[#991B1B] selection:text-white">
       <AutoScrollToForm />
       {/* Sticky Navbar */}
       <Navbar />
@@ -72,11 +75,13 @@ export default function Home() {
       {/* 3D Coverflow Popular Invitation Templates Showcase */}
       <PopularTemplatesShowcase />
 
-      {/* Dedicated Showcase Section for ₹2000 Cinematic Exclusive 480-Frame Template */}
-      <CinematicShowcaseSection />
+      {/* Dedicated Canva Studio Visual Editor Section */}
+      <CanvaStudioSection />
+
+      {/* Dedicated Instagram & WhatsApp Announcement Post Cards Showcase Section */}
+      <InstagramCardsSection />
 
       {/* Lazy-Loaded Below the Fold Sections */}
-      <AboutSection />
       {/* <HowItWorks /> */}
       <PricingSection />
       <FAQSection />

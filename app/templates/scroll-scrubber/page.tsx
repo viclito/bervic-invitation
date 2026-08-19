@@ -26,32 +26,44 @@ function ScrollScrubberContent() {
       }
     }
 
-    fetch("/api/user/event-draft")
+    const isLocalMatching =
+      activeDraft &&
+      (!activeDraft.eventType || (activeDraft.eventType as string).toUpperCase() === "WEDDING");
+
+    fetch("/api/user/event-draft?eventType=WEDDING")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.draft) {
           setInvitationData(mapEventProfileToInvitationData(data.draft, sampleWeddingData));
-        } else if (activeDraft) {
+        } else if (isLocalMatching && activeDraft) {
           setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        } else {
+          setInvitationData(sampleWeddingData);
         }
       })
       .catch(() => {
-        if (activeDraft) {
+        if (isLocalMatching && activeDraft) {
           setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        } else {
+          setInvitationData(sampleWeddingData);
         }
       });
   }, []);
 
+  const isThumbnail = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true";
+
   return (
     <div className="relative min-h-screen">
       <DynamicTemplateCard {...invitationData} templateSlug="scroll-scrubber" />
-      <TemplatePreviewBottomBar
-        slug="scroll-scrubber"
-        templateTitle="Cinematic 480-Frame Scroll Sequence"
-        isPremium={true}
-        price={2000}
-        displayData={invitationData}
-      />
+      {!isThumbnail && (
+        <TemplatePreviewBottomBar
+          slug="scroll-scrubber"
+          templateTitle="Cinematic 480-Frame Scroll Sequence"
+          isPremium={true}
+          price={2000}
+          displayData={invitationData}
+        />
+      )}
     </div>
   );
 }

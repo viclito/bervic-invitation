@@ -43,13 +43,20 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
       }
     }
 
-    fetch("/api/user/event-draft")
+    const eventType = targetTemplate?.category === "birthday" ? "BIRTHDAY" : "WEDDING";
+    const isLocalMatching =
+      activeDraft &&
+      (targetTemplate?.category === "birthday"
+        ? activeDraft.eventType === "BIRTHDAY"
+        : !activeDraft.eventType || activeDraft.eventType === "WEDDING");
+
+    fetch(`/api/user/event-draft?eventType=${eventType}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.draft) {
           const merged = mapEventProfileToInvitationData(data.draft, initialData);
           setInvitationData(merged);
-        } else if (activeDraft) {
+        } else if (isLocalMatching && activeDraft) {
           const merged = mapEventProfileToInvitationData(activeDraft, initialData);
           setInvitationData(merged);
         } else {
@@ -57,7 +64,7 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
         }
       })
       .catch(() => {
-        if (activeDraft) {
+        if (isLocalMatching && activeDraft) {
           setInvitationData(mapEventProfileToInvitationData(activeDraft, initialData));
         } else {
           setInvitationData(initialData);
@@ -72,20 +79,24 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
     return <TemplatePreviewSkeleton />;
   }
 
+  const isThumbnail = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true";
+
   return (
     <div className="relative min-h-screen">
       {/* Live Preview Full Invitation Screen */}
       <DynamicTemplateCard {...displayData} templateSlug={slug} />
 
       {/* Floating Bottom CTA Bar & Ownership Modal */}
-      <TemplatePreviewBottomBar
-        slug={slug}
-        templateTitle={targetTemplate?.title}
-        isPremium={targetTemplate?.isPremium}
-        price={targetTemplate?.price}
-        categoryParam={categoryParam}
-        displayData={displayData}
-      />
+      {!isThumbnail && (
+        <TemplatePreviewBottomBar
+          slug={slug}
+          templateTitle={targetTemplate?.title}
+          isPremium={targetTemplate?.isPremium}
+          price={targetTemplate?.price}
+          categoryParam={categoryParam}
+          displayData={displayData}
+        />
+      )}
     </div>
   );
 }

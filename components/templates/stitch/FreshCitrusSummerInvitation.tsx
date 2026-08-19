@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -19,6 +19,7 @@ import {
   Music,
   UtensilsCrossed,
   ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 
 export default function FreshCitrusSummerInvitation(
@@ -27,13 +28,47 @@ export default function FreshCitrusSummerInvitation(
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
-  // Celebrant Name
+  // Celebrant Name & Age
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
       : "Evelyn";
 
   const brandName = "Citrus Summer";
+
+  // Venue location fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "The Orangery, Botanical Gardens, Sunlit Avenue"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Orangery Botanical Pavilion",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Sunlit Avenue, Botanical Gardens",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Orangery Botanical Pavilion",
+          address: props.contactAddress || props.venuePlace || "123 Sunlit Avenue, Botanical Gardens",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
+
+  // Celebrant portrait priority
+  const celebrantPhoto =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCSsKGaMuuDxgIaWJElIBuO9LMUZvIAPe_TZ99NLrT_RmiQmid1eHwWPgN01lxQwP6NJiC-Z0o2fxeTfB2UNm8GRJ7BKObTwA5qfk8sstLqYLwKIeBWUMDCD_rhUS9cL7K_HA_pmRR1ErDPHpYJZ7XYRoxwuiWAEr79G9nDuarVao0TFxMAqgQ8DfUCMe0YH0-z7ve0o3TMXBcLY6t-jCqFa2t8heaoMmTBwOH7rrh25AUSXRk92Rbd";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -44,9 +79,7 @@ export default function FreshCitrusSummerInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-08-15T10:30:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -65,11 +98,11 @@ export default function FreshCitrusSummerInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 78b87bccfe924e33a5f8d5422cb65a03
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -306,10 +339,11 @@ export default function FreshCitrusSummerInvitation(
                   Freshly Squeezed Joy
                 </h2>
                 <p className="font-body-citrus text-base md:text-lg text-[#564334] mb-6 leading-relaxed">
-                  Summer is a state of mind, and this brunch is our canvas. We're bringing together our favorite people to celebrate the season with a menu inspired by sun-kissed citrus and vibrant flavors.
+                  {props.loveStoryText ||
+                    `Summer is a state of mind, and this celebration is our canvas. We're bringing together our favorite people to celebrate ${celebrantName}'s milestone with a gathering inspired by sun-kissed citrus and vibrant flavors.`}
                 </p>
                 <p className="font-body-citrus text-base md:text-lg text-[#564334] mb-8 leading-relaxed">
-                  Expect an elegant yet relaxed atmosphere where the mimosas flow freely, the conversation sparkles, and every detail is designed to bring a little sunshine to your day. Let's create memories that are as bright and refreshing as a summer breeze.
+                  Expect an elegant yet relaxed atmosphere where the mimosas flow freely, the conversation sparkles, and every detail is designed to bring a little sunshine to your day.
                 </p>
                 <a
                   className="inline-flex items-center gap-2 text-[#904d00] hover:text-[#ff8c00] transition-colors font-mono-citrus text-xs uppercase tracking-wider font-bold"
@@ -321,29 +355,15 @@ export default function FreshCitrusSummerInvitation(
               <div className="relative">
                 <div className="absolute inset-0 bg-[#ff8c00]/20 rounded-[2rem] transform rotate-3 blur-xl" />
                 <div className="relative bg-[#fafaf4] p-4 rounded-[2rem] shadow-xl border border-white/50 backdrop-blur-md">
-                  <div className="aspect-video bg-black rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
-                    {isPlayingVideo ? (
-                      <iframe
-                        title="Love story video"
-                        src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                        className="w-full h-full border-0"
-                        allow="autoplay; encrypted-media"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <div className="relative w-full h-full" onClick={() => setIsPlayingVideo(true)}>
-                        <img
-                          alt="Video Cover Photo"
-                          className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                          src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/couple-photo.jpg"}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center z-10 text-[#904d00] shadow-lg group-hover:scale-110 transition-transform">
-                            <Play className="w-8 h-8 fill-current ml-1" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  <div className="aspect-[4/3] bg-[#f0ede6] rounded-xl flex items-center justify-center relative overflow-hidden group">
+                    <img
+                      alt={`${celebrantName} Summer Portrait`}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      src={celebrantPhoto}
+                    />
+                    <div className="absolute top-3 left-3 bg-[#fafaf4]/90 backdrop-blur-md px-3 py-1 rounded-full font-mono-citrus text-[10px] text-[#904d00] uppercase font-bold border border-[#904d00]/20">
+                      SUNSHINE ARCHIVE
+                    </div>
                   </div>
                 </div>
               </div>
@@ -457,25 +477,46 @@ export default function FreshCitrusSummerInvitation(
         <section className="py-20 px-6 md:px-16 bg-[#fafaf4]/80 rounded-3xl border border-[#904d00]/10 my-12" id="venue">
           <div className="max-w-[1200px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className="relative order-2 md:order-1">
+              {/* Clickable Map Card */}
+              <a
+                href={mainVenue.mapLink}
+                target="_blank"
+                rel="noreferrer"
+                className="relative order-2 md:order-1 block group"
+              >
                 <div className="absolute inset-0 bg-[#006e0a]/10 rounded-2xl transform rotate-3 scale-105 blur-lg" />
                 <div
-                  className="w-full h-[450px] bg-cover bg-center rounded-2xl shadow-lg relative z-10 border border-white/50"
+                  className="w-full h-[450px] bg-cover bg-center rounded-2xl shadow-lg relative z-10 border border-white/50 flex flex-col justify-end p-6 overflow-hidden"
                   style={{
                     backgroundImage:
                       "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbHKejKdRUkXbCUxxcjo3sUqfciRib9IgPhlWMTI115yZLJev3rUMmMUtglPKEebM802jt0H4KNf8IxAuTQytYxSNFyu0tVwxxAdAoRxQ1_QYf46Ex_Yxxj7CpA0qZ20uqjKJd8WR214MBxDY5xHpBwRuwlaqei02_gHQ8EeKvK7ZTyDzcAVR_ATpjzKgiZFPnz5Tai16I72avsd0OKTYXB7aSuT2957Q-Ecp5zGpZQSfYa-hpB6gO')",
                   }}
-                />
-                <div className="absolute -bottom-5 -right-5 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center z-20 border border-[#ddc1ae]/40">
-                  <MapPin className="w-8 h-8 text-[#904d00]" />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10" />
+                  <div className="relative z-20 text-white">
+                    <span className="font-title-citrus text-xl font-bold block mb-1">
+                      {mainVenue.name || "The Orangery Botanical Pavilion"}
+                    </span>
+                    <span className="font-body-citrus text-xs opacity-90 block mb-3">
+                      {mainVenue.address}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-[#904d00] text-white px-4 py-1.5 rounded-full font-mono-citrus text-xs uppercase font-bold tracking-wider group-hover:bg-[#ff8c00] transition-colors shadow-md">
+                      <span>Open in Google Maps</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
                 </div>
-              </div>
+                <div className="absolute -bottom-4 -right-4 w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center z-20 border border-[#ddc1ae]/40 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-7 h-7 text-[#904d00]" />
+                </div>
+              </a>
+
               <div className="order-1 md:order-2">
                 <h2 className="font-title-citrus text-3xl md:text-4xl font-bold text-[#904d00] mb-6">
-                  The Orangery
+                  {mainVenue.name || "The Orangery"}
                 </h2>
                 <p className="font-body-citrus text-base text-[#564334] mb-8 leading-relaxed">
-                  Nestled in the heart of the botanical gardens, The Orangery offers a luminous glasshouse setting perfect for a sun-drenched gathering. Expect a vibrant atmosphere where the scent of blooming citrus fills the air.
+                  Nestled in the heart of lush gardens, {mainVenue.name} offers a luminous glasshouse setting perfect for a sun-drenched gathering. Expect a vibrant atmosphere where the scent of blooming citrus fills the air.
                 </p>
                 <ul className="space-y-6 font-body-citrus">
                   <li className="flex items-start gap-4">
@@ -484,10 +525,10 @@ export default function FreshCitrusSummerInvitation(
                     </div>
                     <div>
                       <h4 className="font-mono-citrus text-xs text-[#1a1c19] uppercase tracking-wider mb-1 font-bold">
-                        Location
+                        Location &amp; Address
                       </h4>
-                      <p className="text-[#564334] text-sm">
-                        123 Sunlit Avenue, The Botanical Gardens
+                      <p className="text-[#564334] text-sm leading-relaxed">
+                        {mainVenue.address}
                       </p>
                     </div>
                   </li>
@@ -500,7 +541,7 @@ export default function FreshCitrusSummerInvitation(
                         Date &amp; Time
                       </h4>
                       <p className="text-[#564334] text-sm">
-                        Saturday, August 15th • 10:30 AM
+                        {props.weddingTime || "Saturday, August 15th • 10:30 AM"}
                       </p>
                     </div>
                   </li>
@@ -513,11 +554,24 @@ export default function FreshCitrusSummerInvitation(
                         Parking
                       </h4>
                       <p className="text-[#564334] text-sm">
-                        Complimentary valet parking is available at the East Gate entrance.
+                        Complimentary valet and guest parking is available at the venue gates.
                       </p>
                     </div>
                   </li>
                 </ul>
+
+                <div className="mt-8">
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 bg-[#904d00] text-white px-8 py-3.5 rounded-full hover:scale-105 transition-transform duration-300 font-mono-citrus text-xs uppercase tracking-wider shadow-[0_8px_24px_rgba(255,140,0,0.3)] font-bold"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>Get Directions on Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>

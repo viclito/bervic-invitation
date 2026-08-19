@@ -2,17 +2,17 @@
 
 @layer base {
   :root {
-    --bg-cream: #F8F3EA;
-    --text-dark: #221C17;
+    --bg-cream: #FFFFFF;
+    --text-dark: #0F172A;
     --gold: #D9A441;
-    --gold-light: #F7E7C4;
+    --gold-light: #FEF3C7;
     --gold-glow: rgba(217, 164, 65, 0.35);
-    --maroon: #7A1F2B;
-    --maroon-hover: #631822;
+    --maroon: #991B1B;
+    --maroon-hover: #7F1D1D;
   }
 
   body {
-    background-color: var(--bg-cream);
+    background-color: #FFFFFF;
     color: var(--text-dark);
     font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
@@ -26,11 +26,11 @@
 
 /* Custom Utilities */
 .bg-cream {
-  background-color: #F8F3EA;
+  background-color: #FFFFFF;
 }
 
 .text-near-black {
-  color: #221C17;
+  color: #0F172A;
 }
 
 .text-gold {
@@ -46,21 +46,21 @@
 }
 
 .bg-maroon {
-  background-color: #7A1F2B;
+  background-color: #991B1B;
 }
 
 .text-maroon {
-  color: #7A1F2B;
+  color: #991B1B;
 }
 
 .hover\:bg-maroon-hover:hover {
-  background-color: #631822;
+  background-color: #7F1D1D;
 }
 
 /* Button & Card Styles */
 .btn-maroon {
-  background-color: #7A1F2B;
-  color: #F8F3EA;
+  background-color: #991B1B;
+  color: #FFFFFF;
   border-radius: 9999px;
   font-weight: 600;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
@@ -69,15 +69,15 @@
 
 .btn-maroon:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 25px rgba(217, 164, 65, 0.4);
-  background-color: #631822;
+  box-shadow: 0 0 25px rgba(153, 27, 27, 0.35);
+  background-color: #7F1D1D;
 }
 
 .btn-outline-cream {
-  background-color: rgba(248, 243, 234, 0.15);
+  background-color: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
-  color: #F8F3EA;
-  border: 1px solid rgba(248, 243, 234, 0.4);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 9999px;
   font-weight: 600;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
@@ -86,16 +86,30 @@
 
 .btn-outline-cream:hover {
   transform: scale(1.03);
-  background-color: rgba(248, 243, 234, 0.25);
+  background-color: rgba(255, 255, 255, 0.25);
   border-color: #D9A441;
 }
 
+.btn-gold {
+  background: linear-gradient(135deg, #D9A441 0%, #B8860B 100%);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.btn-gold:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 25px rgba(217, 164, 65, 0.45);
+}
+
 .card-shadow {
-  box-shadow: 0 10px 30px -5px rgba(34, 28, 23, 0.06), 0 4px 12px -2px rgba(34, 28, 23, 0.03);
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
 }
 
 .premium-card-glow {
-  box-shadow: 0 12px 35px -5px rgba(217, 164, 65, 0.25), 0 0 15px rgba(217, 164, 65, 0.2);
+  box-shadow: 0 12px 35px -5px rgba(153, 27, 27, 0.15), 0 0 15px rgba(217, 164, 65, 0.2);
 }
 
 /* Section dividers */
@@ -105,12 +119,18 @@
   opacity: 0.4;
 }
 
+.red-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #991B1B 50%, transparent 100%);
+  opacity: 0.25;
+}
+
 /* Glassmorphism Header */
 .header-glass {
-  background-color: rgba(248, 243, 234, 0.85);
+  background-color: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(217, 164, 65, 0.15);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 /* Lenis Smooth Scroll Fixes */

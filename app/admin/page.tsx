@@ -24,7 +24,100 @@ import {
   ArrowLeft,
   Lock,
   Check,
+  Package,
+  MessageSquare,
+  Send,
+  Clock,
+  Truck,
+  Phone,
+  Mail,
+  MapPin,
+  ChevronDown,
+  Eye,
+  ExternalLink,
+  ShoppingBag,
+  Edit3,
+  Trash2,
+  Loader2,
+  Plus,
+  Upload,
+  Image as ImageIcon,
+  Link2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  CheckSquare,
+  Square,
+  MinusSquare,
+  SlidersHorizontal,
+  EyeOff,
 } from "lucide-react";
+
+export interface AdminShopProduct {
+  id: string;
+  name: string;
+  category: string;
+  pricePerCard: number;
+  minCopies: number;
+  previewImage: string;
+  galleryImages?: string | null;
+  badge?: string | null;
+  paperType: string;
+  dimensions: string;
+  description: string;
+  featuresJson: string;
+  canvaTemplateId?: string | null;
+  rating: number;
+  reviewsCount: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AdminOrderItem {
+  id: string;
+  orderId: string;
+  itemType: string;
+  templateId: string;
+  templateName: string;
+  previewImage: string | null;
+  copies: number;
+  cardDetailsJson: string;
+  elementsJson: string | null;
+  customNotes: string | null;
+  price: number;
+  createdAt: string;
+}
+
+interface AdminOrderMessage {
+  id: string;
+  orderId: string;
+  sender: string;
+  message: string;
+  createdAt: string;
+}
+
+interface AdminOrder {
+  id: string;
+  orderNumber: string;
+  userId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryAddress: string | null;
+  city: string | null;
+  pincode: string | null;
+  status: string;
+  totalCopies: number;
+  totalAmount: number;
+  paymentStatus: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: AdminOrderItem[];
+  messages: AdminOrderMessage[];
+}
 
 interface SubscriptionHistoryItem {
   id: string;
@@ -45,6 +138,7 @@ interface AdminUser {
   role: string;
   plan: string;
   purchasedPlansList?: string[];
+  purchasedPlansCounts?: Record<string, number>;
   subscriptionsHistory?: SubscriptionHistoryItem[];
   planExpiresAt: string | null;
   allowedTemplatesCount: number;
@@ -87,6 +181,27 @@ interface AdminInvitation {
   guestsCount: number;
 }
 
+const PLAN_BADGE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  CINEMATIC_2000: {
+    label: "CINEMATIC ₹2000",
+    bg: "bg-amber-500/20",
+    text: "text-amber-900",
+    border: "border-amber-500/50",
+  },
+  PRO_1799: {
+    label: "PRO ₹1799",
+    bg: "bg-[#D9A441]/20",
+    text: "text-[#8B6519]",
+    border: "border-[#D9A441]/50",
+  },
+  BASIC_599: {
+    label: "BASIC ₹599",
+    bg: "bg-[#7A1F2B]/10",
+    text: "text-[#7A1F2B]",
+    border: "border-[#7A1F2B]/30",
+  },
+};
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -97,7 +212,51 @@ export default function AdminPage() {
   const [invitationsList, setInvitationsList] = useState<AdminInvitation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [planFilter, setPlanFilter] = useState("ALL");
+  const [activeTab, setActiveTab] = useState<"USERS" | "ORDERS" | "LOCKS" | "SHOP">("USERS");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [ordersList, setOrdersList] = useState<AdminOrder[]>([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("ALL");
+  const [selectedOrderForMessage, setSelectedOrderForMessage] = useState<AdminOrder | null>(null);
+  const [messageInput, setMessageInput] = useState<string>("");
+  const [sendingMessage, setSendingMessage] = useState<boolean>(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
+
+  // Traditional Shop Product Management State
+  const [shopProductsList, setShopProductsList] = useState<AdminShopProduct[]>([]);
+  const [shopCategoryFilter, setShopCategoryFilter] = useState<string>("ALL");
+  const [shopStatusFilter, setShopStatusFilter] = useState<string>("ALL");
+  const [shopSearchQuery, setShopSearchQuery] = useState<string>("" );
+  const [shopSortBy, setShopSortBy] = useState<string>("DEFAULT");
+  const [shopCurrentPage, setShopCurrentPage] = useState<number>(1);
+  const [shopPageSize, setShopPageSize] = useState<number>(15);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState<boolean>(false);
+  const [shopModalOpen, setShopModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminShopProduct | null>(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
+  const [uploadingSubImages, setUploadingSubImages] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [showManualUrl, setShowManualUrl] = useState(false);
+  const [subImageUrlInput, setSubImageUrlInput] = useState("");
+  const [productForm, setProductForm] = useState({
+    name: "",
+    category: "royal",
+    pricePerCard: 65,
+    minCopies: 50,
+    previewImage: "",
+    galleryImages: [] as string[],
+    badge: "",
+    paperType: "350 GSM Textured Metallic Gold Cardstock",
+    dimensions: "5.5 x 8.5 inches",
+    description: "",
+    features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included",
+    canvaTemplateId: "",
+    isActive: true,
+  });
 
   // Modal State for Granting Extra Quota
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -108,6 +267,7 @@ export default function AdminPage() {
   const [granting, setGranting] = useState(false);
   const [successToast, setSuccessToast] = useState("");
   const [togglingLockId, setTogglingLockId] = useState<string | null>(null);
+  const [deletingInvitationId, setDeletingInvitationId] = useState<string | null>(null);
 
   const isAdmin = session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
 
@@ -115,20 +275,422 @@ export default function AdminPage() {
     setLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/admin/overview");
-      const data = await res.json();
+      const [overviewRes, ordersRes, shopRes] = await Promise.all([
+        fetch("/api/admin/overview"),
+        fetch("/api/admin/orders"),
+        fetch("/api/admin/shop/products"),
+      ]);
+      const data = await overviewRes.json();
+      const ordersData = await ordersRes.json();
+      const shopData = await shopRes.json();
 
-      if (!res.ok) {
+      if (!overviewRes.ok) {
         throw new Error(data.error || "Failed to load admin data");
       }
 
       setStats(data.stats);
       setUsers(data.users || []);
       setInvitationsList(data.invitationsList || []);
+      if (ordersRes.ok && Array.isArray(ordersData.orders)) {
+        setOrdersList(ordersData.orders);
+      }
+      if (shopRes.ok && Array.isArray(shopData.products)) {
+        setShopProductsList(shopData.products);
+      }
     } catch (err: any) {
       setErrorMsg(err?.message || "Error loading admin dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenNewProductModal = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: "",
+      category: "royal",
+      pricePerCard: 65,
+      minCopies: 50,
+      previewImage: "/images/canva/template2-thumb.webp",
+      galleryImages: [],
+      badge: "NEW",
+      paperType: "350 GSM Textured Metallic Gold Cardstock",
+      dimensions: "5.5 x 8.5 inches",
+      description: "Majestic luxury Indian wedding invitation card with real gold foil border frames.",
+      features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included",
+      canvaTemplateId: "",
+      isActive: true,
+    });
+    setSubImageUrlInput("");
+    setUploadError("");
+    setShowManualUrl(false);
+    setShopModalOpen(true);
+  };
+
+  const handleOpenEditProductModal = (product: AdminShopProduct) => {
+    setEditingProduct(product);
+    let featuresStr = "";
+    try {
+      const parsed = JSON.parse(product.featuresJson);
+      if (Array.isArray(parsed)) featuresStr = parsed.join("\n");
+    } catch {
+      featuresStr = product.featuresJson || "";
+    }
+
+    let parsedGallery: string[] = [];
+    try {
+      if (product.galleryImages) {
+        const parsed = JSON.parse(product.galleryImages);
+        if (Array.isArray(parsed)) parsedGallery = parsed;
+      }
+    } catch {
+      parsedGallery = [];
+    }
+
+    setProductForm({
+      name: product.name,
+      category: product.category,
+      pricePerCard: product.pricePerCard,
+      minCopies: product.minCopies,
+      previewImage: product.previewImage,
+      galleryImages: parsedGallery,
+      badge: product.badge || "",
+      paperType: product.paperType,
+      dimensions: product.dimensions,
+      description: product.description,
+      features: featuresStr,
+      canvaTemplateId: product.canvaTemplateId || "",
+      isActive: product.isActive,
+    });
+    setSubImageUrlInput("");
+    setUploadError("");
+    setShowManualUrl(false);
+    setShopModalOpen(true);
+  };
+
+  const handleUploadProductImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingProductImage(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to upload image");
+      setProductForm((prev) => ({ ...prev, previewImage: data.url }));
+    } catch (err: any) {
+      setUploadError(err.message || "Failed to upload image from local system");
+    } finally {
+      setUploadingProductImage(false);
+    }
+  };
+
+  const handleUploadProductSubImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingSubImages(true);
+    setUploadError("");
+    try {
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          uploadedUrls.push(data.url);
+        }
+      }
+      if (uploadedUrls.length > 0) {
+        setProductForm((prev) => ({
+          ...prev,
+          galleryImages: [...(prev.galleryImages || []), ...uploadedUrls],
+        }));
+      }
+    } catch (err: any) {
+      setUploadError(err.message || "Failed to upload sub images");
+    } finally {
+      setUploadingSubImages(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleSetAsMainImage = (subImgUrl: string, subIndex: number) => {
+    setProductForm((prev) => {
+      const oldMain = prev.previewImage;
+      const newGallery = [...(prev.galleryImages || [])];
+      newGallery.splice(subIndex, 1);
+      if (oldMain && !newGallery.includes(oldMain)) {
+        newGallery.unshift(oldMain);
+      }
+      return {
+        ...prev,
+        previewImage: subImgUrl,
+        galleryImages: newGallery,
+      };
+    });
+  };
+
+  const handleRemoveSubImage = (subIndex: number) => {
+    setProductForm((prev) => {
+      const newGallery = [...(prev.galleryImages || [])];
+      newGallery.splice(subIndex, 1);
+      return {
+        ...prev,
+        galleryImages: newGallery,
+      };
+    });
+  };
+
+  const handleAddSubImageUrl = () => {
+    if (!subImageUrlInput.trim()) return;
+    setProductForm((prev) => ({
+      ...prev,
+      galleryImages: [...(prev.galleryImages || []), subImageUrlInput.trim()],
+    }));
+    setSubImageUrlInput("");
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.previewImage) {
+      alert("Please fill in the product name and main preview image.");
+      return;
+    }
+
+    setSavingProduct(true);
+    const featuresList = productForm.features
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    try {
+      const payload = {
+        ...productForm,
+        galleryImages: JSON.stringify(productForm.galleryImages || []),
+        features: featuresList,
+      };
+
+      if (editingProduct) {
+        // Edit existing product
+        const res = await fetch(`/api/admin/shop/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update product");
+
+        setShopProductsList((prev) =>
+          prev.map((p) => (p.id === editingProduct.id ? data.product : p))
+        );
+        setSuccessToast(`Product "${productForm.name}" updated successfully!`);
+      } else {
+        // Create new product
+        const res = await fetch("/api/admin/shop/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create product");
+
+        setShopProductsList((prev) => [data.product, ...prev]);
+        setSuccessToast(`Product "${productForm.name}" added to /shop catalog!`);
+      }
+      setTimeout(() => setSuccessToast(""), 4000);
+      setShopModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Error saving product");
+    } finally {
+      setSavingProduct(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm("Are you sure you want to delete this product from the shop catalog?")) return;
+
+    setDeletingProductId(productId);
+    try {
+      const res = await fetch(`/api/admin/shop/products/${productId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete product");
+
+      setShopProductsList((prev) => prev.filter((p) => p.id !== productId));
+      setSuccessToast("Product deleted successfully");
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err.message || "Error deleting product");
+    } finally {
+      setDeletingProductId(null);
+    }
+  };
+
+  const handleToggleProductActive = async (product: AdminShopProduct) => {
+    try {
+      const newActive = !product.isActive;
+      const res = await fetch(`/api/admin/shop/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle status");
+
+      setShopProductsList((prev) =>
+        prev.map((p) => (p.id === product.id ? { ...p, isActive: newActive } : p))
+      );
+      setSuccessToast(`Product is now ${newActive ? "ACTIVE on /shop" : "HIDDEN from /shop"}`);
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err.message || "Error toggling product status");
+    }
+  };
+
+  const handleToggleSelectProduct = (productId: string) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const handleToggleSelectAllOnPage = (pageProductIds: string[]) => {
+    const allSelected =
+      pageProductIds.length > 0 && pageProductIds.every((id) => selectedProductIds.includes(id));
+    if (allSelected) {
+      setSelectedProductIds((prev) => prev.filter((id) => !pageProductIds.includes(id)));
+    } else {
+      setSelectedProductIds((prev) => Array.from(new Set([...prev, ...pageProductIds])));
+    }
+  };
+
+  const handleSelectAllFiltered = (allFilteredIds: string[]) => {
+    setSelectedProductIds(allFilteredIds);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedProductIds([]);
+  };
+
+  const handleBulkToggleStatus = async (isActive: boolean) => {
+    if (selectedProductIds.length === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/shop/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: selectedProductIds, isActive }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to bulk update status");
+
+      setShopProductsList((prev) =>
+        prev.map((p) => (selectedProductIds.includes(p.id) ? { ...p, isActive } : p))
+      );
+      setSuccessToast(
+        `${selectedProductIds.length} products ${isActive ? "ACTIVATED on /shop" : "HIDDEN from /shop"} successfully!`
+      );
+      setTimeout(() => setSuccessToast(""), 4000);
+      setSelectedProductIds([]);
+    } catch (err: any) {
+      alert(err.message || "Error during bulk update");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProductIds.length === 0) return;
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedProductIds.length} selected products? This action cannot be undone.`
+      )
+    )
+      return;
+
+    setBulkActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/shop/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds: selectedProductIds }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to bulk delete products");
+
+      setShopProductsList((prev) => prev.filter((p) => !selectedProductIds.includes(p.id)));
+      setSuccessToast(`${selectedProductIds.length} products deleted successfully!`);
+      setTimeout(() => setSuccessToast(""), 4000);
+      setSelectedProductIds([]);
+    } catch (err: any) {
+      alert(err.message || "Error during bulk delete");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string, note?: string) => {
+    setUpdatingStatusId(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, note }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update order status");
+
+      setOrdersList((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+      );
+      setSuccessToast(`✨ Order #${data.order?.orderNumber || ""} status updated to ${newStatus} & email sent!`);
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err?.message || "Failed to update status");
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const handleSendOrderMessage = async (orderId: string) => {
+    if (!messageInput.trim()) return;
+    setSendingMessage(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: messageInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send message");
+
+      setOrdersList((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? { ...o, messages: [...o.messages, data.message] }
+            : o
+        )
+      );
+      if (selectedOrderForMessage && selectedOrderForMessage.id === orderId) {
+        setSelectedOrderForMessage((prev) =>
+          prev ? { ...prev, messages: [...prev.messages, data.message] } : null
+        );
+      }
+      setMessageInput("");
+      setSuccessToast("💬 Message sent & customer notified via email!");
+      setTimeout(() => setSuccessToast(""), 4000);
+    } catch (err: any) {
+      alert(err?.message || "Failed to send message");
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -185,6 +747,33 @@ export default function AdminPage() {
       setErrorMsg(err?.message || "Error toggling lock state");
     } finally {
       setTogglingLockId(null);
+    }
+  };
+
+  const handleDeleteInvitation = async (invitationId: string, partnerNames?: string) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to permanently delete the invitation template "${partnerNames || "Website"}"?\n\nThis will remove the live website, RSVP records, and guest lists.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingInvitationId(invitationId);
+      const res = await fetch(`/api/admin/invitations/${invitationId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete invitation template");
+
+      setSuccessToast(data.message || "Invitation template deleted successfully!");
+      setTimeout(() => setSuccessToast(""), 4000);
+
+      // Remove from local invitations list & update state
+      setInvitationsList((prev) => prev.filter((i) => i.id !== invitationId));
+      fetchAdminData();
+    } catch (err: any) {
+      alert(err?.message || "Failed to delete invitation");
+    } finally {
+      setDeletingInvitationId(null);
     }
   };
 
@@ -249,10 +838,10 @@ export default function AdminPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#F8F3EA] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-[#7A1F2B] border-t-transparent animate-spin" />
-          <span className="text-xs font-bold text-[#7A1F2B]">Loading Admin Control Panel...</span>
+          <div className="w-10 h-10 rounded-full border-4 border-[#991B1B] border-t-transparent animate-spin" />
+          <span className="text-xs font-bold text-[#991B1B]">Loading Admin Control Panel...</span>
         </div>
       </div>
     );
@@ -260,23 +849,23 @@ export default function AdminPage() {
 
   if (status === "unauthenticated" || !isAdmin) {
     return (
-      <div className="min-h-screen bg-[#F8F3EA] flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-20">
-          <div className="bg-[#FAF7F2] border-2 border-[#7A1F2B]/30 rounded-3xl p-8 sm:p-12 text-center max-w-md w-full card-shadow space-y-5">
-            <div className="w-16 h-16 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] flex items-center justify-center mx-auto shadow-inner">
-              <Crown className="w-8 h-8 text-[#7A1F2B]" />
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center max-w-md w-full shadow-lg space-y-5">
+            <div className="w-16 h-16 rounded-full bg-red-50 text-[#991B1B] flex items-center justify-center mx-auto shadow-inner">
+              <Crown className="w-8 h-8 text-[#991B1B]" />
             </div>
-            <h2 className="text-2xl font-bold text-[#221C17]">Admin Authority Required</h2>
-            <p className="text-xs text-[#221C17]/70 leading-relaxed">
-              You must be logged in as an administrator (<strong className="text-[#7A1F2B]">berglin1998@gmail.com</strong>) to access the Admin Control Dashboard.
+            <h2 className="text-2xl font-bold text-slate-900">Admin Authority Required</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              You must be logged in as an administrator (<strong className="text-[#991B1B]">berglin1998@gmail.com</strong>) to access the Admin Control Dashboard.
             </p>
             <div className="pt-2">
               <Link
                 href="/dashboard"
                 className="btn-maroon inline-flex items-center gap-2 px-6 py-3 text-xs font-bold shadow-md"
               >
-                <ArrowLeft className="w-4 h-4 text-[#D9A441]" />
+                <ArrowLeft className="w-4 h-4 text-amber-300" />
                 <span>Return to User Dashboard</span>
               </Link>
             </div>
@@ -295,60 +884,105 @@ export default function AdminPage() {
     return matchesSearch && matchesPlan;
   });
 
+  const filteredShopProducts = shopProductsList
+    .filter((product) => {
+      // 1. Category filter
+      if (shopCategoryFilter !== "ALL" && product.category !== shopCategoryFilter) {
+        return false;
+      }
+      // 2. Status filter
+      if (shopStatusFilter === "ACTIVE" && !product.isActive) return false;
+      if (shopStatusFilter === "HIDDEN" && product.isActive) return false;
+      // 3. Search query
+      if (shopSearchQuery.trim()) {
+        const q = shopSearchQuery.toLowerCase().trim();
+        const text = `${product.name} ${product.description} ${product.paperType} ${product.dimensions} ${product.badge || ""}`.toLowerCase();
+        if (!text.includes(q)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (shopSortBy === "PRICE_LOW") return a.pricePerCard - b.pricePerCard;
+      if (shopSortBy === "PRICE_HIGH") return b.pricePerCard - a.pricePerCard;
+      if (shopSortBy === "NAME_ASC") return a.name.localeCompare(b.name);
+      return 0; // Default/Newest
+    });
+
+  const totalShopItems = filteredShopProducts.length;
+  const effectivePageSize = shopPageSize === 0 ? totalShopItems || 1 : shopPageSize;
+  const totalShopPages = Math.max(1, Math.ceil(totalShopItems / effectivePageSize));
+  const validCurrentPage = Math.min(Math.max(1, shopCurrentPage), totalShopPages);
+
+  const paginatedShopProducts =
+    shopPageSize === 0
+      ? filteredShopProducts
+      : filteredShopProducts.slice(
+          (validCurrentPage - 1) * effectivePageSize,
+          validCurrentPage * effectivePageSize
+        );
+
+  const currentPageProductIds = paginatedShopProducts.map((p) => p.id);
+  const allFilteredShopIds = filteredShopProducts.map((p) => p.id);
+  const isAllOnPageSelected =
+    currentPageProductIds.length > 0 &&
+    currentPageProductIds.every((id) => selectedProductIds.includes(id));
+  const isSomeOnPageSelected =
+    currentPageProductIds.some((id) => selectedProductIds.includes(id)) && !isAllOnPageSelected;
+
   return (
-    <div className="min-h-screen bg-[#F8F3EA] text-[#221C17] flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-20 max-w-[1400px] mx-auto w-full px-4 sm:px-6 space-y-8">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16 sm:pb-20 max-w-[1400px] mx-auto w-full px-3 sm:px-6 space-y-6 sm:space-y-8">
         {/* Toast Notification */}
         {successToast && (
-          <div className="fixed top-24 right-6 z-50 bg-[#5B8C69] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold border border-white/20 animate-slide-down">
-            <CheckCircle2 className="w-5 h-5 text-white" />
-            <span>{successToast}</span>
+          <div className="fixed top-20 sm:top-24 right-3 sm:right-6 z-50 bg-[#5B8C69] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border border-white/20 animate-slide-down max-w-[90vw]">
+            <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+            <span className="truncate">{successToast}</span>
           </div>
         )}
 
         {/* Header Title Bar */}
-        <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 sm:p-8 card-shadow flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-[#7A1F2B] text-[#D9A441] text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider flex items-center gap-1">
-                <Crown className="w-3 h-3 fill-current" />
+        <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1.5 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#991B1B] text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full tracking-wider flex items-center gap-1">
+                <Crown className="w-3 h-3 fill-current text-amber-300" />
                 <span>ADMIN AUTHORITY PANEL</span>
               </span>
-              <span className="text-xs text-[#221C17]/60 font-semibold">• Live System Control</span>
+              <span className="text-[11px] sm:text-xs text-slate-500 font-semibold">• Live System Control</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#221C17]">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 leading-snug">
               Subscription Analytics &amp; Quota Top-Up Panel
             </h1>
-            <p className="text-xs text-[#221C17]/70">
-              Logged in as <strong className="text-[#7A1F2B]">{session?.user?.email}</strong>. View platform subscriptions, total usage metrics, and grant custom quotas to users.
+            <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+              Logged in as <strong className="text-[#991B1B]">{session?.user?.email}</strong>. View platform subscriptions, total usage metrics, and grant custom quotas to users.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
             <button
               onClick={handleResetPurchases}
               disabled={loading}
-              className="px-3.5 py-2.5 rounded-xl bg-[#7A1F2B]/10 text-[#7A1F2B] text-xs font-extrabold hover:bg-[#7A1F2B]/20 border border-[#7A1F2B]/30 flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-3.5 py-2.5 rounded-xl bg-red-50 text-[#991B1B] text-xs font-extrabold hover:bg-red-100 border border-red-200 flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
               title="Reset all non-admin user purchases and revenue to zero"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[#7A1F2B]" />
+              <RefreshCw className="w-3.5 h-3.5 text-[#991B1B]" />
               <span>Reset Purchases to ₹0</span>
             </button>
             <button
               onClick={fetchAdminData}
               disabled={loading}
-              className="px-3.5 py-2.5 rounded-xl bg-[#EFE7D8] text-[#221C17] text-xs font-bold hover:bg-[#D9A441]/20 border border-[#D9A441]/40 flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-[#7A1F2B] ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-[#991B1B] ${loading ? "animate-spin" : ""}`} />
               <span>Refresh Stats</span>
             </button>
             <Link
               href="/dashboard"
-              className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center gap-2 shadow-md"
+              className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#D9A441]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-amber-300" />
               <span>User Dashboard</span>
             </Link>
           </div>
@@ -356,411 +990,1847 @@ export default function AdminPage() {
 
         {/* Error Banner */}
         {errorMsg && (
-          <div className="p-4 rounded-2xl bg-[#7A1F2B]/10 border border-[#7A1F2B]/40 text-[#7A1F2B] text-xs font-semibold flex items-center gap-2">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#7A1F2B]/10 border border-[#7A1F2B]/40 text-[#7A1F2B] text-xs font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Overview Analytics Stat Cards (4 Cards) */}
+        {/* Overview Analytics Stat Cards (4 Cards - 2 cols on mobile, 4 on desktop) */}
         {stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
             {/* Stat 1: Total Revenue */}
-            <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow flex flex-col justify-between space-y-4 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden hover:border-[#991B1B]/40 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#8B6519] uppercase tracking-wider">Total Revenue</span>
-                <div className="w-10 h-10 rounded-2xl bg-[#D9A441]/20 text-[#8B6519] flex items-center justify-center">
-                  <IndianRupee className="w-5 h-5" />
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">Total Revenue</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100 shrink-0">
+                  <IndianRupee className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-extrabold text-[#7A1F2B]">₹{stats.totalRevenue.toLocaleString()}</span>
-                <span className="text-[11px] text-[#221C17]/60 block mt-1 font-medium">
-                  From {stats.totalSubscriptions} payment subscriptions
+                <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#991B1B]">
+                  ₹{stats.totalRevenue.toLocaleString()}
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 block mt-0.5 sm:mt-1 font-medium truncate">
+                  From {stats.totalSubscriptions} subscriptions
                 </span>
               </div>
             </div>
 
             {/* Stat 2: Subscriptions */}
-            <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow flex flex-col justify-between space-y-4 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden hover:border-slate-300 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#8B6519] uppercase tracking-wider">Active Subscriptions</span>
-                <div className="w-10 h-10 rounded-2xl bg-[#5B8C69]/20 text-[#5B8C69] flex items-center justify-center">
-                  <CreditCard className="w-5 h-5" />
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">Active Subs</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-extrabold text-[#221C17]">{stats.activeSubscriptions}</span>
-                <span className="text-[11px] text-[#221C17]/60 block mt-1 font-medium">
-                  {stats.totalSubscriptions} total purchased plans
+                <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900">{stats.activeSubscriptions}</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 block mt-0.5 sm:mt-1 font-medium truncate">
+                  {stats.totalSubscriptions} total purchased
                 </span>
               </div>
             </div>
 
             {/* Stat 3: Total Invitations Created */}
-            <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow flex flex-col justify-between space-y-4 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden hover:border-slate-300 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#8B6519] uppercase tracking-wider">Web Invitations Built</span>
-                <div className="w-10 h-10 rounded-2xl bg-[#7A1F2B]/10 text-[#7A1F2B] flex items-center justify-center">
-                  <Layers className="w-5 h-5" />
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">Web Invites</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200 shrink-0">
+                  <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-extrabold text-[#7A1F2B]">{stats.totalInvitationsCreated}</span>
-                <span className="text-[11px] text-[#221C17]/60 block mt-1 font-medium">
-                  Active wedding invite websites
+                <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900">{stats.totalInvitationsCreated}</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 block mt-0.5 sm:mt-1 font-medium truncate">
+                  Active invite websites
                 </span>
               </div>
             </div>
 
             {/* Stat 4: Instagram Cards Generated */}
-            <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 card-shadow flex flex-col justify-between space-y-4 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 sm:space-y-4 relative overflow-hidden hover:border-slate-300 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#8B6519] uppercase tracking-wider">Instagram Cards Exported</span>
-                <div className="w-10 h-10 rounded-2xl bg-[#D9A441]/20 text-[#8B6519] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5" />
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">Cards Made</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100 shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-extrabold text-[#8B6519]">{stats.totalCardsGenerated}</span>
-                <span className="text-[11px] text-[#221C17]/60 block mt-1 font-medium">
-                  Custom announcement card exports
+                <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900">{stats.totalCardsGenerated}</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 block mt-0.5 sm:mt-1 font-medium truncate">
+                  Announcement exports
                 </span>
               </div>
             </div>
           </div>
         )}
 
-        {/* User Management & Quota Top-Up Table Section */}
-        <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 sm:p-8 card-shadow space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#D9A441]/20 pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-[#221C17] flex items-center gap-2">
-                <Users className="w-5 h-5 text-[#7A1F2B]" />
-                <span>User Management &amp; Quota Top-Up Authority ({filteredUsers.length})</span>
-              </h3>
-              <p className="text-xs text-[#221C17]/70 mt-0.5">
-                View individual user usage and grant extra wedding template slots or Instagram card credits.
-              </p>
-            </div>
+        {/* Tab Navigation Controls - Horizontally scrollable on mobile */}
+        <div className="p-1.5 sm:p-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap md:flex-wrap min-w-max md:min-w-0">
+            {/* Tab 1: User Accounts */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("USERS")}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "USERS"
+                  ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
+                  : "text-slate-700 hover:text-[#991B1B] hover:bg-slate-100"
+              }`}
+            >
+              <Users className={`w-4 h-4 ${activeTab === "USERS" ? "text-amber-300" : "text-[#991B1B]"}`} />
+              <span>User Accounts &amp; Quotas</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === "USERS"
+                    ? "bg-white text-[#991B1B]"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {filteredUsers.length}
+              </span>
+            </button>
 
-            {/* Search & Filter Controls */}
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="w-3.5 h-3.5 text-[#221C17]/50 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search name or email..."
-                  className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#EFE7D8] border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
-                />
+            {/* Tab 2: Print Orders & Requests */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("ORDERS")}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 relative ${
+                activeTab === "ORDERS"
+                  ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
+                  : "text-slate-700 hover:text-[#991B1B] hover:bg-slate-100"
+              }`}
+            >
+              <Package className={`w-4 h-4 ${activeTab === "ORDERS" ? "text-amber-300" : "text-[#991B1B]"}`} />
+              <span>Card Print Orders</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === "ORDERS"
+                    ? "bg-white text-[#991B1B]"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {ordersList.length}
+              </span>
+              {ordersList.some((o) => o.status === "PENDING") && (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-white animate-pulse absolute top-2 right-2" />
+              )}
+            </button>
+
+            {/* Tab 3: Invitation Anti-Reuse & Locks */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("LOCKS")}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "LOCKS"
+                  ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
+                  : "text-slate-700 hover:text-[#991B1B] hover:bg-slate-100"
+              }`}
+            >
+              <ShieldCheck className={`w-4 h-4 ${activeTab === "LOCKS" ? "text-amber-300" : "text-[#991B1B]"}`} />
+              <span>Anti-Reuse &amp; Locks</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === "LOCKS"
+                    ? "bg-white text-[#991B1B]"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {invitationsList.length}
+              </span>
+            </button>
+
+            {/* Tab 4: Traditional Cards Shop Catalog */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("SHOP")}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "SHOP"
+                  ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
+                  : "text-slate-700 hover:text-[#991B1B] hover:bg-slate-100"
+              }`}
+            >
+              <ShoppingBag className={`w-4 h-4 ${activeTab === "SHOP" ? "text-amber-300" : "text-[#991B1B]"}`} />
+              <span>Shop Catalog</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === "SHOP"
+                    ? "bg-white text-[#991B1B]"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {shopProductsList.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* TAB 1: User Management & Quota Top-Up Table Section */}
+        {activeTab === "USERS" && (
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs space-y-5 sm:space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#991B1B]" />
+                  <span>User Quota Authority ({filteredUsers.length})</span>
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
+                  View individual user usage and grant extra wedding template slots or card credits.
+                </p>
               </div>
 
-              <select
-                value={planFilter}
-                onChange={(e) => setPlanFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#EFE7D8] border border-[#D9A441]/40 text-xs font-bold text-[#7A1F2B] focus:outline-none"
-              >
-                <option value="ALL">All Plans</option>
-                <option value="BASIC_599">BASIC ₹599</option>
-                <option value="PRO_1799">PRO ₹1799</option>
-                <option value="CINEMATIC_2000">CINEMATIC ₹2000</option>
-                <option value="NONE">Free / Unsubscribed</option>
-              </select>
-            </div>
-          </div>
+              {/* Search & Filter Controls */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-60">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search name or email..."
+                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
 
-          {/* User Table */}
-          <div className="overflow-x-auto rounded-2xl border border-[#D9A441]/30 bg-white">
-            <table className="w-full text-left border-collapse min-w-[900px]">
-              <thead>
-                <tr className="bg-[#EFE7D8] text-[#7A1F2B] text-[11px] font-extrabold uppercase tracking-wider border-b border-[#D9A441]/30">
-                  <th className="py-3.5 px-4">User Details</th>
-                  <th className="py-3.5 px-4">Active Plan</th>
-                  <th className="py-3.5 px-4">Template Slots (Used / Allowed)</th>
-                  <th className="py-3.5 px-4">Card Credits (Used / Allowed)</th>
-                  <th className="py-3.5 px-4">Total Revenue</th>
-                  <th className="py-3.5 px-4 text-right">Admin Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#D9A441]/20 text-xs text-[#221C17]">
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-[#221C17]/60 font-semibold">
-                      No users found matching query "{searchQuery}"
-                    </td>
+                <select
+                  value={planFilter}
+                  onChange={(e) => setPlanFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                >
+                  <option value="ALL">All Plans</option>
+                  <option value="BASIC_599">BASIC ₹599</option>
+                  <option value="PRO_1799">PRO ₹1799</option>
+                  <option value="CINEMATIC_2000">CINEMATIC ₹2000</option>
+                  <option value="NONE">Free / Unsubscribed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* User Table */}
+            <div className="overflow-x-auto rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <th className="py-3.5 px-4 font-bold min-w-[180px]">User Details</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[150px]">Active Plan</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[140px]">Template Slots</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[130px]">Card Credits</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[110px]">Revenue</th>
+                    <th className="py-3.5 px-4 text-right min-w-[140px]">Admin Action</th>
                   </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-[#F8F3EA]/60 transition-colors">
-                      {/* User Info */}
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5">
-                            <strong className="font-bold text-[#221C17] text-xs sm:text-sm">{user.name}</strong>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        No users found matching your search.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                        {/* User Details */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                            <span>{user.name}</span>
                             {user.role === "ADMIN" && (
-                              <span className="bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">
+                              <span className="px-2 py-0.5 rounded-full bg-[#991B1B] text-white text-[9px] font-extrabold tracking-wider">
                                 ADMIN
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] text-[#221C17]/70 font-mono">{user.email}</span>
-                        </div>
-                      </td>
+                          <div className="text-[11px] text-slate-500 font-mono">{user.email}</div>
+                          {user.phone && <div className="text-[10px] text-slate-400">{user.phone}</div>}
+                        </td>
 
-                      {/* Active Plan(s) & Purchases */}
-                      <td className="py-4 px-4">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {(!user.purchasedPlansList || user.purchasedPlansList.length === 0) ? (
-                            <span className="inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border bg-gray-100 text-gray-600 border-gray-300">
-                              Free User
-                            </span>
-                          ) : (
-                            user.purchasedPlansList.map((planKey) => (
-                              <span
-                                key={planKey}
-                                className={`inline-block text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
-                                  planKey === "CINEMATIC_2000"
-                                    ? "bg-amber-500/20 text-amber-900 border-amber-500/50 font-bold"
-                                    : planKey === "PRO_1799"
-                                    ? "bg-[#D9A441]/20 text-[#8B6519] border-[#D9A441]/50 font-bold"
-                                    : planKey === "BASIC_599"
-                                    ? "bg-[#7A1F2B]/10 text-[#7A1F2B] border-[#7A1F2B]/30 font-bold"
-                                    : "bg-gray-100 text-gray-600 border-gray-300"
-                                }`}
-                              >
-                                {planKey === "CINEMATIC_2000"
-                                  ? "CINEMATIC ₹2000"
-                                  : planKey === "PRO_1799"
-                                  ? "PRO ₹1799"
-                                  : planKey === "BASIC_599"
-                                  ? "BASIC ₹599"
-                                  : "Free User"}
+                        {/* Active Plan Badges with Individual Plan Counts */}
+                        <td className="py-4 px-4">
+                          <div className="flex flex-wrap items-center gap-1.5 max-w-[320px]">
+                            {user.role === "ADMIN" ? (
+                              <span className="px-3 py-1 rounded-full bg-[#991B1B] text-white font-extrabold text-[11px] tracking-wide shadow-xs">
+                                MASTER ADMIN
                               </span>
-                            ))
-                          )}
-                          {user.subscriptionsHistory && user.subscriptionsHistory.length > 0 && (
-                            <span className="px-2 py-0.5 rounded-md bg-[#EFE7D8] text-[#8B6519] text-[9px] font-bold font-mono">
-                              {user.subscriptionsHistory.length} Purchase{user.subscriptionsHistory.length > 1 ? "s" : ""}
+                            ) : user.purchasedPlansCounts && Object.keys(user.purchasedPlansCounts).length > 0 ? (
+                              Object.entries(user.purchasedPlansCounts).map(([planKey, count]) => {
+                                const config = PLAN_BADGE_CONFIG[planKey] || {
+                                  label: planKey,
+                                  bg: "bg-slate-100",
+                                  text: "text-slate-800",
+                                  border: "border-slate-300",
+                                };
+                                return (
+                                  <span
+                                    key={planKey}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide border shadow-2xs ${config.bg} ${config.text} ${config.border}`}
+                                  >
+                                    <span>{config.label}</span>
+                                    <span className="px-1.5 py-0.5 rounded-full bg-slate-900/10 text-[9px] font-black leading-none">
+                                      {count} {count === 1 ? "purchase" : "purchases"}
+                                    </span>
+                                  </span>
+                                );
+                              })
+                            ) : user.purchasedPlansList && user.purchasedPlansList.length > 0 ? (
+                              user.purchasedPlansList.map((planKey) => {
+                                const config = PLAN_BADGE_CONFIG[planKey] || {
+                                  label: planKey,
+                                  bg: "bg-slate-100",
+                                  text: "text-slate-800",
+                                  border: "border-slate-300",
+                                };
+                                return (
+                                  <span
+                                    key={planKey}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide border shadow-2xs ${config.bg} ${config.text} ${config.border}`}
+                                  >
+                                    <span>{config.label}</span>
+                                    <span className="px-1.5 py-0.5 rounded-full bg-slate-900/10 text-[9px] font-black leading-none">
+                                      1 purchase
+                                    </span>
+                                  </span>
+                                );
+                              })
+                            ) : user.hasActiveSubscription ? (
+                              (() => {
+                                const config = PLAN_BADGE_CONFIG[user.plan] || {
+                                  label: user.plan,
+                                  bg: "bg-red-50",
+                                  text: "text-[#991B1B]",
+                                  border: "border-red-200",
+                                };
+                                return (
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide border shadow-2xs ${config.bg} ${config.text} ${config.border}`}
+                                  >
+                                    <span>{config.label}</span>
+                                    <span className="px-1.5 py-0.5 rounded-full bg-slate-900/10 text-[9px] font-black leading-none">
+                                      1 purchase
+                                    </span>
+                                  </span>
+                                );
+                              })()
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[10px] border border-slate-200">
+                                FREE USER
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Template Slots */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-[#991B1B]">
+                              {user.role === "ADMIN" ? `${user.usedTemplatesCount} / Unlimited` : `${user.usedTemplatesCount} / ${user.allowedTemplatesCount}`}
                             </span>
-                          )}
-                        </div>
-                      </td>
+                            <span className="text-[10px] text-slate-400">
+                              ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedTemplatesCount - user.usedTemplatesCount)} left`})
+                            </span>
+                          </div>
+                        </td>
 
-                      {/* Template Slots */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#7A1F2B]">
-                            {user.role === "ADMIN" ? `${user.usedTemplatesCount} / Unlimited` : `${user.usedTemplatesCount} / ${user.allowedTemplatesCount}`}
-                          </span>
-                          <span className="text-[10px] text-[#221C17]/60">
-                            ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedTemplatesCount - user.usedTemplatesCount)} left`})
-                          </span>
-                        </div>
-                      </td>
+                        {/* Card Credits */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-slate-800">
+                              {user.role === "ADMIN" ? `${user.usedCardsCount} / Unlimited` : `${user.usedCardsCount} / ${user.allowedCardsCount}`}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedCardsCount - user.usedCardsCount)} left`})
+                            </span>
+                          </div>
+                        </td>
 
-                      {/* Card Credits */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#8B6519]">
-                            {user.role === "ADMIN" ? `${user.usedCardsCount} / Unlimited` : `${user.usedCardsCount} / ${user.allowedCardsCount}`}
-                          </span>
-                          <span className="text-[10px] text-[#221C17]/60">
-                            ({user.role === "ADMIN" ? "∞ left" : `${Math.max(0, user.allowedCardsCount - user.usedCardsCount)} left`})
-                          </span>
-                        </div>
-                      </td>
+                        {/* Revenue */}
+                        <td className="py-4 px-4 font-bold text-emerald-600">
+                          ₹{user.totalRevenue.toLocaleString()}
+                        </td>
 
-                      {/* Revenue */}
-                      <td className="py-4 px-4 font-bold text-[#5B8C69]">
-                        ₹{user.totalRevenue.toLocaleString()}
-                      </td>
+                        {/* Action */}
+                        <td className="py-4 px-4 text-right">
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setAddTemplateSlots(1);
+                              setAddCardCredits(5);
+                              setOverridePlan("");
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                          >
+                            <Zap className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Grant Extra Quota</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
-                      {/* Action */}
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setAddTemplateSlots(1);
-                            setAddCardCredits(5);
-                            setOverridePlan("");
-                          }}
-                          className="btn-maroon px-3 py-1.5 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm"
-                        >
-                          <Zap className="w-3.5 h-3.5 text-[#D9A441]" />
-                          <span>Grant Extra Quota</span>
-                        </button>
+        {/* TAB 2: 📦 CUSTOMER CARD PRINT ORDERS & REQUESTS */}
+        {activeTab === "ORDERS" && (
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs space-y-5 sm:space-y-6 animate-fade-in">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-[#991B1B]" />
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                    Card Print Orders ({ordersList.length})
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-600">
+                  Manage customer print orders, contact info, and production status.
+                </p>
+              </div>
+
+              {/* Status Filter Tabs - Scrollable on mobile */}
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar max-w-full">
+                {["ALL", "PENDING", "CONFIRMED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setOrderStatusFilter(st)}
+                    className={`px-2.5 sm:px-3 py-1 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                      orderStatusFilter === st
+                        ? "bg-[#991B1B] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                    }`}
+                  >
+                    {st.replace("_", " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div className="overflow-x-auto rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <table className="w-full text-left border-collapse min-w-[760px]">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <th className="py-3.5 px-4 font-bold min-w-[130px]">Order # &amp; Date</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[170px]">Customer</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[140px]">Phone Number</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[170px]">Items &amp; Copies</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[140px]">Status</th>
+                    <th className="py-3.5 px-4 text-right min-w-[140px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {ordersList.filter((o) => orderStatusFilter === "ALL" || o.status === orderStatusFilter).length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p className="text-xs font-bold">No orders found for the selected status.</p>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  ) : (
+                    ordersList
+                      .filter((o) => orderStatusFilter === "ALL" || o.status === orderStatusFilter)
+                      .map((order) => {
+                        const statusColors: Record<string, string> = {
+                          PENDING: "bg-amber-50 text-amber-900 border-amber-200",
+                          CONFIRMED: "bg-emerald-50 text-emerald-900 border-emerald-200",
+                          IN_PRODUCTION: "bg-blue-50 text-blue-900 border-blue-200",
+                          SHIPPED: "bg-purple-50 text-purple-900 border-purple-200",
+                          DELIVERED: "bg-green-50 text-green-900 border-green-200",
+                          CANCELLED: "bg-red-50 text-red-900 border-red-200",
+                        };
 
-        {/* SECTION 2: INVITATION ANTI-REUSE & EDIT UNLOCK CONTROLS */}
-        <div className="bg-[#FAF7F2] border border-[#D9A441]/30 rounded-3xl p-6 sm:p-8 card-shadow mt-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <ShieldCheck className="w-5 h-5 text-[#7A1F2B]" />
-                <h2 className="text-xl font-serif font-bold text-[#221C17]">
-                  Invitation Anti-Reuse &amp; Edit Unlock Controls
-                </h2>
-              </div>
-              <p className="text-xs text-[#221C17]/70">
-                Summary of active user invitation websites. Click any user to view all their created templates and manage individual 2-hour pre-event edit locks.
-              </p>
+                        return (
+                          <tr
+                            key={order.id}
+                            className="hover:bg-slate-50 transition-colors group cursor-pointer"
+                            onClick={(e) => {
+                              const target = e.target as HTMLElement;
+                              if (!target.closest("select") && !target.closest("button") && !target.closest("a")) {
+                                window.open(`/admin/orders/${order.id}`, "_blank");
+                              }
+                            }}
+                          >
+                            {/* 1. Order Number & Date */}
+                            <td className="py-4 px-4">
+                              <Link
+                                href={`/admin/orders/${order.id}`}
+                                target="_blank"
+                                className="font-mono font-extrabold text-[#991B1B] text-xs hover:underline flex items-center gap-1 group-hover:text-[#7F1D1D]"
+                              >
+                                <span>#{order.orderNumber}</span>
+                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </Link>
+                              <div className="text-[11px] text-slate-500 font-medium">
+                                {new Date(order.createdAt).toLocaleDateString(undefined, {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </div>
+                            </td>
+
+                            {/* 2. Customer Name & Email */}
+                            <td className="py-4 px-4">
+                              <div className="font-bold text-slate-900 text-sm">{order.customerName}</div>
+                              <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                                <Mail className="w-3 h-3 text-slate-400" />
+                                <a
+                                  href={`mailto:${order.customerEmail}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="hover:text-[#991B1B] hover:underline"
+                                >
+                                  {order.customerEmail}
+                                </a>
+                              </div>
+                            </td>
+
+                            {/* 3. Phone Number */}
+                            <td className="py-4 px-4">
+                              {order.customerPhone ? (
+                                <a
+                                  href={`tel:${order.customerPhone}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="font-bold text-[#991B1B] text-xs hover:underline flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 w-fit"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-[#991B1B]" />
+                                  <span>{order.customerPhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 text-xs italic">N/A</span>
+                              )}
+                            </td>
+
+                            {/* 4. Template & Total Copies */}
+                            <td className="py-4 px-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="px-2 py-0.5 rounded-full bg-red-50 text-[#991B1B] text-[11px] font-extrabold border border-red-200">
+                                    {order.totalCopies} Copies
+                                  </span>
+                                  <span className="font-bold text-xs text-slate-800 line-clamp-1">
+                                    {order.items[0]?.templateName || "Custom Card"}
+                                    {order.items.length > 1 ? ` (+${order.items.length - 1} more)` : ""}
+                                  </span>
+                                </div>
+                                {order.notes && (
+                                  <span className="text-[10px] text-slate-500 line-clamp-1 block italic">
+                                    Note: {order.notes}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* 5. Order Status */}
+                            <td className="py-4 px-4">
+                              <div className="relative w-fit" onClick={(e) => e.stopPropagation()}>
+                                <select
+                                  value={order.status}
+                                  disabled={updatingStatusId === order.id}
+                                  onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                                  className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold border outline-none cursor-pointer shadow-2xs ${
+                                    statusColors[order.status] || "bg-slate-100 text-slate-700 border-slate-300"
+                                  }`}
+                                >
+                                  <option value="PENDING">⏳ Pending Review</option>
+                                  <option value="CONFIRMED">✅ Confirmed</option>
+                                  <option value="IN_PRODUCTION">🏭 In Production</option>
+                                  <option value="SHIPPED">🚚 Shipped</option>
+                                  <option value="DELIVERED">🎉 Delivered</option>
+                                  <option value="CANCELLED">❌ Cancelled</option>
+                                </select>
+                              </div>
+                            </td>
+
+                            {/* 6. Actions */}
+                            <td className="py-4 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedOrderForMessage(order);
+                                    setMessageInput("");
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-[#991B1B] border border-slate-200 transition-colors shadow-2xs cursor-pointer"
+                                  title="Quick message customer"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </button>
+
+                                <Link
+                                  href={`/admin/orders/${order.id}`}
+                                  target="_blank"
+                                  className="px-3 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-[11px] font-bold inline-flex items-center gap-1 shadow-sm transition-all"
+                                >
+                                  <span>View Details</span>
+                                  <ExternalLink className="w-3 h-3 text-amber-300" />
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
             </div>
-            <span className="px-3 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] text-xs font-bold shrink-0">
-              {invitationsList.length} Active Invitation Websites Built
-            </span>
           </div>
+        )}
 
-          <div className="overflow-x-auto rounded-2xl border border-[#D9A441]/20 bg-white">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#EFE7D8] text-[#7A1F2B] text-xs font-serif uppercase tracking-wider border-b border-[#D9A441]/30">
-                  <th className="py-3.5 px-4 font-bold">Owner User</th>
-                  <th className="py-3.5 px-4 font-bold">Templates Built</th>
-                  <th className="py-3.5 px-4 font-bold">Total Guests &amp; RSVPs</th>
-                  <th className="py-3.5 px-4 font-bold">Lock Status Overview</th>
-                  <th className="py-3.5 px-4 text-right">Admin Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#D9A441]/20 text-xs">
-                {users.filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email)).length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500">
-                      No user invitations created yet.
-                    </td>
+        {/* TAB 3: INVITATION ANTI-REUSE & EDIT UNLOCK CONTROLS */}
+        {activeTab === "LOCKS" && (
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs space-y-5 sm:space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#991B1B]" />
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                    Anti-Reuse &amp; Edit Unlock Controls ({invitationsList.length})
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-600">
+                  Manage active invitation websites and individual 2-hour pre-event edit locks.
+                </p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-red-50 text-[#991B1B] text-[11px] font-bold shrink-0 border border-red-200">
+                {invitationsList.length} Websites Built
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <th className="py-3.5 px-4 font-bold min-w-[180px]">Owner User</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[160px]">Templates Built</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[150px]">Guests &amp; RSVPs</th>
+                    <th className="py-3.5 px-4 font-bold min-w-[150px]">Lock Status</th>
+                    <th className="py-3.5 px-4 text-right min-w-[140px]">Admin Action</th>
                   </tr>
-                ) : (
-                  users
-                    .filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email))
-                    .map((user) => {
-                      const userInvs = invitationsList.filter(
-                        (inv) => inv.userId === user.id || inv.userEmail.toLowerCase() === user.email.toLowerCase()
-                      );
-                      const totalGuests = userInvs.reduce((acc, inv) => acc + (inv.guestsCount || 0), 0);
-                      const lockedInvsCount = userInvs.filter((inv) => (inv.isLocked && !inv.isUnlockedByAdmin) || inv.isLockedByAdmin).length;
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {users.filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email)).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        No user invitations created yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    users
+                      .filter((u) => u.usedTemplatesCount > 0 || invitationsList.some((inv) => inv.userId === u.id || inv.userEmail === u.email))
+                      .map((user) => {
+                        const userInvs = invitationsList.filter(
+                          (inv) => inv.userId === user.id || inv.userEmail.toLowerCase() === user.email.toLowerCase()
+                        );
+                        const totalGuests = userInvs.reduce((acc, inv) => acc + (inv.guestsCount || 0), 0);
+                        const lockedInvsCount = userInvs.filter((inv) => (inv.isLocked && !inv.isUnlockedByAdmin) || inv.isLockedByAdmin).length;
+
+                        return (
+                          <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                            {/* 1. Owner User (Clickable) */}
+                            <td className="py-4 px-4">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setAddTemplateSlots(1);
+                                  setAddCardCredits(5);
+                                  setOverridePlan("");
+                                }}
+                                className="text-left group focus:outline-none cursor-pointer"
+                                title="Click to view all created templates & manage lock status"
+                              >
+                                <div className="font-bold text-[#991B1B] text-sm group-hover:underline flex items-center gap-1">
+                                  <span>{user.name}</span>
+                                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-mono">{user.email}</div>
+                              </button>
+                            </td>
+
+                            {/* 2. Templates Built Summary */}
+                            <td className="py-4 px-4">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="px-2.5 py-1 rounded-full bg-red-50 text-[#991B1B] font-bold text-xs border border-red-200">
+                                  {userInvs.length} Invitation{userInvs.length !== 1 ? "s" : ""} Built
+                                </span>
+                                {userInvs.map((inv) => (
+                                  <span key={inv.id} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-mono font-bold border border-slate-200">
+                                    {inv.templateSlug}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+
+                            {/* 3. Total Guests & RSVPs */}
+                            <td className="py-4 px-4 font-bold text-emerald-600">
+                              {totalGuests} Total Guests Attached
+                            </td>
+
+                            {/* 4. Lock Status Overview */}
+                            <td className="py-4 px-4">
+                              {lockedInvsCount > 0 ? (
+                                <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
+                                  <Lock className="w-3 h-3 text-rose-600" />
+                                  {lockedInvsCount} Locked / {userInvs.length} Total
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  All {userInvs.length} Active (Editable)
+                                </span>
+                              )}
+                            </td>
+
+                            {/* 5. Admin Action Button */}
+                            <td className="py-4 px-4 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setAddTemplateSlots(1);
+                                  setAddCardCredits(5);
+                                  setOverridePlan("");
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                <span>Manage Templates &amp; Locks</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: Traditional Cards Shop Catalog & Pricing Management Section */}
+        {activeTab === "SHOP" && (
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs space-y-5 sm:space-y-6 animate-fade-in">
+            {/* Header & Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100">
+                    <ShoppingBag className="w-4 h-4" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                    Traditional Cards Shop Catalog
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-[#991B1B] text-[11px] font-extrabold border border-red-200">
+                    {shopProductsList.length} items
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-600">
+                  Manage physical card templates, return gifts, pricing, and Canva Studio links on{" "}
+                  <Link href="/shop" target="_blank" className="font-bold text-[#991B1B] underline hover:text-[#7F1D1D]">
+                    /shop
+                  </Link>.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                {/* Add New Product Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenNewProductModal}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Product</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filters & Search Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
+                {/* Search Input */}
+                <div className="relative flex-1 sm:max-w-xs">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={shopSearchQuery}
+                    onChange={(e) => {
+                      setShopSearchQuery(e.target.value);
+                      setShopCurrentPage(1);
+                    }}
+                    placeholder="Search by card name, specs, price..."
+                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B]"
+                  />
+                  {shopSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShopSearchQuery("");
+                        setShopCurrentPage(1);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Filter */}
+                <select
+                  value={shopCategoryFilter}
+                  onChange={(e) => {
+                    setShopCategoryFilter(e.target.value);
+                    setShopCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                >
+                  <option value="ALL">All Categories</option>
+                  <optgroup label="💌 Invitation Cards">
+                    <option value="royal">👑 Royal &amp; Heritage</option>
+                    <option value="floral">🌸 Floral &amp; Botanical</option>
+                    <option value="vintage">📜 Vintage Parchment</option>
+                    <option value="modern">✨ Modern Die-Cut Arch</option>
+                    <option value="velvet">💎 Luxury Velvet Suites</option>
+                  </optgroup>
+                  <optgroup label="🎁 Return Gifts">
+                    <option value="return_gifts">🎁 All / General Return Gifts</option>
+                    <option value="brass">🪔 Brass Diyas &amp; Idols</option>
+                    <option value="hampers">🍬 Sweets &amp; Hampers</option>
+                    <option value="silver">🪙 Silver Pooja Coins</option>
+                    <option value="bags">🛍️ Brocade &amp; Jute Bags</option>
+                    <option value="candles">🕯️ Aromatherapy Candles</option>
+                  </optgroup>
+                </select>
+
+                {/* Status Filter */}
+                <select
+                  value={shopStatusFilter}
+                  onChange={(e) => {
+                    setShopStatusFilter(e.target.value);
+                    setShopCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="ACTIVE">● Active on /shop</option>
+                  <option value="HIDDEN">○ Hidden</option>
+                </select>
+
+                {/* Sort By */}
+                <select
+                  value={shopSortBy}
+                  onChange={(e) => setShopSortBy(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                >
+                  <option value="DEFAULT">Sort: Default (Newest)</option>
+                  <option value="PRICE_LOW">Price: Low to High</option>
+                  <option value="PRICE_HIGH">Price: High to Low</option>
+                  <option value="NAME_ASC">Name: A to Z</option>
+                </select>
+              </div>
+
+              {/* Quick Select All Button */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      selectedProductIds.length === allFilteredShopIds.length &&
+                      allFilteredShopIds.length > 0
+                    ) {
+                      handleClearSelection();
+                    } else {
+                      handleSelectAllFiltered(allFilteredShopIds);
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {selectedProductIds.length === allFilteredShopIds.length &&
+                  allFilteredShopIds.length > 0 ? (
+                    <>
+                      <CheckSquare className="w-3.5 h-3.5 text-[#991B1B]" />
+                      <span>Deselect All</span>
+                    </>
+                  ) : (
+                    <>
+                      <Square className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Select All ({allFilteredShopIds.length})</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Bulk Action Bar (When items are selected) */}
+            {selectedProductIds.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-red-50 border border-red-200 animate-slide-down">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#991B1B] text-white text-xs font-bold flex items-center justify-center">
+                    {selectedProductIds.length}
+                  </span>
+                  <span className="text-xs font-bold text-[#991B1B]">items selected</span>
+                  {selectedProductIds.length < allFilteredShopIds.length && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectAllFiltered(allFilteredShopIds)}
+                      className="text-xs font-bold text-slate-600 hover:text-[#991B1B] underline ml-2 cursor-pointer"
+                    >
+                      Select all {allFilteredShopIds.length} items
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={() => handleBulkToggleStatus(true)}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Activate ({selectedProductIds.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={() => handleBulkToggleStatus(false)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span>Hide ({selectedProductIds.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={bulkActionLoading}
+                    onClick={handleBulkDelete}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete ({selectedProductIds.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-semibold cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Products Table */}
+            <div className="overflow-x-auto rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <table className="w-full text-left border-collapse min-w-[850px]">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <th className="py-3.5 px-4 w-10 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSelectAllOnPage(currentPageProductIds)}
+                        className="cursor-pointer flex items-center justify-center mx-auto"
+                        title={isAllOnPageSelected ? "Deselect page" : "Select page"}
+                      >
+                        {isAllOnPageSelected ? (
+                          <CheckSquare className="w-4 h-4 text-[#991B1B]" />
+                        ) : isSomeOnPageSelected ? (
+                          <MinusSquare className="w-4 h-4 text-[#991B1B]" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                        )}
+                      </button>
+                    </th>
+                    <th className="py-3.5 px-4 min-w-[220px]">Card Design</th>
+                    <th className="py-3.5 px-4 min-w-[140px]">Category &amp; Badge</th>
+                    <th className="py-3.5 px-4 min-w-[100px]">Price / Unit</th>
+                    <th className="py-3.5 px-4 min-w-[160px]">Paper &amp; Specs</th>
+                    <th className="py-3.5 px-4 min-w-[120px]">Status</th>
+                    <th className="py-3.5 px-4 text-right min-w-[110px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {paginatedShopProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-500">
+                        <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p className="font-bold text-sm text-slate-700">No products match your filters</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Try clearing your search query or selecting another category.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedShopProducts.map((product) => {
+                      const isSelected = selectedProductIds.includes(product.id);
+                      const isGift = product.category === "return_gifts";
+                      let featuresList: string[] = [];
+                      try {
+                        const parsed = JSON.parse(product.featuresJson);
+                        if (Array.isArray(parsed)) featuresList = parsed;
+                      } catch {
+                        // ignore
+                      }
 
                       return (
-                        <tr key={user.id} className="hover:bg-[#EFE7D8]/40 transition-colors">
-                          {/* 1. Owner User (Clickable) */}
-                          <td className="py-4 px-4">
+                        <tr
+                          key={product.id}
+                          className={`transition-colors ${
+                            isSelected ? "bg-red-50/40" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          {/* 0. Row Checkbox */}
+                          <td className="py-4 px-4 text-center">
                             <button
                               type="button"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setAddTemplateSlots(1);
-                                setAddCardCredits(5);
-                                setOverridePlan("");
-                              }}
-                              className="text-left group focus:outline-none"
-                              title="Click to view all created templates & manage lock status"
+                              onClick={() => handleToggleSelectProduct(product.id)}
+                              className="cursor-pointer flex items-center justify-center mx-auto"
+                              title={isSelected ? "Deselect item" : "Select item"}
                             >
-                              <div className="font-bold text-[#7A1F2B] text-sm group-hover:underline flex items-center gap-1">
-                                <span>{user.name}</span>
-                                <Zap className="w-3.5 h-3.5 text-[#D9A441]" />
-                              </div>
-                              <div className="text-[11px] text-[#221C17]/60 font-mono">{user.email}</div>
+                              {isSelected ? (
+                                <CheckSquare className="w-4 h-4 text-[#991B1B]" />
+                              ) : (
+                                <Square className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                              )}
                             </button>
                           </td>
 
-                          {/* 2. Templates Built Summary */}
+                          {/* 1. Image Thumbnail & Title */}
                           <td className="py-4 px-4">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2.5 py-1 rounded-full bg-[#7A1F2B]/10 text-[#7A1F2B] font-bold text-xs">
-                                {userInvs.length} Invitation{userInvs.length !== 1 ? "s" : ""} Built
-                              </span>
-                              {userInvs.map((inv) => (
-                                <span key={inv.id} className="px-2 py-0.5 rounded-md bg-[#EFE7D8] text-[#8B6519] text-[10px] font-mono font-bold">
-                                  {inv.templateSlug}
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center">
+                                <img
+                                  src={product.previewImage}
+                                  alt={product.name}
+                                  className="w-full h-full object-contain p-1"
+                                />
+                              </div>
+                              <div className="space-y-0.5">
+                                <span className="font-bold text-slate-900 text-sm block leading-snug line-clamp-1">
+                                  {product.name}
                                 </span>
-                              ))}
+                                <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                                  <span>⭐ {product.rating || 5.0}</span>
+                                  <span>•</span>
+                                  <span>{product.reviewsCount || 0} reviews</span>
+                                </div>
+                                {product.canvaTemplateId && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 font-mono mt-0.5">
+                                    <span>🎨 Canva:</span>
+                                    <span className="truncate max-w-[100px]">{product.canvaTemplateId}</span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
 
-                          {/* 3. Total Guests & RSVPs */}
-                          <td className="py-4 px-4 font-bold text-emerald-700">
-                            {totalGuests} Total Guests Attached
-                          </td>
-
-                          {/* 4. Lock Status Overview */}
+                          {/* 2. Category & Badge */}
                           <td className="py-4 px-4">
-                            {lockedInvsCount > 0 ? (
-                              <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
-                                <Lock className="w-3 h-3 text-rose-600" />
-                                {lockedInvsCount} Locked / {userInvs.length} Total
+                            <div className="space-y-1">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 block w-fit">
+                                {isGift ? "🎁 Return Gift" : product.category}
                               </span>
-                            ) : (
-                              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit">
-                                <Check className="w-3 h-3 text-emerald-600" />
-                                All {userInvs.length} Active (Editable)
-                              </span>
-                            )}
+                              {product.badge && (
+                                <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider bg-red-50 text-[#991B1B] border border-red-200 block w-fit">
+                                  {product.badge}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
-                          {/* 5. Admin Action Button */}
-                          <td className="py-4 px-4 text-right">
+                          {/* 3. Price & Min Copies */}
+                          <td className="py-4 px-4">
+                            <div className="space-y-0.5">
+                              <span className="text-base font-extrabold text-[#991B1B]">₹{product.pricePerCard}</span>
+                              <span className="text-[10px] text-slate-500 block font-medium">
+                                Min: {product.minCopies || (isGift ? 25 : 50)} {isGift ? "pcs" : "copies"}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* 4. Paper & Specs */}
+                          <td className="py-4 px-4">
+                            <div className="max-w-[220px] space-y-1">
+                              <p className="text-[11px] font-bold text-slate-700 truncate">{product.paperType}</p>
+                              <p className="text-[10px] text-slate-500">Size: {product.dimensions}</p>
+                              {featuresList.length > 0 && (
+                                <p className="text-[10px] text-slate-400 truncate">• {featuresList[0]}</p>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 5. Status Toggle */}
+                          <td className="py-4 px-4">
                             <button
                               type="button"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setAddTemplateSlots(1);
-                                setAddCardCredits(5);
-                                setOverridePlan("");
-                              }}
-                              className="btn-maroon px-3.5 py-1.5 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm hover:scale-105 transition-all"
+                              onClick={() => handleToggleProductActive(product)}
+                              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                product.isActive
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                                  : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
+                              }`}
+                              title="Click to toggle active/hidden on /shop"
                             >
-                              <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
-                              <span>Manage Templates &amp; Locks</span>
+                              {product.isActive ? "● Active on /shop" : "○ Hidden"}
                             </button>
+                          </td>
+
+                          {/* 6. Action Buttons */}
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditProductModal(product)}
+                                className="p-2 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-[#991B1B] border border-slate-200 transition-colors cursor-pointer"
+                                title="Edit Product Details & Price"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={deletingProductId === product.id}
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="p-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-100 transition-colors cursor-pointer disabled:opacity-50"
+                                title="Delete Product"
+                              >
+                                {deletingProductId === product.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
                     })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-        {/* Modal: Grant Quota Drawer & Template Lock Controls */}
-        {selectedUser && (
-          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div data-lenis-prevent className="bg-[#FAF7F2] border-2 border-[#D9A441]/50 rounded-3xl p-6 sm:p-8 max-w-3xl sm:max-w-4xl w-full card-shadow relative space-y-6 animate-scale-up max-h-[88vh] overflow-y-auto pr-3 sm:pr-6">
+            {/* Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 text-slate-600">
+                <span className="text-center sm:text-left">
+                  Showing{" "}
+                  <strong className="text-slate-900">
+                    {totalShopItems === 0
+                      ? 0
+                      : (validCurrentPage - 1) * effectivePageSize + 1}
+                  </strong>{" "}
+                  to{" "}
+                  <strong className="text-slate-900">
+                    {Math.min(validCurrentPage * effectivePageSize, totalShopItems)}
+                  </strong>{" "}
+                  of <strong className="text-slate-900">{totalShopItems}</strong> products
+                </span>
+
+                <div className="flex items-center gap-1.5 ml-1">
+                  <span className="text-slate-400">Per page:</span>
+                  <select
+                    value={shopPageSize}
+                    onChange={(e) => {
+                      setShopPageSize(Number(e.target.value));
+                      setShopCurrentPage(1);
+                    }}
+                    className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={0}>All</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Page Navigator */}
+              {totalShopPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={validCurrentPage <= 1}
+                    onClick={() => setShopCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                    {Array.from({ length: Math.min(totalShopPages, 7) }, (_, i) => {
+                      let pageNum = i + 1;
+                      if (totalShopPages > 7 && validCurrentPage > 4) {
+                        pageNum = validCurrentPage - 3 + i;
+                        if (pageNum > totalShopPages) pageNum = totalShopPages - (6 - i);
+                      }
+                      return (
+                        <button
+                          key={`page_${pageNum}`}
+                          type="button"
+                          onClick={() => setShopCurrentPage(pageNum)}
+                          className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 ${
+                            validCurrentPage === pageNum
+                              ? "bg-[#991B1B] text-white shadow-xs"
+                              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={validCurrentPage >= totalShopPages}
+                    onClick={() => setShopCurrentPage((prev) => Math.min(totalShopPages, prev + 1))}
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add or Edit Shop Product */}
+        {shopModalOpen && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-2xl w-full shadow-2xl relative space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto overscroll-contain animate-scale-up">
               <button
-                onClick={() => setSelectedUser(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-[#EFE7D8] text-[#7A1F2B] hover:bg-[#7A1F2B]/10 transition-colors shadow-sm"
+                type="button"
+                onClick={() => setShopModalOpen(false)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-3 border-b border-[#D9A441]/20 pb-4">
-                <div className="w-11 h-11 rounded-2xl bg-[#7A1F2B] text-[#D9A441] flex items-center justify-center shadow-md shrink-0">
-                  <Zap className="w-6 h-6" />
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100 shrink-0">
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-[#221C17]">User Authority &amp; Template Lock Manager</h3>
-                  <p className="text-xs sm:text-sm text-[#221C17]/70 font-semibold">{selectedUser.name} ({selectedUser.email})</p>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {editingProduct ? "Edit Traditional Card Product" : "Add New Traditional Card to /shop"}
+                  </h3>
+                  <p className="text-xs text-slate-500">Fill in card specifications, pricing, and upload card design.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+                {/* Name & Category */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Return Gift / Item Title *"
+                        : "Card Design Title *"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={productForm.name}
+                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                      placeholder={
+                        ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                          ? "e.g. Antique Brass Peacock Diya Pair in Velvet Box"
+                          : "e.g. Royal Heritage Gold Embossed Card"
+                      }
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">Category *</label>
+                    <select
+                      value={productForm.category}
+                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B]"
+                    >
+                      <optgroup label="💌 Traditional Invitation Cards">
+                        <option value="royal">👑 Royal &amp; Heritage (Cards)</option>
+                        <option value="floral">🌸 Floral &amp; Botanical (Cards)</option>
+                        <option value="vintage">📜 Vintage Parchment (Cards)</option>
+                        <option value="modern">✨ Modern Die-Cut Arch (Cards)</option>
+                        <option value="velvet">💎 Luxury Velvet Suites (Cards)</option>
+                      </optgroup>
+                      <optgroup label="🎁 Return Gifts &amp; Favors">
+                        <option value="return_gifts">🎁 All / General Return Gifts</option>
+                        <option value="brass">🪔 Brass Diyas &amp; Idols (Return Gift)</option>
+                        <option value="hampers">🍬 Sweets &amp; Dry Fruits Hampers (Return Gift)</option>
+                        <option value="silver">🪙 Silver Pooja Coins (Return Gift)</option>
+                        <option value="bags">🛍️ Brocade &amp; Jute Bags (Return Gift)</option>
+                        <option value="candles">🕯️ Aromatherapy Candles (Return Gift)</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price, Min Copies, Badge */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Price Per Unit / Piece (₹) *"
+                        : "Price Per Card (₹) *"}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      value={productForm.pricePerCard}
+                      onChange={(e) => setProductForm({ ...productForm, pricePerCard: Number(e.target.value) })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#991B1B] focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Min Order Pieces"
+                        : "Min Order Copies"}
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={productForm.minCopies}
+                      onChange={(e) => setProductForm({ ...productForm, minCopies: Number(e.target.value) })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">Badge Tag (Optional)</label>
+                    <input
+                      type="text"
+                      value={productForm.badge}
+                      onChange={(e) => setProductForm({ ...productForm, badge: e.target.value })}
+                      placeholder="e.g. BESTSELLER, NEW, ROYAL LUXE"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+
+                {/* ── 1. MAIN COVER IMAGE UPLOAD ── */}
+                <div className="p-4 rounded-2xl border-2 border-red-200/80 bg-red-50/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-[#991B1B] text-white text-[10px] font-extrabold uppercase tracking-wide">
+                        Main Image *
+                      </span>
+                      <label className="font-bold text-slate-900 text-xs">
+                        {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                          ? "Primary Gift Cover Photo"
+                          : "Primary Card Cover Photo"}
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualUrl((prev) => !prev)}
+                      className="text-[11px] text-[#991B1B] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      <span>{showManualUrl ? "Switch to Local Upload" : "Enter Image URL"}</span>
+                    </button>
+                  </div>
+
+                  {/* Hidden Native File Input for Main Image */}
+                  <input
+                    type="file"
+                    id="shopProductFileInput"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    className="hidden"
+                    onChange={handleUploadProductImage}
+                  />
+
+                  {!showManualUrl ? (
+                    <div className="space-y-2">
+                      {productForm.previewImage ? (
+                        <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-red-200 shadow-2xs">
+                          <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shrink-0 p-1 flex items-center justify-center relative">
+                            <img
+                              src={productForm.previewImage}
+                              alt="Main Product Preview"
+                              className="w-full h-full object-contain"
+                            />
+                            <span className="absolute bottom-1 right-1 bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.2 rounded shadow-xs">
+                              MAIN
+                            </span>
+                          </div>
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>Main Cover Photo Ready</span>
+                            </div>
+                            <p className="text-[10px] font-mono text-slate-500 truncate max-w-xs">
+                              {productForm.previewImage}
+                            </p>
+                            <label
+                              htmlFor="shopProductFileInput"
+                              className={`px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer ${
+                                uploadingProductImage ? "opacity-50 pointer-events-none" : ""
+                              }`}
+                            >
+                              {uploadingProductImage ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#991B1B]" />
+                              ) : (
+                                <Upload className="w-3.5 h-3.5 text-[#991B1B]" />
+                              )}
+                              <span>{uploadingProductImage ? "Uploading Main..." : "Change Main Cover Image"}</span>
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="shopProductFileInput"
+                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-red-300 hover:border-[#991B1B] rounded-2xl bg-white hover:bg-red-50/50 transition-colors cursor-pointer text-center group"
+                        >
+                          {uploadingProductImage ? (
+                            <div className="flex flex-col items-center gap-2 text-[#991B1B]">
+                              <Loader2 className="w-8 h-8 animate-spin" />
+                              <span className="font-bold text-xs">Uploading main image from your computer...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                <Upload className="w-6 h-6" />
+                              </div>
+                              <span className="font-bold text-xs text-slate-800">
+                                Click to Browse &amp; Upload Main Cover Image
+                              </span>
+                              <span className="text-[11px] text-slate-500 mt-0.5">
+                                Select PNG, JPG, or WEBP (Cover image displayed in catalog)
+                              </span>
+                            </>
+                          )}
+                        </label>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        required
+                        value={productForm.previewImage}
+                        onChange={(e) => setProductForm({ ...productForm, previewImage: e.target.value })}
+                        placeholder="https://res.cloudinary.com/... or /images/templates/..."
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                      />
+                      {productForm.previewImage && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-500">Main Preview:</span>
+                          <img
+                            src={productForm.previewImage}
+                            alt="Main Preview"
+                            className="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-slate-50 p-0.5"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── 2. SUB / GALLERY IMAGES MULTI-UPLOAD ── */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-700 text-white text-[10px] font-extrabold uppercase tracking-wide">
+                        Sub Images
+                      </span>
+                      <label className="font-bold text-slate-900 text-xs">
+                        Additional Angles, Envelopes &amp; Detail Shots
+                      </label>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {productForm.galleryImages?.length || 0} Sub {(productForm.galleryImages?.length === 1 ? "Image" : "Images")} Uploaded
+                    </span>
+                  </div>
+
+                  {/* Hidden Multi-File Input for Sub Images */}
+                  <input
+                    type="file"
+                    id="shopProductSubFilesInput"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={handleUploadProductSubImages}
+                  />
+
+                  {/* Multi-Upload Actions */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <label
+                      htmlFor="shopProductSubFilesInput"
+                      className={`flex-1 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all ${
+                        uploadingSubImages ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                    >
+                      {uploadingSubImages ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-[#991B1B]" />
+                      ) : (
+                        <Plus className="w-4 h-4 text-[#991B1B]" />
+                      )}
+                      <span>
+                        {uploadingSubImages ? "Uploading Sub Images..." : "Upload Multiple Sub Images (Select 1 or more)"}
+                      </span>
+                    </label>
+
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={subImageUrlInput}
+                        onChange={(e) => setSubImageUrlInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddSubImageUrl();
+                          }
+                        }}
+                        placeholder="Or paste sub-image URL..."
+                        className="p-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-[#991B1B] w-48 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddSubImageUrl}
+                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sub Images Gallery Grid */}
+                  {productForm.galleryImages && productForm.galleryImages.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-2">
+                      {productForm.galleryImages.map((subImg, idx) => (
+                        <div
+                          key={idx}
+                          className="group relative bg-white border border-slate-200 rounded-xl p-1 shadow-2xs flex flex-col items-center justify-between overflow-hidden"
+                        >
+                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center">
+                            <img
+                              src={subImg}
+                              alt={`Sub Image ${idx + 1}`}
+                              className="w-full h-full object-contain p-0.5"
+                            />
+                            <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] font-bold px-1.5 py-0.2 rounded">
+                              #{idx + 1}
+                            </span>
+                          </div>
+
+                          {/* Action Overlay */}
+                          <div className="w-full flex items-center justify-between gap-1 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSetAsMainImage(subImg, idx)}
+                              title="Promote this sub image to Main Cover"
+                              className="flex-1 py-1 rounded bg-amber-50 hover:bg-amber-400 text-amber-800 hover:text-slate-950 font-black text-[9px] border border-amber-200 transition-colors flex items-center justify-center gap-0.5 cursor-pointer"
+                            >
+                              <Sparkles className="w-2.5 h-2.5 text-amber-600 group-hover:text-slate-950" />
+                              <span>Make Main</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSubImage(idx)}
+                              title="Delete this sub image"
+                              className="p-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[9px] border border-rose-200 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-slate-500 italic">
+                    💡 Tip: The <strong>Main Image</strong> is displayed on catalog cards. <strong>Sub Images</strong> are displayed as interactive thumbnails when customers view product details. You can click <em>&ldquo;Make Main&rdquo;</em> on any sub-image to swap it.
+                  </p>
+
+                  {uploadError && (
+                    <p className="text-rose-600 font-bold text-[11px]">{uploadError}</p>
+                  )}
+                </div>
+
+                {/* Paper Type / Material & Dimensions */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Material & Packaging"
+                        : "Paper Type & Quality"}
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.paperType}
+                      onChange={(e) => setProductForm({ ...productForm, paperType: e.target.value })}
+                      placeholder={
+                        ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                          ? "e.g. Handcrafted Solid Brass & Royal Velvet Box"
+                          : "e.g. 350 GSM Italian Textured Metallic Gold Cardstock"
+                      }
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Dimensions / Weight / Set Size"
+                        : "Dimensions / Size"}
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.dimensions}
+                      onChange={(e) => setProductForm({ ...productForm, dimensions: e.target.value })}
+                      placeholder={
+                        ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                          ? "e.g. 4.5 x 3.5 inches / Set of 2 (250g)"
+                          : "e.g. 5.5 x 8.5 inches (Portrait)"
+                      }
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+
+                {/* Linked Canva Studio Design (Optional) */}
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-1.5">
+                  <label className="font-bold text-amber-950 flex items-center gap-1.5">
+                    <span>🎨 Link to Canva Card Studio Template (Optional)</span>
+                  </label>
+                  <select
+                    value={productForm.canvaTemplateId}
+                    onChange={(e) => setProductForm({ ...productForm, canvaTemplateId: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  >
+                    <option value="">None (Standard Printed Card / Return Gift - No Canva Edit)</option>
+                    <optgroup label="✨ Modern Watercolor &amp; Arch Suites">
+                      <option value="modern-watercolor-floral">🌸 Modern Watercolor Floral &amp; Rings (Purple / Multi-color)</option>
+                      <option value="modern-watercolor-gold-splatter">✨ Modern Watercolor &amp; Gold Foil Splatter</option>
+                      <option value="modern-silver-botanical-foliage">💎 Midnight Silver Foliage Suite (Navy / Obsidian)</option>
+                    </optgroup>
+                    <optgroup label="👑 Vintage &amp; Heritage Suites">
+                      <option value="vintage-botanical-romance">🌿 Vintage Botanical Romance (Deckled Parchment)</option>
+                      <option value="royal-parchment-filigree">👑 Royal Parchment &amp; Filigree (Parchment Gold)</option>
+                      <option value="vintage-baroque-gold">📜 Vintage Baroque Gold Scroll (Royal Frame)</option>
+                      <option value="antique-parchment-victorian">⚜️ Antique Parchment &amp; Victorian Swirl (Victorian Arch)</option>
+                    </optgroup>
+                  </select>
+                  <p className="text-[10.5px] text-amber-900/80 leading-relaxed m-0">
+                    💡 If linked, a prominent <strong className="text-[#991B1B]">"🎨 Customize in Canva Card Studio"</strong> button will automatically appear on the shop card modal, navigating guests directly into Canva Card Studio with this design pre-loaded.
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="font-bold text-slate-800 block mb-1">Description</label>
+                  <textarea
+                    rows={3}
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    placeholder={
+                      ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Provide details on return gift craftsmanship, occasion suitability, packaging, and custom tags."
+                        : "Provide a luxury summary of the card design, printing techniques, and aesthetic appeal."
+                    }
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+
+                {/* Features (One per line) */}
+                <div>
+                  <label className="font-bold text-slate-800 block mb-1">Bullet Features (One per line)</label>
+                  <textarea
+                    rows={3}
+                    value={productForm.features}
+                    onChange={(e) => setProductForm({ ...productForm, features: e.target.value })}
+                    placeholder={
+                      ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                        ? "Solid Heavy Brass with Antique Finish\nRoyal Red Velvet Hard Box Included\nPersonalized Couple Tag Attached"
+                        : "Real Gold Foil Stamping on Titles\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included"
+                    }
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-mono focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+
+                {/* Active Checkbox */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="productIsActive"
+                    checked={productForm.isActive}
+                    onChange={(e) => setProductForm({ ...productForm, isActive: e.target.checked })}
+                    className="w-4 h-4 text-[#991B1B] accent-[#991B1B] rounded"
+                  />
+                  <label htmlFor="productIsActive" className="text-xs font-bold text-slate-800 cursor-pointer">
+                    Publish &amp; Show on Public /shop Catalog
+                  </label>
+                </div>
+
+                {/* Submit & Cancel Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShopModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingProduct}
+                    className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center gap-2 shadow-md hover:scale-105 transition-transform cursor-pointer disabled:opacity-50"
+                  >
+                    {savingProduct ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    <span>{editingProduct ? "Update Product" : "Publish to /shop"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Message Customer Thread */}
+        {selectedOrderForMessage && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 max-w-lg w-full space-y-4 relative shadow-2xl border border-gray-200 max-h-[92vh] overflow-y-auto">
+              <button
+                onClick={() => setSelectedOrderForMessage(null)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2.5 border-b border-gray-200 pb-3">
+                <div className="w-9 h-9 rounded-xl bg-[#7A1F2B] text-white flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4 text-[#D9A441]" />
+                </div>
+                <div className="pr-6">
+                  <h3 className="font-serif font-bold text-[#1E293B] text-sm sm:text-base leading-snug">
+                    Message: {selectedOrderForMessage.customerName}
+                  </h3>
+                  <p className="text-[10px] sm:text-[11px] text-gray-500 font-mono truncate">Order #{selectedOrderForMessage.orderNumber} ({selectedOrderForMessage.customerEmail})</p>
+                </div>
+              </div>
+
+              {/* Message Thread History */}
+              <div className="max-h-56 sm:max-h-60 overflow-y-auto space-y-2.5 p-3 bg-gray-50 rounded-2xl border border-gray-200 text-xs custom-scrollbar">
+                {selectedOrderForMessage.messages.length === 0 ? (
+                  <p className="text-gray-400 text-center py-4 text-xs">No previous messages. Write the first message below!</p>
+                ) : (
+                  selectedOrderForMessage.messages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`p-3 rounded-xl ${
+                        m.sender === "ADMIN"
+                          ? "bg-[#FAF3E0] text-[#8C6B1B] border border-[#D9A441]/30 ml-3 sm:ml-4"
+                          : "bg-white text-gray-800 border border-gray-200 mr-3 sm:mr-4"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 mb-1">
+                        <span>{m.sender === "ADMIN" ? "Admin Support" : "Customer"}</span>
+                        <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                      <p className="text-xs whitespace-pre-wrap">{m.message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Input Area */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-gray-700 block">
+                  Write Message (sent to user&apos;s email automatically):
+                </label>
+                <textarea
+                  rows={3}
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="e.g. Hi! Your custom print proof is ready..."
+                  className="w-full p-3 rounded-xl border border-gray-300 text-xs text-gray-800 focus:outline-none focus:border-[#D9A441]"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderForMessage(null)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={sendingMessage || !messageInput.trim()}
+                  onClick={() => handleSendOrderMessage(selectedOrderForMessage.id)}
+                  className="px-5 py-2.5 rounded-xl bg-[#7A1F2B] text-white text-xs font-bold hover:bg-[#9B2C3B] transition-colors flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5 text-[#D9A441]" />
+                  <span>{sendingMessage ? "Sending..." : "Send & Email Customer"}</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Full Card Image Preview */}
+        {previewModalImage && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 max-w-lg w-full flex flex-col items-center gap-3 relative shadow-2xl">
+              <button
+                onClick={() => setPreviewModalImage(null)}
+                className="absolute top-3 right-3 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="font-serif font-bold text-sm text-[#1E293B]">Customer Card Design Snapshot</h3>
+              <div className="max-h-[75vh] overflow-hidden rounded-2xl border border-gray-200">
+                <img src={previewModalImage} alt="Card Preview" className="w-full h-full object-contain" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedUser && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-3xl sm:max-w-4xl w-full shadow-2xl relative space-y-5 sm:space-y-6 animate-scale-up max-h-[92vh] overflow-y-auto pr-3 sm:pr-6">
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shadow-xs cursor-pointer z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3 sm:pb-4 pr-8">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100 shrink-0">
+                  <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-xl font-bold text-slate-900 leading-snug">User Authority &amp; Lock Manager</h3>
+                  <p className="text-[11px] sm:text-sm text-slate-500 font-semibold truncate max-w-[240px] sm:max-w-md">{selectedUser.name} ({selectedUser.email})</p>
                 </div>
               </div>
 
               {/* SECTION A: CREATED INVITATION TEMPLATES & LOCK CONTROLS FOR THIS USER */}
-              <div className="bg-[#EFE7D8]/60 rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 space-y-3">
+              <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-[#7A1F2B]" />
+                  <h4 className="text-xs font-bold text-[#991B1B] uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#991B1B]" />
                     Created Invitation Websites ({invitationsList.filter((inv) => inv.userId === selectedUser.id || inv.userEmail.toLowerCase() === selectedUser.email.toLowerCase()).length})
                   </h4>
                 </div>
 
                 {invitationsList.filter((inv) => inv.userId === selectedUser.id || inv.userEmail.toLowerCase() === selectedUser.email.toLowerCase()).length === 0 ? (
-                  <p className="text-xs text-[#221C17]/60 italic p-3 bg-white/60 rounded-xl">
+                  <p className="text-xs text-slate-500 italic p-3 bg-white rounded-xl border border-slate-200">
                     This user has not created any invitation websites yet.
                   </p>
                 ) : (
@@ -771,25 +2841,25 @@ export default function AdminPage() {
                         const isCurrentlyLocked = (inv.isLocked && !inv.isUnlockedByAdmin) || inv.isLockedByAdmin;
 
                         return (
-                          <div key={inv.id} className="p-4 bg-white rounded-2xl border border-[#D9A441]/30 grid grid-cols-1 md:grid-cols-12 gap-3 items-center shadow-sm hover:border-[#7A1F2B]/40 transition-all">
+                          <div key={inv.id} className="p-4 bg-white rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center shadow-xs hover:border-red-200 transition-all">
                             {/* Left Info: Bride & Groom, Slug Badge, Public Link */}
                             <div className="md:col-span-7 space-y-1">
-                              <div className="font-bold text-sm text-[#221C17]">
+                              <div className="font-bold text-sm text-slate-900">
                                 {inv.partnerOne} &amp; {inv.partnerTwo}
                               </div>
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="px-2 py-0.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] text-[10px] font-mono font-bold">
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-mono font-bold border border-slate-200">
                                   {inv.templateSlug}
                                 </span>
                                 <a
                                   href={`/invitations/${inv.slug}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-[11px] text-[#7A1F2B] font-mono underline hover:text-[#D9A441] truncate max-w-[180px] sm:max-w-[220px]"
+                                  className="text-[11px] text-[#991B1B] font-mono underline hover:text-[#7F1D1D] truncate max-w-[180px] sm:max-w-[220px]"
                                 >
                                   /{inv.slug}
                                 </a>
-                                <span className="text-[11px] text-[#221C17]/60 font-mono">
+                                <span className="text-[11px] text-slate-400 font-mono">
                                   • {inv.daysInUse} Days Active
                                 </span>
                               </div>
@@ -798,23 +2868,23 @@ export default function AdminPage() {
                             {/* Right Info: Status Badge & Action Button */}
                             <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-2 flex-wrap">
                               {inv.isUnlockedByAdmin ? (
-                                <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
                                   <Sparkles className="w-3 h-3 text-amber-600" />
                                   Admin Unlocked
                                 </span>
                               ) : isCurrentlyLocked ? (
-                                <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
                                   <Lock className="w-3 h-3 text-rose-600" />
                                   {inv.isLockedByAdmin ? "Admin Locked" : "Locked (2H Pre-Event)"}
                                 </span>
                               ) : (
                                 <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
-                                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
                                     <Check className="w-3 h-3 text-emerald-600" />
                                     Active (Editable)
                                   </span>
                                   {inv.timeUntilLockText && (
-                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 border border-amber-400/40 text-[9.5px] font-bold font-mono flex items-center gap-1 shadow-sm">
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-[9.5px] font-bold font-mono flex items-center gap-1 shadow-2xs">
                                       ⏳ {inv.timeUntilLockText}
                                     </span>
                                   )}
@@ -825,17 +2895,17 @@ export default function AdminPage() {
                                 type="button"
                                 disabled={togglingLockId === inv.id}
                                 onClick={() => handleToggleLock(inv.id, isCurrentlyLocked)}
-                                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-sm shrink-0 ${
+                                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer ${
                                   isCurrentlyLocked
-                                    ? "bg-[#7A1F2B] text-[#D9A441] hover:bg-[#5C1720]"
-                                    : "bg-rose-700 text-white hover:bg-rose-800"
+                                    ? "bg-[#991B1B] text-white hover:bg-[#7F1D1D]"
+                                    : "bg-slate-700 text-white hover:bg-slate-800"
                                 }`}
                               >
                                 {togglingLockId === inv.id ? (
                                   <span className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
                                 ) : isCurrentlyLocked ? (
                                   <>
-                                    <Sparkles className="w-3.5 h-3.5 text-[#D9A441]" />
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                                     <span>Unlock Edit Access</span>
                                   </>
                                 ) : (
@@ -844,6 +2914,22 @@ export default function AdminPage() {
                                     <span>Lock Edit Access</span>
                                   </>
                                 )}
+                              </button>
+
+                              {/* Delete Template Button */}
+                              <button
+                                type="button"
+                                disabled={deletingInvitationId === inv.id}
+                                onClick={() => handleDeleteInvitation(inv.id, `${inv.partnerOne} & ${inv.partnerTwo}`)}
+                                className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-[11px] inline-flex items-center gap-1.5 shadow-xs shrink-0 transition-all cursor-pointer disabled:opacity-50"
+                                title="Permanently delete this invitation website & RSVP data"
+                              >
+                                {deletingInvitationId === inv.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                )}
+                                <span>Delete</span>
                               </button>
                             </div>
                           </div>
@@ -854,16 +2940,16 @@ export default function AdminPage() {
               </div>
 
               {/* SECTION B: FULL SUBSCRIPTION & TRANSACTION HISTORY */}
-              <div className="bg-[#EFE7D8]/60 rounded-2xl p-4 sm:p-5 border border-[#D9A441]/30 space-y-3">
+              <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#7A1F2B] uppercase tracking-wider flex items-center gap-1.5">
-                    <CreditCard className="w-4 h-4 text-[#7A1F2B]" />
+                  <h4 className="text-xs font-bold text-[#991B1B] uppercase tracking-wider flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-[#991B1B]" />
                     Subscription &amp; Transaction History ({selectedUser.subscriptionsHistory?.length || 0} Purchase{selectedUser.subscriptionsHistory?.length !== 1 ? "s" : ""})
                   </h4>
                 </div>
 
                 {(!selectedUser.subscriptionsHistory || selectedUser.subscriptionsHistory.length === 0) ? (
-                  <p className="text-xs text-[#221C17]/60 italic p-3 bg-white/60 rounded-xl">
+                  <p className="text-xs text-slate-500 italic p-3 bg-white rounded-xl border border-slate-200">
                     No recorded subscription transactions for this user.
                   </p>
                 ) : (
@@ -871,11 +2957,11 @@ export default function AdminPage() {
                     {selectedUser.subscriptionsHistory.map((sub) => (
                       <div
                         key={sub.id}
-                        className="p-3.5 bg-white rounded-2xl border border-[#D9A441]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:border-[#7A1F2B]/40 transition-all"
+                        className="p-3.5 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs hover:border-red-200 transition-all"
                       >
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs sm:text-sm text-[#221C17]">
+                            <span className="font-bold text-xs sm:text-sm text-slate-900">
                               {sub.plan === "CINEMATIC_2000"
                                 ? "CINEMATIC ₹2000 Plan"
                                 : sub.plan === "PRO_1799"
@@ -884,31 +2970,31 @@ export default function AdminPage() {
                                 ? "BASIC ₹599 Plan"
                                 : sub.plan}
                             </span>
-                            <strong className="text-xs sm:text-sm font-extrabold text-[#5B8C69]">₹{sub.amount.toLocaleString()}</strong>
+                            <strong className="text-xs sm:text-sm font-extrabold text-emerald-600">₹{sub.amount.toLocaleString()}</strong>
                           </div>
-                          <div className="text-[11px] text-[#221C17]/60 font-mono">
+                          <div className="text-[11px] text-slate-500 font-mono">
                             Purchased On: {new Date(sub.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 flex-wrap">
                           {sub.status === "SUCCESS" || sub.status === "COMPLETED" || sub.status === "ACTIVE" ? (
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
                               <Check className="w-3 h-3 text-emerald-600" />
                               SUCCESS
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] uppercase tracking-wider">
+                            <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-bold text-[10px] uppercase tracking-wider">
                               {sub.status}
                             </span>
                           )}
 
                           {sub.isExpired ? (
-                            <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] uppercase tracking-wider">
+                            <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 font-bold text-[10px] uppercase tracking-wider">
                               🔴 Finished ({new Date(sub.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })})
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] uppercase tracking-wider">
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[10px] uppercase tracking-wider">
                               🟢 Active (Valid to {new Date(sub.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })})
                             </span>
                           )}
@@ -921,33 +3007,33 @@ export default function AdminPage() {
 
               {/* SECTION C: QUOTA TOP-UP & PLAN OVERRIDE */}
               <form onSubmit={handleGrantSubmit} className="space-y-4">
-                <div className="p-4 bg-[#EFE7D8]/70 rounded-2xl border border-[#D9A441]/30 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-[11px] text-[#221C17]/60 block font-semibold">Current Standard Templates Allowed:</span>
-                    <strong className="text-[#7A1F2B] font-bold text-sm">{selectedUser.allowedTemplatesCount} Slots</strong>
+                    <span className="text-[11px] text-slate-500 block font-semibold">Current Standard Templates Allowed:</span>
+                    <strong className="text-[#991B1B] font-bold text-sm">{selectedUser.allowedTemplatesCount} Slots</strong>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#221C17]/60 block font-semibold">Current Premium Cinematic Passes Allowed:</span>
-                    <strong className="text-amber-800 font-bold text-sm">{selectedUser.allowedCinematicCount} Passes</strong>
+                    <span className="text-[11px] text-slate-500 block font-semibold">Current Premium Cinematic Passes Allowed:</span>
+                    <strong className="text-amber-700 font-bold text-sm">{selectedUser.allowedCinematicCount} Passes</strong>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Add Standard Template Slots */}
                   <div>
-                    <label className="block text-xs font-bold text-[#7A1F2B] mb-1.5">
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
                       📜 Add Extra Standard Template Slots
                     </label>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
                       {[1, 3, 5].map((preset) => (
                         <button
                           key={preset}
                           type="button"
                           onClick={() => setAddTemplateSlots(preset)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                             addTemplateSlots === preset
-                              ? "bg-[#7A1F2B] text-[#F8F3EA] border-[#7A1F2B]"
-                              : "bg-[#EFE7D8] text-[#221C17] border-[#D9A441]/40 hover:bg-[#D9A441]/20"
+                              ? "bg-[#991B1B] text-white border-[#991B1B]"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                           }`}
                         >
                           +{preset} Slot{preset > 1 ? "s" : ""}
@@ -958,26 +3044,26 @@ export default function AdminPage() {
                       type="number"
                       value={addTemplateSlots}
                       onChange={(e) => setAddTemplateSlots(parseInt(e.target.value, 10) || 0)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-bold text-[#221C17] focus:outline-none focus:border-[#7A1F2B]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                       placeholder="Enter number of extra template slots to add"
                     />
                   </div>
 
                   {/* Add Premium Cinematic Pass Slots */}
                   <div>
-                    <label className="block text-xs font-bold text-amber-900 mb-1.5">
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
                       👑 Add Extra Premium Wedding Template Slots (₹2000 Cinematic Passes)
                     </label>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
                       {[1, 2, 3].map((preset) => (
                         <button
                           key={preset}
                           type="button"
                           onClick={() => setAddCinematicSlots(preset)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                             addCinematicSlots === preset
-                              ? "bg-amber-800 text-white border-amber-800"
-                              : "bg-[#EFE7D8] text-amber-900 border-amber-300 hover:bg-amber-100"
+                              ? "bg-[#991B1B] text-white border-[#991B1B]"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                           }`}
                         >
                           +{preset} Pass{preset > 1 ? "es" : ""}
@@ -988,7 +3074,7 @@ export default function AdminPage() {
                       type="number"
                       value={addCinematicSlots}
                       onChange={(e) => setAddCinematicSlots(parseInt(e.target.value, 10) || 0)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-400 text-xs font-bold text-amber-900 focus:outline-none focus:border-amber-700"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                       placeholder="Enter number of extra cinematic passes to add"
                     />
                   </div>
@@ -996,19 +3082,19 @@ export default function AdminPage() {
 
                 {/* Add Card Credits */}
                 <div>
-                  <label className="block text-xs font-bold text-[#8B6519] mb-1.5">
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
                     🎨 Add Extra Instagram Card Credits
                   </label>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
                     {[5, 10, 25].map((preset) => (
                       <button
                         key={preset}
                         type="button"
                         onClick={() => setAddCardCredits(preset)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                           addCardCredits === preset
-                            ? "bg-[#8B6519] text-white border-[#8B6519]"
-                            : "bg-[#EFE7D8] text-[#221C17] border-[#D9A441]/40 hover:bg-[#D9A441]/20"
+                            ? "bg-[#991B1B] text-white border-[#991B1B]"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                         }`}
                       >
                         +{preset} Credits
@@ -1019,20 +3105,20 @@ export default function AdminPage() {
                     type="number"
                     value={addCardCredits}
                     onChange={(e) => setAddCardCredits(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-bold text-[#221C17] focus:outline-none focus:border-[#7A1F2B]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                     placeholder="Enter number of extra card credits to add"
                   />
                 </div>
 
                 {/* Optional Plan Upgrade */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
                     👑 Optional Plan Override
                   </label>
                   <select
                     value={overridePlan}
                     onChange={(e) => setOverridePlan(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#D9A441]/40 text-xs font-semibold focus:outline-none focus:border-[#7A1F2B]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
                   >
                     <option value="">Keep current plan ({selectedUser.plan})</option>
                     <option value="BASIC_599">Set Plan to BASIC ₹599 (1 Template + 2 Cards)</option>
@@ -1043,20 +3129,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-3 flex items-center gap-3">
+                <div className="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedUser(null)}
-                    className="w-1/2 py-3 rounded-full border border-[#D9A441] text-xs font-bold text-[#221C17] hover:bg-[#EFE7D8]"
+                    className="w-full sm:w-1/2 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     Close
                   </button>
                   <button
                     type="submit"
                     disabled={granting}
-                    className="btn-maroon w-1/2 py-3 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+                    className="w-full sm:w-1/2 py-3 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer disabled:opacity-50"
                   >
-                    <Zap className="w-4 h-4 text-[#D9A441]" />
+                    <Zap className="w-4 h-4 text-amber-300" />
                     <span>{granting ? "Granting..." : "Grant Quota & Save"}</span>
                   </button>
                 </div>

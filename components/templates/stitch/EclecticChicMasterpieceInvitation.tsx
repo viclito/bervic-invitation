@@ -1,24 +1,59 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, PlayCircle, MapPin, Gift, Sparkles } from "lucide-react";
+import { Menu, X, PlayCircle, MapPin, Gift, Sparkles, ExternalLink, Calendar } from "lucide-react";
 
 export default function EclecticChicMasterpieceInvitation(
   props: TemplateClassicFloralProps
 ) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Celebrant Name
+  // Celebrant Name & Age
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
       : "Evelyn";
 
   const brandName = "Celebration";
+
+  // Venue location fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "123 Creative District Avenue, Metropolis, NY 10001"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Artisan Foundry",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Creative District Avenue, Metropolis, NY 10001",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Artisan Foundry",
+          address: props.contactAddress || props.venuePlace || "123 Creative District Avenue, Metropolis, NY 10001",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
+
+  // Celebrant portrait priority
+  const celebrantPhoto =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -29,9 +64,7 @@ export default function EclecticChicMasterpieceInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-09-20T17:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -50,11 +83,11 @@ export default function EclecticChicMasterpieceInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen c2a28195b90246c19cc930f204e0c9ed
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 4
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -74,34 +107,6 @@ export default function EclecticChicMasterpieceInvitation(
             margin: "mt-6 md:mt-10",
           },
         ];
-
-  // Chapters comic panel data
-  const chaptersList = [
-    {
-      year: "1998",
-      text: "The early drafts. Always a creator.",
-      badgeBg: "bg-[#fcf9f8] text-[#94492c]",
-      transform: "-skew-x-3 w-5/6",
-      align: "justify-end",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDBY4Ki58ZtLCaVVnfpQ4A94NrOkyp9g5oYyMGKRjpgv54O1m4GwpMcTsMqr9wU6lzrWdSbN2UyDBoJDrJlsqjMJSsOxS0eMtrN4ucz5pDZ_CVjUhIzn-o7HGQ0wd-tqPXKaLhSklMP35Zsv5S5jNc467d1UpFaYZ618snkeXeFJw6RrQ_Q0_bBkXfvRn-aexCl5P0nTDTCMX-_3rRXrjr-59QSocg0tBW4DdDblqLqx5_O-eQqhofZ",
-    },
-    {
-      year: "2012",
-      text: "Discovering the geometry of life.",
-      badgeBg: "bg-[#94492c] text-white",
-      transform: "skew-x-3 w-5/6 self-end",
-      align: "justify-start",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCrCSKm9xxHDBn1y5IsR8gOz-spSeNvCQr2I-yblJakb0IBzNwbueX3o-O6S8D_9Hsxui-5ZVTwPYbABxwK_p2YnprsBN15KM6gcliIL0bi_nhX8WEnV_Qb79Vf-3HPmSxGaRpsULdBBmaE4y7Z0qWInWU24jTfWfu9o2HNxDUP8q5GiCREgEq_hHpcgyMrto3B9CWvwlKrtB9w10T6pEmhD5MdbhV9aZE8fkz1V4UyEbl3k7EKJ-yl",
-    },
-    {
-      year: "2024",
-      text: "Mastering the craft.",
-      badgeBg: "bg-[#ffdc76] text-[#785f00]",
-      transform: "w-full text-center",
-      align: "justify-center",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBhWZ3obGcPLOm0hvM6IUON2VCnVzbkzpCosf2POa9Zb305guZax3T1WTtW05-yuuPfd9H0FAfcdoaOgK004PgN8m2pl788bWC6kiPCoCkunCEONGzuwPNjJ4qq3b6u3qH42fqQDCcje6EPajmoJZ2RctpT_wc3VbZUp-yUv5TOU6O-C_n9XonKtEZRBOdh1bFgpS2ByrQZlIyaSZifPodpQ0R_2nX9WJdtQ2OXn5xhzJh3Ubwosz6J",
-    },
-  ];
 
   // Celebration Itinerary items
   const itinerarySteps =
@@ -201,21 +206,21 @@ export default function EclecticChicMasterpieceInvitation(
         <nav className="flex space-x-8 font-serif-caslon text-[#645d53] text-sm uppercase tracking-widest">
           <a
             className="hover:text-[#94492c] transition-colors"
-            href="#story"
+            href="#itinerary"
           >
-            Our Story
+            Itinerary
           </a>
           <a
             className="hover:text-[#94492c] transition-colors"
-            href="#chapters"
+            href="#venue"
           >
-            Chapters
+            Venue
           </a>
           <a
             className="hover:text-[#94492c] transition-colors"
             href="#gallery"
           >
-            Gallery
+            Archive
           </a>
           <a
             className="hover:text-[#94492c] transition-colors"
@@ -228,7 +233,7 @@ export default function EclecticChicMasterpieceInvitation(
           className="border border-[#1c1b1b] px-5 py-2 font-sans-work text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#94492c] hover:text-white transition-all duration-300"
           href="#rsvp"
         >
-          Gift Registry
+          RSVP Now
         </a>
       </header>
 
@@ -239,15 +244,30 @@ export default function EclecticChicMasterpieceInvitation(
           <div className="flex-1 flex flex-col items-start space-y-6 z-10">
             <div className="border border-[#1c1b1b] px-3 py-1 inline-block bg-[#fcf9f8]">
               <span className="font-sans-work text-xs text-[#1c1b1b] uppercase tracking-[0.2em] font-semibold">
-                Est. 1994
+                VOL. {ageMilestone || "SPECIAL EDITION"}
               </span>
             </div>
             <h1 className="font-serif-caslon text-4xl md:text-6xl text-[#1c1b1b] leading-tight font-normal">
               {celebrantName}'s Grand Soirée
             </h1>
             <p className="font-mono-space text-base text-[#4b463f] max-w-md leading-relaxed">
-              Join us for an eclectic celebration of thirty remarkable years. A curated evening of warmth, curiosity, and artisanal quality.
+              Join us for an eclectic celebration. A curated evening of warmth, curiosity, and artisanal revelry among cherished friends.
             </p>
+
+            {/* Quick Event Meta Summary */}
+            <div className="w-full border-t border-b border-[#7c766e]/30 py-3 font-mono-space text-xs text-[#4b463f] space-y-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5 text-[#94492c]" />
+                <span>{props.weddingTime || "Sunday, 20th September 2026 at 5:00 PM"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-[#94492c]" />
+                <a href="#venue" className="underline hover:text-[#94492c]">
+                  {mainVenue.name || "The Artisan Foundry"} • {mainVenue.address}
+                </a>
+              </div>
+            </div>
+
             <div className="pt-2">
               <a
                 className="inline-block border border-[#1c1b1b] px-8 py-4 font-sans-work text-xs uppercase tracking-[0.2em] font-semibold bg-[#fcf9f8] text-[#1c1b1b] hover:bg-[#94492c] hover:text-white transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(28,27,27,1)] hover:shadow-none"
@@ -264,11 +284,11 @@ export default function EclecticChicMasterpieceInvitation(
               className="absolute inset-0 border-8 border-dashed border-[#735c00] opacity-30 rounded-full"
               style={{ animation: "spin 60s linear infinite" }}
             />
-            <div className="relative w-full h-full cloud-mask overflow-hidden border border-[#7c766e] bg-[#f0eded]">
+            <div className="relative w-full h-full cloud-mask overflow-hidden border border-[#7c766e] bg-[#f0eded] group">
               <img
                 alt={`${celebrantName} Editorial Portrait`}
-                className="w-full h-full object-cover"
-                src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt"}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                src={celebrantPhoto}
               />
             </div>
           </div>
@@ -325,63 +345,6 @@ export default function EclecticChicMasterpieceInvitation(
           </div>
         </section>
 
-        {/* The Curated Journey (Story Section) */}
-        <section className="py-16 border-b border-[#7c766e]/40 relative" id="story">
-          <h2 className="font-serif-caslon text-3xl md:text-4xl text-[#1c1b1b] mb-12 text-center md:text-left">
-            The Curated Journey
-          </h2>
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            <div className="flex-1 w-full relative group">
-              <div className="border border-[#1c1b1b] bg-[#f0eded] p-2 absolute inset-0 transform translate-x-2 translate-y-2" />
-              <div className="border border-[#1c1b1b] bg-[#fcf9f8] relative z-10 flex items-center justify-center h-64 md:h-96 overflow-hidden">
-                <div className="absolute inset-0 bg-[#94492c]/10 group-hover:bg-[#94492c]/20 transition-colors" />
-                <PlayCircle className="w-16 h-16 text-[#645d53] group-hover:text-[#94492c] transition-colors cursor-pointer relative z-20" />
-              </div>
-            </div>
-            <div className="flex-1 space-y-4">
-              <p className="font-mono-space text-base md:text-lg text-[#1c1b1b] leading-relaxed">
-                Every detail of the past thirty years has been meticulously gathered, like artifacts in a personal museum. From the quiet mornings in the studio to the vibrant evenings shared with kindred spirits.
-              </p>
-              <p className="font-mono-space text-sm text-[#4b463f] leading-relaxed">
-                This celebration is more than a milestone; it is an exhibition of growth, creativity, and the enduring bonds that have shaped {celebrantName}'s narrative.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Chapters of Evelyn (Comic Panels) */}
-        <section className="py-16 border-b border-[#7c766e]/40" id="chapters">
-          <h2 className="font-serif-caslon text-3xl md:text-4xl text-[#1c1b1b] mb-12">
-            Chapters of {celebrantName}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-2 border-[#1c1b1b] bg-[#fcf9f8]">
-            {chaptersList.map((panel, idx) => (
-              <div
-                key={idx}
-                className={`border border-[#1c1b1b] p-4 relative group overflow-hidden bg-[#f4f4ee] min-h-[320px] flex flex-col ${panel.align}`}
-              >
-                <div className="absolute inset-0 z-0">
-                  <img
-                    alt={`Chapter ${panel.year}`}
-                    className="w-full h-full object-cover filter grayscale opacity-60 group-hover:grayscale-0 transition-all duration-500"
-                    src={panel.img}
-                  />
-                </div>
-                <div
-                  className={`relative z-10 border border-[#1c1b1b] p-4 ${panel.transform} ${panel.badgeBg}`}
-                >
-                  <span className="font-sans-work text-xs uppercase tracking-widest block mb-1 font-bold">
-                    {panel.year}
-                  </span>
-                  <p className="font-mono-space text-xs leading-normal">
-                    {panel.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Celebration Itinerary (Timeline) */}
         <section className="py-16 border-b border-[#7c766e]/40" id="itinerary">
           <h2 className="font-serif-caslon text-3xl md:text-4xl text-[#1c1b1b] mb-12 text-center">
@@ -415,33 +378,58 @@ export default function EclecticChicMasterpieceInvitation(
             The Grand Estate
           </h2>
           <div className="flex flex-col md:flex-row-reverse gap-12 items-center">
-            <div className="flex-1 w-full">
+            {/* Interactive Clickable Map Card */}
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 w-full block group"
+            >
               <div className="border border-[#7c766e] p-2 bg-[#fcf9f8]">
-                <div className="w-full h-64 md:h-80 border border-[#7c766e]/40 bg-[#f4f4ee] flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer hover:bg-[#e5e2e1] transition-colors">
+                <div className="w-full h-64 md:h-80 border border-[#7c766e]/40 bg-[#f4f4ee] flex flex-col items-center justify-center relative overflow-hidden p-6 text-center group-hover:bg-[#e5e2e1] transition-colors">
                   <div className="absolute inset-0 blueprint-grid opacity-30" />
-                  <MapPin className="w-10 h-10 text-[#4b463f] mb-2 relative z-10 group-hover:text-[#94492c] transition-colors" />
-                  <span className="font-sans-work text-xs uppercase tracking-[0.2em] font-semibold relative z-10 group-hover:text-[#94492c] transition-colors">
-                    View Directions
+                  <MapPin className="w-10 h-10 text-[#4b463f] mb-2 relative z-10 group-hover:text-[#94492c] group-hover:scale-110 transition-all" />
+                  <span className="font-serif-caslon text-xl text-[#1c1b1b] font-bold relative z-10 block mb-1">
+                    {mainVenue.name || "The Artisan Foundry"}
+                  </span>
+                  <span className="font-mono-space text-xs text-[#4b463f] relative z-10 block max-w-xs mb-3">
+                    {mainVenue.address}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 border border-[#1c1b1b] px-3 py-1 font-sans-work text-xs uppercase tracking-[0.2em] font-semibold text-[#1c1b1b] group-hover:bg-[#94492c] group-hover:text-white group-hover:border-[#94492c] transition-all">
+                    <span>Open in Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </div>
-            </div>
+            </a>
+
             <div className="flex-1 space-y-6 text-center md:text-left">
               <div>
-                <h3 className="font-serif-caslon text-3xl text-[#1c1b1b] mb-2">
-                  The Artisan Foundry
+                <span className="font-sans-work text-xs uppercase tracking-[0.2em] text-[#94492c] font-semibold block mb-1">
+                  OFFICIAL VENUE
+                </span>
+                <h3 className="font-serif-caslon text-3xl text-[#1c1b1b] mb-2 font-normal">
+                  {mainVenue.name || "The Artisan Foundry"}
                 </h3>
-                <p className="font-mono-space text-xs text-[#4b463f] leading-relaxed">
-                  123 Creative District Avenue<br />
-                  Metropolis, NY 10001
+                <p className="font-mono-space text-sm text-[#4b463f] leading-relaxed">
+                  {mainVenue.address}
                 </p>
               </div>
               <p className="font-mono-space text-sm text-[#1c1b1b] leading-relaxed">
-                An industrial-chic venue with exposed brick, terracotta accents, and ample natural light. Valet parking provided.
+                An industrial-chic venue with exposed brick, terracotta accents, and ample natural light. Valet and guest parking provided upon arrival.
               </p>
-              <button className="border-b-2 border-[#94492c] font-sans-work text-xs uppercase tracking-[0.2em] font-semibold text-[#94492c] hover:text-[#735c00] transition-colors pb-1">
-                Open in Maps
-              </button>
+              <div className="pt-2">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 border-2 border-[#1c1b1b] px-6 py-3 font-sans-work text-xs uppercase tracking-[0.2em] font-semibold bg-[#fcf9f8] text-[#1c1b1b] hover:bg-[#94492c] hover:text-white hover:border-[#94492c] transition-all duration-300 shadow-[3px_3px_0px_0px_rgba(28,27,27,1)] hover:shadow-none"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions on Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
           </div>
         </section>

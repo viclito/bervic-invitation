@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -84,6 +84,24 @@ export default function BotanicalGardenEleganceInvitation(
             desc: "A family-style feast featuring local, seasonal ingredients served at long wooden tables.",
           },
         ];
+
+  // Main venue fallback
+  const mainVenue =
+    props.locations && props.locations.length > 0
+      ? props.locations[0]
+      : {
+          name: props.venuePlace || "The Botanical Greenhouse & Conservatory",
+          venueLabel: "The Setting",
+          address:
+            props.contactAddress ||
+            props.venuePlace ||
+            "124 Orchard Lane, Greenfield Valley",
+          mapLink: `https://maps.google.com/?q=${encodeURIComponent(
+            props.contactAddress || props.venuePlace || "Greenfield Valley"
+          )}`,
+          image:
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq",
+        };
 
   return (
     <div className="bg-[#fcf9f8] text-[#1b1c1c] font-sans antialiased overflow-x-hidden relative selection:bg-[#5f5f00]/20 selection:text-[#5f5f00]">
@@ -329,28 +347,45 @@ export default function BotanicalGardenEleganceInvitation(
         <section className="py-28 px-6 md:px-16 bg-[#fcf9f8]" id="about">
           <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
             <div className="md:col-span-6 flex flex-row gap-4 items-center justify-center">
-              <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
-                <img
-                  alt={props.partnerOne || "Bride"}
-                  className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
-                  src={
-                    props.coupleImage ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuB6apaciEMxIAm-wQUZbDL2MzB_jdg_BPJ9LReFAofj2uH7oYLs13yZ4TiRn_Kel5_q1R7z3GgKbIUlpIqJlR0bsNrBu0rS98x2Nm6cp4j5Oz2d_OYt1XtICNhXTV8Nl1zZxn1Zsxg6Us2EVIi0WlICPjKwedftf3Hw5s5bbJ4IxGqJPPtIPLUQpK_9goc6svfanSSizvdj9Lh4LmiZJ1owRrpdyVBginVt8gJwmtxCzcYdxiahSQPO"
-                  }
-                />
-                <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{props.partnerOne || "Bride"}</p>
-              </div>
-              <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
-                <img
-                  alt={props.partnerTwo || "Groom"}
-                  className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
-                  src={
-                    props.partnerTwoImage ||
-                    "/images/templates/groom-bride-2.jpg"
-                  }
-                />
-                <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{props.partnerTwo || "Groom"}</p>
-              </div>
+              {props.partnerTwo && props.partnerTwo.trim() !== "" && props.partnerTwo !== "Groom" ? (
+                <>
+                  <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
+                    <img
+                      alt={celebrantName}
+                      className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
+                      src={
+                        props.coupleImage ||
+                        props.coverImage ||
+                        props.heroImage ||
+                        "https://lh3.googleusercontent.com/aida-public/AB6AXuB6apaciEMxIAm-wQUZbDL2MzB_jdg_BPJ9LReFAofj2uH7oYLs13yZ4TiRn_Kel5_q1R7z3GgKbIUlpIqJlR0bsNrBu0rS98x2Nm6cp4j5Oz2d_OYt1XtICNhXTV8Nl1zZxn1Zsxg6Us2EVIi0WlICPjKwedftf3Hw5s5bbJ4IxGqJPPtIPLUQpK_9goc6svfanSSizvdj9Lh4LmiZJ1owRrpdyVBginVt8gJwmtxCzcYdxiahSQPO"
+                      }
+                    />
+                    <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{celebrantName}</p>
+                  </div>
+                  <div className="botanical-frame p-2 bg-white shadow-sm rounded-xl w-1/2">
+                    <img
+                      alt={props.partnerTwo}
+                      className="w-full h-auto aspect-[3/4] object-cover rounded-lg"
+                      src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
+                    />
+                    <p className="text-center text-xs font-serif italic text-[#5f5f00] mt-2 font-bold">{props.partnerTwo}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="botanical-frame p-3 bg-white shadow-md rounded-2xl max-w-sm w-full">
+                  <img
+                    alt={celebrantName}
+                    className="w-full h-auto aspect-[3/4] object-cover rounded-xl shadow-xs"
+                    src={
+                      props.coupleImage ||
+                      props.coverImage ||
+                      props.heroImage ||
+                      "https://lh3.googleusercontent.com/aida-public/AB6AXuB6apaciEMxIAm-wQUZbDL2MzB_jdg_BPJ9LReFAofj2uH7oYLs13yZ4TiRn_Kel5_q1R7z3GgKbIUlpIqJlR0bsNrBu0rS98x2Nm6cp4j5Oz2d_OYt1XtICNhXTV8Nl1zZxn1Zsxg6Us2EVIi0WlICPjKwedftf3Hw5s5bbJ4IxGqJPPtIPLUQpK_9goc6svfanSSizvdj9Lh4LmiZJ1owRrpdyVBginVt8gJwmtxCzcYdxiahSQPO"
+                    }
+                  />
+                  <p className="text-center text-sm font-serif italic text-[#5f5f00] mt-3 font-bold">{celebrantName}</p>
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-6 md:col-start-7 flex flex-col gap-6">
@@ -442,8 +477,58 @@ export default function BotanicalGardenEleganceInvitation(
           </div>
         </section>
 
+        {/* Venue & Location Section */}
+        <section className="py-28 px-6 md:px-16 bg-[#fcf9f8]" id="venue">
+          <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+            <div className="md:col-span-6 order-2 md:order-1">
+              <div className="botanical-frame p-3 bg-white rounded-2xl shadow-sm overflow-hidden relative aspect-video flex items-center justify-center">
+                <img
+                  alt="Venue preview"
+                  className="w-full h-full object-cover rounded-xl opacity-90"
+                  src={
+                    (mainVenue as { image?: string }).image ||
+                    props.coverImage ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq"
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-6 md:col-start-7 order-1 md:order-2 space-y-6">
+              <div>
+                <span className="font-semibold text-xs text-[#904d00] tracking-widest uppercase block mb-1">
+                  Location &amp; Setting
+                </span>
+                <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00]">
+                  {mainVenue.name || mainVenue.venueLabel || "The Botanical Setting"}
+                </h2>
+              </div>
+              <div className="h-px w-16 bg-[#904d00]"></div>
+
+              <div className="flex items-start gap-3 text-[#484837]">
+                <MapPin className="w-5 h-5 text-[#904d00] shrink-0 mt-0.5" />
+                <p className="text-base md:text-lg font-serif leading-relaxed">
+                  {mainVenue.address || "124 Orchard Lane, Greenfield Valley"}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#5f5f00] text-white font-semibold text-xs uppercase tracking-wider px-8 py-4 rounded hover:bg-[#797900] transition-colors duration-300 shadow-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions on Google Maps</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* RSVP Section */}
-        <section id="rsvp" className="py-20 bg-[#fcf9f8]">
+        <section id="rsvp" className="py-20 bg-[#f6f3f2]">
           <RsvpSection partnerOne={celebrantName} partnerTwo="" />
         </section>
 

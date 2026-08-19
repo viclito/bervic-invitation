@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Sparkles, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -37,8 +37,8 @@ function LoginForm() {
 
       router.push(callbackUrl);
       router.refresh();
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Invalid email or password");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ function LoginForm() {
     <div className="max-w-md w-full bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow space-y-6">
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto">
-          <img src="/logo.png" alt="Bervic Logo" className="w-full h-full object-contain" />
+          <img src="/logo.svg" alt="Bervic Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-[#221C17]">Welcome Back</h1>
         <p className="text-xs text-[#221C17]/70">
@@ -148,7 +148,7 @@ function LoginForm() {
       </form>
 
       <p className="text-center text-xs text-[#221C17]/70">
-        Don't have an account yet?{" "}
+        Don&apos;t have an account yet?{" "}
         <Link
           href={`/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
           className="text-[#7A1F2B] font-bold underline"

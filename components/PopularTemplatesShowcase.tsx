@@ -188,36 +188,26 @@ export default function PopularTemplatesShowcase() {
   const activeTemplate = showcaseTemplates[activeIndex];
 
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-b from-[#F8F3EA] via-[#F3E8D7] to-[#F8F3EA] text-[#221C17] relative overflow-hidden select-none border-t border-b border-[#D9A441]/30">
+    <section className="py-20 md:py-28 bg-gradient-to-b from-white via-red-50/20 to-white text-slate-900 relative overflow-hidden select-none border-t border-b border-slate-200">
       {/* Background Subtle Ambient Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-radial from-[#D9A441]/20 via-[#7A1F2B]/5 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-[#D9A441]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-[#7A1F2B]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-radial from-red-500/10 via-red-900/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Heading matching website's royal theme */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
+          className="text-center max-w-3xl mx-auto mb-10 md:mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D9A441]/20 text-[#8B6519] border border-[#D9A441]/40 text-xs font-bold uppercase tracking-widest mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-[#8B6519]" />
-            <span>FEATURED COLLECTION</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#221C17] leading-tight">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 leading-tight">
             Most Popular{" "}
-            <span className="font-accent italic text-[#7A1F2B] font-normal text-4xl sm:text-6xl md:text-7xl block sm:inline mt-1 sm:mt-0">
+            <span className="font-accent italic text-[#991B1B] font-normal text-4xl sm:text-6xl md:text-7xl block sm:inline mt-1 sm:mt-0">
               Invitation Templates
             </span>
           </h2>
-
-          <p className="mt-4 text-sm sm:text-base md:text-lg text-[#221C17]/80 max-w-xl mx-auto leading-relaxed">
-            Discover beautifully designed interactive wedding & event invitation websites with 1-click WhatsApp RSVP, map directions, and video facades.
-          </p>
         </motion.div>
 
         {/* 3D Coverflow Perspective Container */}
@@ -226,18 +216,18 @@ export default function PopularTemplatesShowcase() {
           <button
             onClick={handlePrev}
             aria-label="Previous Template"
-            className="absolute left-2 sm:left-6 md:left-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#7A1F2B] hover:bg-[#9B2C3B] text-[#F8F3EA] border-2 border-[#D9A441] flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
+            className="absolute left-2 sm:left-6 md:left-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#991B1B] hover:bg-[#7F1D1D] text-white border-2 border-amber-400 flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group cursor-pointer"
           >
-            <ChevronLeft className="w-6 h-6 text-[#D9A441] group-hover:-translate-x-0.5 transition-transform" />
+            <ChevronLeft className="w-6 h-6 text-amber-300 group-hover:-translate-x-0.5 transition-transform" />
           </button>
 
           {/* Navigation Arrow Right */}
           <button
             onClick={handleNext}
             aria-label="Next Template"
-            className="absolute right-2 sm:right-6 md:right-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#7A1F2B] hover:bg-[#9B2C3B] text-[#F8F3EA] border-2 border-[#D9A441] flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group"
+            className="absolute right-2 sm:right-6 md:right-12 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#991B1B] hover:bg-[#7F1D1D] text-white border-2 border-amber-400 flex items-center justify-center transition-all duration-300 shadow-2xl backdrop-blur-md hover:scale-110 active:scale-95 group cursor-pointer"
           >
-            <ChevronRight className="w-6 h-6 text-[#D9A441] group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-amber-300 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           {/* 3D Coverflow Track */}

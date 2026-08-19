@@ -20,8 +20,100 @@ export async function ensureDbSchema() {
             ADD COLUMN IF NOT EXISTS "allowedCinematicCount" INTEGER DEFAULT 0,
             ADD COLUMN IF NOT EXISTS "allowedCardsCount" INTEGER DEFAULT 0;
         `);
-      } catch (err: any) {
-        console.warn("Db Schema Auto-Migration warning:", err?.message);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "CartItem" (
+            "id" TEXT PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "itemType" TEXT NOT NULL DEFAULT 'CANVA_CARD',
+            "templateId" TEXT NOT NULL,
+            "templateName" TEXT NOT NULL,
+            "previewImage" TEXT,
+            "copies" INTEGER NOT NULL DEFAULT 1,
+            "cardDetailsJson" TEXT NOT NULL,
+            "elementsJson" TEXT,
+            "customNotes" TEXT,
+            "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "CartItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "CardOrder" (
+            "id" TEXT PRIMARY KEY,
+            "orderNumber" TEXT UNIQUE NOT NULL,
+            "userId" TEXT NOT NULL,
+            "customerName" TEXT NOT NULL,
+            "customerEmail" TEXT NOT NULL,
+            "customerPhone" TEXT NOT NULL,
+            "deliveryAddress" TEXT,
+            "city" TEXT,
+            "pincode" TEXT,
+            "status" TEXT NOT NULL DEFAULT 'PENDING',
+            "totalCopies" INTEGER NOT NULL DEFAULT 1,
+            "totalAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+            "paymentStatus" TEXT NOT NULL DEFAULT 'PENDING',
+            "notes" TEXT,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "CardOrder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "CardOrderItem" (
+            "id" TEXT PRIMARY KEY,
+            "orderId" TEXT NOT NULL,
+            "itemType" TEXT NOT NULL DEFAULT 'CANVA_CARD',
+            "templateId" TEXT NOT NULL,
+            "templateName" TEXT NOT NULL,
+            "previewImage" TEXT,
+            "copies" INTEGER NOT NULL DEFAULT 1,
+            "cardDetailsJson" TEXT NOT NULL,
+            "elementsJson" TEXT,
+            "customNotes" TEXT,
+            "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "CardOrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "CardOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "OrderMessage" (
+            "id" TEXT PRIMARY KEY,
+            "orderId" TEXT NOT NULL,
+            "sender" TEXT NOT NULL,
+            "message" TEXT NOT NULL,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "OrderMessage_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "CardOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "ShopProduct" (
+            "id" TEXT PRIMARY KEY,
+            "name" TEXT NOT NULL,
+            "category" TEXT NOT NULL DEFAULT 'royal',
+            "pricePerCard" DOUBLE PRECISION NOT NULL DEFAULT 65,
+            "minCopies" INTEGER NOT NULL DEFAULT 50,
+            "previewImage" TEXT NOT NULL,
+            "galleryImages" TEXT,
+            "badge" TEXT,
+            "paperType" TEXT NOT NULL DEFAULT '350 GSM Textured Metallic Gold Cardstock',
+            "dimensions" TEXT NOT NULL DEFAULT '5.5 x 8.5 inches',
+            "description" TEXT NOT NULL,
+            "featuresJson" TEXT NOT NULL DEFAULT '[]',
+            "canvaTemplateId" TEXT,
+            "rating" DOUBLE PRECISION NOT NULL DEFAULT 5.0,
+            "reviewsCount" INTEGER NOT NULL DEFAULT 50,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "sortOrder" INTEGER NOT NULL DEFAULT 0,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          ALTER TABLE "ShopProduct" ADD COLUMN IF NOT EXISTS "canvaTemplateId" TEXT;
+        `);
+      } catch (err: unknown) {
+        console.warn("Db Schema Auto-Migration warning:", (err as Error)?.message);
       }
     })();
   }

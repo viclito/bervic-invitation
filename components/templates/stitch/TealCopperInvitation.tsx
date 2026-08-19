@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import {
   Church,
   PartyPopper,

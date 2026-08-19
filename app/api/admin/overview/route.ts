@@ -220,6 +220,7 @@ export async function GET(req: Request) {
     // Group subscriptions & payments history per user (Deduplicating matched Payment & Subscription rows)
     const userSubscriptionsMap: Record<string, any[]> = {};
     const userPurchasedPlansMap: Record<string, Set<string>> = {};
+    const userPurchasedPlansCountsMap: Record<string, Record<string, number>> = {};
 
     const rawTxMap: Record<string, { payments: any[]; subscriptions: any[] }> = {};
 
@@ -243,6 +244,7 @@ export async function GET(req: Request) {
 
       userSubscriptionsMap[uId] = [];
       userPurchasedPlansMap[uId] = new Set<string>();
+      userPurchasedPlansCountsMap[uId] = {};
 
       const processedOrders = new Set<string>();
 
@@ -266,6 +268,7 @@ export async function GET(req: Request) {
 
         if (sub.plan && sub.plan !== "NONE") {
           userPurchasedPlansMap[uId].add(sub.plan);
+          userPurchasedPlansCountsMap[uId][sub.plan] = (userPurchasedPlansCountsMap[uId][sub.plan] || 0) + 1;
         }
 
         if (sub.razorpayOrderId) {
@@ -298,20 +301,21 @@ export async function GET(req: Request) {
         });
         if (isDuplicateTime) return;
 
-        const pPlan = p.plan || "BASIC_599";
-        const validityMonths = pPlan === "BASIC_599" ? 6 : 12;
+        const pPlan = p.plan || (p.amount === 99 ? "CARDS_99" : p.amount >= 2000 ? "CINEMATIC_2000" : p.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+        const validityMonths = pPlan === "BASIC_599" || pPlan === "CARDS_99" ? 6 : 12;
         const expires = new Date(created);
         expires.setMonth(expires.getMonth() + validityMonths);
 
         const isSucc = p.status === "SUCCESS" || p.status === "COMPLETED";
-        if (isSucc && p.plan && p.plan !== "NONE") {
-          userPurchasedPlansMap[uId].add(p.plan);
+        if (isSucc && pPlan && pPlan !== "NONE") {
+          userPurchasedPlansMap[uId].add(pPlan);
+          userPurchasedPlansCountsMap[uId][pPlan] = (userPurchasedPlansCountsMap[uId][pPlan] || 0) + 1;
         }
 
         userSubscriptionsMap[uId].push({
           id: p.id,
           type: "PAYMENT",
-          plan: p.plan || "UNKNOWN",
+          plan: pPlan || "UNKNOWN",
           amount: Number(p.amount) || 0,
           status: p.status || "UNKNOWN",
           createdAt: created.toISOString(),
@@ -432,8 +436,13 @@ export async function GET(req: Request) {
       }
 
       const purchasedPlansSet = userPurchasedPlansMap[user.id] || new Set<string>();
+      const purchasedPlansCounts: Record<string, number> = { ...(userPurchasedPlansCountsMap[user.id] || {}) };
+
       if (user.plan && user.plan !== "NONE") {
         purchasedPlansSet.add(user.plan);
+        if (!purchasedPlansCounts[user.plan]) {
+          purchasedPlansCounts[user.plan] = 1;
+        }
       }
       const purchasedPlansList = Array.from(purchasedPlansSet);
 
@@ -447,6 +456,7 @@ export async function GET(req: Request) {
         role: isUserAdmin ? "ADMIN" : "USER",
         plan: isUserAdmin ? "CINEMATIC_2000" : userPlan || "NONE",
         purchasedPlansList: isUserAdmin ? ["CINEMATIC_2000"] : purchasedPlansList,
+        purchasedPlansCounts: isUserAdmin ? { CINEMATIC_2000: 1 } : purchasedPlansCounts,
         subscriptionsHistory: history,
         planExpiresAt: user.planExpiresAt,
         allowedTemplatesCount: isUserAdmin ? 99 : allowedTemplates,

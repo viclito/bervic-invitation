@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -38,9 +39,7 @@ export default function EvelynsCelebrationMasterpieceInvitation(
       });
     }).catch(() => {});
 
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T19:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -58,7 +57,7 @@ export default function EvelynsCelebrationMasterpieceInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Hero image fallback matching Stitch screen dcadce93dda94b86b70ee38c4c08e8a1
   const isNonMasterpieceHero =
@@ -75,7 +74,7 @@ export default function EvelynsCelebrationMasterpieceInvitation(
       ? props.heroImage
       : "https://lh3.googleusercontent.com/aida-public/AB6AXuDPNnny-dlognAkhDvCNhFRNyGdojg7bnFj9koTHxsIkmDMy9nv5DW7U0sXvez0NdnLDBzJQ6PvCHZR9AS2jITAmqVVxSufalgrhBrSBTPIvD--MbXtkg9fIiOYoMjfDqBBXZB8eiJJDcdjhIXBxHAkPd9wImdF-x76N_PDM5xs7wjIwV8ruvkfZa4hLejyc3xLQlDdzHrJ6g90juloHzWGSTBzYafBH3TYgbA2plyz-2xVOzLfvtZ1";
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -92,6 +91,46 @@ export default function EvelynsCelebrationMasterpieceInvitation(
             url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87",
             caption: "The Venue",
             rotate: "rotate-[-1deg]",
+          },
+        ];
+
+  // Venue fallback
+  const mainVenue =
+    props.locations && props.locations.length > 0
+      ? props.locations[0]
+      : {
+          name: props.venuePlace || "The Grand Conservatory Estate",
+          venueLabel: "The Setting",
+          address:
+            props.contactAddress ||
+            props.venuePlace ||
+            "452 Sunset Boulevard, Beverly Hills, CA 90210",
+          mapLink: `https://maps.google.com/?q=${encodeURIComponent(
+            props.contactAddress || props.venuePlace || "Beverly Hills, CA"
+          )}`,
+          image:
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87",
+        };
+
+  // Timeline events fallback
+  const timelineSteps =
+    props.timelineDay && props.timelineDay.length > 0
+      ? props.timelineDay
+      : [
+          {
+            time: "6:00 PM",
+            title: "Welcome Drinks & Canapés",
+            desc: "Arrive in style, sip artisan cocktails, and mingle with friends.",
+          },
+          {
+            time: "7:30 PM",
+            title: "Celebration Dinner & Toasts",
+            desc: "A specially curated gourmet multi-course feast and heartfelt speeches.",
+          },
+          {
+            time: "9:00 PM",
+            title: "Cake Cutting & Dancing",
+            desc: "Celebratory cake, live DJ beats, and dancing under the stars.",
           },
         ];
 
@@ -277,6 +316,26 @@ export default function EvelynsCelebrationMasterpieceInvitation(
               <p className="text-base md:text-lg text-[#5d5c58] max-w-md leading-relaxed">
                 Join us for an evening of joy, laughter, and unforgettable memories as we celebrate a milestone.
               </p>
+
+              <div className="pt-2 flex flex-col gap-2.5 text-[#5d5c58] font-sans text-sm">
+                <div className="flex items-center gap-2.5 text-[#904d00] font-semibold">
+                  <Calendar className="w-4 h-4 text-[#904d00]" />
+                  <span>{props.weddingTime || "Saturday, 15th September 2026 at 6:00 PM"}</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <MapPin className="w-4 h-4 text-[#904d00] shrink-0 mt-0.5" />
+                  <span>{mainVenue.address}</span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  className="inline-flex bg-[#5f5f00] text-white px-8 py-3 rounded-full font-sans text-xs font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-sm"
+                  href="#venue"
+                >
+                  View Venue Details
+                </a>
+              </div>
             </div>
 
             <div className="col-span-1 md:col-span-6 relative flex justify-center mt-10 md:mt-0">
@@ -364,16 +423,128 @@ export default function EvelynsCelebrationMasterpieceInvitation(
                 Remember
               </h2>
               <p className="text-base md:text-lg opacity-90 max-w-md leading-relaxed">
-                Expect an evening filled with culinary delights, artisanal cocktails, and music under the stars.
+                {props.loveStoryText ||
+                  "Expect an evening filled with culinary delights, artisanal cocktails, and music under the stars."}
               </p>
             </div>
             <div className="relative">
               <img
-                alt="Party dancers under lights"
+                alt="Party celebration moment"
                 className="w-full aspect-[4/3] object-cover shadow-2xl rounded-lg"
-                src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuAZCkfapr3kHN4Z2HWJgMAu969WaZErlUGyVg0mTlWmloy-uhdFfRMiSSCNhMo0C-ymAjjw4hxDsngLL1kGZQcnTHrhrm63ss5ivqgcXiOtTcj8G6v_UY8--i2XPajDm5JADtmZbg6N9vPSeCkzBig52dT2B-1wtrydI05mNhiBPwfoOqJ5cxKc3HLl449etoHZfdJpxUI4ECa_Beg6zBU_E1QoKzLveaLhiBIdyzLbh-FVDEfdEIgm"}
+                src={
+                  props.coupleImage ||
+                  props.coverImage ||
+                  "https://lh3.googleusercontent.com/aida-public/AB6AXuAZCkfapr3kHN4Z2HWJgMAu969WaZErlUGyVg0mTlWmloy-uhdFfRMiSSCNhMo0C-ymAjjw4hxDsngLL1kGZQcnTHrhrm63ss5ivqgcXiOtTcj8G6v_UY8--i2XPajDm5JADtmZbg6N9vPSeCkzBig52dT2B-1wtrydI05mNhiBPwfoOqJ5cxKc3HLl449etoHZfdJpxUI4ECa_Beg6zBU_E1QoKzLveaLhiBIdyzLbh-FVDEfdEIgm"
+                }
               />
               <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-[#5f5f00] rounded-full mix-blend-multiply opacity-50 pointer-events-none"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Timeline Section */}
+        <section className="bg-[#f6f3f2] py-24 px-6 md:px-16" id="timeline">
+          <div className="max-w-3xl mx-auto flex flex-col gap-12">
+            <div className="text-center space-y-2">
+              <span className="font-sans text-xs font-semibold text-[#904d00] uppercase tracking-widest block">
+                Order of Events
+              </span>
+              <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-sweep">
+                The Celebration Flow
+              </h2>
+              <p className="text-sm font-serif text-[#5d5c58]">
+                A curated evening of fine dining, laughter, and dance.
+              </p>
+            </div>
+
+            <div className="relative max-w-2xl mx-auto space-y-10 py-4 w-full">
+              {/* Central Line */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-[#cac7b1] hidden md:block" />
+              <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-[#cac7b1] md:hidden" />
+
+              {timelineSteps.map((step, idx) => {
+                const isEven = idx % 2 === 1;
+                return (
+                  <div
+                    key={idx}
+                    className="relative flex items-center md:items-start group"
+                  >
+                    <div
+                      className={`absolute left-3 md:left-1/2 -translate-x-1/2 top-1.5 w-3.5 h-3.5 rounded-full ${
+                        idx % 2 === 0 ? "bg-[#904d00]" : "bg-[#5f5f00]"
+                      } ring-4 ring-[#f6f3f2] z-10 shadow-sm`}
+                    />
+                    <div
+                      className={`pl-10 md:pl-0 w-full ${
+                        isEven
+                          ? "md:w-1/2 md:ml-auto md:pl-12 md:text-left"
+                          : "md:w-1/2 md:mr-auto md:pr-12 md:text-right"
+                      }`}
+                    >
+                      <span className="text-xs font-sans font-bold text-[#904d00] uppercase tracking-widest block mb-1">
+                        {step.time}
+                      </span>
+                      <h3 className="text-xl font-bold font-serif text-[#5f5f00] mb-1.5">
+                        {step.title}
+                      </h3>
+                      <p className="text-sm font-serif text-[#484837] leading-relaxed">
+                        {"desc" in step
+                          ? (step as { desc?: string }).desc
+                          : "Celebrate with culinary delights and joyful moments."}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Venue & Location Section */}
+        <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto" id="venue">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+            <div className="md:col-span-6 order-2 md:order-1">
+              <div className="w-full aspect-video bg-[#e4e2e1] rounded-2xl overflow-hidden relative shadow-lg border border-[#cac7b1]/50 group">
+                <img
+                  alt="Celebration Venue"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                  src={
+                    (mainVenue as { image?: string }).image ||
+                    props.coverImage ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87"
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-6 order-1 md:order-2 space-y-6 md:pl-6">
+              <div>
+                <span className="font-sans text-xs font-semibold text-[#904d00] uppercase tracking-widest block mb-2">
+                  Location &amp; Setting
+                </span>
+                <h2 className="text-3xl md:text-5xl font-bold font-serif text-[#5f5f00] gold-shimmer-sweep">
+                  {mainVenue.name || mainVenue.venueLabel || "The Grand Conservatory"}
+                </h2>
+              </div>
+
+              <div className="flex items-start gap-3 text-[#484837]">
+                <MapPin className="w-6 h-6 text-[#904d00] shrink-0 mt-0.5" />
+                <p className="text-base md:text-lg font-serif leading-relaxed">
+                  {mainVenue.address}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#5f5f00] text-white font-sans text-xs font-semibold uppercase tracking-wider px-8 py-4 rounded hover:bg-[#797900] transition-colors shadow-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions on Google Maps</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>

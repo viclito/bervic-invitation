@@ -114,6 +114,8 @@ export async function GET(req: Request) {
       }
     }
 
+    const eventTypeParam = searchParams.get("eventType");
+
     // 2. Fetch all profiles or specific profile (UserDraftDetails is for template previews — NEVER locked)
     if (fetchAll) {
       const rawProfiles = await prisma.userDraftDetails.findMany({
@@ -160,16 +162,38 @@ export async function GET(req: Request) {
       });
     }
 
-    // 3. Default: Return the active profile (or latest updated profile)
-    let draft = await prisma.userDraftDetails.findFirst({
-      where: { userId: user.id, isActive: true },
-    });
-
-    if (!draft) {
+    // 3. If eventType is specified (e.g. WEDDING or BIRTHDAY), find matching profile
+    let draft = null;
+    if (eventTypeParam) {
       draft = await prisma.userDraftDetails.findFirst({
-        where: { userId: user.id },
-        orderBy: { updatedAt: "desc" },
+        where: {
+          userId: user.id,
+          eventType: { equals: eventTypeParam, mode: "insensitive" },
+          isActive: true,
+        },
       });
+
+      if (!draft) {
+        draft = await prisma.userDraftDetails.findFirst({
+          where: {
+            userId: user.id,
+            eventType: { equals: eventTypeParam, mode: "insensitive" },
+          },
+          orderBy: { updatedAt: "desc" },
+        });
+      }
+    } else {
+      // Default: Return the active profile (or latest updated profile)
+      draft = await prisma.userDraftDetails.findFirst({
+        where: { userId: user.id, isActive: true },
+      });
+
+      if (!draft) {
+        draft = await prisma.userDraftDetails.findFirst({
+          where: { userId: user.id },
+          orderBy: { updatedAt: "desc" },
+        });
+      }
     }
 
     if (draft) {
@@ -349,9 +373,21 @@ export async function POST(req: Request) {
           existingSocialLinks.showVideo = Boolean(body.showVideo);
         }
 
+        let targetSlug = undefined;
+        if (body.customSlug && body.customSlug.trim() !== "") {
+          const formattedSlug = body.customSlug.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-|-$)+/g, "");
+          const existingSlug = await prisma.userInvitation.findFirst({
+            where: { slug: formattedSlug, NOT: { id: targetInvId } },
+          });
+          if (!existingSlug) {
+            targetSlug = formattedSlug;
+          }
+        }
+
         const updatedInv = await prisma.userInvitation.update({
           where: { id: targetInvId },
           data: {
+            ...(targetSlug && { slug: targetSlug }),
             ...(hostNameOne !== undefined && { partnerOne: hostNameOne }),
             ...(hostNameTwo !== undefined && { partnerTwo: hostNameTwo }),
             ...(coupleInitials !== undefined && { coupleInitials }),
@@ -446,19 +482,40 @@ export async function POST(req: Request) {
 
       const totalAllowedTemplates = Math.max(0, (user.allowedTemplatesCount || 0) + ((user as unknown as { allowedCinematicCount?: number }).allowedCinematicCount || 0));
       const isAdmin = user.email === "berglin1998@gmail.com" || user.role === "ADMIN";
-      const maxAllowedProfiles = isAdmin ? 99 : Math.max(1, totalAllowedTemplates);
+      const hasActivePlan = (user.plan && user.plan !== "NONE") || totalAllowedTemplates > 0;
+      const maxAllowedProfiles = isAdmin ? 99 : (hasActivePlan ? Math.max(2, totalAllowedTemplates) : 1);
 
       if (existingProfilesCount >= maxAllowedProfiles) {
         return NextResponse.json(
           {
             success: false,
-            error: "PROFILE_LIMIT_REACHED",
-            message: `You have reached your limit of ${maxAllowedProfiles} event profile${maxAllowedProfiles > 1 ? "s" : ""}. To create additional event profiles, please purchase an additional template subscription!`,
+            error: "SUBSCRIPTION_REQUIRED",
+            message: `An active subscription or template slot is required to create multiple event profiles (e.g. Wedding + Birthday). Upgrade now to add more celebration profiles!`,
             maxAllowedProfiles,
             totalAllowedTemplates,
             existingProfilesCount,
           },
           { status: 403 }
+        );
+      }
+
+      // Check if user already has an active profile of the same eventType
+      const normalizedType = (eventType || "WEDDING").toUpperCase();
+      const existingSameType = await prisma.userDraftDetails.findFirst({
+        where: {
+          userId: user.id,
+          eventType: { equals: normalizedType, mode: "insensitive" },
+        },
+      });
+
+      if (existingSameType) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "DUPLICATE_EVENT_TYPE",
+            message: `You already have a ${normalizedType === "WEDDING" ? "Wedding" : "Birthday"} celebration profile. Please edit your existing profile instead of creating a duplicate!`,
+          },
+          { status: 400 }
         );
       }
 

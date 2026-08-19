@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
-import { Search, ExternalLink, Palette, Sparkles } from "lucide-react";
+import { Search, ExternalLink, Sparkles, Crown, Globe, Check } from "lucide-react";
 
 import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import TemplateGallerySkeleton from "@/components/skeletons/TemplateGallerySkeleton";
@@ -23,6 +24,7 @@ function TemplateGalleryContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedSlug] = useState<string | null>(viewedParam);
+  const [myInvitations, setMyInvitations] = useState<any[]>([]);
 
   const [selectedTemplateForModal, setSelectedTemplateForModal] = useState<{
     slug: string;
@@ -54,6 +56,15 @@ function TemplateGalleryContent() {
         }
       })
       .catch(() => setSubData(null));
+
+    fetch("/api/invitations/my-invitations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.invitations)) {
+          setMyInvitations(data.invitations);
+        }
+      })
+      .catch(() => setMyInvitations([]));
   }, []);
 
   const handleActivateTemplate = async () => {
@@ -76,11 +87,46 @@ function TemplateGalleryContent() {
     }
   };
 
-  const categories = [
-    { id: "all", label: "All Templates" },
-    { id: "cinematic", label: "🎬 Cinematic (₹2000 Exclusive)" },
-    { id: "wedding", label: "Weddings" },
-  ];
+  const [profiles, setProfiles] = useState<{ id?: string; eventType?: string }[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/user/event-draft?all=true")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.profiles)) {
+          setProfiles(data.profiles);
+          const hasWedding = data.profiles.some((p: { eventType?: string }) => !p.eventType || p.eventType.toUpperCase() === "WEDDING");
+          const hasBday = data.profiles.some((p: { eventType?: string }) => p.eventType && p.eventType.toUpperCase() === "BIRTHDAY");
+          if (hasBday && !hasWedding && (!categoryParam || categoryParam === "all")) {
+            setSelectedCategory("birthday");
+          }
+        }
+      })
+      .catch((err) => console.error("Error fetching profiles:", err))
+      .finally(() => setLoadingProfiles(false));
+  }, [categoryParam]);
+
+  const hasWeddingProfile = profiles.length === 0 || profiles.some((p) => !p.eventType || p.eventType.toUpperCase() === "WEDDING");
+  const hasBirthdayProfile = profiles.some((p) => p.eventType && p.eventType.toUpperCase() === "BIRTHDAY");
+
+  const categories =
+    hasWeddingProfile && hasBirthdayProfile
+      ? [
+          { id: "all", label: "All Templates" },
+          { id: "wedding", label: "💒 Weddings" },
+          { id: "birthday", label: "🎂 Birthdays" },
+          { id: "cinematic", label: "👑 Premium" },
+        ]
+      : hasBirthdayProfile && !hasWeddingProfile
+      ? [
+          { id: "birthday", label: "🎂 Birthday Templates" },
+        ]
+      : [
+          { id: "all", label: "All Templates" },
+          { id: "cinematic", label: "👑 Premium" },
+          { id: "wedding", label: "Weddings" },
+        ];
 
   // Scroll to last viewed template if specified
   useEffect(() => {
@@ -96,20 +142,30 @@ function TemplateGalleryContent() {
   }, [viewedParam]);
 
   const filteredTemplates = templatesRegistry.filter((tpl) => {
-    // Hide non-wedding categories for now
-    if (["birthday", "religious", "anniversary"].includes(tpl.category)) {
-      return false;
+    // 1. Filter by user's created profiles
+    if (hasWeddingProfile && !hasBirthdayProfile) {
+      if (tpl.category !== "wedding") return false;
+    } else if (hasBirthdayProfile && !hasWeddingProfile) {
+      if (tpl.category !== "birthday") return false;
+    } else if (hasWeddingProfile && hasBirthdayProfile) {
+      if (tpl.category !== "wedding" && tpl.category !== "birthday") return false;
+    } else {
+      if (tpl.category !== "wedding") return false;
     }
+
+    // 2. Filter by selected category pill
     const matchesCategory =
       selectedCategory === "all"
         ? true
         : selectedCategory === "cinematic"
         ? tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"
         : tpl.category === selectedCategory;
+
     const matchesSearch =
       tpl.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tpl.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tpl.styleTag.toLowerCase().includes(searchQuery.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
 
@@ -118,78 +174,111 @@ function TemplateGalleryContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#F5EEE0" }}>
+    <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans">
       <Navbar />
 
-      {/* ── Hero Header ── */}
-      <section className="pt-36 pb-10 text-center px-4">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#C9A84C]/60 bg-white/60 text-[#7A6520] text-[11px] font-semibold uppercase tracking-widest mb-6 shadow-sm">
-          <Palette className="w-3.5 h-3.5" />
-          <span>Design Library</span>
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
+        {/* Header Title and Search Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 font-serif">
+              Explore Templates
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
+              Select any design below to preview live with your personalized details
+            </p>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search designs, styles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-[#991B1B] text-slate-900 transition-colors"
+            />
+          </div>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight text-[#1A1410] leading-tight">
-          Select Your{" "}
-          <span
-            style={{
-              fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
-              color: "#C9A84C",
-              fontStyle: "italic",
-              fontWeight: 700,
-            }}
-          >
-            Invitation Template
-          </span>
-        </h1>
-        <p className="mt-3 text-sm sm:text-base text-[#1A1410]/65 max-w-md mx-auto leading-relaxed">
-          Choose from our curated collection, personalize details, and create stunning
-          invitations for any occasion.
-        </p>
+        {/* ── Owned Products Banner (Shown if User Has Purchased / Activated Templates) ── */}
+        {myInvitations.length > 0 && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-red-50 via-white to-amber-50/60 border border-red-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#991B1B] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Crown className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                    {myInvitations.length === 1
+                      ? "You Own 1 Active Invitation Website"
+                      : `You Own ${myInvitations.length} Active Invitation Websites`}
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide">
+                    Owned
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {myInvitations.length === 1
+                    ? `Your live wedding suite "${myInvitations[0].partnerOne || 'Event'} & ${myInvitations[0].partnerTwo || ''}" is active and published.`
+                    : "Manage your customized invitation websites, guest RSVPs, and downloads."}
+                </p>
+              </div>
+            </div>
 
-        {/* Search Bar */}
-        <div className="mt-7 max-w-sm mx-auto relative">
-          <Search className="w-4 h-4 text-[#8B7345] absolute left-4 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search templates..."
-            className="w-full pl-10 pr-4 py-3 rounded-full bg-white border border-[#D9C88A]/50 text-sm text-[#1A1410] placeholder-[#A89060] focus:outline-none focus:border-[#C9A84C] shadow-sm"
-          />
-        </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {myInvitations.length === 1 ? (
+                <Link
+                  href={`/invitations/${myInvitations[0].slug}`}
+                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>View My Owned Product ↗</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/dashboard?tab=invitations"
+                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>View My Owned Products ({myInvitations.length}) ↗</span>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
 
-        {/* Category Filter Pills */}
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          {categories.map((cat) => (
+        {/* Category Pills Filter */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 mb-6 border-b border-slate-100">
+          {categories.map((tab) => (
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all border ${
-                selectedCategory === cat.id
-                  ? "bg-[#7A1F2B] text-white border-[#7A1F2B] shadow-sm"
-                  : "bg-white text-[#1A1410]/70 border-[#D9C88A]/50 hover:border-[#C9A84C] hover:text-[#1A1410]"
+              key={tab.id}
+              onClick={() => setSelectedCategory(tab.id)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                selectedCategory === tab.id
+                  ? "bg-[#991B1B] text-white shadow-xs"
+                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               }`}
             >
-              {cat.label}
+              {tab.label}
             </button>
           ))}
         </div>
-      </section>
 
-      {/* ── Templates Grid ── */}
-      <main className="flex-1 max-w-[1380px] mx-auto px-4 sm:px-6 pb-20 w-full">
+        {/* Templates Grid Display */}
         {filteredTemplates.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-[#D9C88A]/30 rounded-2xl p-8 shadow-sm">
-            <h3 className="text-xl font-bold text-[#1A1410]">No templates found</h3>
-            <p className="text-sm text-[#1A1410]/60 mt-1">
-              Try clearing your search query or selecting a different category filter.
-            </p>
+          <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 p-8">
+            <Sparkles className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-800">No templates found</h3>
+            <p className="text-xs text-slate-500 mt-1">Try adjusting your search query or filter</p>
             <button
               onClick={() => {
-                setSelectedCategory("all");
                 setSearchQuery("");
+                setSelectedCategory("all");
               }}
-              className="btn-maroon mt-4 px-6 py-2.5 text-xs"
+              className="mt-4 px-4 py-2 rounded-xl bg-[#991B1B] text-white text-xs font-bold hover:bg-[#7F1D1D] transition-colors"
             >
               Reset Filters
             </button>
@@ -198,45 +287,72 @@ function TemplateGalleryContent() {
           <div className="grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {filteredTemplates.map((tpl) => {
               const isViewed = highlightedSlug === tpl.slug;
+              const ownedInvitation = myInvitations.find(
+                (inv) =>
+                  inv.templateSlug === tpl.slug ||
+                  (tpl.slug === "scroll-scrubber" && inv.templateSlug === "scroll-scrubber") ||
+                  (tpl.slug === "premium-scroll" && inv.templateSlug === "premium-scroll")
+              );
+              const isOwned = Boolean(ownedInvitation);
+
               return (
                 <div
                   key={tpl.id}
                   id={`template-card-${tpl.slug}`}
                   className={`flex flex-col group transition-all duration-300 bg-white rounded-2xl p-2 sm:p-3 border relative ${
-                    isViewed
-                      ? "border-2 border-[#7A1F2B] ring-4 ring-[#7A1F2B]/20 shadow-lg scale-[1.02]"
-                      : "border-[#D9C88A]/40 shadow-sm hover:shadow-md hover:border-[#D9A441]"
+                    isOwned
+                      ? "border-2 border-emerald-600/80 ring-4 ring-emerald-100 shadow-md scale-[1.01]"
+                      : isViewed
+                      ? "border-2 border-[#991B1B] ring-4 ring-red-100 shadow-lg scale-[1.02]"
+                      : "border-slate-200 shadow-xs hover:shadow-md hover:border-slate-300"
                   }`}
                 >
-                  {/* Badge for Cinematic Exclusive vs Recently Viewed */}
-                  {tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? (
+                  {/* Badge for Owned vs Premium vs Recently Viewed */}
+                  {isOwned ? (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-emerald-400 flex items-center gap-1">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                      <span>Owned ✓</span>
+                    </div>
+                  ) : tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#070707] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-[#D9A441] flex items-center gap-1">
                       <Sparkles className="w-2.5 h-2.5 fill-current text-[#D9A441]" />
-                      <span>₹2000 Cinematic Exclusive</span>
+                      <span>Premium</span>
                     </div>
                   ) : isViewed ? (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#7A1F2B] text-[#D9A441] text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-[#D9A441] flex items-center gap-1">
-                      <Sparkles className="w-2.5 h-2.5 fill-current text-[#D9A441]" />
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-2.5 py-0.5 rounded-full bg-[#991B1B] text-white text-[9px] font-extrabold uppercase tracking-widest shadow-md border border-red-300 flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 fill-current text-white" />
                       <span>Last Viewed</span>
                     </div>
                   ) : null}
 
-                  {/* ── Card Graphic Container (Clicking goes to Live Preview) ── */}
+                  {/* ── Card Graphic Container (Clicking goes to Live Preview or Owned Product) ── */}
                   <div
-                    onClick={() => router.push(`/templates/${tpl.slug}`)}
+                    onClick={() => {
+                      if (isOwned && ownedInvitation?.slug) {
+                        router.push(`/invitations/${ownedInvitation.slug}`);
+                      } else {
+                        router.push(`/templates/${tpl.slug}`);
+                      }
+                    }}
                     className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer block group-hover:scale-[1.02] transition-transform duration-300"
                     style={{
                       boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
                       border: "1px solid rgba(217,200,138,0.4)",
                     }}
-                    title="Click to view live preview"
+                    title={isOwned ? "Click to open your live owned invitation" : "Click to view live preview"}
                   >
                     <TemplateCardGraphic template={tpl} />
                   </div>
 
                   {/* ── Card Title Below Graphic ── */}
                   <div
-                    onClick={() => router.push(`/templates/${tpl.slug}`)}
+                    onClick={() => {
+                      if (isOwned && ownedInvitation?.slug) {
+                        router.push(`/invitations/${ownedInvitation.slug}`);
+                      } else {
+                        router.push(`/templates/${tpl.slug}`);
+                      }
+                    }}
                     className="text-xs sm:text-sm font-bold text-[#1A1410] mt-2 px-0.5 leading-tight line-clamp-1 cursor-pointer group-hover:text-[#7A1F2B] transition-colors"
                   >
                     {tpl.title}
@@ -253,21 +369,33 @@ function TemplateGalleryContent() {
                       <span>Preview</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedTemplateForModal({
-                          slug: tpl.slug,
-                          title: tpl.title,
-                          isPremium: Boolean(tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"),
-                          price: tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? 2000 : 599,
-                        })
-                      }
-                      className="btn-maroon py-2 px-1.5 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.01] transition-transform whitespace-nowrap"
-                    >
-                      <Sparkles className="w-3 h-3 text-[#D9A441] shrink-0" />
-                      <span>Make It Yours</span>
-                    </button>
+                    {isOwned && ownedInvitation ? (
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/invitations/${ownedInvitation.slug}`)}
+                        className="py-2 px-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.01] transition-transform whitespace-nowrap cursor-pointer"
+                        title="Open your owned active invitation"
+                      >
+                        <Globe className="w-3 h-3 text-white shrink-0" />
+                        <span>View Yours ↗</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTemplateForModal({
+                            slug: tpl.slug,
+                            title: tpl.title,
+                            isPremium: Boolean(tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"),
+                            price: tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? 2000 : 599,
+                          })
+                        }
+                        className="btn-maroon py-2 px-1.5 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.01] transition-transform whitespace-nowrap cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3 text-[#D9A441] shrink-0" />
+                        <span>Make It Yours</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );

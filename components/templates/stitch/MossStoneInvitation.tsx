@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
@@ -297,7 +297,7 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
       </section>
 
       {/* Love Story Video Facade */}
-      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+      {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
         <section className="py-24 bg-[#e8e8e6] px-6 md:px-16">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="font-serif text-4xl font-bold text-[#1a1c1b] mb-3">A Glimpse of Us</h2>

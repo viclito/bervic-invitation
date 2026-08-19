@@ -274,27 +274,34 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
       }
     }
 
-    fetch("/api/user/event-draft")
+    const eventType = targetTemplate?.category === "birthday" ? "BIRTHDAY" : "WEDDING";
+    const isLocalMatching =
+      activeDraft &&
+      (targetTemplate?.category === "birthday"
+        ? activeDraft.eventType === "BIRTHDAY"
+        : !activeDraft.eventType || activeDraft.eventType === "WEDDING");
+
+    fetch(`/api/user/event-draft?eventType=${eventType}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.draft) {
           const merged = mapEventProfileToInvitationData(data.draft, defaultSampleData);
           setFormData((prev) => ({ ...prev, ...merged }));
           formDataRef.current = { ...formDataRef.current, ...merged };
-        } else if (activeDraft) {
+        } else if (isLocalMatching && activeDraft) {
           const merged = mapEventProfileToInvitationData(activeDraft, defaultSampleData);
           setFormData((prev) => ({ ...prev, ...merged }));
           formDataRef.current = { ...formDataRef.current, ...merged };
         }
       })
       .catch(() => {
-        if (activeDraft) {
+        if (isLocalMatching && activeDraft) {
           const merged = mapEventProfileToInvitationData(activeDraft, defaultSampleData);
           setFormData((prev) => ({ ...prev, ...merged }));
           formDataRef.current = { ...formDataRef.current, ...merged };
         }
       });
-  }, [invitationId, templateSlug, defaultSampleData]);
+  }, [invitationId, templateSlug, defaultSampleData, targetTemplate?.category]);
 
   // If editing an existing saved invitation, load it from DB
   useEffect(() => {

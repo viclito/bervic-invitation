@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { cleanupExpiredInvitations } from "@/lib/cleanupExpiredInvitations";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
+import { templatesRegistry } from "@/data/templatesRegistry";
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
@@ -19,7 +20,8 @@ interface Props {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sParams = (await searchParams) || {};
-  const guestName = (sParams.to || sParams.guest) as string | undefined;
+  const guestCode = (sParams.code || sParams.c || sParams.g) as string | undefined;
+  let guestName = (sParams.to || sParams.guest) as string | undefined;
 
   const invitation = await prisma.userInvitation.findUnique({
     where: { slug },
@@ -32,12 +34,40 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     };
   }
 
-  const nameHeader = invitation.partnerTwo
+  // If uniqueCode is present, securely resolve guest name
+  if (guestCode) {
+    const matchedGuest = await prisma.guest.findFirst({
+      where: {
+        invitationId: invitation.id,
+        uniqueCode: guestCode,
+      },
+      select: { name: true },
+    });
+    if (matchedGuest?.name) {
+      guestName = matchedGuest.name;
+    }
+  }
+
+  const isBirthday =
+    templatesRegistry.find((t) => t.slug === invitation.templateSlug)?.category === "birthday";
+
+  const hasValidPartnerTwo =
+    !isBirthday &&
+    invitation.partnerTwo &&
+    invitation.partnerTwo.trim() !== "" &&
+    invitation.partnerTwo !== "Partner Name" &&
+    invitation.partnerTwo !== "Partner's Name";
+
+  const nameHeader = hasValidPartnerTwo
     ? `${invitation.partnerOne} & ${invitation.partnerTwo}`
     : `${invitation.partnerOne}`;
 
   const title = guestName
-    ? `${guestName}, ${nameHeader} cordially invite you to their Wedding!`
+    ? isBirthday
+      ? `${guestName}, you're invited to ${nameHeader}'s Birthday Celebration!`
+      : `${guestName}, ${nameHeader} cordially invite you to their Wedding!`
+    : isBirthday
+    ? `${nameHeader}'s Birthday Celebration | Bervic`
     : `${nameHeader}'s Celebration Invitation | Bervic`;
 
   const description =
@@ -68,7 +98,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     ? rawImagePath
     : `${baseUrl}${rawImagePath.startsWith("/") ? "" : "/"}${rawImagePath}`;
 
-  const canonicalUrl = `${baseUrl}/invitations/${slug}${guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
+  const canonicalUrl = `${baseUrl}/invitations/${slug}${guestCode ? `?code=${encodeURIComponent(guestCode)}` : guestName ? `?to=${encodeURIComponent(guestName)}` : ""}`;
 
   return {
     title,
@@ -122,7 +152,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function PublicInvitationPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sParams = (await searchParams) || {};
-  const guestName = (sParams.to || sParams.guest) as string | undefined;
+  const guestCode = (sParams.code || sParams.c || sParams.g) as string | undefined;
+  let guestName = (sParams.to || sParams.guest) as string | undefined;
 
   // Run automatic cleanup for expired invitations
   await cleanupExpiredInvitations();
@@ -148,6 +179,28 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     );
   }
 
+  // Securely resolve guest details by 10-character uniqueCode
+  let guestData: any = null;
+  if (guestCode) {
+    const matchedGuest = await prisma.guest.findFirst({
+      where: {
+        invitationId: invitation.id,
+        uniqueCode: guestCode,
+      },
+    });
+    if (matchedGuest) {
+      guestName = matchedGuest.name;
+      guestData = {
+        id: matchedGuest.id,
+        name: matchedGuest.name,
+        phone: matchedGuest.phone,
+        status: matchedGuest.status,
+        plusOnes: matchedGuest.plusOnes,
+        uniqueCode: matchedGuest.uniqueCode,
+      };
+    }
+  }
+
   const props = {
     templateSlug: invitation.templateSlug,
     coupleInitials: invitation.coupleInitials,
@@ -170,6 +223,7 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
     contactAddress: invitation.contactAddress,
     socialLinks: invitation.socialLinksJson ? JSON.parse(invitation.socialLinksJson) : {},
     guestName,
+    guestData,
   };
 
   const nameHeader = invitation.partnerTwo

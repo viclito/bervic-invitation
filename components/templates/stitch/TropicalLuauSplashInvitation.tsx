@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import FallingTropicalLeaves from "./FallingTropicalLeaves";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
@@ -32,7 +33,7 @@ export default function TropicalLuauSplashInvitation(
       ? props.partnerOne
       : "Evelyn";
 
-  const ageMilestone = "30th";
+  const ageMilestone = formatAgeOrdinal(props.turningAge) || "30th";
   const eventTitle =
     props.tagline && props.tagline !== "TOGETHER WITH THEIR FAMILIES"
       ? props.tagline
@@ -57,9 +58,7 @@ export default function TropicalLuauSplashInvitation(
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-09-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -78,11 +77,11 @@ export default function TropicalLuauSplashInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items fallback
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -270,17 +269,22 @@ export default function TropicalLuauSplashInvitation(
 
       {/* Hero Section */}
       <header className="relative pt-32 pb-24 md:pt-44 md:pb-32 px-6 md:px-16 bg-[#fcf9f8] overflow-hidden flex flex-col items-center justify-center min-h-[750px] text-center">
+        {/* Falling Tropical Leaves Animation Layer */}
+        <FallingTropicalLeaves />
+
         {/* Botanical Leaf Accents */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none flex justify-between items-start p-8">
+        <div className="absolute inset-0 opacity-20 pointer-events-none flex justify-between items-start p-6 md:p-12">
           <img
-            className="w-64 h-64 object-contain"
+            className="w-48 h-48 md:w-72 md:h-72 object-contain opacity-40 animate-pulse transition-all duration-1000"
             alt="Monstera leaf background accent"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAocslt0-9-fk_Ywtgc3QLAkjzZpt7-3h8GGyA4z2dswVWhHpTvLp5L2w-K120L5-G-YQKESFfy6QYL-BR3zsSKSG-BkuRkct6FbAthGA_4YPGgVITMJWeshlSaQIIbMRet4yPMq8GUseo3II-EvqniUkKjWC37AE5MEXhwsNp_R3_QrDrLuDOQicVw3zv88YT39R7czp9vvjxS6vpZjmBvkHU23_XmEO0O8GoFt61r1rWP6EpY4s0b"
+            src="/images/templates/monstera-leaf-cutout.png"
+            style={{ mixBlendMode: "multiply" }}
           />
           <img
-            className="w-64 h-64 object-contain transform -scale-x-100"
-            alt="Palm frond background accent"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcJtoc9SDW-WdGCkiJmyZu_ZRaML2ZccNiQP_J9wiI-lPac4zfQmtof21WeHJQ7UMRiU1yK-P-AJRaaPpKITUpxxh2XrP8fAr6Tqac4QeQtsaU9atPax3Y0GUdEMnvXeDrTxGgiZehlZvrixOS33AeDe66wZrF7Njxzo6Krkre7B2tG2Fu1y2mX1Eos5rW1oXYbFR2e_plzVxblrtbxj4gG53qw-9Xto0M7H7v2tB0-OQc2u4N36IU"
+            className="w-48 h-48 md:w-72 md:h-72 object-contain transform -scale-x-100 opacity-40 animate-pulse transition-all duration-1000"
+            alt="Monstera leaf background accent"
+            src="/images/templates/monstera-leaf-cutout.png"
+            style={{ mixBlendMode: "multiply" }}
           />
         </div>
 
@@ -292,7 +296,7 @@ export default function TropicalLuauSplashInvitation(
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#904d00]/10 text-[#904d00] border border-[#904d00]/20 text-xs font-semibold uppercase tracking-widest">
             <Cake className="w-4 h-4 text-[#904d00]" />
-            <span>{celebrantName}'s {ageMilestone} Birthday Celebration</span>
+            <span>{celebrantName}'s {ageMilestone ? `${ageMilestone} Birthday` : "Birthday"} Celebration</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold font-serif text-[#5f5f00] tracking-tight leading-tight">
@@ -434,49 +438,7 @@ export default function TropicalLuauSplashInvitation(
         </svg>
       </div>
 
-      {/* Story / Video Highlights */}
-      <section className="py-20 px-6 md:px-16 bg-[#f6f3f2]">
-        <div className="max-w-[1280px] mx-auto text-center space-y-10">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00]">
-              A Journey of Thirty Years
-            </h2>
-            <div className="w-12 h-1 bg-[#904d00] rounded-full mx-auto"></div>
-            <p className="text-base md:text-lg text-[#484837] font-serif max-w-2xl mx-auto leading-relaxed">
-              From early days by the coast to building a beautiful life in the city, {celebrantName} has touched so many with her warmth and grace. Take a look back at some cherished moments.
-            </p>
-          </div>
 
-          <div className="relative w-full max-w-4xl mx-auto aspect-video bg-black rounded-2xl shadow-md overflow-hidden border border-[#cac7b1]/30 flex items-center justify-center group cursor-pointer">
-            {isPlayingVideo ? (
-              <iframe
-                title="Luau celebration video"
-                src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : (
-              <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
-                <img
-                  alt="Video highlight thumbnail"
-                  className="w-full h-full object-cover"
-                  src={
-                    props.coverImage ||
-                    props.heroImage ||
-                    props.coupleImage ||
-                    "/images/templates/couple-photo.jpg"
-                  }
-                />
-                <div className="absolute z-20 w-20 h-20 bg-white/90 rounded-full flex items-center justify-center text-[#5f5f00] group-hover:scale-110 transition-transform shadow-lg">
-                  <Play className="w-10 h-10 fill-[#5f5f00] ml-1" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* SVG Wave Divider 4 */}
       <div className="w-full overflow-hidden leading-none">

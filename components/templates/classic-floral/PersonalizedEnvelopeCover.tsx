@@ -25,9 +25,9 @@ export default function PersonalizedEnvelopeCover({
   const [isOpening, setIsOpening] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // In the customizer/editor, skip the envelope entirely so designers can
+  // In the customizer/editor or during thumbnail capture, skip the envelope entirely so designers/previews can
   // see the actual invitation content without having to click through it.
-  if (isCustomizer) return null;
+  if (isCustomizer || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true")) return null;
 
   const activeGuestName = guestName ? decodeURIComponent(guestName) : "Honored Guest";
 

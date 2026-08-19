@@ -10,7 +10,26 @@ interface Props {
 }
 
 export default function TemplateCardGraphic({ template }: Props) {
-  const { slug, title, styleTag, bgGrad, textColor, accentColor, secondaryAccent, fontStyle, isPremium } = template;
+  const { slug, title, styleTag, bgGrad, textColor, accentColor, secondaryAccent, fontStyle, isPremium, previewImage } = template;
+
+  // If a real screenshot thumbnail is provided, render it with crisp object-cover top
+  if (previewImage && (previewImage.startsWith("/templates/thumbnails/") || previewImage.includes("/thumbnails/"))) {
+    return (
+      <div className="w-full h-full relative overflow-hidden bg-[#1c1c18] group/img">
+        <img
+          src={previewImage}
+          alt={`${title} Preview`}
+          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover/img:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-2">
+          <span className="text-[9px] text-[#fcf9f2] font-mono tracking-wider font-semibold bg-black/75 px-2 py-0.5 rounded border border-white/20">
+            Live Preview
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   // Custom visual card rendering based on template slug / layoutVariant
   switch (slug) {

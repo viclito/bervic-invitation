@@ -111,8 +111,7 @@ export function formatDateForDisplay(weddingDate?: string, fallback = "13th May 
  * Converts any YouTube URL (watch URL, short link, or embed link) into a proper embed URL.
  */
 export function getYouTubeEmbedUrl(url?: string): string {
-  const fallback = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0";
-  if (!url || !url.trim()) return fallback;
+  if (!url || !url.trim()) return "";
 
   const clean = url.trim();
 
@@ -140,5 +139,34 @@ export function getYouTubeEmbedUrl(url?: string): string {
     return clean;
   }
 
-  return fallback;
+  return "";
 }
+
+/**
+ * Formats a birthday person's age into ordinal format (e.g. 30 -> "30th", 1 -> "1st", 21 -> "21st", "25th" -> "25th").
+ */
+export function formatAgeOrdinal(age?: string | number): string {
+  if (!age) return "";
+  const str = String(age).trim();
+  if (!str) return "";
+
+  // If already has an ordinal suffix like "30th", "1st", "2nd", "3rd", return cleaned
+  if (/^\d+(st|nd|rd|th)$/i.test(str)) {
+    return str;
+  }
+
+  const num = parseInt(str, 10);
+  if (isNaN(num) || num <= 0) return str;
+
+  const lastDigit = num % 10;
+  const lastTwoDigits = num % 100;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return `${num}th`;
+  }
+  if (lastDigit === 1) return `${num}st`;
+  if (lastDigit === 2) return `${num}nd`;
+  if (lastDigit === 3) return `${num}rd`;
+  return `${num}th`;
+}
+

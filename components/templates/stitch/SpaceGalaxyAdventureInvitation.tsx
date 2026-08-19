@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -27,9 +28,7 @@ export default function SpaceGalaxyAdventureInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -48,11 +47,11 @@ export default function SpaceGalaxyAdventureInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 71edf06d2f8d40b9a37aeed543f5efc3
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 4
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -105,14 +104,37 @@ export default function SpaceGalaxyAdventureInvitation(
         ];
 
   // Venue location matching exact Stitch screen 71edf06d2f8d40b9a37aeed543f5efc3
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "St. Antony Church Hall, Kaval Kinaru"
+  );
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "St. Antony Church Hall",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Kaval Kinaru, Tirunelveli District, Tamil Nadu, Earth",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
       : {
-          name: "St. Antony Church Hall",
-          address: "Kaval Kinaru, Tirunelveli District, Tamil Nadu, Earth",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "St. Antony Church Hall",
+          address: props.contactAddress || props.venuePlace || "Kaval Kinaru, Tirunelveli District, Tamil Nadu, Earth",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
         };
+
+  // Celebrant portrait priority: user's celebrant portrait or cover photo
+  const celebrantPortrait =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCckQlOtAYjoW-p2VtsankHVm7_IT6RoNnX28VToM16IqMpbgM1xwYL9T1JrRvVfhw4AFugtO7iDGfOFYfNrX1AWk0MsQq6WGXRT5SNETghBBeQ9MHOX2YH5AW4ih6eI0TdzwsGmnaezT9HYj_E69FGPCzTKMBpO6_M4zrpIX_4QvXAmqp053d4Ns3t-VVqLG2TouvG1l7rxSxJ2bmLsiz746MTo3hs9rgxeALwpq5D6YAYr_V4PXzW";
 
   return (
     <div className="bg-[#0b1326] text-[#dae2fd] font-sans antialiased overflow-x-hidden relative selection:bg-[#7c3aed]/30 selection:text-[#d2bbff] min-h-screen">
@@ -263,36 +285,35 @@ export default function SpaceGalaxyAdventureInvitation(
               Commander {celebrantName}'s Mission Log
             </h2>
             <p className="text-base text-[#ccc3d8] mb-4 leading-relaxed font-sans">
-              Preparing for her 10th solar rotation! Commander {celebrantName} has been exploring the outer rim, charting new nebulas and making first contact with friendly alien species.
+              {props.loveStoryText ||
+                `Preparing for another stellar solar rotation! Commander ${celebrantName} has been exploring the outer rim, charting new horizons and bringing boundless joy to the galaxy.`}
             </p>
             <p className="text-base text-[#ccc3d8] mb-6 leading-relaxed font-sans">
-              Now, she is calling all cadets to join her back at home base for a celebration of galactic proportions. Bring your space suits and your sense of wonder as we embark on a journey through the Milky Way and beyond!
+              Now, she is calling all cadets to join her back at home base for a celebration of galactic proportions. Bring your space suits and your sense of wonder as we embark on a journey through the stars!
             </p>
             <div className="flex flex-wrap gap-4">
               <span className="px-4 py-1 rounded-full bg-[#2d3449] text-[#3cd7ff] font-mono text-xs border border-[#3cd7ff]/20 shadow-[0_0_10px_rgba(60,215,255,0.1)] font-semibold">
                 Explorer Class
               </span>
               <span className="px-4 py-1 rounded-full bg-[#2d3449] text-[#d2bbff] font-mono text-xs border border-[#d2bbff]/20 shadow-[0_0_10px_rgba(210,187,255,0.1)] font-semibold">
-                Astrophysicist Level 10
+                Commander Orbit Active
               </span>
             </div>
           </div>
 
           <div className="h-96 rounded-xl overflow-hidden glass-panel flex items-center justify-center p-2 relative group">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#7c3aed]/20 to-[#3cd7ff]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-            <div
-              className="w-full h-full rounded-lg bg-cover bg-center z-0"
-              style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCckQlOtAYjoW-p2VtsankHVm7_IT6RoNnX28VToM16IqMpbgM1xwYL9T1JrRvVfhw4AFugtO7iDGfOFYfNrX1AWk0MsQq6WGXRT5SNETghBBeQ9MHOX2YH5AW4ih6eI0TdzwsGmnaezT9HYj_E69FGPCzTKMBpO6_M4zrpIX_4QvXAmqp053d4Ns3t-VVqLG2TouvG1l7rxSxJ2bmLsiz746MTo3hs9rgxeALwpq5D6YAYr_V4PXzW')",
-              }}
+            <img
+              alt={`Commander ${celebrantName} Mission Visual`}
+              className="w-full h-full rounded-lg object-cover z-0 group-hover:scale-105 transition-transform duration-700"
+              src={celebrantPortrait}
             />
             {/* HUD Elements */}
-            <div className="absolute top-4 left-4 z-20 text-[#3cd7ff] font-mono text-[10px] opacity-70">
-              SCAN: ACTIVE<br />
-              TARGET: ANDROMEDA
+            <div className="absolute top-4 left-4 z-20 text-[#3cd7ff] font-mono text-[10px] bg-[#0b1326]/80 px-2 py-1 rounded border border-[#3cd7ff]/30 backdrop-blur-sm">
+              SCAN: ACTIVE // CADET: {celebrantName.toUpperCase()}<br />
+              COORDINATES: MISSION_LOG_01
             </div>
-            <div className="absolute bottom-4 right-4 z-20">
+            <div className="absolute bottom-4 right-4 z-20 bg-[#0b1326]/80 p-1.5 rounded-full border border-[#d2bbff]/30">
               <Radar className="w-6 h-6 text-[#d2bbff] animate-pulse" />
             </div>
           </div>
@@ -472,42 +493,51 @@ export default function SpaceGalaxyAdventureInvitation(
               </div>
               <a
                 className="inline-flex items-center gap-2 text-[#3cd7ff] hover:text-[#d2bbff] transition-colors font-mono text-xs mt-4 border border-[#3cd7ff]/30 rounded-full px-4 py-2 hover:bg-[#3cd7ff]/10 font-bold"
-                href="https://maps.google.com"
+                href={mainVenue.mapLink}
                 target="_blank"
                 rel="noreferrer"
               >
                 <Navigation className="w-4 h-4" />
-                Engage Thrusters (Map)
+                Engage Thrusters (Google Maps)
               </a>
             </div>
           </div>
 
-          <div className="md:col-span-2 rounded-xl overflow-hidden glass-panel h-80 relative group">
+          {/* Interactive Radar Map Navigation Card */}
+          <a
+            href={mainVenue.mapLink}
+            target="_blank"
+            rel="noreferrer"
+            className="md:col-span-2 rounded-xl overflow-hidden glass-panel h-80 relative group hover:border-[#3cd7ff]/60 transition-colors block cursor-pointer"
+          >
             {/* Simulated Radar UI Overlay */}
-            <div className="absolute inset-0 bg-[#0b1326]/40 z-10 pointer-events-none border border-[#3cd7ff]/20 flex flex-col">
+            <div className="absolute inset-0 bg-[#0b1326]/50 z-10 border border-[#3cd7ff]/20 flex flex-col group-hover:bg-[#0b1326]/30 transition-colors">
               <div className="w-full h-8 border-b border-[#3cd7ff]/20 flex items-center px-4 gap-2 bg-[#222a3d]/80">
                 <div className="w-3 h-3 rounded-full bg-[#ffb4ab]"></div>
                 <div className="w-3 h-3 rounded-full bg-[#3cd7ff]"></div>
                 <div className="w-3 h-3 rounded-full bg-[#d2bbff]"></div>
                 <span className="ml-2 font-mono text-[10px] text-[#ccc3d8] tracking-widest uppercase">
-                  NAV-SYSTEM ONLINE
+                  NAV-SYSTEM ONLINE // SECTOR: {mainVenue.name?.toUpperCase() || "BASE"}
                 </span>
               </div>
-              <div className="flex-1 relative">
+              <div className="flex-1 relative flex items-center justify-center">
                 <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#3cd7ff]/30"></div>
                 <div className="absolute top-0 left-1/2 w-[1px] h-full bg-[#3cd7ff]/30"></div>
-                <div className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full border border-[#3cd7ff]/20 -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full border border-[#3cd7ff]/20 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></div>
                 <div className="absolute top-1/2 left-1/2 w-96 h-96 rounded-full border border-[#3cd7ff]/10 -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="relative z-20 bg-[#0b1326]/90 border border-[#3cd7ff]/60 rounded-full px-5 py-2.5 font-mono text-xs text-[#3cd7ff] font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(60,215,255,0.4)] group-hover:bg-[#3cd7ff] group-hover:text-[#0b1326] transition-colors">
+                  Open Target Sector in Google Maps 🚀
+                </div>
               </div>
             </div>
             <div
-              className="absolute inset-0 bg-cover bg-center z-0 grayscale opacity-50"
+              className="absolute inset-0 bg-cover bg-center z-0 grayscale opacity-40 group-hover:opacity-60 transition-opacity"
               style={{
                 backgroundImage:
                   "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB30HGxpouL2TCobBa6EntSuGZLEA6jh1KqT_x3Vqv7vy0adoHG3ULhZwrn3GCERjQ4njF2RnorO-mMTlmvjvUQqdzaZjUekxeWuVd1zpwSLl9PlGRpaemRHVFVXlG3mJLzWwAw7w44MtS5ufggsAjaACBu23pXpy6yiBI4gspFdDpVuu-7AggQ2j7bBssxX4gS87WgEwKNWZTK9tG7sSUArI8YaazhB_TDESSDf5rPNSc0JYAC601D')",
               }}
             />
-          </div>
+          </a>
         </section>
 
         {/* Mission Briefing (RSVP) */}

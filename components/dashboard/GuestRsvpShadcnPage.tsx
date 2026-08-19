@@ -925,9 +925,11 @@ export default function GuestRsvpShadcnPage({
     }
   };
 
-  const formatMessageForGuest = (guestName: string) => {
+  const formatMessageForGuest = (guestOrName: Guest | string) => {
     const coupleNames = `${partnerOne} & ${partnerTwo}`;
-    const personalizedLink = `${publicLink}?to=${encodeURIComponent(guestName)}`;
+    const guestName = typeof guestOrName === "string" ? guestOrName : guestOrName.name;
+    const guestCode = typeof guestOrName === "string" ? "" : guestOrName.uniqueCode;
+    const personalizedLink = guestCode ? `${publicLink}?code=${guestCode}` : `${publicLink}?to=${encodeURIComponent(guestName)}`;
     return msgTemplate
       .replace(/{guest_name}/g, guestName)
       .replace(/{couple_names}/g, coupleNames)
@@ -944,7 +946,7 @@ export default function GuestRsvpShadcnPage({
     }
 
     // 1. Format personalized text with link
-    const formattedMsg = encodeURIComponent(formatMessageForGuest(guest.name));
+    const formattedMsg = encodeURIComponent(formatMessageForGuest(guest));
     const url = `https://wa.me/${cleanDigits}?text=${formattedMsg}`;
 
     // 2. Open WhatsApp SYNCHRONOUSLY (prevents browser popup blocker completely)

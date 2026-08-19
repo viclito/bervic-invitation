@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -433,7 +433,7 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
         </section>
 
         {/* Video Film Section */}
-        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
           <section className="py-24 px-6 md:px-16 bg-[#f4f3f1]" id="video">
             <div className="max-w-4xl mx-auto text-center">
               <div className="text-center mb-14">

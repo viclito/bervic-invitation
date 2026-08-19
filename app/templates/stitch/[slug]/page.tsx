@@ -7,6 +7,8 @@ import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
+import { sampleBirthdayData } from "@/data/sampleBirthdayData";
+import { templatesRegistry } from "@/data/templatesRegistry";
 import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
 import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -16,6 +18,15 @@ export default function StitchTemplatePage() {
   const slug = (params?.slug as string) || "olive-ochre";
   const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails(`/templates/stitch/${slug}`);
   const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
+
+  const targetTemplate =
+    templatesRegistry.find((t) => t.slug === slug && t.category === "birthday") ||
+    templatesRegistry.find((t) => t.slug === slug);
+
+  const initialData =
+    targetTemplate?.category === "birthday"
+      ? sampleBirthdayData
+      : sampleWeddingData;
 
   useEffect(() => {
     let activeDraft: Record<string, unknown> | null = null;
@@ -31,21 +42,32 @@ export default function StitchTemplatePage() {
       }
     }
 
-    fetch("/api/user/event-draft")
+    const eventType = targetTemplate?.category === "birthday" ? "BIRTHDAY" : "WEDDING";
+    const isLocalMatching =
+      activeDraft &&
+      (targetTemplate?.category === "birthday"
+        ? activeDraft.eventType === "BIRTHDAY"
+        : !activeDraft.eventType || activeDraft.eventType === "WEDDING");
+
+    fetch(`/api/user/event-draft?eventType=${eventType}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.draft) {
-          setInvitationData(mapEventProfileToInvitationData(data.draft, sampleWeddingData));
-        } else if (activeDraft) {
-          setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+          setInvitationData(mapEventProfileToInvitationData(data.draft, initialData));
+        } else if (isLocalMatching && activeDraft) {
+          setInvitationData(mapEventProfileToInvitationData(activeDraft, initialData));
+        } else {
+          setInvitationData(initialData);
         }
       })
       .catch(() => {
-        if (activeDraft) {
-          setInvitationData(mapEventProfileToInvitationData(activeDraft, sampleWeddingData));
+        if (isLocalMatching && activeDraft) {
+          setInvitationData(mapEventProfileToInvitationData(activeDraft, initialData));
+        } else {
+          setInvitationData(initialData);
         }
       });
-  }, [slug]);
+  }, [slug, targetTemplate?.category, initialData]);
 
   if (isLoading || !hasCompletedDetails) {
     return <TemplatePreviewSkeleton />;

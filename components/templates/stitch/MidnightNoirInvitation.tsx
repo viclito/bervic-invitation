@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -472,7 +472,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
         </section>
 
         {/* Video Proposal Feature */}
-        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
           <section className="py-28 relative min-h-[500px] flex items-center justify-center overflow-hidden bg-[#040e1f] border-t border-[#45474b]/30 text-center" id="video">
             <div className="relative z-10 flex flex-col items-center gap-6 px-6 max-w-4xl mx-auto w-full">
               <h2 className="font-serif text-4xl font-bold text-[#d8e3fb]">
@@ -482,7 +482,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
               {isVideoPlaying ? (
                 <div className="relative w-full aspect-video rounded-3xl overflow-hidden border-2 border-[#c1c7cf]/40 shadow-2xl bg-black">
                   <iframe
-                    src={parseYouTubeEmbedUrl(props.loveStoryVideoUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ")}
+                    src={parseYouTubeEmbedUrl(props.loveStoryVideoUrl || "")}
                     title="Wedding Journey Film"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

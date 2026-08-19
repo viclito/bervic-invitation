@@ -89,7 +89,7 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
   ];
 
   const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
-  const showVideo = props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl);
+  const showVideo = props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "");
   const videoId = getYouTubeVideoId(props.loveStoryVideoUrl);
   const embedUrl = parseYouTubeEmbedUrl(props.loveStoryVideoUrl);
   const directWatchUrl = `https://www.youtube.com/watch?v=${videoId}`;

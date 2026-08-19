@@ -1,11 +1,12 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, PlayCircle, Lock, MapPin, AlertTriangle, Flame } from "lucide-react";
+import { Menu, X, PlayCircle, Lock, MapPin, AlertTriangle, Flame, ExternalLink } from "lucide-react";
 
 export default function UrbanStreetwearBashInvitation(
   props: TemplateClassicFloralProps
@@ -13,12 +14,46 @@ export default function UrbanStreetwearBashInvitation(
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Celebrant Name
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
       : "Evelyn";
 
   const brandName = "URBAN_STREET";
+
+  // Venue location fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "192 Concrete Ave, District 7"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Concrete Warehouse",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "192 Concrete Ave, District 7",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Concrete Warehouse",
+          address: props.contactAddress || props.venuePlace || "192 Concrete Ave, District 7",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
+
+  // Celebrant portrait priority
+  const celebrantPhoto =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuAbU8RpbgNa3bPgNMzEyC-qfY2czcPgzx31apUfi4LIh0hmdWm20h4fpUEK4wCghCi3gzPjo7YK47dYEptWcyJAAVGxKRqEzioNsYVVmU_fO2fEzxAVDXomeoRz9R3wLyn-3mZCwp_BbOQIeHRW3DaJY349WsODlGL7MvYUJqfmlGoof-yi7Jow8vlxU-vWJX-PAOdhv8qRuaT3R98ITHP81pRjy29WTbMCMyfCSSlxCdd4kX04Lmh-";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -29,9 +64,7 @@ export default function UrbanStreetwearBashInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T20:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -50,11 +83,11 @@ export default function UrbanStreetwearBashInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 990205ac113a48b69bea7420827c29e3
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -238,8 +271,8 @@ export default function UrbanStreetwearBashInvitation(
               <div className="relative z-10 w-full h-full border-4 border-white peel-effect overflow-hidden rotate-[-2deg]">
                 <img
                   alt={`${celebrantName} Streetwear Portrait`}
-                  className="w-full h-full object-cover filter contrast-125 saturate-50 mix-blend-luminosity"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbU8RpbgNa3bPgNMzEyC-qfY2czcPgzx31apUfi4LIh0hmdWm20h4fpUEK4wCghCi3gzPjo7YK47dYEptWcyJAAVGxKRqEzioNsYVVmU_fO2fEzxAVDXomeoRz9R3wLyn-3mZCwp_BbOQIeHRW3DaJY349WsODlGL7MvYUJqfmlGoof-yi7Jow8vlxU-vWJX-PAOdhv8qRuaT3R98ITHP81pRjy29WTbMCMyfCSSlxCdd4kX04Lmh-"
+                  className="w-full h-full object-cover filter contrast-125 saturate-75 mix-blend-luminosity"
+                  src={celebrantPhoto}
                 />
               </div>
             </div>
@@ -286,8 +319,15 @@ export default function UrbanStreetwearBashInvitation(
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
             <div className="flex-1 relative order-2 md:order-1 w-full">
               <div className="absolute inset-0 bg-[#ff00ff] translate-x-4 translate-y-4 border-4 border-black z-0"></div>
-              <div className="relative w-full aspect-video bg-black border-4 border-white z-10 flex items-center justify-center overflow-hidden">
-                <PlayCircle className="w-16 h-16 text-[#ccff00] opacity-80 cursor-pointer hover:scale-110 transition-transform" />
+              <div className="relative w-full aspect-[4/3] bg-black border-4 border-white z-10 flex items-center justify-center overflow-hidden group">
+                <img
+                  alt={`${celebrantName} Streetwear Vision`}
+                  className="w-full h-full object-cover filter contrast-125 saturate-75 group-hover:scale-105 transition-transform duration-700"
+                  src={celebrantPhoto}
+                />
+                <div className="absolute top-2 left-2 bg-[#ccff00] text-black font-mono text-[10px] px-2 py-0.5 border border-black font-bold uppercase tracking-wider">
+                  EXCLUSIVE DROP // {celebrantName.toUpperCase()}
+                </div>
               </div>
             </div>
             <div className="flex-1 flex flex-col gap-6 order-1 md:order-2">
@@ -296,7 +336,8 @@ export default function UrbanStreetwearBashInvitation(
                 <span className="text-[#ff00ff] text-stroke-black">Vision</span>
               </h2>
               <p className="font-sans text-base md:text-lg text-[#c4c9ac] border-l-4 border-[#ff00ff] pl-6 py-2 leading-relaxed">
-                This isn't just a party. It's a statement. {celebrantName}'s Bash brings together the rawest elements of street culture, underground music, and exclusive fashion drops in one concrete space.
+                {props.loveStoryText ||
+                  `This isn't just a party. It's a statement. ${celebrantName}'s Bash brings together the rawest elements of street culture, underground music, and exclusive celebrations in one concrete space.`}
               </p>
               <div className="flex gap-4 mt-2 font-mono text-xs font-bold">
                 <span className="bg-[#393939] px-4 py-2 text-[#ccff00] border border-[#ccff00]">
@@ -367,27 +408,57 @@ export default function UrbanStreetwearBashInvitation(
         {/* Base Coordinates Section */}
         <section className="py-20 px-6 md:px-16 bg-grid relative z-10" id="location">
           <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 bg-[#201f1f] p-8 border-4 border-black sticker-shadow-black-lg">
-            <div className="flex-1 flex flex-col gap-8 justify-center">
+            <div className="flex-1 flex flex-col gap-6 justify-center">
               <div className="inline-block bg-white text-black font-serif text-2xl px-6 py-2 border-2 border-black sticker-shadow-black self-start rotate-[-3deg] font-bold">
                 <h2 className="uppercase">Base Coordinates</h2>
               </div>
               <div className="font-mono text-sm text-[#c4c9ac] space-y-4">
-                <p className="text-[#ccff00] text-lg md:text-xl border-l-2 border-[#ccff00] pl-4 font-bold">
-                  THE WAREHOUSE<br />
-                  192 CONCRETE AVE<br />
-                  DISTRICT 7
+                <div className="border-l-4 border-[#ccff00] pl-4 space-y-1">
+                  <h3 className="text-[#ccff00] text-xl md:text-2xl font-bold uppercase">
+                    {mainVenue.name || "The Concrete Warehouse"}
+                  </h3>
+                  <p className="text-white text-base leading-relaxed">
+                    {mainVenue.address}
+                  </p>
+                </div>
+                <p className="flex items-center gap-2 text-[#c4c9ac]">
+                  <MapPin className="w-5 h-5 text-[#ff00ff] shrink-0" />
+                  <span>{props.weddingTime || "Event Drop at 20:00 HRS"}</span>
                 </p>
-                <p className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-[#ff00ff]" /> Access via Underground Line B
-                </p>
-                <p className="flex items-center gap-2 text-[#ffb4ab]">
-                  <AlertTriangle className="w-5 h-5" /> Warning: No parking on site.
-                </p>
+                <div className="pt-2">
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 bg-[#ccff00] text-black font-mono font-bold text-xs uppercase px-6 py-3 border-2 border-black sticker-shadow-black hover:bg-[#ff00ff] hover:text-white hover:border-white transition-colors"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>Get Directions on Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
             </div>
-            <div className="flex-1 min-h-[280px] bg-[#393939] border-4 border-[#ccff00] flex items-center justify-center relative overflow-hidden peel-effect">
-              <MapPin className="w-16 h-16 text-[#ccff00] relative z-10 animate-bounce" />
-            </div>
+
+            {/* Clickable Map Area */}
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 min-h-[280px] bg-[#393939] border-4 border-[#ccff00] flex flex-col items-center justify-center p-6 relative overflow-hidden peel-effect group text-center hover:border-[#ff00ff] transition-colors"
+            >
+              <MapPin className="w-14 h-14 text-[#ccff00] group-hover:scale-110 transition-transform mb-3" />
+              <span className="font-serif text-lg uppercase text-white font-bold block">
+                {mainVenue.name || "The Warehouse Base"}
+              </span>
+              <span className="font-mono text-xs text-[#c4c9ac] block max-w-xs mt-1">
+                {mainVenue.address}
+              </span>
+              <span className="mt-3 inline-flex items-center gap-1.5 bg-[#131313] text-[#ccff00] border border-[#ccff00] font-mono text-[11px] font-bold px-3 py-1.5 uppercase tracking-wider group-hover:bg-[#ccff00] group-hover:text-black transition-colors">
+                <span>Open Google Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </span>
+            </a>
           </div>
         </section>
 

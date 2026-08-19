@@ -1,13 +1,15 @@
 import { TemplateClassicFloralProps } from "@/types/template";
 
 export const sampleBirthdayData: TemplateClassicFloralProps = {
-  coupleInitials: "E",
-  partnerOne: "Evelyn",
+  coupleInitials: "B",
+  partnerOne: "Berglin",
   partnerTwo: "",
-  tagline: "A Tropical Soirée",
-  inviteLine: "Join us in celebrating Evelyn's 30th birthday. An evening of curated cocktails, artisanal dining, and sophisticated luau vibes.",
-  weddingDate: "2026-09-15T18:00:00.000Z",
-  weddingTime: "Saturday, 15th September 2026 at 6:00 PM IST",
+  celebrantName: "Berglin",
+  turningAge: "28th",
+  tagline: "A Grand Celebration",
+  inviteLine: "Join us in celebrating Berglin's 28th birthday. An evening of unprecedented revelry, commemorating another illustrious year in the annals of history.",
+  weddingDate: "2026-11-24T09:30:00.000Z",
+  weddingTime: "Tuesday, 24th November 2026 at 9:30 AM",
   heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbj6E_qQBW8N2ekBWlNRTe3cHrgYRMT4QzPd43bvCMBA7Bl6HjAkpuZqvTe__V8hRoA2cLJpxwnpp7wbvCQPktW5Wy49-XG1Y1u9QwL9qXNRTnR2KYvCPYcqgrqJtYSBcXixeYf200LnvQ_ZYdOBdVti2jGn10c4_li63voJM0kByRtKG13sLM-HyR-nWViDmm0QJUi8Ru7jubY98alvyIVdP_1eTY2sw1jz2hGG_7Mv4UyREs4tw8",
   coupleImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuArG5YFkRTyG0NbTRVMqnmH7qfHqXAFAyK9JzYzo8qCgb5rl-LsBpf_yfiu6j1B5B-pS3COjC9Zvf5xCmQWnOci5lJyAwvFF6deG8F2jdka4FfDAsO2XcwegK14vWOKrCgrOjviqY8ei882FdnnfnL0fcl7-gbrMahUOousxE2MhxV44VfugAIk0O2C2UoLNZQprgDmCkbJfVVcUt5ZQ1I4lAaOlbjmPoRR5NTrOeTVk0aIg86H_iIy",
   venuePlace: "The Secret Level, 123 Coastal Breeze Way, Mediterranean Coast",
@@ -69,7 +71,8 @@ export const sampleBirthdayData: TemplateClassicFloralProps = {
   ],
   loveStoryText:
     "Embracing the slow living and organic textures of the Mediterranean mixed with a touch of island spirit. This celebration is designed to be a sensory experience, focusing on culinary arts, natural pigments, and intimate connections.",
-  loveStoryVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  loveStoryVideoUrl: "",
+  showVideoSection: false,
   locations: [
     {
       name: "The Setting",

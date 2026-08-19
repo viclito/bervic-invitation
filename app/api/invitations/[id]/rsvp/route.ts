@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { generateGuestCode } from "@/lib/guestCode";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -10,7 +11,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { id: identifier } = await params;
     const body = await req.json();
 
-    const { name, phone, email, status, plusOnes = 0, dietaryNotes = "" } = body;
+    const { name, phone, email, status, plusOnes = 0, dietaryNotes = "", code, guestCode } = body;
 
     if (!name || !status) {
       return NextResponse.json(
@@ -30,10 +31,21 @@ export async function POST(req: Request, { params }: RouteParams) {
     }
 
     const cleanedPhone = phone ? phone.trim().replace(/[^\d+]/g, "") : "";
+    const uniqueKey = code || guestCode;
 
-    // Check if guest exists by phone or name in this invitation
+    // Check if guest exists by uniqueCode, phone, or name in this invitation
     let existingGuest = null;
-    if (cleanedPhone) {
+
+    if (uniqueKey) {
+      existingGuest = await prisma.guest.findFirst({
+        where: {
+          invitationId: invitation.id,
+          uniqueCode: uniqueKey,
+        },
+      });
+    }
+
+    if (!existingGuest && cleanedPhone) {
       existingGuest = await prisma.guest.findFirst({
         where: {
           invitationId: invitation.id,
@@ -69,6 +81,7 @@ export async function POST(req: Request, { params }: RouteParams) {
       guest = await prisma.guest.create({
         data: {
           invitationId: invitation.id,
+          uniqueCode: generateGuestCode(),
           name: name.trim(),
           phone: cleanedPhone || "N/A",
           email: email ? email.trim() : null,

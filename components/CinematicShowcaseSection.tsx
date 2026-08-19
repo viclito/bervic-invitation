@@ -17,22 +17,18 @@ export default function CinematicShowcaseSection() {
     {
       icon: Film,
       title: "480-Frame Apple Scroll",
-      desc: "Ultra-smooth WebP frame scrubbing locked to touch scroll or mouse wheel.",
     },
     {
       icon: Sparkles,
       title: "Royal Guest Preloader",
-      desc: "Formal glassmorphic invitation unveil displaying guest names & progress bar.",
     },
     {
       icon: MapPin,
       title: "Interactive Venues & Map",
-      desc: "Seamless bento cards with 1-click Google Maps directions for your guests.",
     },
     {
       icon: Clock,
       title: "Order of Events Timeline",
-      desc: "Vertical fade & rise event timeline built specifically for mobile screens.",
     },
   ];
 
@@ -47,22 +43,12 @@ export default function CinematicShowcaseSection() {
         
         {/* ── Section Header ── */}
         <div className="text-center space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#D9A441]/20 via-[#F7E7C4]/15 to-[#D9A441]/20 border border-[#D9A441]/50 text-[#D9A441] text-xs font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(217,164,65,0.25)]">
-            <Sparkles className="w-3.5 h-3.5 text-[#D9A441] animate-pulse" />
-            <span>EXCLUSIVITY AT ITS FINEST • ₹2000 PASS</span>
-            <Sparkles className="w-3.5 h-3.5 text-[#D9A441] animate-pulse" />
-          </div>
-
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#FDF6F3] leading-tight">
             The 480-Frame Apple-Style <br />
             <span className="font-accent italic text-transparent bg-clip-text bg-gradient-to-r from-[#F7E7C4] via-[#D9A441] to-[#F7E7C4] drop-shadow-[0_4px_20px_rgba(217,164,65,0.4)]">
               Cinematic Scroll Masterpiece
             </span>
           </h2>
-
-          <p className="text-xs sm:text-sm md:text-base text-[#F8F3EA]/80 max-w-2xl mx-auto font-light leading-relaxed">
-            Experience the pinnacle of digital wedding invitations. Scroll through 480 high-definition WebP video sequence frames with royal gold storytelling, glassmorphic guest cards, and interactive venue navigation.
-          </p>
         </div>
 
         {/* ── Main Showcase Unit: Mockup & Interactive Feature Switcher ── */}
@@ -121,28 +107,21 @@ export default function CinematicShowcaseSection() {
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-bold text-[#D9A441] uppercase tracking-widest mb-2">
                 <ShieldCheck className="w-4 h-4 text-[#D9A441]" />
-                <span>CINEMATIC MASTERPIECE TIER</span>
+                <span>CINEMATIC MASTERPIECE</span>
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#FDF6F3] mb-3">
+              <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#FDF6F3] mb-6">
                 Unrivaled Elegance for Your Special Day
               </h3>
 
-              <p className="text-xs sm:text-sm text-[#F8F3EA]/80 leading-relaxed font-light mb-6">
-                Created with 480 continuous 4K WebP sequence frames. As your guests scroll, the background seamlessly responds frame-by-frame, unveiling your story, gallery, locations, and RSVP.
-              </p>
-
               {/* Feature Checklist */}
-              <div className="space-y-3 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">
                 {highlights.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 text-xs text-[#FDF6F3]/90">
-                    <div className="w-6 h-6 rounded-full bg-[#D9A441]/15 border border-[#D9A441]/40 flex items-center justify-center shrink-0 mt-0.5">
+                  <div key={idx} className="flex items-center gap-3 text-xs sm:text-sm text-[#FDF6F3]/90 bg-white/5 border border-[#D9A441]/20 rounded-2xl p-3">
+                    <div className="w-7 h-7 rounded-full bg-[#D9A441]/15 border border-[#D9A441]/40 flex items-center justify-center shrink-0">
                       <item.icon className="w-3.5 h-3.5 text-[#D9A441]" />
                     </div>
-                    <div>
-                      <strong className="font-semibold text-[#F7E7C4] block">{item.title}</strong>
-                      <span className="text-[#F8F3EA]/70">{item.desc}</span>
-                    </div>
+                    <strong className="font-semibold text-[#F7E7C4]">{item.title}</strong>
                   </div>
                 ))}
               </div>
@@ -163,7 +142,7 @@ export default function CinematicShowcaseSection() {
                 className="flex-1 py-3.5 px-5 rounded-2xl bg-[#070707] border border-[#D9A441]/60 text-[#F7E7C4] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#D9A441]/20 hover:text-white transition-all shadow-md"
               >
                 <Edit3 className="w-4 h-4 text-[#D9A441]" />
-                <span>Customize (₹2000)</span>
+                <span>Customize Now</span>
               </Link>
             </div>
           </div>

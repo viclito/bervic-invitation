@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -442,7 +442,7 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
           </section>
 
           {/* Video Section */}
-          {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+          {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
             <section className="relative">
               <div className="text-center mb-14">
                 <h2 className="font-serif text-3xl md:text-4xl text-[#f2ca50] uppercase tracking-[0.2em]">

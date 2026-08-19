@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { generateGuestCode } from "@/lib/guestCode";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,6 +42,7 @@ export async function POST(req: Request, { params }: RouteParams) {
 
     const preparedGuests = guests.map((g: any) => ({
       invitationId,
+      uniqueCode: generateGuestCode(),
       name: String(g.name || "Guest").trim(),
       phone: String(g.phone || "").trim().replace(/[^\d+]/g, ""),
       email: g.email ? String(g.email).trim() : null,

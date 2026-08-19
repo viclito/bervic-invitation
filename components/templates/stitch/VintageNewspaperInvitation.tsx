@@ -1,24 +1,59 @@
 "use client";
 
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, PlayCircle, Newspaper, Clock, Calendar, MapPin } from "lucide-react";
+import { Menu, X, PlayCircle, Newspaper, Clock, Calendar, MapPin, ExternalLink } from "lucide-react";
 
 export default function VintageNewspaperInvitation(
   props: TemplateClassicFloralProps
 ) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Celebrant Name
+  // Celebrant Name & Age
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
       : "Evelyn";
 
   const brandName = "THE DAILY CHRONICLE";
+
+  // Venue location fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "The Grand Plaza Ballroom, Metropolis"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Grand Ballroom",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Heritage Way, Historic District",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Grand Ballroom",
+          address: props.contactAddress || props.venuePlace || "123 Heritage Way, Historic District",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
+
+  // Celebrant portrait priority: user's celebrant portrait or cover photo
+  const celebrantPhoto =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCj3CvobW7gsQYwkfoAOootCuUgtdPvoOrhAs_N_lgeq9Arj1ulHZKjnXc7O9rJIJoLSp0ZlHmOaA6btrEP8CeFLaF_Pjw49qQi5JL_75EQioNX2QVVhtDjH1sr7zPKY6eDlXWb5SiSduZr-al3XItn_AmkNHx5KxdMnb9CqaumzJ3AUQY6kSgIdyvw8S2X4jnmpe7IDa24Se5LU5-aoqc8lOP9gRtbWoARW-iOEVAkgsFYyBpKoDJo";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -29,9 +64,7 @@ export default function VintageNewspaperInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T18:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -50,11 +83,11 @@ export default function VintageNewspaperInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   // Gallery items matching exact Stitch screen 98fdaad794ba457faaa59779a6de3586
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 4
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -188,6 +221,18 @@ export default function VintageNewspaperInvitation(
             </a>
             <a
               className="text-[#5e5e5e] hover:bg-[#1c1c18] hover:text-[#fcf9f2] transition-colors px-2 py-1 uppercase"
+              href="#venue"
+            >
+              Venue
+            </a>
+            <a
+              className="text-[#5e5e5e] hover:bg-[#1c1c18] hover:text-[#fcf9f2] transition-colors px-2 py-1 uppercase"
+              href="#gallery"
+            >
+              Archive
+            </a>
+            <a
+              className="text-[#5e5e5e] hover:bg-[#1c1c18] hover:text-[#fcf9f2] transition-colors px-2 py-1 uppercase"
               href="#rsvp"
             >
               RSVP
@@ -216,6 +261,22 @@ export default function VintageNewspaperInvitation(
           <p className="font-mono text-base md:text-lg max-w-2xl text-[#444748] leading-relaxed">
             Citizens are hereby summoned to partake in an evening of unprecedented revelry, commemorating another illustrious year in the annals of history.
           </p>
+
+          {/* Newspaper Masthead Meta */}
+          <div className="w-full flex flex-wrap justify-between items-center border-y-2 border-[#1c1c18] py-2 px-4 font-mono text-xs text-[#1c1c18] uppercase tracking-wider font-bold gap-2">
+            <div>VOL. {ageMilestone || "XXXIV"} // SPECIAL COMMEMORATIVE EDITION</div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{props.weddingTime || "Saturday, 15th October 2026 at 6:00 PM"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5" />
+              <a href="#venue" className="underline hover:text-[#5e5e5e]">
+                {mainVenue.name || "Grand Ballroom"}
+              </a>
+            </div>
+            <div>PRICE: TWO PENCE</div>
+          </div>
         </section>
 
         {/* Countdown Widget */}
@@ -262,31 +323,31 @@ export default function VintageNewspaperInvitation(
           </div>
 
           <div className="col-span-1 md:col-span-7 flex flex-col gap-4">
-            <div className="aspect-video bg-[#dcdad3] border border-[#1c1c18] flex items-center justify-center relative overflow-hidden group">
-              <PlayCircle className="w-16 h-16 text-[#1c1c18] opacity-50 group-hover:opacity-100 transition-opacity z-10 absolute" />
-              <div className="absolute inset-0 flex items-center justify-center font-serif text-xl text-[#747878] uppercase opacity-30 font-bold">
-                Latest Newsreel
-              </div>
+            <div className="aspect-[4/3] bg-[#dcdad3] border-2 border-[#1c1c18] flex items-center justify-center relative overflow-hidden group shadow-[4px_4px_0_#000]">
               <img
-                alt="Vintage newsreel placeholder"
-                className="w-full h-full object-cover mix-blend-luminosity opacity-80"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj3CvobW7gsQYwkfoAOootCuUgtdPvoOrhAs_N_lgeq9Arj1ulHZKjnXc7O9rJIJoLSp0ZlHmOaA6btrEP8CeFLaF_Pjw49qQi5JL_75EQioNX2QVVhtDjH1sr7zPKY6eDlXWb5SiSduZr-al3XItn_AmkNHx5KxdMnb9CqaumzJ3AUQY6kSgIdyvw8S2X4jnmpe7IDa24Se5LU5-aoqc8lOP9gRtbWoARW-iOEVAkgsFYyBpKoDJo"
+                alt={`${celebrantName} Special Dispatch Portrait`}
+                className="w-full h-full object-cover grayscale contrast-125 sepia-[.25] group-hover:scale-105 transition-transform duration-700"
+                src={celebrantPhoto}
               />
+              <div className="absolute top-2 left-2 bg-[#1c1c18] text-[#fcf9f2] font-mono text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
+                PRESS BUREAU EXCLUSIVE // ARCHIVE
+              </div>
             </div>
             <p className="font-sans text-center text-[#5e5e5e] italic text-xs font-semibold">
-              Fig. 1 - Archival footage of the early years.
+              FIG. 1 — Official dispatch photograph of {celebrantName} on the eve of the grand gala.
             </p>
           </div>
 
           <div className="col-span-1 md:col-span-5 border-t md:border-t-0 md:border-l border-[#1c1c18] pt-6 md:pt-0 md:pl-8 text-justify font-mono text-sm leading-relaxed">
             <p className="drop-cap mb-4">
-              From the very beginning, it was clear that {celebrantName} was destined for greatness. Born under an auspicious star, her early days were marked by a curiosity that confounded scholars and delighted observers alike. The local gazettes frequently featured her nascent exploits, from the great tricycle expedition to the profound philosophical inquiries posited during afternoon tea.
+              From the very beginning, it was clear that {celebrantName} was destined for greatness. Born under an auspicious star, her journey has been marked by a charm and spirit that delights observers across every walk of life. The local gazettes frequently feature her nascent exploits and triumphs.
             </p>
             <p className="mb-4">
-              As the years progressed, so too did her influence. A beacon of modern thought and uncompromising style, she has traversed the globe, leaving an indelible mark upon the cultural zeitgeist. Friends and confidants note her unparalleled ability to turn a mundane gathering into an affair of historic proportions.
+              {props.loveStoryText ||
+                "As the years progressed, so too did her influence. A beacon of wit and uncompromising style, she has gathered cherished friends from near and far, turning every gathering into an affair of historic proportions."}
             </p>
             <p>
-              Now, as we stand on the precipice of another momentous anniversary, the city holds its breath in anticipation of what promises to be the most spectacular gala of the decade. The archives have been dusted off, the champagne secured, and the press alerted.
+              Now, as we stand on the precipice of another momentous milestone, the city holds its breath in anticipation of what promises to be the most spectacular gala of the decade. The archives have been dusted off, the champagne secured, and the press alerted.
             </p>
           </div>
         </section>
@@ -347,6 +408,64 @@ export default function VintageNewspaperInvitation(
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Official Venue & Logistical Dispatch */}
+        <section className="border-b-2 border-[#1c1c18] pb-16" id="venue">
+          <div className="text-center mb-10">
+            <h3 className="font-serif text-2xl uppercase border-y-2 border-[#1c1c18] py-2 inline-block px-8 font-bold">
+              Official Venue &amp; Logistical Dispatch
+            </h3>
+            <p className="font-sans text-xs text-[#5e5e5e] mt-2 font-bold tracking-wider uppercase">
+              Assembly Point &amp; Directions for Attending Dignitaries
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center max-w-4xl mx-auto">
+            <div className="md:col-span-6 border-2 border-[#1c1c18] p-6 bg-[#fcf9f2] shadow-[4px_4px_0_#000] space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#1c1c18] pb-2">
+                <MapPin className="w-5 h-5 text-[#1c1c18]" />
+                <span className="font-sans text-xs font-bold uppercase tracking-widest text-[#1c1c18]">
+                  Assembly Pavilion
+                </span>
+              </div>
+              <h4 className="font-serif text-xl font-bold uppercase text-[#1c1c18]">
+                {mainVenue.name || "The Grand Ballroom"}
+              </h4>
+              <p className="font-mono text-sm text-[#444748] leading-relaxed">
+                {mainVenue.address}
+              </p>
+              <div className="pt-2">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#1c1c18] text-[#fcf9f2] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#444748] transition-colors shadow-[2px_2px_0_#000]"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Get Directions on Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+              </div>
+            </div>
+
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="md:col-span-6 border-2 border-[#1c1c18] p-6 bg-[#fcf9f2] shadow-[4px_4px_0_#000] flex flex-col items-center justify-center text-center group hover:bg-[#f5f0e1] transition-colors min-h-[200px]"
+            >
+              <div className="w-14 h-14 rounded-full border-2 border-[#1c1c18] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <MapPin className="w-7 h-7 text-[#1c1c18]" />
+              </div>
+              <span className="font-serif text-base font-bold uppercase text-[#1c1c18]">
+                Open Gazette Map Telegraph
+              </span>
+              <span className="font-mono text-xs text-[#5e5e5e] mt-1">
+                Click to launch satellite coordinates
+              </span>
+            </a>
           </div>
         </section>
 

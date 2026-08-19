@@ -143,7 +143,8 @@ export async function GET(req: Request) {
     let computedExpiresAt: Date | null = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
     let computedTemplatesCount = user.allowedTemplatesCount || 0;
     let computedCinematicCount = (user as any).allowedCinematicCount || 0;
-    let computedCardsCount = user.allowedCardsCount || 0;
+    // Base 2 Free Cards for every logged-in user
+    let computedCardsCount = Math.max(2, user.allowedCardsCount || 2);
 
     if (validPayments.length > 0 || validSubscriptions.length > 0) {
       let totalTemplatesFromHistory = 0;
@@ -153,9 +154,9 @@ export async function GET(req: Request) {
       let maxExpiryFromHistory: Date | null = null;
 
       validPayments.forEach((p: any) => {
-        const pPlan = p.plan || (p.amount >= 2000 ? "CINEMATIC_2000" : p.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+        const pPlan = p.plan || (p.amount === 99 ? "CARDS_99" : p.amount >= 2000 ? "CINEMATIC_2000" : p.amount >= 1799 ? "PRO_1799" : "BASIC_599");
         const created = p.createdAt ? new Date(p.createdAt) : new Date();
-        const months = pPlan === "BASIC_599" ? 6 : 12;
+        const months = pPlan === "BASIC_599" || pPlan === "CARDS_99" ? 6 : 12;
         const exp = new Date(created);
         exp.setMonth(exp.getMonth() + months);
 
@@ -175,6 +176,8 @@ export async function GET(req: Request) {
           totalCinematicFromHistory += 1;
           totalCardsFromHistory += 10;
           if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "CINEMATIC_2000";
+        } else if (pPlan === "CARDS_99") {
+          totalCardsFromHistory += 5;
         }
       });
 
@@ -182,7 +185,7 @@ export async function GET(req: Request) {
       validSubscriptions.forEach((s: any) => {
         if (s.razorpayOrderId && paymentOrderIds.has(s.razorpayOrderId)) return;
 
-        const sPlan = s.plan || (s.amount >= 2000 ? "CINEMATIC_2000" : s.amount >= 1799 ? "PRO_1799" : "BASIC_599");
+        const sPlan = s.plan || (s.amount === 99 ? "CARDS_99" : s.amount >= 2000 ? "CINEMATIC_2000" : s.amount >= 1799 ? "PRO_1799" : "BASIC_599");
         const exp = s.expiresAt ? new Date(s.expiresAt) : new Date(Date.now() + 180 * 86400000);
 
         if (!maxExpiryFromHistory || exp > maxExpiryFromHistory) {
@@ -201,6 +204,8 @@ export async function GET(req: Request) {
           totalCinematicFromHistory += 1;
           totalCardsFromHistory += 10;
           if (highestPlanFromHistory === "NONE") highestPlanFromHistory = "CINEMATIC_2000";
+        } else if (sPlan === "CARDS_99") {
+          totalCardsFromHistory += 5;
         }
       });
 
@@ -219,7 +224,7 @@ export async function GET(req: Request) {
 
       computedTemplatesCount = Math.max(computedTemplatesCount, totalTemplatesFromHistory);
       computedCinematicCount = Math.max(computedCinematicCount, totalCinematicFromHistory);
-      computedCardsCount = Math.max(computedCardsCount, totalCardsFromHistory);
+      computedCardsCount = Math.max(computedCardsCount, 2 + totalCardsFromHistory);
 
       // Auto-heal the User DB record if stale or unassigned
       if (
@@ -271,6 +276,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
+      isLoggedIn: true,
       plan: isSubscribed ? computedPlan : "NONE",
       hasCinematicPass: computedCinematicCount > 0,
       planExpiresAt: isSubscribed ? computedExpiresAt : null,

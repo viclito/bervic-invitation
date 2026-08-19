@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, ArrowRight, Edit3, Sparkles, LayoutGrid } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit3, Sparkles, LayoutGrid, Globe, Crown, Check } from "lucide-react";
 import MakeItYoursModal from "./MakeItYoursModal";
 import { templatesRegistry } from "@/data/templatesRegistry";
 
@@ -31,34 +31,66 @@ export default function TemplatePreviewBottomBar({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [userSubscription, setUserSubscription] = useState<any>(null);
+  const [myInvitations, setMyInvitations] = useState<any[]>([]);
 
-  // Filter templates list to wedding category ONLY (excluding birthday, religious, anniversary)
-  const activeWeddingTemplates = templatesRegistry.filter(
-    (t) => t.category === "wedding" || !["birthday", "religious", "anniversary"].includes(t.category)
-  );
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/invitations/my-invitations")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.invitations)) {
+            setMyInvitations(data.invitations);
+          }
+        })
+        .catch(() => setMyInvitations([]));
+    }
+  }, [status]);
 
+  // Determine current template and its exact category
   const targetTemplate =
-    activeWeddingTemplates.find((t) => t.slug === slug) ||
     templatesRegistry.find((t) => t.slug === slug) ||
-    activeWeddingTemplates[0];
+    templatesRegistry.find((t) => t.category === categoryParam) ||
+    templatesRegistry[0];
 
-  const currentIndex = activeWeddingTemplates.findIndex((t) => t.slug === slug);
+  const currentCategory = targetTemplate?.category || categoryParam || "wedding";
+
+  // Filter templates list by current category (e.g. birthday templates cycle circularly within birthday templates, wedding within wedding)
+  const categoryTemplates = templatesRegistry.filter((t) => {
+    if (currentCategory === "birthday") return t.category === "birthday";
+    if (currentCategory === "religious") return t.category === "religious";
+    if (currentCategory === "anniversary") return t.category === "anniversary";
+    return t.category === "wedding" || !["birthday", "religious", "anniversary"].includes(t.category);
+  });
+
+  const activeTemplates = categoryTemplates.length > 0
+    ? categoryTemplates
+    : templatesRegistry.filter((t) => t.category === "wedding");
+
+  const currentIndex = activeTemplates.findIndex((t) => t.slug === slug);
   const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
 
-  const prevIndex = (safeCurrentIndex - 1 + activeWeddingTemplates.length) % activeWeddingTemplates.length;
-  const nextIndex = (safeCurrentIndex + 1) % activeWeddingTemplates.length;
+  const prevIndex = (safeCurrentIndex - 1 + activeTemplates.length) % activeTemplates.length;
+  const nextIndex = (safeCurrentIndex + 1) % activeTemplates.length;
 
-  const prevTemplate = activeWeddingTemplates[prevIndex];
-  const nextTemplate = activeWeddingTemplates[nextIndex];
+  const prevTemplate = activeTemplates[prevIndex];
+  const nextTemplate = activeTemplates[nextIndex];
 
-  const prevSlug = prevTemplate ? prevTemplate.slug : activeWeddingTemplates[0].slug;
-  const nextSlug = nextTemplate ? nextTemplate.slug : activeWeddingTemplates[0].slug;
+  const prevSlug = prevTemplate ? prevTemplate.slug : activeTemplates[0].slug;
+  const nextSlug = nextTemplate ? nextTemplate.slug : activeTemplates[0].slug;
 
-  const resolvedTitle = templateTitle || targetTemplate?.title || "Wedding Invitation";
+  const resolvedTitle = templateTitle || targetTemplate?.title || "Invitation Template";
   const resolvedIsPremium = Boolean(
     targetTemplate?.isCinematicExclusive || slug === "scroll-scrubber"
   );
   const resolvedPrice = price || targetTemplate?.price || (resolvedIsPremium ? 2000 : 599);
+
+  const matchingOwnedInv = myInvitations.find(
+    (inv) =>
+      inv.templateSlug === slug ||
+      (slug === "scroll-scrubber" && inv.templateSlug === "scroll-scrubber") ||
+      (slug === "premium-scroll" && inv.templateSlug === "premium-scroll")
+  );
+  const isTemplateOwned = Boolean(matchingOwnedInv);
 
   const handleMakeItYoursClick = async () => {
     if (status === "unauthenticated") {
@@ -107,13 +139,33 @@ export default function TemplatePreviewBottomBar({
     }
 
     try {
+      // 1. First claim / activate template using event draft activate endpoint
+      const activateRes = await fetch("/api/user/event-draft/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateSlug: slug }),
+      });
+      const activateData = await activateRes.json();
+
+      if (activateData.success) {
+        setIsModalOpen(false);
+        const targetSlug = activateData.slug || activateData.invitation?.slug;
+        if (targetSlug) {
+          router.push(`/invitations/${targetSlug}`);
+        } else {
+          router.push("/dashboard?tab=invitations");
+        }
+        return;
+      }
+
+      // 2. Fallback to /api/invitations/save if activate returns error or requires custom creation
       const res = await fetch("/api/invitations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           templateSlug: slug,
-          partnerOne: displayData?.partnerOne || "Sasa Adi Tinah",
-          partnerTwo: displayData?.partnerTwo || "Allan Susilo",
+          partnerOne: displayData?.partnerOne || "Your Name",
+          partnerTwo: displayData?.partnerTwo || "Partner Name",
           weddingTime: displayData?.weddingTime || "May 13, 2026",
           heroImage: displayData?.coverImage || displayData?.heroImage,
           coupleImage: displayData?.coupleImage || displayData?.coverImage,
@@ -121,17 +173,26 @@ export default function TemplatePreviewBottomBar({
       });
 
       const data = await res.json();
-      if (!res.ok && data.error === "PAYMENT_REQUIRED") {
-        const targetPlan = resolvedIsPremium ? "CINEMATIC_2000" : "BASIC_599";
-        router.push(`/checkout?plan=${targetPlan}&template=${slug}`);
-        return;
+      if (!res.ok) {
+        if (data.error === "PAYMENT_REQUIRED" || data.error === "CINEMATIC_PLAN_REQUIRED" || data.error === "QUOTA_EXCEEDED") {
+          const targetPlan = resolvedIsPremium ? "CINEMATIC_2000" : "BASIC_599";
+          router.push(`/checkout?plan=${targetPlan}&template=${slug}`);
+          return;
+        }
+        throw new Error(data.message || data.error || "Failed to activate template.");
       }
-    } catch (e) {
-      console.warn("Save invitation notice:", e);
-    }
 
-    setIsModalOpen(false);
-    router.push(`/templates/${slug}?activated=true`);
+      setIsModalOpen(false);
+      const targetSlug = data.invitation?.slug;
+      if (targetSlug) {
+        router.push(`/invitations/${targetSlug}`);
+      } else {
+        router.push("/dashboard?tab=invitations");
+      }
+    } catch (e: any) {
+      console.error("Save invitation error:", e);
+      throw new Error(e?.message || "Failed to activate template.");
+    }
   };
 
   return (
@@ -147,7 +208,7 @@ export default function TemplatePreviewBottomBar({
         </Link>
 
         <Link
-          href="/dashboard/event-profile"
+          href={categoryParam === "birthday" ? "/dashboard/event-profile?eventType=BIRTHDAY" : "/dashboard/event-profile?eventType=WEDDING"}
           className="pointer-events-auto px-4 py-2 rounded-full bg-[#7A1F2B] text-[#F8F3EA] border-2 border-[#D9A441] text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-xl hover:bg-[#9B2C3B] hover:scale-105 transition-all cursor-pointer"
         >
           <Edit3 className="w-4 h-4 text-[#D9A441]" />
@@ -184,30 +245,54 @@ export default function TemplatePreviewBottomBar({
             <LayoutGrid className="w-3.5 h-3.5" />
             <span className="hidden md:inline text-[11px] font-bold">Gallery</span>
           </Link>
+
+          {myInvitations.length > 0 && (
+            <Link
+              href={myInvitations.length === 1 ? `/invitations/${myInvitations[0].slug}` : "/dashboard?tab=invitations"}
+              className="px-2.5 py-1.5 rounded-full bg-emerald-900/60 text-emerald-300 hover:bg-emerald-800/80 border border-emerald-500/40 transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
+              title="Navigate to your owned product"
+            >
+              <Crown className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="hidden md:inline text-[11px] font-bold">
+                {myInvitations.length === 1 ? "My Product" : `My Products (${myInvitations.length})`}
+              </span>
+            </Link>
+          )}
         </div>
 
         <div className="hidden sm:flex flex-col text-left leading-tight truncate">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D9A441] flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
-            <span>Love this design?</span>
+            <span>{isTemplateOwned ? "Your Active Suite" : "Love this design?"}</span>
           </span>
           <span className="text-xs font-bold text-[#F8F3EA] truncate">
             {resolvedTitle}
           </span>
         </div>
 
-        <button
-          onClick={handleMakeItYoursClick}
-          disabled={checkingSubscription}
-          className="btn-maroon px-4 sm:px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all text-[#F8F3EA] cursor-pointer disabled:opacity-50"
-        >
-          {checkingSubscription ? (
-            <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-          ) : (
-            <Edit3 className="w-4 h-4 text-[#D9A441]" />
-          )}
-          <span>Make It Yours ✨</span>
-        </button>
+        {isTemplateOwned && matchingOwnedInv ? (
+          <Link
+            href={`/invitations/${matchingOwnedInv.slug}`}
+            className="px-4 sm:px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer"
+            title="Open your owned active invitation"
+          >
+            <Globe className="w-4 h-4 text-white" />
+            <span>View My Owned Product ↗</span>
+          </Link>
+        ) : (
+          <button
+            onClick={handleMakeItYoursClick}
+            disabled={checkingSubscription}
+            className="btn-maroon px-4 sm:px-5 py-2.5 rounded-full text-xs font-extrabold tracking-wide flex items-center gap-1.5 shrink-0 shadow-lg hover:scale-105 transition-all text-[#F8F3EA] cursor-pointer disabled:opacity-50"
+          >
+            {checkingSubscription ? (
+              <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            ) : (
+              <Edit3 className="w-4 h-4 text-[#D9A441]" />
+            )}
+            <span>Make It Yours ✨</span>
+          </button>
+        )}
       </div>
 
       {/* Confirmation Modal to Own Template */}

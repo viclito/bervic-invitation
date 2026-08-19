@@ -50,18 +50,22 @@ export default function CardTemplate12({
       </div>
 
       {/* Main Content Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '700px', marginTop: '40px', zIndex: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '900px', marginTop: '40px', zIndex: 10 }}>
         {/* Names Heading Above Photo */}
         <h1 style={{ 
           fontFamily: "'Inter', sans-serif", 
-          fontSize: '52px', 
+          fontSize: '46px', 
           fontWeight: 900, 
           color: '#111111', 
           lineHeight: 1.1, 
           margin: '0 0 24px 0',
           textAlign: 'center',
           textTransform: 'uppercase',
-          letterSpacing: '-1px'
+          letterSpacing: '0px',
+          maxWidth: '880px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
         }}>
           {partnerOne} <span style={{ color: '#888888', fontWeight: 400 }}>&amp;</span> {partnerTwo}
         </h1>

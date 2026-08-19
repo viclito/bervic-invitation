@@ -311,11 +311,12 @@ export default function GuestRsvpModal({
     }
   };
 
-  const formatMessageForGuest = (guestName: string) => {
+  const formatMessageForGuest = (guest: Guest) => {
     const coupleNames = `${partnerOne} & ${partnerTwo}`;
-    const personalizedLink = `${publicLink}?to=${encodeURIComponent(guestName)}`;
+    const codeParam = guest.uniqueCode ? `?code=${guest.uniqueCode}` : `?to=${encodeURIComponent(guest.name)}`;
+    const personalizedLink = `${publicLink}${codeParam}`;
     return msgTemplate
-      .replace(/{guest_name}/g, guestName)
+      .replace(/{guest_name}/g, guest.name)
       .replace(/{couple_names}/g, coupleNames)
       .replace(/{wedding_date}/g, weddingDate)
       .replace(/{venue}/g, venuePlace)
@@ -331,7 +332,7 @@ export default function GuestRsvpModal({
       cleanDigits = "91" + cleanDigits;
     }
 
-    const formattedMsg = encodeURIComponent(formatMessageForGuest(guest.name));
+    const formattedMsg = encodeURIComponent(formatMessageForGuest(guest));
     const url = `https://wa.me/${cleanDigits}?text=${formattedMsg}`;
     window.open(url, "_blank");
   };

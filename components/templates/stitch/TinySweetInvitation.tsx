@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -15,6 +15,7 @@ export default function TinySweetInvitation(
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Celebrant Name
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
@@ -31,9 +32,7 @@ export default function TinySweetInvitation(
   });
 
   useEffect(() => {
-    const targetDate = new Date(
-      props.weddingDate || "2026-10-15T14:00:00"
-    ).getTime();
+    const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -52,7 +51,7 @@ export default function TinySweetInvitation(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [props.weddingDate]);
+  }, [props.weddingDate, props.weddingTime]);
 
   const defaultGalleryList = [
     {
@@ -400,29 +399,17 @@ export default function TinySweetInvitation(
           <div className="max-w-[1140px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
               <div className="order-2 md:order-1 relative">
-                <div className="aspect-[4/3] bg-black clip-cloud relative flex items-center justify-center soft-shadow border-4 border-white group overflow-hidden">
-                  {isPlayingVideo ? (
-                    <iframe
-                      title="First year video"
-                      src={getYouTubeEmbedUrl(props.loveStoryVideoUrl)}
-                      className="w-full h-full border-0"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className="relative w-full h-full flex items-center justify-center cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#a7d8de] to-[#ffd4e7] opacity-60" />
-                      <PlayCircle className="w-16 h-16 text-white z-10 group-hover:scale-110 transition-transform cursor-pointer drop-shadow-md" />
-                      <span className="absolute bottom-6 font-serif text-white z-10 drop-shadow-md text-lg font-bold">
-                        Our First Year Video
-                      </span>
-                    </div>
-                  )}
+                <div className="aspect-[4/3] bg-[#f8f9ff] clip-cloud relative flex items-center justify-center soft-shadow border-4 border-white group overflow-hidden">
+                  <img
+                    alt="Celebrant photo"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    src={props.coverImage || props.heroImage || props.coupleImage || "/images/templates/birthday-celebrant.jpg"}
+                  />
                 </div>
               </div>
               <div className="order-1 md:order-2 space-y-6">
                 <h2 className="text-3xl md:text-5xl text-[#36666b] font-bold font-serif">
-                  {celebrantName}'s First Year
+                  {celebrantName}'s {ageMilestone ? `${ageMilestone} Year` : "Birthday"}
                 </h2>
                 <p className="text-base md:text-lg text-[#404849] leading-relaxed">
                   From her first tiny smile to her wobbly first steps, this past year has been a beautiful whirlwind. We've loved watching her personality blossom.

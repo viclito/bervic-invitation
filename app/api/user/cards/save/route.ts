@@ -27,21 +27,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const now = new Date();
-    const isSubscribed = !!(user.planExpiresAt && new Date(user.planExpiresAt) > now);
-
-    if (!isSubscribed) {
-      return NextResponse.json(
-        { error: "An active subscription plan is required to download Instagram Announcement Cards." },
-        { status: 403 }
-      );
-    }
-
+    const effectiveAllowedCards = Math.max(2, user.allowedCardsCount || 2);
     const usedCardsCount = user.cards.length;
-    if (usedCardsCount >= user.allowedCardsCount) {
+
+    if (usedCardsCount >= effectiveAllowedCards) {
       return NextResponse.json(
         {
-          error: `Card download quota reached (${usedCardsCount} of ${user.allowedCardsCount} cards used). Please upgrade your subscription to download additional cards.`,
+          error: `You have used all your card download credits (${usedCardsCount} of ${effectiveAllowedCards} cards used). Get 5 additional High-Res Card Credits for just ₹99!`,
         },
         { status: 403 }
       );
@@ -77,7 +69,7 @@ export async function POST(req: Request) {
         success: true,
         message: "Card already recorded in your subscription.",
         card: existingCard,
-        remainingCardSlots: Math.max(0, user.allowedCardsCount - usedCardsCount),
+        remainingCardSlots: Math.max(0, effectiveAllowedCards - usedCardsCount),
       });
     }
 
@@ -101,7 +93,7 @@ export async function POST(req: Request) {
     });
 
     const updatedUsedCount = usedCardsCount + 1;
-    const remainingCardSlots = Math.max(0, user.allowedCardsCount - updatedUsedCount);
+    const remainingCardSlots = Math.max(0, effectiveAllowedCards - updatedUsedCount);
 
     return NextResponse.json({
       success: true,

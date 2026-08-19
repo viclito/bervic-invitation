@@ -26,24 +26,45 @@ export default function PricingCheckoutModal({
 
   const isCinematicRequired = templateSlug === "scroll-scrubber" || preselectedPlan === "CINEMATIC_2000";
 
-  useEffect(() => {
-    // Dynamically load Razorpay Checkout SDK
-    if (!document.getElementById("razorpay-sdk")) {
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window !== "undefined" && (window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const existing = document.getElementById("razorpay-sdk");
+      if (existing) {
+        existing.addEventListener("load", () => resolve(true));
+        existing.addEventListener("error", () => resolve(false));
+        return;
+      }
       const script = document.createElement("script");
       script.id = "razorpay-sdk";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
       document.body.appendChild(script);
-    }
+    });
+  };
+
+  useEffect(() => {
+    loadRazorpayScript();
   }, []);
 
   if (!isOpen) return null;
 
-  const handleCheckout = async (plan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000") => {
+  const handleCheckout = async (plan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" | "CARDS_99") => {
     setLoadingPlan(plan);
     setErrorMsg(null);
 
     try {
+      // Ensure Razorpay SDK is ready
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !(window as any).Razorpay) {
+        throw new Error("Payment gateway could not load. Please check your internet connection and refresh.");
+      }
+
       // 1. Create order on server
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
@@ -57,19 +78,19 @@ export default function PricingCheckoutModal({
       }
 
       const planNames = {
+        CARDS_99: "Instagram Post Cards Pass (₹99 - 5 Credits)",
         BASIC_599: "Basic Plan (₹599 - 6 Months)",
         PRO_1799: "Pro Plan (₹1799 - 1 Year)",
         CINEMATIC_2000: "Cinematic Pass (₹2000 - 1 Year)",
       };
 
       // 2. Open Razorpay Checkout Widget
-      const options = {
-        key: data.keyId,
+      const options: any = {
+        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TJjdhQ40H2NION",
         amount: data.amount,
-        currency: data.currency,
+        currency: data.currency || "INR",
         name: "Bervic Invitations",
-        description: planNames[plan],
-        image: "https://bervic.app/images/category-wedding.jpg",
+        description: planNames[plan] || "Bervic Pass",
         order_id: data.orderId,
         prefill: {
           name: data.user?.name || "",
@@ -77,7 +98,7 @@ export default function PricingCheckoutModal({
           contact: data.user?.phone || "",
         },
         theme: {
-          color: "#7A1F2B",
+          color: "#991B1B",
         },
         handler: async function (response: any) {
           try {
@@ -114,8 +135,17 @@ export default function PricingCheckoutModal({
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+      const RazorpayConstructor = (window as any).Razorpay;
+      if (RazorpayConstructor) {
+        const rzp = new RazorpayConstructor(options);
+        rzp.on("payment.failed", function (failResponse: any) {
+          setErrorMsg(failResponse?.error?.description || "Payment was cancelled or failed.");
+          setLoadingPlan(null);
+        });
+        rzp.open();
+      } else {
+        throw new Error("Razorpay SDK is not available. Please refresh.");
+      }
     } catch (err: any) {
       console.error("Payment order error:", err);
       setErrorMsg(err.message || "Failed to initiate payment.");
@@ -125,12 +155,12 @@ export default function PricingCheckoutModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
-      <div className="bg-[#F8F3EA] border-2 border-[#D9A441] rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl relative my-8">
+      <div className="bg-[#F8F3EA] border-2 border-[#D9A441] rounded-3xl max-w-5xl w-full overflow-hidden shadow-2xl relative my-8">
         {/* Header */}
         <div className="p-6 sm:p-8 bg-[#FAF7F2] border-b border-[#D9A441]/20 relative">
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 rounded-full bg-[#EFE7D8] text-[#221C17] hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all"
+            className="absolute top-6 right-6 p-2 rounded-full bg-[#EFE7D8] text-[#221C17] hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -155,9 +185,63 @@ export default function PricingCheckoutModal({
           </div>
         )}
 
-        {/* Plan Cards Grid */}
-        <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
-          {/* Plan 1: BASIC ₹599 */}
+        {/* Plan Cards Grid: 4 Cards */}
+        <div className="p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+          
+          {/* Plan 1: INSTAGRAM CARDS PASS ₹99 */}
+          <div
+            className={`bg-[#FAF7F2] border-2 rounded-3xl p-5 flex flex-col justify-between relative ${
+              isCinematicRequired
+                ? "border-gray-300 opacity-40 grayscale select-none"
+                : "border-[#D9A441]/40 hover:border-[#991B1B] shadow-md"
+            }`}
+          >
+            <div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-3 bg-red-50 text-[#991B1B] border border-red-200">
+                Social Pass
+              </span>
+              <h3 className="text-lg font-serif font-bold text-[#221C17]">Instagram Cards</h3>
+              <div className="flex items-baseline gap-2 mt-1 mb-3">
+                <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹299</span>
+                <span className="text-2xl font-bold text-[#991B1B]">₹99</span>
+                <span className="text-[11px] text-[#221C17]/60 font-medium">/ 5 Cards</span>
+              </div>
+
+              <hr className="border-t border-[#D9A441]/20 mb-3" />
+
+              <ul className="space-y-2 text-[11px] text-[#221C17]/80">
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#991B1B] shrink-0 mt-0.5" />
+                  <span><strong>5 High-Res Downloads</strong></span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#991B1B] shrink-0 mt-0.5" />
+                  <span><strong>31+ Luxury Presets</strong></span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#991B1B] shrink-0 mt-0.5" />
+                  <span><strong>PNG &amp; PDF Downloads</strong></span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => handleCheckout("CARDS_99")}
+              disabled={loadingPlan !== null}
+              className="mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#991B1B] text-white hover:bg-[#7F1D1D] shadow-sm disabled:opacity-50 cursor-pointer"
+            >
+              {loadingPlan === "CARDS_99" ? (
+                <span>Processing...</span>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Choose ₹99 Pass</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Plan 2: BASIC ₹599 */}
           <div
             className={`bg-[#FAF7F2] border-2 rounded-3xl p-5 flex flex-col justify-between relative ${
               isCinematicRequired
@@ -175,7 +259,7 @@ export default function PricingCheckoutModal({
               >
                 {isCinematicRequired ? "🔒 Standard Only" : "6 Months Pass"}
               </span>
-              <h3 className="text-xl font-serif font-bold text-[#221C17]">Basic Pass</h3>
+              <h3 className="text-lg font-serif font-bold text-[#221C17]">Basic Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
                 <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹1,299</span>
                 <span className="text-2xl font-bold text-[#7A1F2B]">₹599</span>
@@ -197,17 +281,13 @@ export default function PricingCheckoutModal({
                   <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
                   <span><strong>2 Instagram Cards</strong></span>
                 </li>
-                <li className="flex items-start gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-[#7A1F2B] shrink-0 mt-0.5" />
-                  <span><strong>WhatsApp Invitations</strong></span>
-                </li>
               </ul>
             </div>
 
             <button
               onClick={() => handleCheckout("BASIC_599")}
               disabled={loadingPlan !== null || isCinematicRequired}
-              className={`mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`mt-6 w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 isCinematicRequired
                   ? "bg-gray-200 text-gray-600 border border-gray-300 cursor-not-allowed"
                   : "bg-[#EFE7D8] text-[#7A1F2B] border-2 border-[#7A1F2B]/40 hover:bg-[#7A1F2B] hover:text-[#F8F3EA] shadow-sm disabled:opacity-50"
@@ -220,7 +300,7 @@ export default function PricingCheckoutModal({
               ) : (
                 <>
                   <Zap className="w-3.5 h-3.5 text-[#D9A441]" />
-                  <span>Choose Basic (₹599)</span>
+                  <span>Choose ₹599</span>
                 </>
               )}
             </button>
@@ -250,7 +330,7 @@ export default function PricingCheckoutModal({
               >
                 {isCinematicRequired ? "🔒 Standard Only" : "1 Year Annual Pass"}
               </span>
-              <h3 className="text-xl font-serif font-bold text-[#221C17]">Pro Pass</h3>
+              <h3 className="text-lg font-serif font-bold text-[#221C17]">Pro Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
                 <span className="line-through text-xs text-[#221C17]/40 font-semibold">₹3,499</span>
                 <span className="text-2xl font-bold text-[#7A1F2B]">₹1799</span>
@@ -321,7 +401,7 @@ export default function PricingCheckoutModal({
               <span className="px-3 py-1 rounded-full bg-[#D9A441]/20 text-[#D9A441] text-[10px] font-extrabold uppercase tracking-widest border border-[#D9A441]/50 inline-block mb-3">
                 {isCinematicRequired ? "🎬 CINEMATIC REQUIRED" : "Exclusive Masterpiece"}
               </span>
-              <h3 className="text-xl font-serif font-bold text-[#F7E7C4]">Cinematic Pass</h3>
+              <h3 className="text-lg font-serif font-bold text-[#F7E7C4]">Cinematic Pass</h3>
               <div className="flex items-baseline gap-2 mt-1 mb-3">
                 <span className="line-through text-xs text-[#FDF6F3]/40 font-semibold">₹4,999</span>
                 <span className="text-2xl font-bold text-[#D9A441]">₹2000</span>
@@ -360,7 +440,7 @@ export default function PricingCheckoutModal({
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-[#070707]" />
-                  <span>Pay ₹2000 & Unlock Cinematic</span>
+                  <span>Pay ₹2000 &amp; Unlock</span>
                 </>
               )}
             </button>

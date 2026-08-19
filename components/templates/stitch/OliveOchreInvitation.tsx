@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate, getYouTubeEmbedUrl } from "@/lib/dateUtils";
+import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
@@ -341,7 +341,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
         </section>
 
         {/* Love Story Section */}
-        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl) && (
+        {props.showVideoSection !== false && Boolean(props.loveStoryVideoUrl && props.loveStoryVideoUrl.trim() !== "") && (
           <section className="py-24 max-w-[1280px] mx-auto px-6 md:px-16" id="story">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <motion.div

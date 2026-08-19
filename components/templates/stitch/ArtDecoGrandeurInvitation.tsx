@@ -1,25 +1,59 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, PlayCircle, MapPin } from "lucide-react";
+import { Menu, X, PlayCircle, MapPin, ExternalLink } from "lucide-react";
 
 export default function ArtDecoGrandeurInvitation(
   props: TemplateClassicFloralProps
 ) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Celebrant Name
+  // Celebrant Name & Age
+  const ageMilestone = formatAgeOrdinal(props.turningAge);
   const celebrantName =
     props.partnerOne && props.partnerOne !== "Your Name"
       ? props.partnerOne
       : "Evelyn";
 
   const brandName = "GRANDEUR";
+
+  // Venue location fallback
+  const mapQuery = encodeURIComponent(
+    props.contactAddress ||
+      props.venuePlace ||
+      (props.locations && props.locations[0] && props.locations[0].address) ||
+      "The Grand Gatsby Estate, Long Island"
+  );
+  const mainVenue =
+    props.locations && props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Grand Gatsby Estate",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "1924 West Egg Boulevard, Long Island, NY",
+          mapLink:
+            props.locations[0].mapLink &&
+            props.locations[0].mapLink !== "https://maps.google.com" &&
+            props.locations[0].mapLink !== "https://maps.google.com/"
+              ? props.locations[0].mapLink
+              : `https://maps.google.com/?q=${mapQuery}`,
+        }
+      : {
+          name: props.venuePlace || "The Grand Gatsby Estate",
+          address: props.contactAddress || props.venuePlace || "1924 West Egg Boulevard, Long Island, NY",
+          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+        };
+
+  // Celebrant portrait priority
+  const celebrantPhoto =
+    props.coupleImage ||
+    props.coverImage ||
+    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuB_JH44cFP46ThEWh6od0hSuOU9vdctmMvd58Y8c7Mvl-JL8gRP6m_BnaYteF6eHdYGMH1V-gf0VyuR33V-4oFOKrmYY2xK4Cr1qoes3zkq-vFTTX5e4SQDNyhAoDYpuwXDnuz8JmnlM6HTHqkGnq2IfjY0gOMMK6Fuc9a2zxzOaKGGaKzUL6J5hyNOjxx203TU50rf8fjXLtDg1snZ6XQNef1O1JS8wuuBQcjpO_iA-fd-eQ000rKA";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -56,7 +90,7 @@ export default function ArtDecoGrandeurInvitation(
 
   // Gallery items matching exact Stitch screen 70fda70b44084bce81ed9cc6adb4dec3
   const galleryList =
-    props.galleryImages && props.galleryImages.length >= 3
+    props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
@@ -331,16 +365,19 @@ export default function ArtDecoGrandeurInvitation(
                 The Golden Era
               </h2>
               <p className="font-sans text-sm md:text-base text-[#e4e4cc] leading-relaxed">
-                Join us in celebrating {celebrantName}'s grand milestone. Expect an evening steeped in the glamour of a bygone era, where every detail is meticulously curated to reflect her impeccable taste. Prepare for a night of jazz, champagne, and geometric perfection. Let the opulence of the roaring twenties wash over you in a symphony of gold and shadow.
+                {props.loveStoryText ||
+                  `Join us in celebrating ${celebrantName}'s grand milestone. Expect an evening steeped in the glamour of a golden era, where every detail is meticulously curated to reflect her impeccable taste. Prepare for a night of music, champagne, and timeless celebration among cherished friends.`}
               </p>
             </div>
-            <div className="col-span-1 md:col-span-6 min-h-[350px] deco-frame p-2 relative bg-[#0e0f03] flex items-center justify-center">
-              <div className="absolute inset-0 border border-[#f2ca50] m-4 opacity-30 pointer-events-none" />
-              <div className="flex flex-col items-center justify-center text-[#d0c5af] cursor-pointer hover:scale-105 transition-transform">
-                <PlayCircle className="w-16 h-16 text-[#f2ca50] mb-4 opacity-90" />
-                <span className="font-accent-deco text-xs md:text-sm uppercase tracking-[0.3em]">
-                  A Glimpse of Grandeur
-                </span>
+            <div className="col-span-1 md:col-span-6 min-h-[350px] deco-frame p-2 relative bg-[#0e0f03] flex items-center justify-center overflow-hidden group">
+              <div className="absolute inset-0 border border-[#f2ca50] m-4 opacity-50 pointer-events-none z-10" />
+              <img
+                alt={`${celebrantName} Art Deco Portrait`}
+                className="w-full h-full object-cover filter contrast-125 sepia-[.2] group-hover:scale-105 transition-transform duration-700"
+                src={celebrantPhoto}
+              />
+              <div className="absolute bottom-6 left-6 z-20 bg-[#131407]/90 px-4 py-1.5 border border-[#f2ca50] font-accent-deco text-xs text-[#f2ca50] uppercase tracking-[0.2em] font-bold">
+                PORTRAIT OF ELEGANCE
               </div>
             </div>
           </div>
@@ -424,32 +461,51 @@ export default function ArtDecoGrandeurInvitation(
         {/* The Estate Grounds */}
         <section className="mb-28" id="estate">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#1f2111] p-8 deco-frame">
-            <div className="order-2 md:order-1 h-[350px] border border-[#f2ca50] p-2 relative bg-[#0e0f03] flex items-center justify-center">
-              <MapPin className="w-16 h-16 text-[#f2ca50]/50 mb-2" />
-              <span className="font-accent-deco text-xs text-[#f2ca50]/50 uppercase absolute bottom-4 tracking-[0.2em]">
-                Map Integration
+            {/* Clickable Map Card */}
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="order-2 md:order-1 h-[350px] border border-[#f2ca50] p-6 relative bg-[#0e0f03] flex flex-col items-center justify-center text-center group hover:bg-[#131407] transition-colors"
+            >
+              <div className="absolute inset-0 border border-[#f2ca50]/30 m-3 pointer-events-none" />
+              <MapPin className="w-16 h-16 text-[#f2ca50] group-hover:scale-110 transition-transform mb-3 opacity-90" />
+              <span className="font-serif-deco text-xl text-[#f2ca50] font-bold block mb-1">
+                {mainVenue.name || "The Grand Gatsby Estate"}
               </span>
-            </div>
+              <span className="font-sans text-xs text-[#d0c5af] max-w-xs block mb-4">
+                {mainVenue.address}
+              </span>
+              <span className="inline-flex items-center gap-1.5 border border-[#f2ca50] text-[#f2ca50] font-accent-deco text-xs px-4 py-1.5 uppercase tracking-[0.2em] group-hover:bg-[#f2ca50] group-hover:text-[#3c2f00] transition-colors font-bold">
+                <span>View Google Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </span>
+            </a>
+
             <div className="order-1 md:order-2 flex flex-col justify-center text-center p-6">
               <h2 className="font-serif-deco text-3xl md:text-4xl text-[#f2ca50] mb-6 font-bold">
                 The Estate Grounds
               </h2>
               <div className="w-12 h-px bg-[#f2ca50] mx-auto mb-6" />
-              <p className="font-accent-deco text-xl text-white mb-2 tracking-[0.1em]">
-                The Gatsby Mansion
+              <p className="font-accent-deco text-2xl text-white mb-2 tracking-[0.1em] font-bold">
+                {mainVenue.name || "The Grand Gatsby Estate"}
               </p>
-              <p className="font-sans text-sm text-[#d0c5af] mb-1">
-                1924 West Egg Boulevard
+              <p className="font-sans text-base text-[#d0c5af] mb-1">
+                {mainVenue.address}
               </p>
-              <p className="font-sans text-sm text-[#d0c5af] mb-8">
-                Long Island, New York
-              </p>
-              <p className="font-sans text-xs text-[#d0c5af] italic mb-8">
+              <p className="font-sans text-xs text-[#d0c5af] italic mb-8 mt-2">
                 Valet parking will be provided upon arrival at the main gates.
               </p>
-              <button className="bg-transparent border border-[#f2ca50] text-[#f2ca50] font-accent-deco text-xs px-8 py-3 uppercase tracking-[0.2em] hover:bg-[#f2ca50] hover:text-[#3c2f00] transition-colors self-center font-bold">
-                Get Directions
-              </button>
+              <a
+                href={mainVenue.mapLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-transparent border border-[#f2ca50] text-[#f2ca50] font-accent-deco text-xs px-8 py-3 uppercase tracking-[0.2em] hover:bg-[#f2ca50] hover:text-[#3c2f00] transition-colors self-center font-bold"
+              >
+                <MapPin className="w-4 h-4" />
+                <span>Get Directions on Google Maps</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           </div>
         </section>
