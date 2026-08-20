@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -21,6 +21,7 @@ import {
   Wand2,
   Share2,
   Eye,
+  EyeOff,
   Sliders,
   X,
   FileText,
@@ -41,6 +42,12 @@ import {
   FlipVertical,
   CopyPlus,
   ShoppingCart,
+  Move,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Crosshair,
 } from "lucide-react";
 import OrderOrCartModal from "@/components/cart/OrderOrCartModal";
 
@@ -67,6 +74,7 @@ export interface CanvasElement {
   zIndex: number;
   backgroundColor?: string;
   isLocked?: boolean;
+  isHidden?: boolean;
   flipH?: boolean;
   flipV?: boolean;
 }
@@ -2371,6 +2379,56 @@ export default function CanvaCardStudio() {
     updateActiveElement({ zIndex: Math.max(1, minZ - 1) });
   };
 
+  const [nudgeStep, setNudgeStep] = useState<number>(1);
+  const [showNudgePad, setShowNudgePad] = useState<boolean>(false);
+
+  const handleNudge = useCallback(
+    (dir: "up" | "down" | "left" | "right", customStep?: number) => {
+      if (!activeElement || activeElement.isLocked) return;
+      const step = customStep || nudgeStep;
+      let newX = activeElement.x;
+      let newY = activeElement.y;
+
+      if (dir === "left") newX = Math.max(0, Number((activeElement.x - step).toFixed(2)));
+      if (dir === "right") newX = Math.min(100 - activeElement.width, Number((activeElement.x + step).toFixed(2)));
+      if (dir === "up") newY = Math.max(0, Number((activeElement.y - step).toFixed(2)));
+      if (dir === "down") newY = Math.min(100 - activeElement.height, Number((activeElement.y + step).toFixed(2)));
+
+      updateActiveElement({ x: newX, y: newY });
+    },
+    [activeElement, nudgeStep]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement)?.isContentEditable) {
+        return;
+      }
+
+      if (!activeElement || activeElement.isLocked) return;
+
+      const step = e.shiftKey ? 5 : 1;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleNudge("left", step);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleNudge("right", step);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        handleNudge("up", step);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        handleNudge("down", step);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeElement, handleNudge]);
+
   const handleAlign = (type: "left" | "center" | "right" | "top" | "middle" | "bottom") => {
     if (!activeElement) return;
     if (type === "left") updateActiveElement({ x: 5 });
@@ -2815,6 +2873,9 @@ export default function CanvaCardStudio() {
           clonedElement.style.transformOrigin = "top left";
           clonedElement.style.boxShadow = "none";
           clonedElement.style.margin = "0";
+          clonedElement.querySelectorAll('[data-hidden="true"]').forEach((hiddenEl: any) => {
+            hiddenEl.style.display = "none";
+          });
         },
       });
 
@@ -3120,15 +3181,52 @@ export default function CanvaCardStudio() {
                   }`}
                 >
                   <span className="truncate">{el.text || (el.type === "image" ? "Graphic Image" : `Layer #${i + 1}`)}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateActiveElement({ isLocked: !el.isLocked });
-                    }}
-                    className="text-slate-400 hover:text-slate-700"
-                  >
-                    {el.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const updatedPages = pages.map((pg, idx) =>
+                          idx === activePageIndex
+                            ? {
+                                ...pg,
+                                elements: pg.elements.map((item) =>
+                                  item.id === el.id ? { ...item, isHidden: !item.isHidden } : item
+                                ),
+                              }
+                            : pg
+                        );
+                        setPages(updatedPages);
+                        pushState(updatedPages);
+                        setHasUnsavedChanges(true);
+                      }}
+                      className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                      title={el.isHidden ? "Unhide Layer" : "Hide Layer"}
+                    >
+                      {el.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const updatedPages = pages.map((pg, idx) =>
+                          idx === activePageIndex
+                            ? {
+                                ...pg,
+                                elements: pg.elements.map((item) =>
+                                  item.id === el.id ? { ...item, isLocked: !item.isLocked } : item
+                                ),
+                              }
+                            : pg
+                        );
+                        setPages(updatedPages);
+                        pushState(updatedPages);
+                        setHasUnsavedChanges(true);
+                      }}
+                      className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                      title={el.isLocked ? "Unlock Layer" : "Lock Layer"}
+                    >
+                      {el.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -3703,10 +3801,10 @@ export default function CanvaCardStudio() {
     >
       
       {/* ── 1. TOP NAVIGATION BAR ── */}
-      <header className="h-14 sm:h-16 bg-white border-b border-slate-200 px-2 sm:px-4 md:px-6 flex items-center justify-between gap-1.5 sm:gap-3 shrink-0 z-40 shadow-xs">
+      <header data-lenis-prevent className="h-14 sm:h-16 bg-white border-b border-slate-200 px-2 sm:px-4 md:px-6 flex items-center justify-between gap-1 sm:gap-3 shrink-0 z-40 shadow-xs overflow-x-auto no-scrollbar whitespace-nowrap flex-nowrap">
         
         {/* Left: Back & Title */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
           <button
             onClick={(e) => handleBackNavigation(e, "/templates")}
             className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors border border-slate-200 flex items-center gap-1 text-xs font-bold cursor-pointer shrink-0"
@@ -3716,9 +3814,9 @@ export default function CanvaCardStudio() {
             <span className="hidden md:inline">Templates</span>
           </button>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-red-50 border border-red-200 text-[#991B1B] flex items-center justify-center font-extrabold shadow-2xs shrink-0">
-              <Sparkles className="w-3.5 h-3.5 fill-current text-[#991B1B]" />
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-red-50 border border-red-200 text-[#991B1B] flex items-center justify-center font-extrabold shadow-2xs shrink-0">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current text-[#991B1B]" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1">
@@ -3729,7 +3827,7 @@ export default function CanvaCardStudio() {
                     setDocTitle(e.target.value);
                     setHasUnsavedChanges(true);
                   }}
-                  className="bg-transparent text-xs sm:text-sm font-serif font-bold text-slate-900 outline-none border-b border-transparent hover:border-[#991B1B] focus:border-[#991B1B] transition-colors py-0.5 max-w-[85px] xs:max-w-[120px] sm:max-w-[170px] md:max-w-xs truncate"
+                  className="bg-transparent text-xs sm:text-sm font-serif font-bold text-slate-900 outline-none border-b border-transparent hover:border-[#991B1B] focus:border-[#991B1B] transition-colors py-0.5 max-w-[80px] xs:max-w-[110px] sm:max-w-[160px] md:max-w-xs truncate"
                 />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest flex items-center gap-1 ${hasUnsavedChanges ? "text-amber-600" : "text-emerald-600"}`}>
@@ -3873,10 +3971,10 @@ export default function CanvaCardStudio() {
 
       {/* ── 2. TOP CONTEXTUAL BAR ── */}
       {activeElement && (
-        <div className="h-12 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center gap-3 sm:gap-4 text-xs shrink-0 overflow-x-auto z-40 shadow-xs">
+        <div data-lenis-prevent className="h-12 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center gap-2.5 sm:gap-4 text-xs shrink-0 overflow-x-auto z-40 shadow-xs whitespace-nowrap no-scrollbar scroll-smooth">
+          {/* Text Font Family & Color */}
           {activeElement.type === "text" && (
             <>
-              {/* Font Family Selector */}
               <select
                 value={activeElement.fontFamily}
                 onChange={(e) => updateActiveElement({ fontFamily: e.target.value })}
@@ -3889,18 +3987,6 @@ export default function CanvaCardStudio() {
                 ))}
               </select>
 
-              {/* Font Size */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-slate-500 uppercase font-bold">Size:</span>
-                <input
-                  type="number"
-                  value={activeElement.fontSize || 20}
-                  onChange={(e) => updateActiveElement({ fontSize: Number(e.target.value) })}
-                  className="w-12 bg-slate-50 text-slate-800 border border-slate-200 rounded-lg px-2 py-1 text-xs text-center outline-none focus:border-[#991B1B]"
-                />
-              </div>
-
-              {/* Text Color */}
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] text-slate-500 uppercase font-bold">Color:</span>
                 <input
@@ -3910,57 +3996,121 @@ export default function CanvaCardStudio() {
                   className="w-6 h-6 bg-transparent border-0 cursor-pointer rounded overflow-hidden"
                 />
               </div>
-
-              {/* 1-Click Align Center Button */}
-              <button
-                onClick={() => updateActiveElement({ x: Math.round((100 - activeElement.width) / 2) })}
-                className="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
-                title="Align Horizontally to Canvas Center"
-              >
-                <AlignCenter className="w-3.5 h-3.5 text-[#991B1B] group-hover:text-white" />
-                <span>Center</span>
-              </button>
             </>
           )}
 
-          {activeElement.type === "image" && (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-500 uppercase font-bold">Size:</span>
-                <button
-                  onClick={() => updateActiveElement({ width: Math.max(10, activeElement.width - 5) })}
-                  className="p-1 rounded bg-slate-100 hover:bg-[#991B1B] hover:text-white border border-slate-200 cursor-pointer"
-                  title="Shrink"
-                >
-                  <Minimize2 className="w-3.5 h-3.5" />
-                </button>
-                <span className="font-mono text-xs font-bold w-9 text-center">{activeElement.width}%</span>
-                <button
-                  onClick={() => updateActiveElement({ width: Math.min(100, activeElement.width + 5) })}
-                  className="p-1 rounded bg-slate-100 hover:bg-[#991B1B] hover:text-white border border-slate-200 cursor-pointer"
-                  title="Expand"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+          {/* Universal SIZE Controls (Shrink, Value, Expand) */}
+          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 shrink-0">
+            <span className="text-[10px] text-slate-500 uppercase font-extrabold">Size:</span>
+            <button
+              onClick={() => {
+                if (activeElement.type === "text") {
+                  updateActiveElement({ fontSize: Math.max(8, (activeElement.fontSize || 20) - 2) });
+                } else {
+                  updateActiveElement({ width: Math.max(5, activeElement.width - 5) });
+                }
+              }}
+              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+              title="Shrink Size"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+            </button>
 
-              {/* 1-Click Align Center Button for Image */}
-              <button
-                onClick={() => updateActiveElement({ x: Math.round((100 - activeElement.width) / 2) })}
-                className="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
-                title="Align Horizontally to Canvas Center"
-              >
-                <AlignCenter className="w-3.5 h-3.5 text-[#991B1B]" />
-                <span>Center</span>
-              </button>
-            </>
-          )}
+            {activeElement.type === "text" ? (
+              <input
+                type="number"
+                value={activeElement.fontSize || 20}
+                onChange={(e) => updateActiveElement({ fontSize: Number(e.target.value) })}
+                className="w-11 bg-white text-slate-800 border border-slate-200 rounded-lg py-0.5 text-xs font-bold text-center outline-none focus:border-[#991B1B]"
+              />
+            ) : (
+              <span className="font-mono text-xs font-bold w-10 text-center">{activeElement.width}%</span>
+            )}
 
-          {/* Layer Actions */}
-          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => {
+                if (activeElement.type === "text") {
+                  updateActiveElement({ fontSize: Math.min(200, (activeElement.fontSize || 20) + 2) });
+                } else {
+                  updateActiveElement({ width: Math.min(100, activeElement.width + 5) });
+                }
+              }}
+              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+              title="Expand Size"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* 1-Click Align Center Button */}
+          <button
+            onClick={() => updateActiveElement({ x: Math.round((100 - activeElement.width) / 2) })}
+            className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer shrink-0"
+            title="Align Horizontally to Canvas Center"
+          >
+            <AlignCenter className="w-3.5 h-3.5 text-[#991B1B]" />
+            <span>Center</span>
+          </button>
+
+          {/* Hide / Unhide Eye Button */}
+          <button
+            onClick={() => updateActiveElement({ isHidden: !activeElement.isHidden })}
+            className={`px-2.5 py-1 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 ${
+              activeElement.isHidden
+                ? "bg-rose-100 text-rose-800 border-rose-300 shadow-xs"
+                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-[#991B1B] hover:text-white"
+            }`}
+            title={activeElement.isHidden ? "Unhide Element" : "Hide Element"}
+          >
+            {activeElement.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+            <span>{activeElement.isHidden ? "Hidden" : "Hide"}</span>
+          </button>
+
+          {/* Nudge Position Controls */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+            <span className="text-[10px] text-slate-500 font-extrabold uppercase px-1">Move:</span>
+            <button
+              onClick={() => handleNudge("left")}
+              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
+              title="Move Left (ArrowLeft)"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleNudge("up")}
+              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
+              title="Move Up (ArrowUp)"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleNudge("down")}
+              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
+              title="Move Down (ArrowDown)"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleNudge("right")}
+              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
+              title="Move Right (ArrowRight)"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setNudgeStep((prev) => (prev === 1 ? 5 : prev === 5 ? 0.5 : 1))}
+              className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 text-slate-800 hover:bg-slate-300 transition-colors ml-0.5 cursor-pointer"
+              title="Toggle Nudge Step Size"
+            >
+              {nudgeStep}%
+            </button>
+          </div>
+
+          {/* Duplicate & Delete Buttons */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
               onClick={handleDuplicate}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
+              className="px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
               <span>Duplicate</span>
@@ -3968,7 +4118,7 @@ export default function CanvaCardStudio() {
 
             <button
               onClick={handleDelete}
-              className="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
+              className="px-2.5 py-1 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete</span>
@@ -4093,18 +4243,20 @@ export default function CanvaCardStudio() {
                       setShowMoreMenu(false);
                       setActiveSubMenu(null);
                     }}
+                    data-hidden={el.isHidden ? "true" : "false"}
                     style={{
                       position: "absolute",
                       left: `${el.x}%`,
                       top: `${el.y}%`,
                       width: `${el.width}%`,
                       height: `${el.height}%`,
-                      opacity: el.opacity,
+                      opacity: el.isHidden ? (isSelected ? 0.35 : 0) : el.opacity,
+                      display: el.isHidden && !isSelected ? "none" : "block",
                       zIndex: isSelected ? 100 : el.zIndex,
                       cursor: el.isLocked ? "default" : "move",
                     }}
                     className={`relative select-none transition-shadow ${
-                      isSelected ? "ring-2 ring-[#991B1B] ring-offset-0" : ""
+                      isSelected ? (el.isHidden ? "ring-2 ring-rose-400 border-2 border-dashed border-rose-400" : "ring-2 ring-[#991B1B] ring-offset-0") : ""
                     }`}
                   >
                     {/* Anchor handles on selection */}
@@ -4129,6 +4281,87 @@ export default function CanvaCardStudio() {
                         }}
                         className="bg-white text-gray-800 border border-gray-200/90 rounded-2xl px-2 py-1.5 shadow-2xl flex items-center gap-1.5 z-[999] text-xs shrink-0 whitespace-nowrap pointer-events-auto select-none"
                       >
+                        <button
+                          onClick={() => setShowNudgePad(!showNudgePad)}
+                          className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                            showNudgePad ? "bg-[#991B1B] text-white" : "hover:bg-gray-100 text-gray-700"
+                          }`}
+                          title="Nudge / Move Position"
+                        >
+                          <Move className="w-4 h-4" />
+                        </button>
+
+                        {/* 🌟 4-WAY DIRECTIONAL TOUCH NUDGE PAD POPOVER 🌟 */}
+                        {showNudgePad && (
+                          <div
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-slate-900 text-white border border-slate-700 rounded-2xl p-2.5 shadow-2xl z-[1001] flex flex-col items-center gap-1 text-xs animate-in fade-in zoom-in-95"
+                          >
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Move Element</span>
+                            <div className="flex items-center justify-center">
+                              <button
+                                onClick={() => handleNudge("up")}
+                                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#991B1B] text-white flex items-center justify-center font-extrabold active:scale-95 transition-all shadow-xs cursor-pointer"
+                                title="Move Up"
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleNudge("left")}
+                                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#991B1B] text-white flex items-center justify-center font-extrabold active:scale-95 transition-all shadow-xs cursor-pointer"
+                                title="Move Left"
+                              >
+                                <ArrowLeft className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => updateActiveElement({ x: Math.round((100 - el.width) / 2) })}
+                                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 flex items-center justify-center font-bold active:scale-95 transition-all text-[10px] cursor-pointer"
+                                title="Center Horizontal"
+                              >
+                                Center
+                              </button>
+                              <button
+                                onClick={() => handleNudge("right")}
+                                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#991B1B] text-white flex items-center justify-center font-extrabold active:scale-95 transition-all shadow-xs cursor-pointer"
+                                title="Move Right"
+                              >
+                                <ArrowRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-center">
+                              <button
+                                onClick={() => handleNudge("down")}
+                                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-[#991B1B] text-white flex items-center justify-center font-extrabold active:scale-95 transition-all shadow-xs cursor-pointer"
+                                title="Move Down"
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-between w-full mt-1 pt-1 border-t border-slate-800 text-[10px]">
+                              <span className="text-slate-400">Step:</span>
+                              <button
+                                onClick={() => setNudgeStep((prev) => (prev === 1 ? 5 : prev === 5 ? 0.5 : 1))}
+                                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-extrabold cursor-pointer"
+                              >
+                                {nudgeStep}%
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => updateActiveElement({ isHidden: !el.isHidden })}
+                          className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                            el.isHidden ? "bg-rose-100 text-rose-800" : "hover:bg-gray-100 text-gray-700"
+                          }`}
+                          title={el.isHidden ? "Unhide Element" : "Hide Element"}
+                        >
+                          {el.isHidden ? <EyeOff className="w-4 h-4 text-rose-600" /> : <Eye className="w-4 h-4" />}
+                        </button>
+
                         <button
                           onClick={handleToggleLock}
                           className={`p-1.5 rounded-xl transition-all cursor-pointer ${

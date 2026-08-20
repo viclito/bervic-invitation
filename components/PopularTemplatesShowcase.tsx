@@ -203,8 +203,8 @@ export default function PopularTemplatesShowcase() {
           className="text-center max-w-3xl mx-auto mb-10 md:mb-14"
         >
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 leading-tight">
-            Most Popular{" "}
-            <span className="font-accent italic text-[#991B1B] font-normal text-4xl sm:text-6xl md:text-7xl block sm:inline mt-1 sm:mt-0">
+            Most Popular
+            <span className="font-accent italic text-[#991B1B] font-normal text-3xl sm:text-5xl md:text-6xl lg:text-7xl block mt-1.5 sm:mt-2">
               Invitation Templates
             </span>
           </h2>
@@ -376,36 +376,19 @@ export default function PopularTemplatesShowcase() {
             transition={{ duration: 0.35 }}
             className="text-center max-w-xl mx-auto mt-6"
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7A1F2B]/10 border border-[#7A1F2B]/30 text-xs font-bold text-[#7A1F2B] mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#7A1F2B]" />
-              <span>{activeTemplate.category}</span>
-            </div>
-
             <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#221C17]">
               {activeTemplate.title}
             </h3>
 
-            <p className="text-xs sm:text-sm text-[#221C17]/80 mt-1">
-              {activeTemplate.tagline} • Includes 1-Click WhatsApp Broadcast & Venue Map Link
-            </p>
-
             {/* Action CTAs */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Link
-                href={`/templates/customize/${activeTemplate.slug}`}
-                className="btn-maroon inline-flex items-center gap-2.5 px-6 sm:px-8 py-3.5 text-xs sm:text-sm font-bold shadow-xl hover:scale-105 transition-all"
-              >
-                <Edit3 className="w-4 h-4 text-[#D9A441]" />
-                <span>Customize This Template</span>
-              </Link>
-
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Link
                 href={`/templates/${activeTemplate.slug}`}
                 target="_blank"
-                className="inline-flex items-center gap-2 px-5 sm:px-6 py-3.5 rounded-2xl bg-[#EFE7D8] text-[#221C17] border border-[#D9A441]/40 text-xs sm:text-sm font-bold hover:bg-[#7A1F2B] hover:text-[#F8F3EA] transition-all shadow-md group"
+                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-2xl bg-[#7A1F2B] text-white border border-[#D9A441]/40 text-xs sm:text-sm font-bold hover:bg-[#5C1720] transition-all shadow-md group hover:scale-105"
               >
                 <span>Live Preview Demo</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#7A1F2B] group-hover:text-[#D9A441]" />
+                <ExternalLink className="w-3.5 h-3.5 text-amber-300 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           </motion.div>

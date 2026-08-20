@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -177,6 +177,7 @@ export default function CardGenerator() {
     }
   }, [invitationId]);
 
+  const router = useRouter();
   const { status } = useSession();
 
   const handleChange = useCallback((key: keyof CardFormData, value: string) => {
@@ -216,21 +217,19 @@ export default function CardGenerator() {
       });
 
       if (!isLoggedIn) {
-        setPricingReason('Please log in to claim your 2 Free Instagram Card Downloads!');
-        setShowPricingModal(true);
+        router.push('/auth/login?callbackUrl=' + encodeURIComponent('/checkout?plan=CARDS_99'));
         return false;
       }
 
       if (remaining <= 0) {
-        setPricingReason(`You have used all ${allowed} free card credits. Get 5 additional High-Res Instagram Card Credits for just ₹99!`);
-        setShowPricingModal(true);
+        router.push('/checkout?plan=CARDS_99');
         return false;
       }
       return true;
     } catch (e) {
       return true;
     }
-  }, [status]);
+  }, [status, router]);
 
   useEffect(() => {
     checkSubscriptionAccess();
@@ -450,8 +449,7 @@ export default function CardGenerator() {
                 </span>
                 <button
                   onClick={() => {
-                    setPricingReason('Get 5 High-Res (1080x1080px) Instagram Announcement Post Card Credits for just ₹99!');
-                    setShowPricingModal(true);
+                    router.push('/checkout?plan=CARDS_99');
                   }}
                   className="bg-[#991B1B] text-white border-none px-2 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer hover:bg-[#7F1D1D] transition-colors ml-0.5 shadow-2xs"
                   title="Buy 5 Cards for ₹99"
@@ -461,7 +459,7 @@ export default function CardGenerator() {
               </>
             ) : (
               <Link
-                href="/auth/login?callbackUrl=/cards"
+                href="/auth/login?callbackUrl=/checkout?plan=CARDS_99"
                 className="text-[#991B1B] font-extrabold hover:underline flex items-center gap-1"
               >
                 <span>🎁 2 Free Slots (Login)</span>
@@ -546,8 +544,7 @@ export default function CardGenerator() {
                 <button
                   type="button"
                   onClick={() => {
-                    setPricingReason('Get 5 High-Res (1080x1080px) Instagram Announcement Post Card Credits for just ₹99!');
-                    setShowPricingModal(true);
+                    router.push('/checkout?plan=CARDS_99');
                   }}
                   className="px-3 py-1 rounded-full bg-[#991B1B] text-white text-[11px] font-extrabold hover:bg-[#7F1D1D] transition-all shadow-xs shrink-0 cursor-pointer"
                 >

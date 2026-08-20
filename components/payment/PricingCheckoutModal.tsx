@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { X, Check, Sparkles, ShieldCheck, Zap, Crown, Lock } from "lucide-react";
 
@@ -21,136 +22,17 @@ export default function PricingCheckoutModal({
   templateSlug = "",
   preselectedPlan = "",
 }: PricingCheckoutModalProps) {
+  const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isCinematicRequired = templateSlug === "scroll-scrubber" || preselectedPlan === "CINEMATIC_2000";
 
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (typeof window !== "undefined" && (window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-      const existing = document.getElementById("razorpay-sdk");
-      if (existing) {
-        existing.addEventListener("load", () => resolve(true));
-        existing.addEventListener("error", () => resolve(false));
-        return;
-      }
-      const script = document.createElement("script");
-      script.id = "razorpay-sdk";
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  useEffect(() => {
-    loadRazorpayScript();
-  }, []);
-
   if (!isOpen) return null;
 
-  const handleCheckout = async (plan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" | "CARDS_99") => {
-    setLoadingPlan(plan);
-    setErrorMsg(null);
-
-    try {
-      // Ensure Razorpay SDK is ready
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded || !(window as any).Razorpay) {
-        throw new Error("Payment gateway could not load. Please check your internet connection and refresh.");
-      }
-
-      // 1. Create order on server
-      const res = await fetch("/api/payment/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Failed to create payment order");
-      }
-
-      const planNames = {
-        CARDS_99: "Instagram Post Cards Pass (₹99 - 5 Credits)",
-        BASIC_599: "Basic Plan (₹599 - 6 Months)",
-        PRO_1799: "Pro Plan (₹1799 - 1 Year)",
-        CINEMATIC_2000: "Cinematic Pass (₹2000 - 1 Year)",
-      };
-
-      // 2. Open Razorpay Checkout Widget
-      const options: any = {
-        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TJjdhQ40H2NION",
-        amount: data.amount,
-        currency: data.currency || "INR",
-        name: "Bervic Invitations",
-        description: planNames[plan] || "Bervic Pass",
-        order_id: data.orderId,
-        prefill: {
-          name: data.user?.name || "",
-          email: data.user?.email || "",
-          contact: data.user?.phone || "",
-        },
-        theme: {
-          color: "#991B1B",
-        },
-        handler: async function (response: any) {
-          try {
-            // 3. Verify payment on server
-            const verifyRes = await fetch("/api/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                plan,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok || verifyData.error) {
-              throw new Error(verifyData.error || "Payment verification failed.");
-            }
-
-            setLoadingPlan(null);
-            if (onSuccess) onSuccess();
-            onClose();
-          } catch (err: any) {
-            console.error("Payment verification error:", err);
-            setErrorMsg(err.message || "Payment verification failed.");
-            setLoadingPlan(null);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setLoadingPlan(null);
-          },
-        },
-      };
-
-      const RazorpayConstructor = (window as any).Razorpay;
-      if (RazorpayConstructor) {
-        const rzp = new RazorpayConstructor(options);
-        rzp.on("payment.failed", function (failResponse: any) {
-          setErrorMsg(failResponse?.error?.description || "Payment was cancelled or failed.");
-          setLoadingPlan(null);
-        });
-        rzp.open();
-      } else {
-        throw new Error("Razorpay SDK is not available. Please refresh.");
-      }
-    } catch (err: any) {
-      console.error("Payment order error:", err);
-      setErrorMsg(err.message || "Failed to initiate payment.");
-      setLoadingPlan(null);
-    }
+  const handleCheckout = (plan: "BASIC_599" | "PRO_1799" | "CINEMATIC_2000" | "CARDS_99") => {
+    onClose();
+    router.push(`/checkout?plan=${plan}${templateSlug ? `&template=${templateSlug}` : ""}`);
   };
 
   return (

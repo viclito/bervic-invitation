@@ -545,37 +545,6 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* Dedicated Micro-Pass: Standalone Instagram Cards Pass (₹99) */}
-          <div className="mt-10 max-w-4xl mx-auto bg-gradient-to-r from-[#7F1D1D] via-[#991B1B] to-[#7F1D1D] text-white border-2 border-red-300/40 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-            <div className="space-y-2 text-center md:text-left">
-              <span className="px-3.5 py-1 rounded-full bg-white/15 text-white border border-white/30 text-[10px] font-extrabold uppercase tracking-widest inline-flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Standalone Instagram Card Pass</span>
-              </span>
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">
-                Instagram Announcement Cards Pass — ₹99
-              </h3>
-              <p className="text-xs text-white/85 max-w-lg leading-relaxed">
-                Need only Instagram & WhatsApp status post cards? Get <strong>5 High-Res (1080x1080px) Card Credits</strong> for just ₹99 with access to all 31+ design presets, photo upload, and instant PNG/PDF downloads.
-              </p>
-            </div>
-
-            <button
-              onClick={() => handlePay("CARDS_99")}
-              disabled={loadingPlan !== null}
-              className="w-full md:w-auto px-8 py-4 rounded-2xl bg-white text-[#991B1B] font-extrabold text-xs uppercase tracking-wider hover:bg-red-50 transition-all shadow-lg flex items-center justify-center gap-2 shrink-0 hover:scale-105 cursor-pointer"
-            >
-              {loadingPlan === "CARDS_99" ? (
-                <span>Processing...</span>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 text-[#991B1B] fill-current" />
-                  <span>Buy 5 Cards for ₹99</span>
-                </>
-              )}
-            </button>
-          </div>
-
           {/* Security Guarantee */}
           <div className="mt-14 max-w-xl mx-auto p-4 bg-red-50/70 border border-red-200 rounded-2xl flex items-center justify-center gap-3 text-xs text-slate-700 font-semibold text-center">
             <ShieldCheck className="w-5 h-5 text-[#991B1B] shrink-0" />
