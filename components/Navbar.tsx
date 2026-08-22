@@ -36,8 +36,29 @@ export default function Navbar() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  // Verify admin / sub-admin privileges dynamically
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setIsAdminUser(false);
+      return;
+    }
+    const checkAdmin = async () => {
+      try {
+        const res = await fetch("/api/admin/check");
+        const data = await res.json();
+        if (res.ok && data.isAdmin) {
+          setIsAdminUser(true);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkAdmin();
+  }, [status]);
 
   const fetchCartCount = useCallback(async () => {
     if (status !== "authenticated") {
@@ -99,6 +120,12 @@ export default function Navbar() {
   }
 
   const isLightNav = true;
+  const userRole = ((session?.user as any)?.role || "").toUpperCase();
+  const isUserAdmin =
+    isAdminUser ||
+    (session?.user as any)?.isAdmin ||
+    ["SUPER_ADMIN", "ADMIN", "SUB_ADMIN"].includes(userRole) ||
+    session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
 
   const navLinkClass = `transition-colors font-semibold text-slate-700 hover:text-[#991B1B]`;
 
@@ -254,14 +281,14 @@ export default function Navbar() {
                     <span>Quota &amp; Subscription</span>
                   </Link>
 
-                  {/* Admin Direct Panel Link for Admin Account */}
-                  {session.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
+                  {/* Admin Direct Panel Link for Admin & Sub-Admin Accounts */}
+                  {isUserAdmin && (
                     <Link
                       href="/admin"
                       onClick={() => setProfileDropdownOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-extrabold text-[#991B1B] bg-red-50 hover:bg-[#991B1B] hover:text-white transition-colors border border-red-200"
                     >
-                      <ShieldCheck className="w-4 h-4" />
+                      <ShieldCheck className="w-4 h-4 text-amber-600" />
                       <span>Admin Control Panel</span>
                     </Link>
                   )}
@@ -533,7 +560,7 @@ export default function Navbar() {
             <div className="pt-2 border-t border-slate-100 space-y-2">
               {status === "authenticated" ? (
                 <>
-                  {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com" && (
+                  {isUserAdmin && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}

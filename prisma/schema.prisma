@@ -323,6 +323,8 @@ model ShopProduct {
 
   @@index([category])
   @@index([isActive])
+  @@index([isActive, category, sortOrder, createdAt])
+  @@index([isActive, sortOrder, createdAt])
 }
 
 model CanvaTemplate {

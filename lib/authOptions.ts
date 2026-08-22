@@ -137,26 +137,33 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, trigger }) {
-      if (token?.id && trigger !== "update") {
-        return token;
-      }
-
       if (token?.email) {
         const cleanEmail = (token.email as string).toLowerCase().trim();
+        const isSuperAdminEmail = cleanEmail === "berglin1998@gmail.com";
         let dbUser: any = null;
 
         try {
-          dbUser = await prisma.user.findFirst({
+          dbUser = await (prisma as any).user.findFirst({
             where: { email: { equals: cleanEmail, mode: "insensitive" } },
-            select: { id: true },
+            select: { id: true, role: true, adminPermissions: true },
           });
         } catch {}
+
+        if (!dbUser) {
+          try {
+            const rows: any[] = await prisma.$queryRawUnsafe(
+              `SELECT "id", "role", "adminPermissions" FROM "User" WHERE LOWER("email") = $1 LIMIT 1`,
+              cleanEmail
+            );
+            if (rows && rows.length > 0) dbUser = rows[0];
+          } catch {}
+        }
 
         // Ensure user row is strictly persisted in PostgreSQL User table
         if (!dbUser) {
           const newId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
           try {
-            dbUser = await prisma.user.create({
+            dbUser = await (prisma as any).user.create({
               data: {
                 id: newId,
                 name: token.name || (user?.name as string) || "User",
@@ -165,35 +172,50 @@ export const authOptions: NextAuthOptions = {
                 plan: "NONE",
                 allowedTemplatesCount: 0,
                 allowedCardsCount: 0,
-                role: "USER",
+                role: isSuperAdminEmail ? "SUPER_ADMIN" : "USER",
               },
-              select: { id: true },
+              select: { id: true, role: true, adminPermissions: true },
             });
           } catch {
             try {
               await prisma.$executeRawUnsafe(
                 `INSERT INTO "User" ("id", "name", "email", "image", "plan", "allowedTemplatesCount", "allowedCardsCount", "role", "createdAt", "updatedAt") 
-                 VALUES ($1, $2, $3, $4, 'NONE', 0, 0, 'USER', NOW(), NOW()) 
+                 VALUES ($1, $2, $3, $4, 'NONE', 0, 0, $5, NOW(), NOW()) 
                  ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name"`,
                 newId,
                 token.name || user?.name || "User",
                 cleanEmail,
-                token.picture || user?.image || null
+                token.picture || user?.image || null,
+                isSuperAdminEmail ? "SUPER_ADMIN" : "USER"
               );
-              dbUser = { id: newId };
+              dbUser = { id: newId, role: isSuperAdminEmail ? "SUPER_ADMIN" : "USER", adminPermissions: [] };
             } catch {}
           }
         }
 
         if (dbUser?.id) {
           token.id = dbUser.id;
+          const userRole = isSuperAdminEmail ? "SUPER_ADMIN" : (dbUser.role || "USER").toUpperCase();
+          const isUserAdmin = isSuperAdminEmail || userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole === "SUB_ADMIN";
+          token.role = userRole;
+          token.isAdmin = isUserAdmin;
+          token.isSuperAdmin = isSuperAdminEmail || userRole === "SUPER_ADMIN";
+          token.adminPermissions = Array.isArray(dbUser.adminPermissions)
+            ? dbUser.adminPermissions
+            : typeof dbUser.adminPermissions === "string"
+            ? JSON.parse(dbUser.adminPermissions || "[]")
+            : [];
         }
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.id) {
-        (session.user as { id?: string }).id = token.id as string;
+      if (session.user) {
+        if (token.id) (session.user as any).id = token.id as string;
+        (session.user as any).role = (token.role as string) || "USER";
+        (session.user as any).isAdmin = Boolean(token.isAdmin);
+        (session.user as any).isSuperAdmin = Boolean(token.isSuperAdmin);
+        (session.user as any).adminPermissions = token.adminPermissions || [];
       }
       return session;
     },

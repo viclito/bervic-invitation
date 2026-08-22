@@ -351,14 +351,25 @@ export default function AdminPage() {
   const [togglingLockId, setTogglingLockId] = useState<string | null>(null);
   const [deletingInvitationId, setDeletingInvitationId] = useState<string | null>(null);
 
-  const isAdmin = session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
+  const isSuperAdmin =
+    adminProfile?.isSuperAdmin ||
+    Boolean((session?.user as any)?.isSuperAdmin) ||
+    session?.user?.email?.toLowerCase() === "berglin1998@gmail.com";
+
+  const isAdmin =
+    (session?.user as any)?.isAdmin ||
+    isSuperAdmin ||
+    Boolean(adminProfile && ["ADMIN", "SUB_ADMIN", "SUPER_ADMIN"].includes((adminProfile.role || "").toUpperCase()));
 
   const canAccess = (permissionKey: string) => {
-    if (!adminProfile) {
-      return isAdmin;
+    if (isSuperAdmin) {
+      return true;
     }
-    if (adminProfile.isSuperAdmin) return true;
-    return (adminProfile.adminPermissions || []).includes(permissionKey);
+    if (adminProfile) {
+      return (adminProfile.adminPermissions || []).includes(permissionKey);
+    }
+    const sessionPerms = (session?.user as any)?.adminPermissions || [];
+    return sessionPerms.includes(permissionKey);
   };
 
   const fetchStaffData = async () => {
@@ -427,7 +438,9 @@ export default function AdminPage() {
       }
 
       // If user is super admin or can manage admins, fetch staff list
-      fetchStaffData();
+      if (data.currentAdmin?.isSuperAdmin || isSuperAdmin) {
+        fetchStaffData();
+      }
     } catch (err: any) {
       setErrorMsg(err?.message || "Error loading admin dashboard");
     } finally {
@@ -1186,18 +1199,31 @@ export default function AdminPage() {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-[#991B1B] border-t-transparent animate-spin" />
-          <span className="text-xs font-bold text-[#991B1B]">Loading Admin Control Panel...</span>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-[#991B1B] border-t-transparent animate-spin" />
+            <span className="text-xs font-bold text-[#991B1B]">Verifying administrative authorization...</span>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
-  if (status === "unauthenticated" || !isAdmin) {
+  const hasAccess =
+    isAdmin ||
+    Boolean(
+      adminProfile &&
+        (adminProfile.isSuperAdmin ||
+          (adminProfile.adminPermissions && adminProfile.adminPermissions.length > 0) ||
+          ["ADMIN", "SUB_ADMIN", "SUPER_ADMIN"].includes((adminProfile.role || "").toUpperCase()))
+    );
+
+  if (status === "unauthenticated" || !hasAccess) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
@@ -1208,7 +1234,7 @@ export default function AdminPage() {
             </div>
             <h2 className="text-2xl font-bold text-slate-900">Admin Authority Required</h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              You must be logged in as an administrator (<strong className="text-[#991B1B]">berglin1998@gmail.com</strong>) to access the Admin Control Dashboard.
+              Your account (<strong className="text-[#991B1B]">{session?.user?.email}</strong>) does not have active administrative permissions. Please sign in with an authorized admin account.
             </p>
             <div className="pt-2">
               <Link
@@ -1312,21 +1338,23 @@ export default function AdminPage() {
               </span>
               <span className="text-[11px] sm:text-xs text-slate-500 font-semibold hidden sm:inline">• Live Control</span>
 
-              {/* 🔘 Toggle Button for Full Analytics & Stats Panel */}
-              <button
-                type="button"
-                onClick={() => setShowStatsPanel(!showStatsPanel)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border shadow-xs ${
-                  showStatsPanel
-                    ? "bg-[#991B1B] text-white border-[#991B1B]"
-                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-                title="Toggle Analytics Summary & System Controls"
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>{showStatsPanel ? "Hide Analytics & Stats" : "Show Analytics & Stats"}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showStatsPanel ? "rotate-180" : ""}`} />
-              </button>
+              {/* 🔘 Toggle Button for Full Analytics & Stats Panel (Super Admin Only) */}
+              {isSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setShowStatsPanel(!showStatsPanel)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border shadow-xs ${
+                    showStatsPanel
+                      ? "bg-[#991B1B] text-white border-[#991B1B]"
+                      : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                  title="Toggle Analytics Summary & System Controls"
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>{showStatsPanel ? "Hide Analytics & Stats" : "Show Analytics & Stats"}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showStatsPanel ? "rotate-180" : ""}`} />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -1349,8 +1377,8 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* 2. Collapsible Analytics & Stats Panel (Hidden by default on page load) */}
-          {showStatsPanel && (
+          {/* 2. Collapsible Analytics & Stats Panel (Super Admin Only) */}
+          {showStatsPanel && isSuperAdmin && (
             <div className="animate-fade-in border-b border-slate-100">
               {/* Full Title, Email & Advanced Admin Actions */}
               <div className="p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white">
@@ -1578,8 +1606,8 @@ export default function AdminPage() {
                 </button>
               )}
 
-              {/* Tab 6: Admin Staff & RBAC Roles */}
-              {(adminProfile?.isSuperAdmin || canAccess("ADMINS_MANAGE") || isAdmin) && (
+              {/* Tab 6: Admin Staff & RBAC Roles (Super Admin Only) */}
+              {isSuperAdmin && (
                 <button
                   type="button"
                   onClick={() => setActiveTab("ADMIN_STAFF")}
@@ -2738,7 +2766,7 @@ export default function AdminPage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                 {canvaTemplatesList
                   .filter((t) => {
                     const matchesTopic =
@@ -2754,7 +2782,7 @@ export default function AdminPage() {
                   .map((tpl) => (
                     <div
                       key={tpl.id}
-                      className="bg-white border border-slate-200 hover:border-red-200 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
+                      className="bg-white border border-slate-200 hover:border-[#991B1B]/40 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
                     >
                       <div>
                         {/* Preview Thumbnail Container */}
@@ -2762,39 +2790,39 @@ export default function AdminPage() {
                           style={{
                             backgroundColor: tpl.backgroundColor || "#F3EAD8",
                           }}
-                          className="relative aspect-[4/5] w-full overflow-hidden border-b border-slate-100 flex items-center justify-center p-0 bg-slate-100"
+                          className="relative aspect-[3/4] w-full overflow-hidden border-b border-slate-100 flex items-center justify-center p-0 bg-slate-50"
                         >
                           {tpl.previewImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={tpl.previewImage}
                               alt={tpl.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                             />
                           ) : tpl.backgroundImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={tpl.backgroundImage}
                               alt={tpl.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                             />
                           ) : (
-                            <div className="text-center bg-white/90 backdrop-blur-xs p-3 rounded-xl border border-slate-200 shadow-sm max-w-[85%] space-y-1">
-                              <h5 className="font-serif font-bold text-xs text-[#991B1B] truncate">
+                            <div className="text-center bg-white/90 backdrop-blur-xs p-2 rounded-lg border border-slate-200 shadow-2xs max-w-[85%] space-y-0.5">
+                              <h5 className="font-serif font-bold text-[11px] text-[#991B1B] truncate">
                                 {tpl.name}
                               </h5>
-                              <p className="text-[10px] text-slate-500 font-mono">
+                              <p className="text-[9px] text-slate-500 font-mono">
                                 {tpl.elements?.length || 0} Layers
                               </p>
                             </div>
                           )}
 
                           {/* Status Badge */}
-                          <div className="absolute top-2 right-2">
+                          <div className="absolute top-1.5 right-1.5">
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-2xs ${
+                              className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wide shadow-2xs ${
                                 tpl.isActive
-                                  ? "bg-emerald-500 text-white"
+                                  ? "bg-emerald-600 text-white"
                                   : "bg-slate-700 text-slate-200"
                               }`}
                             >
@@ -2803,34 +2831,36 @@ export default function AdminPage() {
                           </div>
 
                           {/* Topic Pill */}
-                          <div className="absolute bottom-2 left-2">
-                            <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-[9px] font-mono font-bold backdrop-blur-xs">
-                              {tpl.topic.toUpperCase()} &bull; {tpl.aspectRatio}
+                          <div className="absolute bottom-1.5 left-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-black/60 text-white text-[8px] font-mono font-bold backdrop-blur-xs">
+                              {tpl.topic.toUpperCase()}
                             </span>
                           </div>
                         </div>
 
                         {/* Metadata Details */}
-                        <div className="p-3.5 space-y-1.5">
-                          <h4 className="font-bold text-sm text-slate-900 truncate" title={tpl.name}>
+                        <div className="p-2.5 space-y-0.5">
+                          <h4 className="font-bold text-xs text-slate-900 truncate" title={tpl.name}>
                             {tpl.name}
                           </h4>
-                          <div className="flex items-center justify-between text-[11px] text-slate-500">
-                            <span>{tpl.category}</span>
-                            <span className="font-mono">{tpl.elements?.length || 0} Layers</span>
+                          <div className="flex items-center justify-between text-[10px] text-slate-500">
+                            <span className="truncate max-w-[90px]">{tpl.category}</span>
+                            <span className="font-mono text-[9px] bg-slate-100 px-1 py-0.5 rounded text-slate-600 shrink-0">
+                              {tpl.elements?.length || 0} Layers
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       {/* Action Footer */}
-                      <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <div className="p-2 bg-slate-50/70 border-t border-slate-100 flex items-center gap-1.5">
                         {/* Edit in Visual Studio */}
                         <Link
                           href={`/admin/canva-templates/builder?id=${tpl.id}`}
-                          className="flex-1 py-1.5 px-3 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                          className="flex-1 py-1 px-2 rounded-lg bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-[11px] font-bold text-center transition-all flex items-center justify-center gap-1 shadow-2xs"
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>Edit Studio</span>
+                          <Edit3 className="w-3 h-3 text-amber-300" />
+                          <span>Edit</span>
                         </Link>
 
                         {/* Visibility Toggle */}
@@ -2838,13 +2868,13 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => handleToggleCanvaStatus(tpl.id, tpl.isActive)}
                           disabled={togglingCanvaId === tpl.id}
-                          className="p-1.5 rounded-xl border border-slate-200 hover:bg-white text-slate-600 transition-colors cursor-pointer"
+                          className="p-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
                           title={tpl.isActive ? "Deactivate template" : "Activate template"}
                         >
                           {tpl.isActive ? (
-                            <Eye className="w-4 h-4 text-emerald-600" />
+                            <Eye className="w-3.5 h-3.5 text-emerald-600" />
                           ) : (
-                            <EyeOff className="w-4 h-4 text-slate-400" />
+                            <EyeOff className="w-3.5 h-3.5 text-slate-400" />
                           )}
                         </button>
 
@@ -2853,10 +2883,10 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => handleDeleteCanvaTemplate(tpl.id, tpl.name)}
                           disabled={deletingCanvaTemplateId === tpl.id}
-                          className="p-1.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
+                          className="p-1 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
                           title="Delete template"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
                         </button>
                       </div>
                     </div>
@@ -2866,8 +2896,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 6: 👑 ADMIN STAFF & RBAC PERMISSIONS */}
-        {activeTab === "ADMIN_STAFF" && (
+        {/* TAB 6: 👑 ADMIN STAFF & RBAC PERMISSIONS (Super Admin Only) */}
+        {activeTab === "ADMIN_STAFF" && isSuperAdmin && (
           <div className="space-y-5 sm:space-y-6 animate-fade-in">
             {/* Header with Title and Action Buttons */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-200 pb-5">
