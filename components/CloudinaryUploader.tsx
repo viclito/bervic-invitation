@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Upload, Image as ImageIcon, CheckCircle2, Loader2, Link2, Trash2 } from "lucide-react";
+import { optimizeImageForUpload } from "@/lib/imageOptimizer";
 
 interface CloudinaryUploaderProps {
   label: string;
@@ -48,8 +49,14 @@ export default function CloudinaryUploader({
     setError("");
 
     try {
+      // Pre-optimize image to save bandwidth and storage with zero visual quality loss
+      const optimizedFile = await optimizeImageForUpload(file, {
+        maxDimension: 2560,
+        quality: 0.92,
+      });
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", optimizedFile);
 
       const res = await fetch("/api/upload", {
         method: "POST",

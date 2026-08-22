@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
+import { getAdminAuth } from "@/lib/adminAuth";
 import crypto from "crypto";
-
-function isAdmin(email?: string | null) {
-  return email?.toLowerCase() === "berglin1998@gmail.com";
-}
 
 export async function GET() {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     let products: any[] = [];
@@ -41,10 +36,10 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const body = await req.json();
@@ -186,10 +181,10 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const body = await req.json();
@@ -223,10 +218,10 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const body = await req.json();

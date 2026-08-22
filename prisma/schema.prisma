@@ -20,7 +20,8 @@ model User {
   allowedTemplatesCount Int              @default(0)
   allowedCinematicCount Int              @default(0)
   allowedCardsCount     Int              @default(0)
-  role                  String           @default("USER") // USER, ADMIN
+  role                  String           @default("USER") // USER, SUB_ADMIN, ADMIN, SUPER_ADMIN
+  adminPermissions      String[]         @default([])
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   accounts              Account[]
@@ -323,6 +324,28 @@ model ShopProduct {
   @@index([category])
   @@index([isActive])
 }
+
+model CanvaTemplate {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  name              String
+  topic             String   @default("vintage") // "vintage" | "modern"
+  category          String   @default("Vintage Floral")
+  aspectRatio       String   @default("classic") // "portrait" | "square" | "classic"
+  backgroundColor   String   @default("#F3EAD8")
+  backgroundImage   String?  @db.Text
+  previewImage      String?  @db.Text
+  elementsJson      String   @db.Text // JSON array of CanvasElement[]
+  colorVariantsJson String?  @db.Text // JSON array of ColorVariant[]
+  isActive          Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([topic])
+  @@index([isActive])
+}
+
 
 
 

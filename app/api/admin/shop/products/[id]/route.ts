@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
-
-function isAdmin(email?: string | null) {
-  return email?.toLowerCase() === "berglin1998@gmail.com";
-}
+import { getAdminAuth } from "@/lib/adminAuth";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const { id } = await params;
@@ -60,22 +55,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           where: { id },
           data: updateData,
         });
-      } catch (prismaErr) {
-        console.warn("Prisma update failed, falling back to raw SQL:", prismaErr);
+      } catch (err: unknown) {
+        console.warn("Prisma ShopProduct update failed, falling back to SQL:", (err as Error)?.message);
         prismaUpdateFailed = true;
       }
+    } else {
+      prismaUpdateFailed = true;
     }
 
-    if (!updated || prismaUpdateFailed) {
-      // Dynamic SQL update fallback
+    if (prismaUpdateFailed) {
       const setClauses: string[] = [];
       const values: unknown[] = [];
       let paramIdx = 1;
 
       for (const [key, val] of Object.entries(updateData)) {
-        setClauses.push(`"${key}" = $${paramIdx}`);
+        setClauses.push(`"${key}" = $${paramIdx++}`);
         values.push(val);
-        paramIdx++;
       }
 
       setClauses.push(`"updatedAt" = NOW()`);
@@ -105,10 +100,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("SHOP_PRODUCTS_MANAGE");
 
-    if (!session || !session.user || !isAdmin(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const { id } = await params;

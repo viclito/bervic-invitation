@@ -16,7 +16,7 @@ export default function InstagramCardsSection() {
               <img
                 src="/images/instagram-whatsapp-mockup.png"
                 alt="Aesthetic Instagram and WhatsApp Wedding Announcement Cards Mockup"
-                className="w-full max-w-xl h-auto object-contain rounded-2xl drop-shadow-2xl hover:scale-[1.02] transition-transform duration-500"
+                className="w-full max-w-xl h-auto object-contain drop-shadow-2xl hover:scale-[1.02] transition-transform duration-500"
                 loading="eager"
               />
             </div>
@@ -118,11 +118,7 @@ export default function InstagramCardsSection() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              {/* Sub-note */}
-              <div className="flex items-center justify-center lg:justify-start gap-1.5 text-xs text-slate-500 font-semibold">
-                <ShieldCheck className="w-4 h-4 text-[#991B1B]" />
-                <span>Instant 1-Click PNG &amp; PDF Export</span>
-              </div>
+              
             </div>
 
           </div>

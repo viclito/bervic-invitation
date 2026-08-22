@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getAdminAuth } from "@/lib/adminAuth";
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("ADMINS_MANAGE");
 
-    if (!session || !session.user || !session.user.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const currentUserEmail = session.user.email.toLowerCase().trim();
-    if (currentUserEmail !== "berglin1998@gmail.com") {
-      return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const adminUser = await prisma.user.findUnique({

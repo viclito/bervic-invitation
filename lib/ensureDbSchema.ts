@@ -16,6 +16,8 @@ export async function ensureDbSchema() {
           ALTER TABLE "User"
             ADD COLUMN IF NOT EXISTS "phone" TEXT,
             ADD COLUMN IF NOT EXISTS "plan" TEXT DEFAULT 'NONE',
+            ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'USER',
+            ADD COLUMN IF NOT EXISTS "adminPermissions" TEXT[] DEFAULT ARRAY[]::TEXT[],
             ADD COLUMN IF NOT EXISTS "allowedTemplatesCount" INTEGER DEFAULT 0,
             ADD COLUMN IF NOT EXISTS "allowedCinematicCount" INTEGER DEFAULT 0,
             ADD COLUMN IF NOT EXISTS "allowedCardsCount" INTEGER DEFAULT 0;
@@ -110,7 +112,23 @@ export async function ensureDbSchema() {
           );
         `);
         await prisma.$executeRawUnsafe(`
-          ALTER TABLE "ShopProduct" ADD COLUMN IF NOT EXISTS "canvaTemplateId" TEXT;
+          CREATE TABLE IF NOT EXISTS "CanvaTemplate" (
+            "id" TEXT PRIMARY KEY,
+            "slug" TEXT UNIQUE NOT NULL,
+            "name" TEXT NOT NULL,
+            "topic" TEXT NOT NULL DEFAULT 'vintage',
+            "category" TEXT NOT NULL DEFAULT 'Vintage Floral',
+            "aspectRatio" TEXT NOT NULL DEFAULT 'classic',
+            "backgroundColor" TEXT NOT NULL DEFAULT '#F3EAD8',
+            "backgroundImage" TEXT,
+            "previewImage" TEXT,
+            "elementsJson" TEXT NOT NULL,
+            "colorVariantsJson" TEXT,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "sortOrder" INTEGER NOT NULL DEFAULT 0,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
         `);
       } catch (err: unknown) {
         console.warn("Db Schema Auto-Migration warning:", (err as Error)?.message);
@@ -119,3 +137,4 @@ export async function ensureDbSchema() {
   }
   return schemaPromise;
 }
+

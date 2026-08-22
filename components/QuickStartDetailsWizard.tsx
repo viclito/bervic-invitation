@@ -1220,21 +1220,6 @@ export default function QuickStartDetailsWizard({
         }`}
       >
         <div className="max-w-[1020px] mx-auto px-4 sm:px-6">
-          {/* Header matching Image 2 */}
-          <div className="flex items-center gap-3.5 mb-5">
-            <div className="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#991B1B] shadow-2xs shrink-0">
-              <UploadCloud className="w-5 h-5 text-[#991B1B]" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold font-serif text-slate-900 leading-tight">
-                Upload Your Wedding Invitation
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                Upload your invitation and our AI will automatically fill your wedding details.
-              </p>
-            </div>
-          </div>
-
           {/* Luxury Dashed Floral Upload Card matching Image 2 */}
           <div
             onClick={() => setShowLoginModal(true)}
@@ -1310,7 +1295,7 @@ export default function QuickStartDetailsWizard({
               {/* Title Text */}
               <div className="space-y-1">
                 <h3 className="text-xl sm:text-2xl font-bold font-serif text-slate-900 tracking-tight">
-                  Drag &amp; Drop Your File Here
+                  Drag &amp; Drop Your Wedding Invitation
                 </h3>
               </div>
 
@@ -1346,7 +1331,7 @@ export default function QuickStartDetailsWizard({
                     <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-700 font-medium leading-tight">
-                    Our AI will automatically read names, dates, venues &amp; events from your invitation and fill the form instantly.
+                    Our tool will automatically read names, dates, venues &amp; events from your invitation and fill the form instantly.
                   </p>
                 </div>
               </div>

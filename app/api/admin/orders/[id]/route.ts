@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
+import { getAdminAuth } from "@/lib/adminAuth";
 
 interface DynamicPrismaModel {
   findUnique: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
@@ -20,23 +19,10 @@ export async function GET(
 ) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth("ORDERS_MANAGE");
 
-    if (!session || !session.user || !session.user.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const currentUserEmail = session.user.email.toLowerCase().trim();
-    const isAdmin = currentUserEmail === "berglin1998@gmail.com";
-
-    if (!isAdmin) {
-      const dbUser = await prisma.user.findUnique({
-        where: { email: currentUserEmail },
-        select: { role: true },
-      });
-      if (!dbUser || dbUser.role !== "ADMIN") {
-        return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
-      }
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     const { id } = await context.params;

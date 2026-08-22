@@ -1,40 +1,28 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ensureDbSchema } from "@/lib/ensureDbSchema";
 import { checkInvitationLockStatus } from "@/lib/lockCheck";
+import { getAdminAuth } from "@/lib/adminAuth";
 
 export async function GET(req: Request) {
   try {
     await ensureDbSchema();
-    const session = await getServerSession(authOptions);
+    const auth = await getAdminAuth();
 
-    if (!session || !session.user || !session.user.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const currentUserEmail = session.user.email.toLowerCase().trim();
-    const isAdmin = currentUserEmail === "berglin1998@gmail.com";
-
-    if (!isAdmin) {
-      const dbUser: any = await prisma.user.findUnique({
-        where: { email: currentUserEmail },
-        select: { id: true, role: true },
-      });
-      if (!dbUser || dbUser.role !== "ADMIN") {
-        return NextResponse.json({ error: "Forbidden. Admin authority required." }, { status: 403 });
-      }
+    if (auth.error || !auth.admin) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
     let rawUsers: any[] = [];
     try {
-      rawUsers = await prisma.user.findMany({
+      rawUsers = await (prisma as any).user.findMany({
         select: {
           id: true,
           name: true,
           email: true,
           phone: true,
+          role: true,
+          adminPermissions: true,
           plan: true,
           planExpiresAt: true,
           allowedTemplatesCount: true,
@@ -48,7 +36,7 @@ export async function GET(req: Request) {
       console.warn("Prisma findMany user query warning, attempting SQL fallback:", err1?.message);
       try {
         rawUsers = await prisma.$queryRawUnsafe(
-          `SELECT "id", "name", "email", "phone", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCinematicCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
+          `SELECT "id", "name", "email", "phone", "role", "adminPermissions", "plan", "planExpiresAt", "allowedTemplatesCount", "allowedCinematicCount", "allowedCardsCount", "createdAt" FROM "User" ORDER BY "createdAt" DESC`
         );
       } catch (err2: any) {
         console.error("Raw SQL user query error:", err2?.message);
@@ -514,6 +502,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
+      currentAdmin: auth.admin,
       stats: overviewStats,
       users,
       invitationsList,

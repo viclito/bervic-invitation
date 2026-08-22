@@ -50,6 +50,17 @@ export async function POST(req: Request) {
         {
           folder: "bervic-invitations",
           resource_type: "auto",
+          // Perceptually lossless auto-compression, max 2560px (Retina Ultra-HD), and modern WebP/AVIF auto-format
+          transformation: [
+            {
+              width: 2560,
+              height: 2560,
+              crop: "limit",
+              quality: "auto:good",
+              fetch_format: "auto",
+            },
+          ],
+          flags: "strip_profile", // Strips unneeded EXIF camera/GPS metadata to save space
         },
         (error, result) => {
           if (error || !result) {

@@ -251,8 +251,15 @@ function MiniCardProof({ item, width = 110, height = 155 }: { item: OrderItemDat
       ) : (
         <div
           style={{
-            backgroundColor: bgInfo.color,
-            backgroundImage: bgInfo.image ? `url(${bgInfo.image})` : undefined,
+            backgroundColor:
+              bgInfo.color && (bgInfo.color.startsWith("#") || bgInfo.color.startsWith("rgb"))
+                ? bgInfo.color
+                : undefined,
+            backgroundImage: bgInfo.image
+              ? `url(${bgInfo.image})`
+              : bgInfo.color && bgInfo.color.includes("gradient")
+              ? bgInfo.color
+              : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

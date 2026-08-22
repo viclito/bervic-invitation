@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -48,6 +48,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Crosshair,
+  Minus,
+  Plus,
+  WrapText,
+  Edit3,
 } from "lucide-react";
 import OrderOrCartModal from "@/components/cart/OrderOrCartModal";
 
@@ -104,6 +108,8 @@ const createUniqueId = (prefix: string) => `${prefix}-${Date.now()}-${++elementI
 
 export interface PersonalizationData {
   coupleNames: string;
+  groomName?: string;
+  brideName?: string;
   eventName: string;
   date: string;
   time: string;
@@ -139,6 +145,8 @@ export interface PersonalizationData {
 
 const DEFAULT_PERSONALIZATION: PersonalizationData = {
   coupleNames: "Sophia & Alexander",
+  groomName: "Alexander",
+  brideName: "Sophia",
   eventName: "Wedding Ceremony",
   date: "OCTOBER 30, 2026",
   time: "6:30 PM",
@@ -2066,6 +2074,34 @@ export default function CanvaCardStudio() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const workspaceRef = useRef<HTMLDivElement | null>(null);
 
+  // Dynamic DB Templates State
+  const [dynamicTemplates, setDynamicTemplates] = useState<PresetTemplate[]>([]);
+
+  useEffect(() => {
+    async function loadDynamicTemplates() {
+      try {
+        const res = await fetch("/api/canva/templates");
+        const data = await res.json();
+        if (Array.isArray(data.templates) && data.templates.length > 0) {
+          setDynamicTemplates(data.templates);
+        }
+      } catch (e) {
+        console.warn("Failed to load dynamic templates:", e);
+      }
+    }
+    loadDynamicTemplates();
+  }, []);
+
+  const allTemplates: PresetTemplate[] = useMemo(() => {
+    const combined = [...dynamicTemplates, ...PRESET_TEMPLATES];
+    const seen = new Set<string>();
+    return combined.filter((t) => {
+      if (seen.has(t.id)) return false;
+      seen.add(t.id);
+      return true;
+    });
+  }, [dynamicTemplates]);
+
   // Document & Page State
   const [docTitle, setDocTitle] = useState<string>(
     () => getInitialDraft()?.docTitle || "Vintage Botanical Wedding Invitation"
@@ -2080,10 +2116,30 @@ export default function CanvaCardStudio() {
   const currentPage = pages[activePageIndex] || pages[0];
   const elements = currentPage.elements;
 
-  // Selected Element & Dragging State
-  const [selectedId, setSelectedId] = useState<string | null>("leaf-divider-middle");
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragStart, setDragStart] = useState<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+  // Selected Element & Dragging/Resizing State
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+  const dragRef = useRef<{
+    isDragging: boolean;
+    elId: string;
+    startX: number;
+    startY: number;
+    mouseStartX: number;
+    mouseStartY: number;
+  } | null>(null);
+
+  const resizeRef = useRef<{
+    isResizing: boolean;
+    elId: string;
+    handle: string;
+    startX: number;
+    startY: number;
+    startW: number;
+    startH: number;
+    mouseStartX: number;
+    mouseStartY: number;
+  } | null>(null);
 
   // Studio Tools Drawer Tab
   const [activeTab, setActiveTab] = useState<
@@ -2163,57 +2219,185 @@ export default function CanvaCardStudio() {
     }
   };
 
-  // Full 4-Directional Mouse Drag-to-Move Handler
-  const handleMouseDown = (e: React.MouseEvent, el: CanvasElement) => {
+  // Full 4-Directional Pointer Drag-to-Move Handler
+  const handlePointerDownElement = (e: React.PointerEvent, el: CanvasElement) => {
     if (el.isLocked) {
       setSelectedId(el.id);
       return;
     }
+    const target = e.target as HTMLElement;
+    if (target.closest(".floating-toolbar") || target.closest(".resize-handle") || target.tagName === "TEXTAREA") {
+      return;
+    }
     e.stopPropagation();
     setSelectedId(el.id);
-    setDraggingId(el.id);
-    setDragStart({
-      mouseX: e.clientX,
-      mouseY: e.clientY,
+    dragRef.current = {
+      isDragging: true,
+      elId: el.id,
       startX: el.x,
       startY: el.y,
-    });
+      mouseStartX: e.clientX,
+      mouseStartY: e.clientY,
+    };
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!draggingId || !dragStart || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const deltaXPercent = ((e.clientX - dragStart.mouseX) / rect.width) * 100;
-    const deltaYPercent = ((e.clientY - dragStart.mouseY) / rect.height) * 100;
-
-    const newX = Math.max(0, Math.min(95, Math.round(dragStart.startX + deltaXPercent)));
-    const newY = Math.max(0, Math.min(95, Math.round(dragStart.startY + deltaYPercent)));
-
-    setPages((prevPages) =>
-      prevPages.map((pg, idx) =>
-        idx === activePageIndex
-          ? {
-              ...pg,
-              elements: pg.elements.map((el) =>
-                el.id === draggingId ? { ...el, x: newX, y: newY } : el
-              ),
-            }
-          : pg
-      )
-    );
+  // Element Resize Start (Mouse & Touch)
+  const handlePointerDownResize = (e: React.PointerEvent, handle: string, el: CanvasElement) => {
+    e.stopPropagation();
+    if (el.isLocked) return;
+    setSelectedId(el.id);
+    resizeRef.current = {
+      isResizing: true,
+      elId: el.id,
+      handle,
+      startX: el.x,
+      startY: el.y,
+      startW: el.width,
+      startH: el.height || 20,
+      mouseStartX: e.clientX,
+      mouseStartY: e.clientY,
+    };
   };
 
-  const handleMouseUp = () => {
-    if (draggingId) {
-      setDraggingId(null);
-      setDragStart(null);
-      pushState(pages);
-      setHasUnsavedChanges(true);
-    }
-  };
+  // Global Pointer Listeners for Ultra-Smooth Instant Dragging & Resizing
+  useEffect(() => {
+    const onGlobalPointerMove = (e: PointerEvent) => {
+      if (!canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+
+      // 1. Resizing Mode
+      if (resizeRef.current && resizeRef.current.isResizing) {
+        const { elId, handle, startX, startY, startW, startH, mouseStartX, mouseStartY } = resizeRef.current;
+        const deltaXPercent = ((e.clientX - mouseStartX) / rect.width) * 100;
+        const deltaYPercent = ((e.clientY - mouseStartY) / rect.height) * 100;
+
+        let newX = startX;
+        let newY = startY;
+        let newW = startW;
+        let newH = startH;
+
+        if (handle === "e") {
+          newW = Math.max(5, Math.min(100, startW + deltaXPercent));
+        } else if (handle === "w") {
+          newW = Math.max(5, Math.min(100, startW - deltaXPercent));
+          newX = Math.max(0, startX + (startW - newW));
+        } else if (handle === "s") {
+          newH = Math.max(2, Math.min(100, startH + deltaYPercent));
+        } else if (handle === "n") {
+          newH = Math.max(2, Math.min(100, startH - deltaYPercent));
+          newY = Math.max(0, startY + (startH - newH));
+        } else if (handle === "se") {
+          newW = Math.max(5, Math.min(100, startW + deltaXPercent));
+          newH = Math.max(2, Math.min(100, startH + deltaYPercent));
+        } else if (handle === "sw") {
+          newW = Math.max(5, Math.min(100, startW - deltaXPercent));
+          newX = Math.max(0, startX + (startW - newW));
+          newH = Math.max(2, Math.min(100, startH + deltaYPercent));
+        } else if (handle === "ne") {
+          newW = Math.max(5, Math.min(100, startW + deltaXPercent));
+          newH = Math.max(2, Math.min(100, startH - deltaYPercent));
+          newY = Math.max(0, startY + (startH - newH));
+        } else if (handle === "nw") {
+          newW = Math.max(5, Math.min(100, startW - deltaXPercent));
+          newX = Math.max(0, startX + (startW - newW));
+          newH = Math.max(2, Math.min(100, startH - deltaYPercent));
+          newY = Math.max(0, startY + (startH - newH));
+        }
+
+        setPages((prevPages) =>
+          prevPages.map((pg, idx) =>
+            idx === activePageIndex
+              ? {
+                  ...pg,
+                  elements: pg.elements.map((item) =>
+                    item.id === elId
+                      ? {
+                          ...item,
+                          x: Math.round(newX * 10) / 10,
+                          y: Math.round(newY * 10) / 10,
+                          width: Math.round(newW * 10) / 10,
+                          height: Math.round(newH * 10) / 10,
+                        }
+                      : item
+                  ),
+                }
+              : pg
+          )
+        );
+        return;
+      }
+
+      // 2. Dragging Mode
+      if (dragRef.current && dragRef.current.isDragging) {
+        const { elId, startX, startY, mouseStartX, mouseStartY } = dragRef.current;
+        const deltaXPercent = ((e.clientX - mouseStartX) / rect.width) * 100;
+        const deltaYPercent = ((e.clientY - mouseStartY) / rect.height) * 100;
+
+        const newX = Math.max(0, Math.min(95, Math.round(startX + deltaXPercent)));
+        const newY = Math.max(0, Math.min(95, Math.round(startY + deltaYPercent)));
+
+        setPages((prevPages) =>
+          prevPages.map((pg, idx) =>
+            idx === activePageIndex
+              ? {
+                  ...pg,
+                  elements: pg.elements.map((item) =>
+                    item.id === elId ? { ...item, x: newX, y: newY } : item
+                  ),
+                }
+              : pg
+          )
+        );
+      }
+    };
+
+    const onGlobalPointerUp = () => {
+      if (dragRef.current?.isDragging || resizeRef.current?.isResizing) {
+        dragRef.current = null;
+        resizeRef.current = null;
+        setPages((currentPages) => {
+          pushState(currentPages);
+          return currentPages;
+        });
+        setHasUnsavedChanges(true);
+      }
+    };
+
+    window.addEventListener("pointermove", onGlobalPointerMove);
+    window.addEventListener("pointerup", onGlobalPointerUp);
+    return () => {
+      window.removeEventListener("pointermove", onGlobalPointerMove);
+      window.removeEventListener("pointerup", onGlobalPointerUp);
+    };
+  }, [activePageIndex]);
 
   const handlePersonalizationChange = (field: keyof typeof personalization, value: string) => {
-    setPersonalization((prev) => ({ ...prev, [field]: value }));
+    let nextBride = personalization.brideName || "Sophia";
+    let nextGroom = personalization.groomName || "Alexander";
+    let nextCouple = personalization.coupleNames || "Sophia & Alexander";
+
+    if (field === "brideName") {
+      nextBride = value;
+      nextCouple = nextGroom ? `${value} & ${nextGroom}` : value;
+    } else if (field === "groomName") {
+      nextGroom = value;
+      nextCouple = nextBride ? `${nextBride} & ${value}` : value;
+    } else if (field === "coupleNames") {
+      nextCouple = value;
+      if (value.includes("&")) {
+        const parts = value.split("&");
+        nextBride = parts[0].trim();
+        nextGroom = parts[1].trim();
+      }
+    }
+
+    setPersonalization((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === "brideName" ? { brideName: value, coupleNames: nextCouple } : {}),
+      ...(field === "groomName" ? { groomName: value, coupleNames: nextCouple } : {}),
+      ...(field === "coupleNames" ? { brideName: nextBride, groomName: nextGroom } : {}),
+    }));
 
     const updatedPages = pages.map((pg) => ({
       ...pg,
@@ -2257,10 +2441,10 @@ export default function CanvaCardStudio() {
         if (field === "modernTagline" && (el.id.startsWith("praise-lord") || el.fieldKey === "tagline")) {
           return { ...el, text: value };
         }
-        if (field === "modernGroom" && (el.id.startsWith("groom-name") || el.fieldKey === "coupleNames")) {
+        if ((field === "modernGroom" || field === "groomName") && (el.id.startsWith("groom-name") || el.fieldKey === "groomName")) {
           return { ...el, text: value };
         }
-        if (field === "modernBride" && el.id.startsWith("bride-name")) {
+        if ((field === "modernBride" || field === "brideName") && (el.id.startsWith("bride-name") || el.fieldKey === "brideName")) {
           return { ...el, text: value };
         }
         if (field === "modernDate" && (el.id.startsWith("date-line") || el.fieldKey === "date")) {
@@ -2282,12 +2466,30 @@ export default function CanvaCardStudio() {
           return { ...el, text: value };
         }
 
-        // Vintage / Global Field Bindings
-        if (el.fieldKey === field) {
-          return { ...el, text: field === "rsvp" && !value.startsWith("R.S.V.P") ? `R.S.V.P ${value}` : value };
+        // Bride & Groom & Couple Names Bindings
+        if (field === "brideName") {
+          if (el.fieldKey === "brideName" || el.id.startsWith("bride-name") || el.id.includes("bride")) {
+            return { ...el, text: value };
+          }
+          if (el.fieldKey === "coupleNames" || el.id.includes("couple")) {
+            return { ...el, text: nextCouple };
+          }
+        }
+        if (field === "groomName") {
+          if (el.fieldKey === "groomName" || el.id.startsWith("groom-name") || el.id.includes("groom")) {
+            return { ...el, text: value };
+          }
+          if (el.fieldKey === "coupleNames" || el.id.includes("couple")) {
+            return { ...el, text: nextCouple };
+          }
         }
         if (field === "coupleNames" && (el.id.includes("couple") || el.fieldKey === "coupleNames")) {
           return { ...el, text: value };
+        }
+
+        // Vintage / Global Field Bindings
+        if (el.fieldKey === field) {
+          return { ...el, text: field === "rsvp" && !value.startsWith("R.S.V.P") ? `R.S.V.P ${value}` : value };
         }
         if (field === "date" && (el.id.includes("date") || el.fieldKey === "date")) {
           return { ...el, text: value };
@@ -2685,12 +2887,12 @@ export default function CanvaCardStudio() {
     const params = new URLSearchParams(window.location.search);
     const templateParam = params.get("template");
     if (templateParam) {
-      const found = PRESET_TEMPLATES.find((t) => t.id === templateParam);
+      const found = allTemplates.find((t) => t.id === templateParam);
       if (found) {
         handleLoadTemplate(found);
       }
     }
-  }, []);
+  }, [allTemplates]);
 
   const handleSelectColorVariant = (variant: ColorVariant) => {
     setSelectedColorVariantId(variant.id);
@@ -2774,16 +2976,53 @@ export default function CanvaCardStudio() {
     setHasUnsavedChanges(true);
   };
 
-  const handleAddGraphic = (graphic: { name: string; icon: string; src?: string }) => {
+  const handleAddGraphicAt = (graphic: { name: string; icon: string; src?: string; id?: string }, dropX?: number, dropY?: number) => {
+    let x = typeof dropX === "number" ? dropX : 20;
+    let y = typeof dropY === "number" ? dropY : 35;
+    let width = 60;
+    let height = 15;
+
+    // Smart default positions if not dropped directly via mouse
+    if (typeof dropX !== "number" || typeof dropY !== "number") {
+      const gName = (graphic.name || "").toLowerCase();
+      const gId = (graphic.id || "").toLowerCase();
+      if (gName.includes("header") || gName.includes("top") || gId.includes("top") || gId.includes("header")) {
+        x = 10;
+        y = 3;
+        width = 80;
+        height = 18;
+      } else if (gName.includes("footer") || gName.includes("bottom") || gId.includes("bottom") || gId.includes("footer")) {
+        x = 10;
+        y = 76;
+        width = 80;
+        height = 20;
+      } else if (gName.includes("arch") || gName.includes("frame")) {
+        x = 5;
+        y = 5;
+        width = 90;
+        height = 90;
+      } else if (gName.includes("divider") || gName.includes("leaf") || gName.includes("swirl")) {
+        x = 20;
+        y = 44;
+        width = 60;
+        height = 8;
+      } else if (gName.includes("ring") || gName.includes("seal")) {
+        x = 40;
+        y = 10;
+        width = 20;
+        height = 12;
+      }
+    }
+
     const newEl: CanvasElement = graphic.src
       ? {
           id: createUniqueId("image"),
           type: "image",
           src: graphic.src,
-          x: 20,
-          y: 35,
-          width: 60,
-          height: 15,
+          x,
+          y,
+          width,
+          height,
           rotation: 0,
           opacity: 1,
           zIndex: elements.length + 1,
@@ -2794,8 +3033,8 @@ export default function CanvaCardStudio() {
           text: graphic.icon,
           fontSize: 36,
           color: "#8C6B1B",
-          x: 40,
-          y: 10,
+          x,
+          y,
           width: 20,
           height: 12,
           rotation: 0,
@@ -2809,6 +3048,10 @@ export default function CanvaCardStudio() {
     setSelectedId(newEl.id);
     pushState(updatedPages);
     setHasUnsavedChanges(true);
+  };
+
+  const handleAddGraphic = (graphic: { name: string; icon: string; src?: string; id?: string }) => {
+    handleAddGraphicAt(graphic);
   };
 
   const handleDuplicate = () => {
@@ -2944,7 +3187,7 @@ export default function CanvaCardStudio() {
     }
 
     if (!capturedUrl) {
-      const matched = PRESET_TEMPLATES.find((t) => t.id === activeTemplateId);
+      const matched = allTemplates.find((t) => t.id === activeTemplateId);
       capturedUrl = matched?.previewImage || "/images/canva/template1-thumb.webp";
     }
 
@@ -2976,7 +3219,7 @@ export default function CanvaCardStudio() {
                       : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {PRESET_TEMPLATES.filter((t) => t.topic === "vintage").length}
+                  {allTemplates.filter((t) => t.topic === "vintage").length}
                 </span>
               </button>
 
@@ -2996,14 +3239,14 @@ export default function CanvaCardStudio() {
                       : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {PRESET_TEMPLATES.filter((t) => t.topic === "modern").length}
+                  {allTemplates.filter((t) => t.topic === "modern").length}
                 </span>
               </button>
             </div>
 
             {/* TEMPLATES GRID FOR SELECTED TOPIC */}
             <div className="grid grid-cols-2 gap-2.5">
-              {PRESET_TEMPLATES.filter((t) => t.topic === templateTopic).map((tpl) => {
+              {allTemplates.filter((t) => t.topic === templateTopic).map((tpl) => {
                 const isActive = tpl.id === activeTemplateId;
                 return (
                   <button
@@ -3026,10 +3269,29 @@ export default function CanvaCardStudio() {
                           alt={tpl.name}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                      ) : tpl.backgroundImage ? (
+                        <img
+                          src={tpl.backgroundImage}
+                          alt={tpl.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
                       ) : (
                         <div
                           className="w-full h-full flex items-center justify-center p-1.5 text-center text-[10px] font-serif font-bold text-slate-700"
-                          style={{ backgroundColor: tpl.backgroundColor }}
+                          style={{
+                            backgroundColor:
+                              tpl.backgroundColor &&
+                              (tpl.backgroundColor.startsWith("#") || tpl.backgroundColor.startsWith("rgb"))
+                                ? tpl.backgroundColor
+                                : undefined,
+                            backgroundImage: tpl.backgroundImage
+                              ? `url(${tpl.backgroundImage})`
+                              : tpl.backgroundColor && tpl.backgroundColor.includes("gradient")
+                              ? tpl.backgroundColor
+                              : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
                         >
                           {tpl.name}
                         </div>
@@ -3124,7 +3386,7 @@ export default function CanvaCardStudio() {
               const availableElements = GRAPHIC_ELEMENTS.filter(
                 (e) => e.templateId === activeTemplateId || e.templateId === "all"
               );
-              const activeTplObj = PRESET_TEMPLATES.find((t) => t.id === activeTemplateId);
+              const activeTplObj = allTemplates.find((t) => t.id === activeTemplateId);
 
               return (
                 <>
@@ -3139,23 +3401,29 @@ export default function CanvaCardStudio() {
 
                   <div className="grid grid-cols-2 gap-2">
                     {availableElements.map((elem) => (
-                      <button
+                      <div
                         key={elem.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("application/json", JSON.stringify(elem));
+                          e.dataTransfer.effectAllowed = "copy";
+                        }}
                         onClick={() => {
                           handleAddGraphic(elem);
                           setMobileSheetOpen(false);
                         }}
-                        className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center gap-1.5 hover:border-[#991B1B] hover:bg-red-50/50 transition-all group cursor-pointer shadow-xs"
+                        className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center gap-1.5 hover:border-[#991B1B] hover:bg-red-50/50 transition-all group cursor-grab active:cursor-grabbing shadow-xs select-none"
+                        title="Click to add or Drag & Drop directly onto card"
                       >
                         {elem.src ? (
-                          <img src={elem.src} alt={elem.name} className="h-8 object-contain my-0.5" />
+                          <img src={elem.src} alt={elem.name} className="h-8 object-contain my-0.5 pointer-events-none" />
                         ) : (
-                          <span className="text-2xl">{elem.icon}</span>
+                          <span className="text-2xl pointer-events-none">{elem.icon}</span>
                         )}
-                        <span className="text-[9px] font-bold text-slate-700 group-hover:text-[#991B1B] text-center leading-tight">
+                        <span className="text-[9px] font-bold text-slate-700 group-hover:text-[#991B1B] text-center leading-tight pointer-events-none">
                           {elem.name}
                         </span>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -3655,16 +3923,31 @@ export default function CanvaCardStudio() {
         ) : (
           /* ── 📜 VINTAGE TEMPLATE INPUTS ── */
           <div className="space-y-3.5">
-            <div>
-              <label className="text-[10px] font-extrabold text-gray-600 uppercase tracking-wider block mb-1">
-                Couple Names
-              </label>
-              <input
-                type="text"
-                value={personalization.coupleNames}
-                onChange={(e) => handlePersonalizationChange("coupleNames", e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs font-serif font-bold text-[#1E293B] outline-none focus:border-[#D9A441] focus:bg-white"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-extrabold text-gray-600 uppercase tracking-wider block mb-1">
+                  Bride Name
+                </label>
+                <input
+                  type="text"
+                  value={personalization.brideName || ""}
+                  onChange={(e) => handlePersonalizationChange("brideName", e.target.value)}
+                  placeholder="e.g. Sophia"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs font-serif font-bold text-[#1E293B] outline-none focus:border-[#D9A441] focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-extrabold text-gray-600 uppercase tracking-wider block mb-1">
+                  Groom Name
+                </label>
+                <input
+                  type="text"
+                  value={personalization.groomName || ""}
+                  onChange={(e) => handlePersonalizationChange("groomName", e.target.value)}
+                  placeholder="e.g. Alexander"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs font-serif font-bold text-[#1E293B] outline-none focus:border-[#D9A441] focus:bg-white"
+                />
+              </div>
             </div>
 
             <div>
@@ -3795,8 +4078,6 @@ export default function CanvaCardStudio() {
   return (
     <div
       data-lenis-prevent
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       className="h-screen max-h-screen w-full bg-slate-50 text-[#1E293B] flex flex-col font-sans overflow-hidden select-none"
     >
       
@@ -3972,6 +4253,29 @@ export default function CanvaCardStudio() {
       {/* ── 2. TOP CONTEXTUAL BAR ── */}
       {activeElement && (
         <div data-lenis-prevent className="h-12 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center gap-2.5 sm:gap-4 text-xs shrink-0 overflow-x-auto z-40 shadow-xs whitespace-nowrap no-scrollbar scroll-smooth">
+          {/* Text Content Input & Next Line Support */}
+          {activeElement.type === "text" && (
+            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200 shrink-0">
+              <Edit3 className="w-3.5 h-3.5 text-[#991B1B]" />
+              <input
+                type="text"
+                value={activeElement.text || ""}
+                onChange={(e) => updateActiveElement({ text: e.target.value })}
+                placeholder="Edit text..."
+                className="w-36 sm:w-52 bg-white text-slate-900 border border-slate-200 rounded-lg px-2 py-0.5 text-xs font-semibold outline-none focus:border-[#991B1B]"
+                title="Type text. Press Enter on canvas (or double-click) to add next line"
+              />
+              <button
+                onClick={() => updateActiveElement({ text: (activeElement.text || "") + "\n" })}
+                className="px-2 py-0.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                title="Add Next Line / Line Break"
+              >
+                <WrapText className="w-3 h-3 text-[#991B1B]" />
+                <span>Next Line</span>
+              </button>
+            </div>
+          )}
+
           {/* Text Font Family & Color */}
           {activeElement.type === "text" && (
             <>
@@ -3999,48 +4303,59 @@ export default function CanvaCardStudio() {
             </>
           )}
 
-          {/* Universal SIZE Controls (Shrink, Value, Expand) */}
+          {/* Dedicated Element WIDTH Controls (Shrink Width, % Input, Expand Width) */}
           <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 shrink-0">
-            <span className="text-[10px] text-slate-500 uppercase font-extrabold">Size:</span>
+            <span className="text-[10px] text-slate-500 uppercase font-extrabold">Width:</span>
             <button
-              onClick={() => {
-                if (activeElement.type === "text") {
-                  updateActiveElement({ fontSize: Math.max(8, (activeElement.fontSize || 20) - 2) });
-                } else {
-                  updateActiveElement({ width: Math.max(5, activeElement.width - 5) });
-                }
-              }}
+              onClick={() => updateActiveElement({ width: Math.max(5, (activeElement.width || 80) - 5) })}
               className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-              title="Shrink Size"
+              title="Reduce Element Width (-5%)"
             >
-              <Minimize2 className="w-3.5 h-3.5" />
+              <Minus className="w-3 h-3" />
             </button>
+            <input
+              type="number"
+              min={5}
+              max={100}
+              value={Math.round(activeElement.width || 80)}
+              onChange={(e) => updateActiveElement({ width: Math.max(5, Math.min(100, Number(e.target.value))) })}
+              className="w-11 bg-white text-slate-800 border border-slate-200 rounded-lg py-0.5 text-xs font-bold text-center outline-none focus:border-[#991B1B]"
+            />
+            <button
+              onClick={() => updateActiveElement({ width: Math.min(100, (activeElement.width || 80) + 5) })}
+              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+              title="Increase Element Width (+5%)"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
 
-            {activeElement.type === "text" ? (
+          {/* Universal Font SIZE / Element Scale Controls */}
+          {activeElement.type === "text" && (
+            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 shrink-0">
+              <span className="text-[10px] text-slate-500 uppercase font-extrabold">Font Size:</span>
+              <button
+                onClick={() => updateActiveElement({ fontSize: Math.max(8, (activeElement.fontSize || 20) - 2) })}
+                className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+                title="Decrease Font Size"
+              >
+                <Minimize2 className="w-3.5 h-3.5" />
+              </button>
               <input
                 type="number"
                 value={activeElement.fontSize || 20}
                 onChange={(e) => updateActiveElement({ fontSize: Number(e.target.value) })}
                 className="w-11 bg-white text-slate-800 border border-slate-200 rounded-lg py-0.5 text-xs font-bold text-center outline-none focus:border-[#991B1B]"
               />
-            ) : (
-              <span className="font-mono text-xs font-bold w-10 text-center">{activeElement.width}%</span>
-            )}
-
-            <button
-              onClick={() => {
-                if (activeElement.type === "text") {
-                  updateActiveElement({ fontSize: Math.min(200, (activeElement.fontSize || 20) + 2) });
-                } else {
-                  updateActiveElement({ width: Math.min(100, activeElement.width + 5) });
-                }
-              }}
-              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-              title="Expand Size"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              <button
+                onClick={() => updateActiveElement({ fontSize: Math.min(200, (activeElement.fontSize || 20) + 2) })}
+                className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+                title="Increase Font Size"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* 1-Click Align Center Button */}
           <button
@@ -4207,21 +4522,49 @@ export default function CanvaCardStudio() {
                 setShowMoreMenu(false);
                 setActiveSubMenu(null);
               }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "copy";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                try {
+                  const raw = e.dataTransfer.getData("application/json");
+                  if (!raw) return;
+                  const elem = JSON.parse(raw);
+                  const rect = canvasRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  const dropX = Math.max(0, Math.min(85, Math.round(((e.clientX - rect.left) / rect.width) * 100) - 15));
+                  const dropY = Math.max(0, Math.min(85, Math.round(((e.clientY - rect.top) / rect.height) * 100) - 5));
+                  handleAddGraphicAt(elem, dropX, dropY);
+                } catch (err) {
+                  console.error("Drop error:", err);
+                }
+              }}
               style={{
                 width: canvasDim.width,
                 height: canvasDim.height,
                 transform: `scale(${zoomLevel / 100})`,
                 transformOrigin: "center center",
               }}
-              className="relative shadow-2xl rounded-3xl transition-transform duration-100 flex-shrink-0"
+              className="relative shadow-2xl rounded-3xl transition-transform duration-100 flex-shrink-0 overflow-hidden"
             >
               {/* INNER ARTWORK CONTAINER */}
               <div
                 style={{
-                  backgroundColor: currentPage.backgroundColor,
-                  backgroundImage: currentPage.backgroundImage ? `url(${currentPage.backgroundImage})` : undefined,
+                  backgroundColor:
+                    currentPage.backgroundColor &&
+                    (currentPage.backgroundColor.startsWith("#") || currentPage.backgroundColor.startsWith("rgb"))
+                      ? currentPage.backgroundColor
+                      : undefined,
+                  backgroundImage: currentPage.backgroundImage
+                    ? `url(${currentPage.backgroundImage})`
+                    : currentPage.backgroundColor && currentPage.backgroundColor.includes("gradient")
+                    ? currentPage.backgroundColor
+                    : undefined,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
                 }}
                 className={`absolute inset-0 rounded-3xl overflow-hidden pointer-events-none ${
                   showGrid ? "bg-[radial-gradient(#D9A441_1px,transparent_1px)] [background-size:16px_16px]" : ""
@@ -4236,7 +4579,7 @@ export default function CanvaCardStudio() {
                 return (
                   <div
                     key={el.id}
-                    onMouseDown={(e) => handleMouseDown(e, el)}
+                    onPointerDown={(e) => handlePointerDownElement(e, el)}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedId(el.id);
@@ -4254,22 +4597,46 @@ export default function CanvaCardStudio() {
                       display: el.isHidden && !isSelected ? "none" : "block",
                       zIndex: isSelected ? 100 : el.zIndex,
                       cursor: el.isLocked ? "default" : "move",
+                      touchAction: "none",
                     }}
                     className={`relative select-none transition-shadow ${
                       isSelected ? (el.isHidden ? "ring-2 ring-rose-400 border-2 border-dashed border-rose-400" : "ring-2 ring-[#991B1B] ring-offset-0") : ""
                     }`}
                   >
-                    {/* Anchor handles on selection */}
-                    {isSelected && (
+                    {/* 🌟 8-POINT & SIDE RESIZE HANDLES 🌟 */}
+                    {isSelected && !el.isLocked && (
                       <>
-                        <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-[#991B1B] rounded-full shadow-sm z-30 pointer-events-none" />
-                        <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-[#991B1B] rounded-full shadow-sm z-30 pointer-events-none" />
+                        {/* West / Left Handle (Width) */}
+                        <div
+                          onPointerDown={(e) => handlePointerDownResize(e, "w", el)}
+                          className="resize-handle absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#991B1B] rounded-full shadow-md z-40 cursor-ew-resize hover:scale-125 transition-transform"
+                          title="Drag to resize width"
+                        />
+                        {/* East / Right Handle (Width) */}
+                        <div
+                          onPointerDown={(e) => handlePointerDownResize(e, "e", el)}
+                          className="resize-handle absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#991B1B] rounded-full shadow-md z-40 cursor-ew-resize hover:scale-125 transition-transform"
+                          title="Drag to resize width"
+                        />
+                        {/* Bottom-Right Corner Handle */}
+                        <div
+                          onPointerDown={(e) => handlePointerDownResize(e, "se", el)}
+                          className="resize-handle absolute -right-1.5 -bottom-1.5 w-3.5 h-3.5 bg-white border-2 border-[#991B1B] rounded-sm shadow-sm z-40 cursor-nwse-resize hover:scale-125 transition-transform"
+                          title="Drag corner to resize"
+                        />
+                        {/* Bottom-Left Corner Handle */}
+                        <div
+                          onPointerDown={(e) => handlePointerDownResize(e, "sw", el)}
+                          className="resize-handle absolute -left-1.5 -bottom-1.5 w-3.5 h-3.5 bg-white border-2 border-[#991B1B] rounded-sm shadow-sm z-40 cursor-nesw-resize hover:scale-125 transition-transform"
+                          title="Drag corner to resize"
+                        />
                       </>
                     )}
 
                     {/* 🌟 CANVA-STYLE FLOATING CAPSULE TOOLBAR 🌟 */}
                     {isSelected && (
                       <div
+                        onPointerDown={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                         onMouseUp={(e) => e.stopPropagation()}
                         onClick={(e) => e.stopPropagation()}
@@ -4279,7 +4646,7 @@ export default function CanvaCardStudio() {
                           transform: "translateX(-50%)",
                           ...(isNearTop ? { top: "100%", marginTop: "10px" } : { bottom: "100%", marginBottom: "10px" }),
                         }}
-                        className="bg-white text-gray-800 border border-gray-200/90 rounded-2xl px-2 py-1.5 shadow-2xl flex items-center gap-1.5 z-[999] text-xs shrink-0 whitespace-nowrap pointer-events-auto select-none"
+                        className="floating-toolbar bg-white text-gray-800 border border-gray-200/90 rounded-2xl px-2 py-1.5 shadow-2xl flex items-center gap-1.5 z-[999] text-xs shrink-0 whitespace-nowrap pointer-events-auto select-none"
                       >
                         <button
                           onClick={() => setShowNudgePad(!showNudgePad)}
@@ -4587,23 +4954,61 @@ export default function CanvaCardStudio() {
                       className="flex items-center justify-center"
                     >
                       {el.type === "text" && (
-                        <div
-                          style={{
-                            fontFamily: el.fontFamily,
-                            fontSize: `${el.fontSize}px`,
-                            color: el.color,
-                            fontWeight: el.fontWeight,
-                            fontStyle: el.fontStyle,
-                            textAlign: el.textAlign,
-                            letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
-                            lineHeight: el.lineHeight || 1.2,
-                            width: "100%",
-                            whiteSpace: "pre-wrap",
-                          }}
-                          className="outline-none"
-                        >
-                          {el.text}
-                        </div>
+                        editingTextId === el.id ? (
+                          <textarea
+                            autoFocus
+                            value={el.text || ""}
+                            onChange={(e) => updateActiveElement({ text: e.target.value })}
+                            onBlur={() => setEditingTextId(null)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                setEditingTextId(null);
+                              }
+                            }}
+                            rows={Math.max(1, (el.text || "").split("\n").length)}
+                            style={{
+                              fontFamily: el.fontFamily,
+                              fontSize: `${el.fontSize}px`,
+                              color: el.color,
+                              fontWeight: el.fontWeight,
+                              fontStyle: el.fontStyle,
+                              textAlign: el.textAlign,
+                              letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
+                              lineHeight: el.lineHeight || 1.2,
+                              width: "100%",
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              background: "rgba(255, 255, 255, 0.92)",
+                              borderRadius: "8px",
+                              padding: "2px 4px",
+                            }}
+                            className="outline-none border-2 border-[#991B1B] resize-none shadow-md z-50 text-slate-900"
+                          />
+                        ) : (
+                          <div
+                            onDoubleClick={() => !el.isLocked && setEditingTextId(el.id)}
+                            style={{
+                              fontFamily: el.fontFamily,
+                              fontSize: `${el.fontSize}px`,
+                              color: el.color,
+                              fontWeight: el.fontWeight,
+                              fontStyle: el.fontStyle,
+                              textAlign: el.textAlign,
+                              letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
+                              lineHeight: el.lineHeight || 1.2,
+                              width: "100%",
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              cursor: el.isLocked ? "default" : "text",
+                            }}
+                            className="outline-none"
+                            title="Double-click to edit text directly & press Enter for next line"
+                          >
+                            {el.text}
+                          </div>
+                        )
                       )}
 
                       {el.type === "image" && el.src && (
@@ -4880,10 +5285,19 @@ export default function CanvaCardStudio() {
                 style={{
                   width: "360px",
                   height: "500px",
-                  backgroundColor: currentPage.backgroundColor,
-                  backgroundImage: currentPage.backgroundImage ? `url(${currentPage.backgroundImage})` : undefined,
+                  backgroundColor:
+                    currentPage.backgroundColor &&
+                    (currentPage.backgroundColor.startsWith("#") || currentPage.backgroundColor.startsWith("rgb"))
+                      ? currentPage.backgroundColor
+                      : undefined,
+                  backgroundImage: currentPage.backgroundImage
+                    ? `url(${currentPage.backgroundImage})`
+                    : currentPage.backgroundColor && currentPage.backgroundColor.includes("gradient")
+                    ? currentPage.backgroundColor
+                    : undefined,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
                 }}
                 className="relative rounded-2xl overflow-hidden shadow-2xl border border-red-200"
               >
@@ -5018,8 +5432,8 @@ export default function CanvaCardStudio() {
         isOpen={showOrderModal}
         onClose={() => setShowOrderModal(false)}
         templateId={String(activeTemplateId)}
-        templateName={PRESET_TEMPLATES.find((t) => t.id === activeTemplateId)?.name || docTitle}
-        previewImage={orderPreviewUrl || PRESET_TEMPLATES.find((t) => t.id === activeTemplateId)?.previewImage || "/images/canva/template1-thumb.webp"}
+        templateName={allTemplates.find((t) => t.id === activeTemplateId)?.name || docTitle}
+        previewImage={orderPreviewUrl || allTemplates.find((t) => t.id === activeTemplateId)?.previewImage || "/images/canva/template1-thumb.webp"}
         cardDetails={{
           coupleNames: personalization.coupleNames || "",
           groom: personalization.modernGroom || personalization.modern3GroomFirst || "",
@@ -5030,8 +5444,8 @@ export default function CanvaCardStudio() {
           city: personalization.address || personalization.modern3VenueAddr2 || "",
           tagline: personalization.modernTagline || "",
           aspectRatio,
-          backgroundColor: pages[activePageIndex]?.backgroundColor || PRESET_TEMPLATES.find((t) => t.id === activeTemplateId)?.backgroundColor,
-          backgroundImage: pages[activePageIndex]?.backgroundImage || PRESET_TEMPLATES.find((t) => t.id === activeTemplateId)?.backgroundImage,
+          backgroundColor: pages[activePageIndex]?.backgroundColor || allTemplates.find((t) => t.id === activeTemplateId)?.backgroundColor,
+          backgroundImage: pages[activePageIndex]?.backgroundImage || allTemplates.find((t) => t.id === activeTemplateId)?.backgroundImage,
         }}
         elements={elements}
         onCartSuccess={() => {
