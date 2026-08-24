@@ -25,18 +25,7 @@ export default function CardTemplate26({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#FFF9F5',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#FFF9F5', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box' }}
     >
       <style>
         {`
@@ -80,21 +69,13 @@ export default function CardTemplate26({
       </svg>
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '18px', letterSpacing: '4px', color: '#6B2D3E', textTransform: 'uppercase', marginBottom: '30px' }}>
+        <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '28px', fontWeight: 600, letterSpacing: '4px', color: '#6B2D3E', textTransform: 'uppercase', marginBottom: '30px' }}>
           {tagline}
         </p>
 
         {/* Embedded Photo */}
         <div
-          style={{
-            width: '280px',
-            height: '280px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            marginBottom: '40px',
-            border: '6px solid #FFF',
-            boxShadow: '0 8px 24px rgba(107, 45, 62, 0.15)'
-          }}
+          style={{ width: '280px', height: '280px', borderRadius: '50%', overflow: 'hidden', marginBottom: '40px', border: '6px solid #FFF', boxShadow: '0 8px 24px rgba(107, 45, 62, 0.15)' }}
         >
           <img
             src={couplePhoto}
@@ -105,21 +86,21 @@ export default function CardTemplate26({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', width: '100%' }}>
-          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '54px', fontWeight: '400', color: '#6B2D3E', margin: '0', textAlign: 'center', lineHeight: '1.1' }}>
+          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '74px', fontWeight: '400', color: '#6B2D3E', margin: '0', textAlign: 'center', lineHeight: '1.1' }}>
             {partnerOne}
           </h1>
-          <span style={{ fontSize: '36px', fontStyle: 'italic', color: '#E5989B', margin: '2px 0' }}>&amp;</span>
-          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '54px', fontWeight: '400', color: '#6B2D3E', margin: '0', textAlign: 'center', lineHeight: '1.1' }}>
+          <span style={{ fontSize: '44px', fontStyle: 'italic', color: '#E5989B', margin: '2px 0' }}>&amp;</span>
+          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '74px', fontWeight: '400', color: '#6B2D3E', margin: '0', textAlign: 'center', lineHeight: '1.1' }}>
             {partnerTwo}
           </h1>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginTop: '40px' }}>
-          <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '22px', fontWeight: '400', color: '#6B2D3E', margin: '0', letterSpacing: '2px' }}>
+          <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '32px', fontWeight: '400', color: '#6B2D3E', margin: '0', letterSpacing: '2px' }}>
             {weddingDate} | {weddingTime}
           </p>
           <div style={{ width: '60px', height: '1px', backgroundColor: '#E5989B' }} />
-          <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '20px', fontWeight: '300', color: '#6B2D3E', margin: '0', letterSpacing: '1px' }}>
+          <p style={{ fontFamily: '"Raleway", sans-serif', fontSize: '28px', fontWeight: '300', color: '#6B2D3E', margin: '0', letterSpacing: '1px' }}>
             {venue}, {city}
           </p>
         </div>

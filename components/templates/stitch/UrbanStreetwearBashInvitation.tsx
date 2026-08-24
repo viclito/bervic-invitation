@@ -52,14 +52,14 @@ export default function UrbanStreetwearBashInvitation(
   const celebrantPhoto =
     props.coupleImage ||
     props.coverImage ||
-    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAbU8RpbgNa3bPgNMzEyC-qfY2czcPgzx31apUfi4LIh0hmdWm20h4fpUEK4wCghCi3gzPjo7YK47dYEptWcyJAAVGxKRqEzioNsYVVmU_fO2fEzxAVDXomeoRz9R3wLyn-3mZCwp_BbOQIeHRW3DaJY349WsODlGL7MvYUJqfmlGoof-yi7Jow8vlxU-vWJX-PAOdhv8qRuaT3R98ITHP81pRjy29WTbMCMyfCSSlxCdd4kX04Lmh-";
+    (props.heroImage && !props.heroImage.includes("wedding") ? props.heroImage : undefined) ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
     days: 5,
-    hours: 14,
-    minutes: 42,
+    hours: 12,
+    minutes: 30,
     seconds: 0,
   });
 
@@ -91,17 +91,17 @@ export default function UrbanStreetwearBashInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuArKqpEpBw99diBgqjhH5tEvPMtCgN6yYRd5LOIXYTmWQT_ROS9SChpLlOPAXuCDgMGduYAqG2ViQu971ItV3-kXaBiGKVnaV9Ytzoj7LdUxLwkbA5798xr1Vc_oIMjt_A3ySuDtK8kjlzGvZn6LNzboDzkZiYhUay-J2ORVYkWRavZWrko2RHct2FqAUMLPlkVL10WBxJ40aoNw36R3Lfh90VgeCuykTRr9J2towc_WHI9TR9G9y8x",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             rotate: "rotate-[-4deg]",
             bgColor: "bg-[#ff00ff]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDdHbmQ9tthMNVH3PnOkjaQURD-YUP7poBPRzDG3Kf45bK_5c0DznNum3gflAd6WrPetWq7PJHDYuacZvgdxB47gAevz2lwdILvNpVHj7F2wHiuLthzeIpUXi7syX6wWEFrHC58xA18HXlAWMiE4KEPX_pixyOrvLoxi2tx5zPqK4eNjXPeiw1sTpL0HtpJGG0a7KvckF6a_Z8fbcCkJ7YuVkfDHfps1Xs-xzvKnxPdIWemzMKjlsC",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             rotate: "rotate-[3deg] md:mt-12",
             bgColor: "bg-[#ccff00]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuA1iRmwea9B8zNIZsC56vD_btfaD5O1vnNcB8iq1-8ZZuBq0sGneEJcTBGDsiEiJCbW_OqGSRnQ3XW-uD5xbxyBQ5q7d8ayu4-ChpwTiVciC9OZxzKunAPeSodtp7w6M-4wCp9AEo8ync2t--hpu3zSLYIFOuE3vGIu-MyxwjNe-5p20IIZo--EAo9ouE0igHjhLTM2K4jcQZY_96t0jrxUz-hHQPm_FU5bnpFc6pTqd1Xsz94U-isD",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             rotate: "rotate-[-2deg]",
             bgColor: "bg-white",
           },

@@ -1,39 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY || process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-function getCloudinaryPublicId(url: string): string | null {
-  if (!url || !url.includes("res.cloudinary.com")) return null;
-  try {
-    const parts = url.split("/upload/");
-    if (parts.length < 2) return null;
-    let path = parts[1];
-    // Remove version prefix if exists e.g. v1722264625/
-    if (path.match(/^v\d+\//)) {
-      path = path.replace(/^v\d+\//, "");
-    }
-    // Remove file extension (.jpg, .png, etc)
-    const publicId = path.replace(/\.[^/.]+$/, "");
-    return publicId;
-  } catch (e) {
-    return null;
-  }
-}
+import { deleteCloudinaryImage } from "@/lib/cloudinary";
 
 export async function deleteCloudinaryImages(urls: string[]) {
   for (const url of urls) {
-    const publicId = getCloudinaryPublicId(url);
-    if (publicId) {
-      try {
-        await cloudinary.uploader.destroy(publicId);
-      } catch (err) {
-        console.error(`Failed to destroy Cloudinary image ${publicId}:`, err);
-      }
+    try {
+      await deleteCloudinaryImage(url);
+    } catch (err) {
+      console.error(`Failed to destroy Cloudinary image ${url}:`, err);
     }
   }
 }

@@ -355,7 +355,7 @@ export default function NeonRetroArcadeInvitation(
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   src={
                     props.coupleImage ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuA2C3lRIhy9NnwmJD8yvqRPXssU0l6qJ7-vFS7JzYhvXas3PFq0YPnQ4b5u1XLE5qYF_qOKLXAjDZnuSQDhvNZDeB4W4iGT0JrOGHW4-72DYECSCMj5RtlnztYeDWB7zgFvMfPtwWkFCtvYK76ge05Eifc2_dq5ayUr2SXUhm4NzK3MBfUrPb-PcqfygqVry7tu0RBuni8HrGtfLaqOmfeEHaJI4HF__psK54aj3U9aKUm7NB_PLOu1"
+                    "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80"
                   }
                 />
               </div>

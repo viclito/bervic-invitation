@@ -25,20 +25,7 @@ const CardTemplate31: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#FFFFFF',
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px',
-        boxSizing: 'border-box',
-        color: '#111111',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#FFFFFF', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px', boxSizing: 'border-box', color: '#111111' }}
     >
       <style>
         {`
@@ -49,15 +36,7 @@ const CardTemplate31: React.FC<CardProps> = ({
 
       {/* Minimalist Line Art SVG Background */}
       <svg
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-          opacity: 0.08,
-        }}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.08 }}
         viewBox="0 0 1080 1080"
       >
         {/* Single line drawing of abstract floral/face shape */}
@@ -82,48 +61,34 @@ const CardTemplate31: React.FC<CardProps> = ({
       </svg>
 
       <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          zIndex: 2,
-        }}
+        style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2 }}
       >
         <div style={{ marginBottom: '60px', width: '480px', height: '480px', position: 'relative' }}>
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              border: '1px solid #111111',
-              padding: '10px',
-              backgroundColor: '#FFFFFF',
-              boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', border: '1px solid #111111', padding: '10px', backgroundColor: '#FFFFFF', boxSizing: 'border-box' }}
           />
         </div>
 
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 200, fontSize: '18px', letterSpacing: '10px', textTransform: 'uppercase', margin: '0 0 20px 0', color: '#555555' }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: '28px', letterSpacing: '10px', textTransform: 'uppercase', margin: '0 0 20px 0', color: '#555555' }}>
             {tagline}
           </p>
 
-          <h1 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: '68px', fontWeight: 400, margin: '0 0 40px 0', letterSpacing: '2px' }}>
-            {partnerOne} <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 200, fontSize: '40px', margin: '0 15px' }}>+</span> {partnerTwo}
+          <h1 style={{ fontFamily: "'Bodoni Moda', serif", fontSize: '84px', fontWeight: 400, margin: '0 0 40px 0', letterSpacing: '2px' }}>
+            {partnerOne} <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 200, fontSize: '46px', margin: '0 15px' }}>+</span> {partnerTwo}
           </h1>
 
           <div style={{ width: '40px', height: '1px', backgroundColor: '#111111', margin: '0 auto 40px auto' }} />
 
-          <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: '20px', lineHeight: 2, letterSpacing: '4px', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: '32px', lineHeight: 2, letterSpacing: '4px', textTransform: 'uppercase' }}>
             <div>{weddingDate} — {weddingTime}</div>
             <div>{venue}, {city}</div>
           </div>
           
-          <div style={{ fontFamily: "'Bodoni Moda', serif", fontStyle: 'italic', fontSize: '22px', marginTop: '40px', color: '#555555' }}>
+          <div style={{ fontFamily: "'Bodoni Moda', serif", fontStyle: 'italic', fontSize: '30px', fontWeight: 500, marginTop: '40px', color: '#555555' }}>
             {hashtag}
           </div>
         </div>

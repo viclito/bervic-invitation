@@ -100,7 +100,7 @@ export default function BotanicalGardenEleganceInvitation(
             props.contactAddress || props.venuePlace || "Greenfield Valley"
           )}`,
           image:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq",
+            "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };
 
   return (
@@ -302,7 +302,7 @@ export default function BotanicalGardenEleganceInvitation(
                 className="w-full h-full object-cover rounded-t-[90px] rounded-b-lg grayscale-[20%] sepia-[10%] contrast-125"
                 src={
                   props.heroImage ||
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuAZJB7Ka0QuhOUlCq-WvrM9YMyT_qQPfo-5wStIzRDkI1rE9oGCRjHJdaWYb_Tt-1-cPvwl3V18SoideDwVuoURk_6KoaSahb4uvAzqjvjXFmcYtpduAe51zfVp1BCorfBQSLC8RNBqc0bQNLVdgOOboQj_9n5bUQOH1TNuz9dZ0-wAoMjGXonAU0jf1DHmoeXBD6f0kRy5N8hp_UHBZqxTOxq-l-hRSVSKr_AMKMmRVNBpLpeFr_Og"
+                  "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80"
                 }
               />
             </motion.div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Type,
@@ -18,6 +18,9 @@ import {
   Lock,
   Unlock,
   AlignCenter,
+  AlignLeft,
+  AlignRight,
+  MousePointer,
   Wand2,
   Share2,
   Eye,
@@ -52,6 +55,11 @@ import {
   Plus,
   WrapText,
   Edit3,
+  Ruler,
+  Upload,
+  FolderUp,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import OrderOrCartModal from "@/components/cart/OrderOrCartModal";
 
@@ -83,24 +91,90 @@ export interface CanvasElement {
   flipV?: boolean;
 }
 
+export const ASPECT_RATIOS = [
+  { id: "classic", name: "Classic (5:7)", shortName: "Classic", width: 480, height: 672, ratioStr: "5:7" },
+  { id: "portrait", name: "Story (9:16)", shortName: "Story", width: 420, height: 746, ratioStr: "9:16" },
+  { id: "square", name: "Square (1:1)", shortName: "Square", width: 560, height: 560, ratioStr: "1:1" },
+  { id: "landscape", name: "Landscape (7:5)", shortName: "Landscape", width: 672, height: 480, ratioStr: "7:5" },
+  { id: "cinematic", name: "Cinematic (16:9)", shortName: "Cinematic", width: 746, height: 420, ratioStr: "16:9" },
+  { id: "bookmark", name: "Bookmark (1:2)", shortName: "Bookmark", width: 360, height: 720, ratioStr: "1:2" },
+  { id: "a4", name: "A4 Print (1:1.41)", shortName: "A4 Print", width: 480, height: 678, ratioStr: "1:1.41" },
+  { id: "custom", name: "Free Size", shortName: "Free Size", width: 480, height: 672, ratioStr: "Custom" },
+];
+
 export interface CanvasPage {
   id: string;
   title: string;
+  name?: string;
+  isBase?: boolean;
+  heightPercent?: number;
+  aspectRatio?: string;
+  customWidth?: number;
+  customHeight?: number;
+  lockRatio?: boolean;
   backgroundColor: string;
-  backgroundImage?: string;
+  backgroundImage?: string | null;
+  bgMode?: string;
   elements: CanvasElement[];
+}
+
+export function getLayerDimensions(
+  layer: CanvasPage,
+  baseLayer?: CanvasPage
+): { width: number; height: number; ratioStr: string } {
+  const layerRatioObj = ASPECT_RATIOS.find((r) => r.id === layer.aspectRatio);
+  const baseRatioObj = baseLayer
+    ? ASPECT_RATIOS.find((r) => r.id === baseLayer.aspectRatio) || ASPECT_RATIOS[0]
+    : ASPECT_RATIOS[0];
+
+  const rawBaseH = baseLayer?.customHeight || baseRatioObj.height;
+  const rawBaseW = baseLayer?.customWidth || baseRatioObj.width;
+
+  if (layer.isBase !== false) {
+    return {
+      width: layer.customWidth || (layerRatioObj ? layerRatioObj.width : rawBaseW),
+      height: layer.customHeight || (layerRatioObj ? layerRatioObj.height : rawBaseH),
+      ratioStr: layerRatioObj ? layerRatioObj.ratioStr : "5:7",
+    };
+  }
+
+  const heightPct = (layer.heightPercent || 85) / 100;
+  const targetH = Math.max(160, Math.round(rawBaseH * heightPct));
+
+  let ratioFraction = 5 / 7;
+  if (layerRatioObj && layerRatioObj.id !== "custom") {
+    ratioFraction = layerRatioObj.width / layerRatioObj.height;
+  } else if (layer.customWidth && layer.customHeight) {
+    ratioFraction = layer.customWidth / layer.customHeight;
+  } else {
+    ratioFraction = rawBaseW / rawBaseH;
+  }
+
+  const targetW = Math.max(120, Math.round(targetH * ratioFraction));
+
+  return {
+    width: targetW,
+    height: targetH,
+    ratioStr: layerRatioObj ? layerRatioObj.ratioStr : "Custom",
+  };
 }
 
 export interface PresetTemplate {
   id: string;
+  dbId?: string;
+  slug?: string;
   name: string;
-  topic: "vintage" | "modern";
+  topic: "vintage" | "modern" | string;
   category: string;
+  pricePerCard?: number;
+  minCopies?: number;
+  paperType?: string;
+  badge?: string | null;
   previewImage?: string;
-  aspectRatio: "portrait" | "square" | "classic";
+  aspectRatio: "portrait" | "square" | "classic" | string;
   backgroundColor: string;
   backgroundImage?: string;
-  elements: CanvasElement[];
+  elements: CanvasElement[] | any;
 }
 
 let elementIdCounter = 0;
@@ -2021,38 +2095,52 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
 ];
 
 const GRAPHIC_ELEMENTS = [
-  // Modern Template 3 Motifs (Silver Botanical Foliage in Two Parts)
-  { id: "modern3-foliage-top", name: "Silver Botanical Top Foliage", templateId: "modern-silver-botanical-foliage", category: "Silver Botanical", icon: "🌿", src: "/images/canva/modern3-foliage-top.webp" },
-  { id: "modern3-foliage-bottom", name: "Silver Botanical Bottom Foliage", templateId: "modern-silver-botanical-foliage", category: "Silver Botanical", icon: "🍃", src: "/images/canva/modern3-foliage-bottom.webp" },
+  // ── 1. FLORAL MOTIFS ──
+  { id: "modern-floral-blue", name: "Royal Blue Rose Bouquet", templateId: "all", category: "florals", icon: "🌹", src: "/images/canva/modern-floral-blue.webp" },
+  { id: "modern-floral-gold", name: "Golden Blossom Motif", templateId: "all", category: "florals", icon: "✨", src: "/images/canva/modern-floral-gold.webp" },
+  { id: "modern-floral-pink", name: "Blush Peony Floral", templateId: "all", category: "florals", icon: "🌸", src: "/images/canva/modern-floral-pink.webp" },
+  { id: "modern-floral-purple", name: "Imperial Purple Rose", templateId: "all", category: "florals", icon: "💜", src: "/images/canva/modern-floral-purple.webp" },
+  { id: "modern-floral-red", name: "Crimson Rose Motif", templateId: "all", category: "florals", icon: "🌹", src: "/images/canva/modern-floral-red.webp" },
+  { id: "modern-floral-sepia", name: "Vintage Sepia Rose", templateId: "all", category: "florals", icon: "🍂", src: "/images/canva/modern-floral-sepia.webp" },
+  { id: "floral-header-t1", name: "Vintage Floral Top Header", templateId: "all", category: "florals", icon: "🌸", src: "/images/canva/floral-header.webp" },
+  { id: "floral-footer-t1", name: "Vintage Floral Bottom Footer", templateId: "all", category: "florals", icon: "🌺", src: "/images/canva/floral-footer.webp" },
 
-  // Template 4 Motifs (Antique Parchment & Victorian Swirl)
-  { id: "victorian-arch-top-t4", name: "Victorian Swirl Arch Top", templateId: "antique-parchment-victorian", category: "Victorian Swirl", icon: "⚜️", src: "/images/canva/victorian-header-swirl.webp" },
-  { id: "victorian-arch-bottom-t4", name: "Victorian Swirl Arch Bottom", templateId: "antique-parchment-victorian", category: "Victorian Swirl", icon: "⚜️", src: "/images/canva/victorian-footer-swirl.webp" },
-  { id: "victorian-divider-t4", name: "Victorian Center Divider", templateId: "antique-parchment-victorian", category: "Victorian Swirl", icon: "✦", src: "/images/canva/victorian-center-divider.webp" },
-  { id: "victorian-date-badge-t4", name: "Victorian Date Banner", templateId: "antique-parchment-victorian", category: "Victorian Swirl", icon: "📅", src: "/images/canva/victorian-date-badge.webp" },
+  // ── 2. BOTANICAL & FOLIAGE ──
+  { id: "modern3-foliage-top", name: "Silver Botanical Top Foliage", templateId: "all", category: "botanical", icon: "🌿", src: "/images/canva/modern3-foliage-top.webp" },
+  { id: "modern3-foliage-bottom", name: "Silver Botanical Bottom Foliage", templateId: "all", category: "botanical", icon: "🍃", src: "/images/canva/modern3-foliage-bottom.webp" },
+  { id: "leaf-divider-t1", name: "Botanical Leaf Sprig", templateId: "all", category: "botanical", icon: "🌿", src: "/images/canva/leaf-divider.webp" },
+  { id: "modern2-fill", name: "Geometric Luxury Fill", templateId: "all", category: "botanical", icon: "💎", src: "/images/canva/modern2-fill.webp" },
 
-  // Template 2 Motifs (Royal Parchment & Filigree)
-  { id: "swirl-header-t2", name: "Swirl Header Flourish", templateId: "royal-parchment-filigree", category: "Royal Filigree", icon: "📜", src: "/images/canva/vintage-swirl-header.webp" },
-  { id: "wave-divider-t2", name: "Filigree Wave Divider", templateId: "royal-parchment-filigree", category: "Royal Filigree", icon: "〰️", src: "/images/canva/vintage-wave-divider.webp" },
-  { id: "swirl-footer-t2", name: "Swirl Footer Flourish", templateId: "royal-parchment-filigree", category: "Royal Filigree", icon: "📜", src: "/images/canva/vintage-swirl-footer.webp" },
+  // ── 3. VICTORIAN SWIRLS & DIVIDERS ──
+  { id: "victorian-arch-top-t4", name: "Victorian Swirl Arch Top", templateId: "all", category: "swirls", icon: "⚜️", src: "/images/canva/victorian-header-swirl.webp" },
+  { id: "victorian-arch-bottom-t4", name: "Victorian Swirl Arch Bottom", templateId: "all", category: "swirls", icon: "⚜️", src: "/images/canva/victorian-footer-swirl.webp" },
+  { id: "victorian-divider-t4", name: "Victorian Center Divider", templateId: "all", category: "swirls", icon: "✦", src: "/images/canva/victorian-center-divider.webp" },
+  { id: "victorian-date-badge-t4", name: "Victorian Date Banner", templateId: "all", category: "swirls", icon: "📅", src: "/images/canva/victorian-date-badge.webp" },
+  { id: "swirl-header-t2", name: "Royal Swirl Header", templateId: "all", category: "swirls", icon: "📜", src: "/images/canva/vintage-swirl-header.webp" },
+  { id: "wave-divider-t2", name: "Filigree Wave Divider", templateId: "all", category: "swirls", icon: "〰️", src: "/images/canva/vintage-wave-divider.webp" },
+  { id: "swirl-footer-t2", name: "Royal Swirl Footer", templateId: "all", category: "swirls", icon: "📜", src: "/images/canva/vintage-swirl-footer.webp" },
 
-  // Template 1 Motifs (Vintage Botanical Romance)
-  { id: "leaf-divider-t1", name: "Vintage Leaf Ornament", templateId: "vintage-botanical-romance", category: "Botanical Floral", icon: "🌿", src: "/images/canva/leaf-divider.webp" },
-  { id: "floral-header-t1", name: "Floral Top Header", templateId: "vintage-botanical-romance", category: "Botanical Floral", icon: "🌸", src: "/images/canva/floral-header.webp" },
-  { id: "floral-footer-t1", name: "Floral Bottom Footer", templateId: "vintage-botanical-romance", category: "Botanical Floral", icon: "🌺", src: "/images/canva/floral-footer.webp" },
-
-  // Universal Royal Seals & Frames
-  { id: "gold-arch", name: "Gold Arch Frame", templateId: "all", category: "Seals & Frames", icon: "🏛️" },
-  { id: "golden-rings", name: "Golden Rings", templateId: "all", category: "Seals & Frames", icon: "💍" },
-  { id: "wax-seal", name: "Royal Wax Seal", templateId: "all", category: "Seals & Frames", icon: "🏵️" },
+  // ── 4. SEALS, RINGS & FRAMES ──
+  { id: "interlocked-rings", name: "Interlocked Gold Rings", templateId: "all", category: "seals", icon: "💍", src: "/images/canva/interlocked-rings.svg" },
+  { id: "gold-arch", name: "Gold Arch Frame", templateId: "all", category: "seals", icon: "🏛️" },
+  { id: "golden-rings", name: "Golden Rings", templateId: "all", category: "seals", icon: "💍" },
+  { id: "wax-seal", name: "Royal Wax Seal", templateId: "all", category: "seals", icon: "🏵️" },
 ];
 
 const INITIAL_PAGES: CanvasPage[] = [
   {
-    id: "page-1",
-    title: "01 Cover",
+    id: "layer-1",
+    title: "Main Invitation (Base)",
+    name: "Main Invitation (Base)",
+    isBase: true,
+    heightPercent: 100,
+    aspectRatio: "classic",
+    customWidth: 480,
+    customHeight: 672,
+    lockRatio: true,
     backgroundColor: PRESET_TEMPLATES[0].backgroundColor,
     backgroundImage: PRESET_TEMPLATES[0].backgroundImage,
+    bgMode: "textures",
     elements: PRESET_TEMPLATES[0].elements,
   },
 ];
@@ -2070,7 +2158,21 @@ const getInitialDraft = () => {
 
 export default function CanvaCardStudio() {
   const router = useRouter();
-  const { status } = useSession();
+  const searchParams = useSearchParams();
+  const orderIdParam = searchParams.get("orderId");
+  const itemIdParam = searchParams.get("itemId");
+
+  const [adminOrderContext, setAdminOrderContext] = useState<{
+    orderId: string;
+    itemId: string;
+    orderNumber: string;
+    templateName: string;
+    initialDetails: Record<string, unknown>;
+  } | null>(null);
+  const [savingAdminOrder, setSavingAdminOrder] = useState(false);
+  const [toastNotification, setToastNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const { data: session, status } = useSession();
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const workspaceRef = useRef<HTMLDivElement | null>(null);
 
@@ -2080,7 +2182,7 @@ export default function CanvaCardStudio() {
   useEffect(() => {
     async function loadDynamicTemplates() {
       try {
-        const res = await fetch("/api/canva/templates");
+        const res = await fetch("/api/canva/templates", { cache: "no-store" });
         const data = await res.json();
         if (Array.isArray(data.templates) && data.templates.length > 0) {
           setDynamicTemplates(data.templates);
@@ -2091,6 +2193,129 @@ export default function CanvaCardStudio() {
     }
     loadDynamicTemplates();
   }, []);
+
+  // Preload Order Item for Admin Editing Mode
+  useEffect(() => {
+    if (!orderIdParam || !itemIdParam) return;
+
+    async function fetchOrderForAdmin() {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderIdParam}`);
+        const data = await res.json();
+        if (res.ok && data.order) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const item = (data.order.items || []).find((it: any) => it.id === itemIdParam);
+          if (item) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let details: any = {};
+            try {
+              details = JSON.parse(item.cardDetailsJson || "{}");
+            } catch {}
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let els: any[] = [];
+            try {
+              els = JSON.parse(item.elementsJson || "[]");
+            } catch {}
+
+            setAdminOrderContext({
+              orderId: String(orderIdParam),
+              itemId: String(itemIdParam),
+              orderNumber: data.order.orderNumber,
+              templateName: item.templateName,
+              initialDetails: details,
+            });
+
+            setDocTitle(item.templateName);
+            if (Array.isArray(details.pages) && details.pages.length > 0) {
+              setPages(details.pages);
+            } else if (els.length > 0) {
+              setPages([
+                {
+                  id: "page-1",
+                  title: "Main Invitation (Base)",
+                  isBase: true,
+                  heightPercent: 100,
+                  backgroundColor: details.backgroundColor || "#FFFFFF",
+                  backgroundImage: details.backgroundImage || undefined,
+                  elements: els,
+                },
+              ]);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to preload order for admin editing:", err);
+      }
+    }
+
+    fetchOrderForAdmin();
+  }, [orderIdParam, itemIdParam]);
+
+  const handleSaveAdminOrder = async () => {
+    if (!adminOrderContext) return;
+    setSavingAdminOrder(true);
+    try {
+      let capturedUrl = "";
+      if (canvasRef.current) {
+        setSelectedId(null);
+        if (typeof document !== "undefined" && document.fonts) {
+          await document.fonts.ready;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(canvasRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: null,
+        });
+        capturedUrl = canvas.toDataURL("image/jpeg", 0.92);
+      }
+
+      const res = await fetch(`/api/admin/orders/${adminOrderContext.orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_item",
+          itemId: adminOrderContext.itemId,
+          cardDetails: {
+            ...adminOrderContext.initialDetails,
+            pages: pages.map((pg, idx) => ({
+              ...pg,
+              index: idx + 1,
+              sheetName: pg.title || pg.name || `Sheet ${idx + 1}`,
+            })),
+            layerCount: pages.length,
+          },
+          elements: pages[0]?.elements || elements,
+          previewImage: capturedUrl || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update order");
+
+      setToastNotification({
+        type: "success",
+        message: "Order design updated successfully! Redirecting back to order...",
+      });
+      setTimeout(() => {
+        router.push(`/admin/orders/${adminOrderContext.orderId}`);
+      }, 1000);
+    } catch (err: unknown) {
+      setToastNotification({
+        type: "error",
+        message: (err as Error)?.message || "Failed to save design updates",
+      });
+      setTimeout(() => {
+        setToastNotification(null);
+      }, 4000);
+    } finally {
+      setSavingAdminOrder(false);
+    }
+  };
 
   const allTemplates: PresetTemplate[] = useMemo(() => {
     const combined = [...dynamicTemplates, ...PRESET_TEMPLATES];
@@ -2108,7 +2333,7 @@ export default function CanvaCardStudio() {
   );
   const [aspectRatio] = useState<"portrait" | "square" | "classic">("classic");
   const [pages, setPages] = useState<CanvasPage[]>(() => getInitialDraft()?.pages || INITIAL_PAGES);
-  const [activePageIndex] = useState<number>(0);
+  const [activePageIndex, setActivePageIndex] = useState<number>(0);
 
   const [activeTemplateId, setActiveTemplateId] = useState<string>(
     () => getInitialDraft()?.activeTemplateId || "vintage-botanical-romance"
@@ -2145,11 +2370,7 @@ export default function CanvaCardStudio() {
   const [activeTab, setActiveTab] = useState<
     "templates" | "elements" | "text" | "uploads" | "layers"
   >("templates");
-  const [templateTopic, setTemplateTopic] = useState<"vintage" | "modern">(() => {
-    const draft = getInitialDraft();
-    if (draft?.activeTemplateId?.startsWith("modern-")) return "modern";
-    return "vintage";
-  });
+  const [templateTopic, setTemplateTopic] = useState<"all" | "vintage" | "modern">("all");
   const [selectedColorVariantId, setSelectedColorVariantId] = useState<string>("purple");
 
   // Mobile Bottom Bar & Slide-up Drawer State
@@ -2184,8 +2405,49 @@ export default function CanvaCardStudio() {
   const [orderPreviewUrl, setOrderPreviewUrl] = useState<string>("");
   const [exporting, setExporting] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
-  const [zoomLevel, setZoomLevel] = useState<number>(80);
+  const [zoomLevel, setZoomLevel] = useState<number>(85);
   const [showGrid, setShowGrid] = useState<boolean>(false);
+  const [showMobileLayers, setShowMobileLayers] = useState<boolean>(false);
+
+  // Right Sidebar Tab State (Personalize vs Format)
+  const [rightPanelTab, setRightPanelTab] = useState<"personalize" | "format">("personalize");
+
+  // Multi-Deck Layer Stack Visualizer State
+  const [stackAlign, setStackAlign] = useState<"bottom" | "top" | "center">("bottom");
+  const [showStackModal, setShowStackModal] = useState<boolean>(false);
+
+  // Graphic Elements Library State
+  const [elementsCategory, setElementsCategory] = useState<string>("all");
+  const [userUploadedElements, setUserUploadedElements] = useState<any[]>([]);
+
+  const handleCustomElementUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const dataUrl = uploadEvent.target?.result as string;
+      if (dataUrl) {
+        const newEl = {
+          id: `custom-upload-${Date.now()}`,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          category: "uploads",
+          icon: "🖼️",
+          src: dataUrl,
+          templateId: "all",
+        };
+        setUserUploadedElements((prev) => [newEl, ...prev]);
+        handleAddGraphic(newEl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Auto-switch right panel to Format tab when user selects an element
+  useEffect(() => {
+    if (selectedId) {
+      setRightPanelTab("format");
+    }
+  }, [selectedId]);
 
   // Canva Floating Toolbar Context Menu State
   const [showMoreMenu, setShowMoreMenu] = useState<boolean>(false);
@@ -2655,6 +2917,88 @@ export default function CanvaCardStudio() {
     updateActiveElement({ isLocked: !activeElement.isLocked });
   };
 
+  const handleArrange = (action: "forward" | "backward" | "front" | "back") => {
+    if (!selectedId) return;
+    const currentElements = [...currentPage.elements];
+    const idx = currentElements.findIndex((e) => e.id === selectedId);
+    if (idx === -1) return;
+
+    const el = currentElements[idx];
+    currentElements.splice(idx, 1);
+
+    if (action === "front") {
+      currentElements.push(el);
+    } else if (action === "back") {
+      currentElements.unshift(el);
+    } else if (action === "forward") {
+      const newIdx = Math.min(currentElements.length, idx + 1);
+      currentElements.splice(newIdx, 0, el);
+    } else if (action === "backward") {
+      const newIdx = Math.max(0, idx - 1);
+      currentElements.splice(newIdx, 0, el);
+    }
+
+    const updatedPages = pages.map((pg, pIdx) =>
+      pIdx === activePageIndex ? { ...pg, elements: currentElements } : pg
+    );
+    setPages(updatedPages);
+    pushState(updatedPages);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSetBaseLayer = (idxToSet: number) => {
+    const updated = pages.map((p, idx) => ({
+      ...p,
+      isBase: idx === idxToSet,
+      heightPercent: idx === idxToSet ? 100 : (p.heightPercent || 85),
+    }));
+    setPages(updated);
+    pushState(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateLayerHeightPercent = (idx: number, pct: number) => {
+    const clamped = Math.max(10, Math.min(200, pct));
+    const updated = pages.map((p, pIdx) =>
+      pIdx === idx ? { ...p, heightPercent: clamped } : p
+    );
+    setPages(updated);
+    pushState(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateLayerName = (idx: number, name: string) => {
+    const updated = pages.map((p, pIdx) =>
+      pIdx === idx ? { ...p, title: name, name: name } : p
+    );
+    setPages(updated);
+    pushState(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const getPhysicalDimensions = (layer: CanvasPage, basePg: CanvasPage) => {
+    const lDim = getLayerDimensions(layer, basePg);
+    const bDim = getLayerDimensions(basePg, basePg);
+    const pct = layer.isBase !== false ? 100 : (layer.heightPercent || 85);
+    
+    // Reference 5" x 7" base card
+    const widthInches = ((lDim.width / bDim.width) * 5.0).toFixed(2);
+    const heightInches = ((lDim.height / bDim.height) * 7.0).toFixed(2);
+    const widthMm = Math.round((lDim.width / bDim.width) * 127);
+    const heightMm = Math.round((lDim.height / bDim.height) * 178);
+
+    return {
+      pixelW: lDim.width,
+      pixelH: lDim.height,
+      widthInches: `${widthInches}"`,
+      heightInches: `${heightInches}"`,
+      widthMm: `${widthMm} mm`,
+      heightMm: `${heightMm} mm`,
+      pct,
+      ratioStr: lDim.ratioStr,
+    };
+  };
+
   const handleSave = async (navTarget?: string | null) => {
     const currentDraft = {
       docTitle,
@@ -2714,7 +3058,7 @@ export default function CanvaCardStudio() {
   const handleLoadTemplate = (tpl: PresetTemplate) => {
     setActiveTemplateId(tpl.id);
     setDocTitle(tpl.name);
-    setTemplateTopic(tpl.topic);
+    setTemplateTopic(tpl.topic === "modern" ? "modern" : "vintage");
     setSelectedColorVariantId(
       tpl.id === "modern-watercolor-floral"
         ? "purple"
@@ -2727,18 +3071,22 @@ export default function CanvaCardStudio() {
 
     let updatedPersonalization = { ...personalization };
 
+    const rawElementsList: any[] = Array.isArray(tpl.elements)
+      ? tpl.elements
+      : (tpl.elements as any)?.layers?.[0]?.elements || [];
+
     if (tpl.id === "modern-silver-botanical-foliage") {
-      const hostText = tpl.elements.find((e) => e.id === "host-names-m3")?.text || "Host(s)";
-      const gFirst = tpl.elements.find((e) => e.id === "groom-first-m3")?.text || "First Name";
-      const gLast = tpl.elements.find((e) => e.id === "groom-last-m3")?.text || "last name";
-      const bFirst = tpl.elements.find((e) => e.id === "bride-first-m3")?.text || "First Name";
-      const bLast = tpl.elements.find((e) => e.id === "bride-last-m3")?.text || "last name";
-      const dDay = tpl.elements.find((e) => e.id === "date-day-m3")?.text || "Day and Month";
-      const dYear = tpl.elements.find((e) => e.id === "date-year-m3")?.text || "Year";
-      const dTime = tpl.elements.find((e) => e.id === "date-time-m3")?.text || "4:00 PM";
-      const vTitle = tpl.elements.find((e) => e.id === "venue-title-m3")?.text || "Venue";
-      const vAddr1 = tpl.elements.find((e) => e.id === "venue-line1-m3")?.text || "Address Line 1";
-      const vAddr2 = tpl.elements.find((e) => e.id === "venue-line2-m3")?.text || "Address Line 2";
+      const hostText = rawElementsList.find((e) => e.id === "host-names-m3")?.text || "Host(s)";
+      const gFirst = rawElementsList.find((e) => e.id === "groom-first-m3")?.text || "First Name";
+      const gLast = rawElementsList.find((e) => e.id === "groom-last-m3")?.text || "last name";
+      const bFirst = rawElementsList.find((e) => e.id === "bride-first-m3")?.text || "First Name";
+      const bLast = rawElementsList.find((e) => e.id === "bride-last-m3")?.text || "last name";
+      const dDay = rawElementsList.find((e) => e.id === "date-day-m3")?.text || "Day and Month";
+      const dYear = rawElementsList.find((e) => e.id === "date-year-m3")?.text || "Year";
+      const dTime = rawElementsList.find((e) => e.id === "date-time-m3")?.text || "4:00 PM";
+      const vTitle = rawElementsList.find((e) => e.id === "venue-title-m3")?.text || "Venue";
+      const vAddr1 = rawElementsList.find((e) => e.id === "venue-line1-m3")?.text || "Address Line 1";
+      const vAddr2 = rawElementsList.find((e) => e.id === "venue-line2-m3")?.text || "Address Line 2";
 
       updatedPersonalization = {
         ...personalization,
@@ -2756,15 +3104,15 @@ export default function CanvaCardStudio() {
       };
       setPersonalization(updatedPersonalization);
     } else if (tpl.topic === "modern") {
-      const taglineText = tpl.elements.find((e) => e.id.startsWith("praise-lord") || e.fieldKey === "tagline")?.text || "Praise the lord";
-      const groomText = tpl.elements.find((e) => e.id.startsWith("groom-name") || e.fieldKey === "coupleNames")?.text || "Kirubin";
-      const brideText = tpl.elements.find((e) => e.id.startsWith("bride-name"))?.text || "Asha";
-      const dateText = tpl.elements.find((e) => e.id.startsWith("date-line") || e.fieldKey === "date")?.text || "3  Jan 2024,  Saturday  @10am";
-      const welcomeText = tpl.elements.find((e) => e.id.startsWith("welcome-sentence"))?.text || "Welcomes you all";
-      const contactText = tpl.elements.find((e) => e.id.startsWith("contact-info") || e.fieldKey === "address")?.text || "Place: Karumankoodal\nPhone: 8489520394";
-      const familyText = tpl.elements.find((e) => e.id.startsWith("family-info"))?.text || "With love\nM. Tharmar\nS. Rajam";
-      const marriageText = tpl.elements.find((e) => e.id.startsWith("marriage-details") || e.fieldKey === "venue")?.text || "Marthal Zion C.S.I Church\nMarthal\nTime: 10:30 am";
-      const receptionText = tpl.elements.find((e) => e.id.startsWith("reception-details"))?.text || "Holy loosiyal Auditorium\nLocation: Pudur to maindaikadu road\nTime: 6pm";
+      const taglineText = rawElementsList.find((e) => e.id.startsWith("praise-lord") || e.fieldKey === "tagline")?.text || "Praise the lord";
+      const groomText = rawElementsList.find((e) => e.id.startsWith("groom-name") || e.fieldKey === "coupleNames")?.text || "Kirubin";
+      const brideText = rawElementsList.find((e) => e.id.startsWith("bride-name"))?.text || "Asha";
+      const dateText = rawElementsList.find((e) => e.id.startsWith("date-line") || e.fieldKey === "date")?.text || "3  Jan 2024,  Saturday  @10am";
+      const welcomeText = rawElementsList.find((e) => e.id.startsWith("welcome-sentence"))?.text || "Welcomes you all";
+      const contactText = rawElementsList.find((e) => e.id.startsWith("contact-info") || e.fieldKey === "address")?.text || "Place: Karumankoodal\nPhone: 8489520394";
+      const familyText = rawElementsList.find((e) => e.id.startsWith("family-info"))?.text || "With love\nM. Tharmar\nS. Rajam";
+      const marriageText = rawElementsList.find((e) => e.id.startsWith("marriage-details") || e.fieldKey === "venue")?.text || "Marthal Zion C.S.I Church\nMarthal\nTime: 10:30 am";
+      const receptionText = rawElementsList.find((e) => e.id.startsWith("reception-details"))?.text || "Holy loosiyal Auditorium\nLocation: Pudur to maindaikadu road\nTime: 6pm";
 
       updatedPersonalization = {
         ...personalization,
@@ -2781,87 +3129,124 @@ export default function CanvaCardStudio() {
       setPersonalization(updatedPersonalization);
     }
 
-    const populatedElements = tpl.id === "modern-silver-botanical-foliage"
-      ? tpl.elements.map((el) => {
-          if (el.id === "host-names-m3") return { ...el, text: updatedPersonalization.modern3Host };
-          if (el.id === "groom-first-m3") return { ...el, text: updatedPersonalization.modern3GroomFirst };
-          if (el.id === "groom-last-m3") return { ...el, text: updatedPersonalization.modern3GroomLast };
-          if (el.id === "bride-first-m3") return { ...el, text: updatedPersonalization.modern3BrideFirst };
-          if (el.id === "bride-last-m3") return { ...el, text: updatedPersonalization.modern3BrideLast };
-          if (el.id === "date-day-m3") return { ...el, text: updatedPersonalization.modern3DateDay };
-          if (el.id === "date-year-m3") return { ...el, text: updatedPersonalization.modern3DateYear };
-          if (el.id === "date-time-m3") return { ...el, text: updatedPersonalization.modern3DateTime };
-          if (el.id === "venue-title-m3") return { ...el, text: updatedPersonalization.modern3VenueTitle };
-          if (el.id === "venue-line1-m3") return { ...el, text: updatedPersonalization.modern3VenueAddr1 };
-          if (el.id === "venue-line2-m3") return { ...el, text: updatedPersonalization.modern3VenueAddr2 };
-          return el;
-        })
-      : tpl.topic === "modern"
-      ? tpl.elements.map((el) => {
-          if (el.id.startsWith("praise-lord") || el.fieldKey === "tagline") {
-            return { ...el, text: updatedPersonalization.modernTagline };
-          }
-          if (el.id.startsWith("groom-name") || el.fieldKey === "coupleNames") {
-            return { ...el, text: updatedPersonalization.modernGroom };
-          }
-          if (el.id.startsWith("bride-name")) {
-            return { ...el, text: updatedPersonalization.modernBride };
-          }
-          if (el.id.startsWith("date-line") || el.fieldKey === "date") {
-            return { ...el, text: updatedPersonalization.modernDate };
-          }
-          if (el.id.startsWith("welcome-sentence")) {
-            return { ...el, text: updatedPersonalization.modernWelcome };
-          }
-          if (el.id.startsWith("contact-info") || el.fieldKey === "address") {
-            return { ...el, text: updatedPersonalization.modernContact };
-          }
-          if (el.id.startsWith("family-info")) {
-            return { ...el, text: updatedPersonalization.modernFamilyWithLove };
-          }
-          if (el.id.startsWith("marriage-details") || el.fieldKey === "venue") {
-            return { ...el, text: updatedPersonalization.modernMarriageVenue };
-          }
-          if (el.id.startsWith("reception-details")) {
-            return { ...el, text: updatedPersonalization.modernReceptionVenue };
-          }
-          return el;
-        })
-      : tpl.elements.map((el) => {
-          if (el.fieldKey === "coupleNames" || el.id.includes("couple")) {
-            return { ...el, text: personalization.coupleNames };
-          }
-          if (el.fieldKey === "date" || el.id.includes("date")) {
-            return { ...el, text: personalization.date };
-          }
-          if (el.fieldKey === "time" || el.id.includes("time")) {
-            return { ...el, text: personalization.time };
-          }
-          if (el.fieldKey === "venue" || el.id.includes("venue")) {
-            return { ...el, text: personalization.venue };
-          }
-          if (el.fieldKey === "address" || el.id.includes("address")) {
-            return { ...el, text: personalization.address };
-          }
-          if (el.fieldKey === "rsvp" || el.id.includes("rsvp")) {
-            return { ...el, text: personalization.rsvp.startsWith("R.S.V.P") ? personalization.rsvp : `R.S.V.P ${personalization.rsvp}` };
-          }
-          return el;
-        });
+    const populatedElements =
+      tpl.id === "modern-silver-botanical-foliage"
+        ? rawElementsList.map((el: any) => {
+            if (el.id === "host-names-m3") return { ...el, text: updatedPersonalization.modern3Host };
+            if (el.id === "groom-first-m3") return { ...el, text: updatedPersonalization.modern3GroomFirst };
+            if (el.id === "groom-last-m3") return { ...el, text: updatedPersonalization.modern3GroomLast };
+            if (el.id === "bride-first-m3") return { ...el, text: updatedPersonalization.modern3BrideFirst };
+            if (el.id === "bride-last-m3") return { ...el, text: updatedPersonalization.modern3BrideLast };
+            if (el.id === "date-day-m3") return { ...el, text: updatedPersonalization.modern3DateDay };
+            if (el.id === "date-year-m3") return { ...el, text: updatedPersonalization.modern3DateYear };
+            if (el.id === "date-time-m3") return { ...el, text: updatedPersonalization.modern3DateTime };
+            if (el.id === "venue-title-m3") return { ...el, text: updatedPersonalization.modern3VenueTitle };
+            if (el.id === "venue-line1-m3") return { ...el, text: updatedPersonalization.modern3VenueAddr1 };
+            if (el.id === "venue-line2-m3") return { ...el, text: updatedPersonalization.modern3VenueAddr2 };
+            return el;
+          })
+        : tpl.topic === "modern"
+        ? rawElementsList.map((el: any) => {
+            if (el.id.startsWith("praise-lord") || el.fieldKey === "tagline") {
+              return { ...el, text: updatedPersonalization.modernTagline };
+            }
+            if (el.id.startsWith("groom-name") || el.fieldKey === "coupleNames") {
+              return { ...el, text: updatedPersonalization.modernGroom };
+            }
+            if (el.id.startsWith("bride-name")) {
+              return { ...el, text: updatedPersonalization.modernBride };
+            }
+            if (el.id.startsWith("date-line") || el.fieldKey === "date") {
+              return { ...el, text: updatedPersonalization.modernDate };
+            }
+            if (el.id.startsWith("welcome-sentence")) {
+              return { ...el, text: updatedPersonalization.modernWelcome };
+            }
+            if (el.id.startsWith("contact-info") || el.fieldKey === "address") {
+              return { ...el, text: updatedPersonalization.modernContact };
+            }
+            if (el.id.startsWith("family-info")) {
+              return { ...el, text: updatedPersonalization.modernFamilyWithLove };
+            }
+            if (el.id.startsWith("marriage-details") || el.fieldKey === "venue") {
+              return { ...el, text: updatedPersonalization.modernMarriageVenue };
+            }
+            if (el.id.startsWith("reception-details")) {
+              return { ...el, text: updatedPersonalization.modernReceptionVenue };
+            }
+            return el;
+          })
+        : rawElementsList.map((el: any) => {
+            if (el.fieldKey === "coupleNames" || el.id.includes("couple")) {
+              return { ...el, text: personalization.coupleNames };
+            }
+            if (el.fieldKey === "date" || el.id.includes("date")) {
+              return { ...el, text: personalization.date };
+            }
+            if (el.fieldKey === "time" || el.id.includes("time")) {
+              return { ...el, text: personalization.time };
+            }
+            if (el.fieldKey === "venue" || el.id.includes("venue")) {
+              return { ...el, text: personalization.venue };
+            }
+            if (el.fieldKey === "address" || el.id.includes("address")) {
+              return { ...el, text: personalization.address };
+            }
+            if (el.fieldKey === "rsvp" || el.id.includes("rsvp")) {
+              return { ...el, text: personalization.rsvp.startsWith("R.S.V.P") ? personalization.rsvp : `R.S.V.P ${personalization.rsvp}` };
+            }
+            return el;
+          });
 
-    const updatedPages = pages.map((pg, idx) =>
-      idx === activePageIndex
-        ? {
-            ...pg,
-            backgroundColor: tpl.backgroundColor,
-            backgroundImage: tpl.backgroundImage,
-            elements: populatedElements,
-          }
-        : pg
-    );
-    setPages(updatedPages);
-    setSelectedId(populatedElements.find((e) => e.type === "text")?.id || populatedElements[0]?.id || null);
-    pushState(updatedPages);
+    let loadedPages: CanvasPage[] = [];
+
+    if (
+      tpl.elements &&
+      typeof tpl.elements === "object" &&
+      !Array.isArray(tpl.elements) &&
+      (tpl.elements as any).layers
+    ) {
+      const rawLayers = (tpl.elements as any).layers as any[];
+      loadedPages = rawLayers.map((l, idx) => ({
+        id: l.id || `layer-${idx + 1}`,
+        title: l.name || (idx === 0 ? "Main Invitation (Base)" : `Insert Sheet ${idx + 1}`),
+        name: l.name || (idx === 0 ? "Main Invitation (Base)" : `Insert Sheet ${idx + 1}`),
+        isBase: l.isBase ?? (idx === 0),
+        heightPercent: l.heightPercent ?? (idx === 0 ? 100 : 85),
+        aspectRatio: l.aspectRatio || tpl.aspectRatio || "classic",
+        customWidth: l.customWidth,
+        customHeight: l.customHeight,
+        lockRatio: l.lockRatio ?? true,
+        backgroundColor: l.backgroundColor || tpl.backgroundColor || "#FFFFFF",
+        backgroundImage: l.backgroundImage || null,
+        bgMode: l.bgMode || "textures",
+        elements: Array.isArray(l.elements) ? l.elements : [],
+      }));
+    } else {
+      loadedPages = [
+        {
+          id: "layer-1",
+          title: "Main Invitation (Base)",
+          name: "Main Invitation (Base)",
+          isBase: true,
+          heightPercent: 100,
+          aspectRatio: tpl.aspectRatio || "classic",
+          customWidth: 480,
+          customHeight: 672,
+          lockRatio: true,
+          backgroundColor: tpl.backgroundColor || "#F3EAD8",
+          backgroundImage: tpl.backgroundImage || null,
+          bgMode: tpl.backgroundImage ? "image" : "textures",
+          elements: populatedElements,
+        },
+      ];
+    }
+
+    setPages(loadedPages);
+    setActivePageIndex(0);
+    const firstText = loadedPages[0]?.elements.find((e: any) => e.type === "text");
+    setSelectedId(firstText?.id || loadedPages[0]?.elements[0]?.id || null);
+    pushState(loadedPages);
     setHasUnsavedChanges(true);
 
     try {
@@ -2870,7 +3255,7 @@ export default function CanvaCardStudio() {
         JSON.stringify({
           docTitle: tpl.name,
           aspectRatio,
-          pages: updatedPages,
+          pages: loadedPages,
           personalization: updatedPersonalization,
           activeTemplateId: tpl.id,
           updatedAt: new Date().toISOString(),
@@ -2881,18 +3266,35 @@ export default function CanvaCardStudio() {
     }
   };
 
-  // Check URL parameters on mount e.g. /canva?template=modern-watercolor-floral
+  // Check URL parameters on mount or sync latest admin template layers
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || allTemplates.length === 0) return;
     const params = new URLSearchParams(window.location.search);
-    const templateParam = params.get("template");
+    const templateParam = params.get("template") || params.get("id");
+
     if (templateParam) {
-      const found = allTemplates.find((t) => t.id === templateParam);
+      const found = allTemplates.find(
+        (t) => t.id === templateParam || (t as any).dbId === templateParam || (t as any).slug === templateParam
+      );
       if (found) {
         handleLoadTemplate(found);
+        return;
       }
     }
-  }, [allTemplates]);
+
+    // If dynamic templates are loaded from admin, sync them
+    if (dynamicTemplates.length > 0) {
+      const activeMatch = dynamicTemplates.find(
+        (t) => t.id === activeTemplateId || (t as any).dbId === activeTemplateId || (t as any).slug === activeTemplateId
+      );
+      if (activeMatch) {
+        handleLoadTemplate(activeMatch);
+      } else {
+        // If no active match or first visit, load latest admin template
+        handleLoadTemplate(dynamicTemplates[0]);
+      }
+    }
+  }, [dynamicTemplates]);
 
   const handleSelectColorVariant = (variant: ColorVariant) => {
     setSelectedColorVariantId(variant.id);
@@ -3154,6 +3556,12 @@ export default function CanvaCardStudio() {
   };
 
   const handleOpenOrderModal = async () => {
+    if (status === "unauthenticated" || !session) {
+      const returnUrl = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/canva";
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
     let capturedUrl = "";
     try {
       if (canvasRef.current) {
@@ -3201,39 +3609,39 @@ export default function CanvaCardStudio() {
         {/* TAB: TEMPLATES */}
         {tabToRender === "templates" && (
           <div className="space-y-3.5">
-            {/* TOPIC SUB-TABS (VINTAGE / MODERN) */}
+            {/* TOPIC SUB-TABS (ALL / MODERN / VINTAGE) */}
             <div className="flex p-1 bg-slate-100 rounded-xl border border-slate-200 gap-1">
               <button
-                onClick={() => setTemplateTopic("vintage")}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  templateTopic === "vintage"
+                onClick={() => setTemplateTopic("all")}
+                className={`flex-1 py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  templateTopic === "all"
                     ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <span>📜 Vintage</span>
+                <span>All</span>
                 <span
-                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                    templateTopic === "vintage"
+                  className={`text-[8.5px] px-1 py-0.2 rounded-full font-mono font-bold ${
+                    templateTopic === "all"
                       ? "bg-red-50 text-[#991B1B]"
                       : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {allTemplates.filter((t) => t.topic === "vintage").length}
+                  {allTemplates.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setTemplateTopic("modern")}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`flex-1 py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   templateTopic === "modern"
                     ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <span>✨ Modern</span>
+                <span>Modern</span>
                 <span
-                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  className={`text-[8.5px] px-1 py-0.2 rounded-full font-mono font-bold ${
                     templateTopic === "modern"
                       ? "bg-red-50 text-[#991B1B]"
                       : "bg-slate-200 text-slate-600"
@@ -3242,262 +3650,568 @@ export default function CanvaCardStudio() {
                   {allTemplates.filter((t) => t.topic === "modern").length}
                 </span>
               </button>
+
+              <button
+                onClick={() => setTemplateTopic("vintage")}
+                className={`flex-1 py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  templateTopic === "vintage"
+                    ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>Vintage</span>
+                <span
+                  className={`text-[8.5px] px-1 py-0.2 rounded-full font-mono font-bold ${
+                    templateTopic === "vintage"
+                      ? "bg-red-50 text-[#991B1B]"
+                      : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {allTemplates.filter((t) => t.topic === "vintage").length}
+                </span>
+              </button>
             </div>
 
-            {/* TEMPLATES GRID FOR SELECTED TOPIC */}
+            {/* TEMPLATES GRID */}
             <div className="grid grid-cols-2 gap-2.5">
-              {allTemplates.filter((t) => t.topic === templateTopic).map((tpl) => {
-                const isActive = tpl.id === activeTemplateId;
-                return (
-                  <button
-                    key={tpl.id}
-                    onClick={() => {
-                      handleLoadTemplate(tpl);
-                      setMobileSheetOpen(false);
-                    }}
-                    className={`group relative flex flex-col text-left rounded-xl overflow-hidden border transition-all cursor-pointer bg-white ${
-                      isActive
-                        ? "border-[#991B1B] ring-2 ring-red-200 shadow-sm"
-                        : "border-slate-200 hover:border-[#991B1B]/70 hover:shadow-sm"
-                    }`}
-                  >
-                    {/* Compact Thumbnail Container */}
-                    <div className="relative aspect-[4/5] w-full bg-slate-50 overflow-hidden">
-                      {tpl.previewImage ? (
-                        <img
-                          src={tpl.previewImage}
-                          alt={tpl.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : tpl.backgroundImage ? (
-                        <img
-                          src={tpl.backgroundImage}
-                          alt={tpl.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center p-1.5 text-center text-[10px] font-serif font-bold text-slate-700"
-                          style={{
-                            backgroundColor:
-                              tpl.backgroundColor &&
-                              (tpl.backgroundColor.startsWith("#") || tpl.backgroundColor.startsWith("rgb"))
+              {allTemplates
+                .filter((t) => (templateTopic === "all" ? true : t.topic === templateTopic))
+                .map((tpl) => {
+                  const isActive = tpl.id === activeTemplateId;
+                  const layerCount =
+                    tpl.elements && typeof tpl.elements === "object" && (tpl.elements as any).layers
+                      ? (tpl.elements as any).layers.length
+                      : 1;
+
+                  return (
+                    <button
+                      key={tpl.id}
+                      onClick={() => {
+                        handleLoadTemplate(tpl);
+                        setMobileSheetOpen(false);
+                      }}
+                      className={`group relative flex flex-col text-left rounded-xl overflow-hidden border transition-all cursor-pointer bg-white ${
+                        isActive
+                          ? "border-[#991B1B] ring-2 ring-red-200 shadow-sm"
+                          : "border-slate-200 hover:border-[#991B1B]/70 hover:shadow-sm"
+                      }`}
+                    >
+                      {/* Compact Thumbnail Container */}
+                      <div className="relative aspect-[4/5] w-full bg-slate-50 overflow-hidden">
+                        {tpl.previewImage ? (
+                          <img
+                            src={tpl.previewImage}
+                            alt={tpl.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : tpl.backgroundImage ? (
+                          <img
+                            src={tpl.backgroundImage}
+                            alt={tpl.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center p-1.5 text-center text-[10px] font-serif font-bold text-slate-700"
+                            style={{
+                              backgroundColor:
+                                tpl.backgroundColor &&
+                                (tpl.backgroundColor.startsWith("#") || tpl.backgroundColor.startsWith("rgb"))
+                                  ? tpl.backgroundColor
+                                  : undefined,
+                              backgroundImage: tpl.backgroundImage
+                                ? `url(${tpl.backgroundImage})`
+                                : tpl.backgroundColor && tpl.backgroundColor.includes("gradient")
                                 ? tpl.backgroundColor
                                 : undefined,
-                            backgroundImage: tpl.backgroundImage
-                              ? `url(${tpl.backgroundImage})`
-                              : tpl.backgroundColor && tpl.backgroundColor.includes("gradient")
-                              ? tpl.backgroundColor
-                              : undefined,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                          }}
-                        >
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }}
+                          >
+                            {tpl.name}
+                          </div>
+                        )}
+
+                        {/* Multi-Layer Count Badge */}
+                        {layerCount > 1 && (
+                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[7.5px] font-bold shadow-xs backdrop-blur-xs flex items-center gap-0.5">
+                            <span>🗂️ {layerCount} Sheets</span>
+                          </div>
+                        )}
+
+                        {/* Active Badge Overlay */}
+                        {isActive && (
+                          <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full bg-[#991B1B] text-white text-[7px] font-extrabold shadow-sm flex items-center gap-0.5 uppercase tracking-wider backdrop-blur-xs">
+                            <Check className="w-2 h-2" />
+                            Active
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Compact Card Info */}
+                      <div className="p-1.5 bg-white flex flex-col gap-0.5">
+                        <span className="text-[8px] font-extrabold text-[#991B1B] uppercase tracking-wider truncate">
+                          {tpl.category}
+                        </span>
+                        <h4 className="text-[10px] font-serif font-bold text-slate-900 group-hover:text-[#991B1B] line-clamp-1 leading-tight">
                           {tpl.name}
-                        </div>
-                      )}
-
-                      {/* Active Badge Overlay */}
-                      {isActive && (
-                        <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full bg-[#991B1B] text-white text-[7px] font-extrabold shadow-sm flex items-center gap-0.5 uppercase tracking-wider backdrop-blur-xs">
-                          <Check className="w-2 h-2" />
-                          Active
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Compact Card Info */}
-                    <div className="p-1.5 bg-white flex flex-col gap-0.5">
-                      <span className="text-[8px] font-extrabold text-[#991B1B] uppercase tracking-wider truncate">
-                        {tpl.category}
-                      </span>
-                      <h4 className="text-[10px] font-serif font-bold text-slate-900 group-hover:text-[#991B1B] line-clamp-1 leading-tight">
-                        {tpl.name}
-                      </h4>
-                    </div>
-                  </button>
-                );
-              })}
+                        </h4>
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </div>
         )}
 
-        {/* TAB: TEXT */}
+        {/* TAB: TEXT (CLEAN & CRISPY TYPOGRAPHY) */}
         {tabToRender === "text" && (
           <div className="space-y-3.5">
-            <h3 className="text-xs font-extrabold text-[#991B1B] uppercase tracking-wider">Typography Library</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Type className="w-3.5 h-3.5 text-[#991B1B]" />
+                <h3 className="text-xs font-extrabold text-[#991B1B] uppercase tracking-wider">
+                  Typography
+                </h3>
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium">Click to add text</span>
+            </div>
 
+            {/* Primary Action: Add Custom Text Box */}
             <button
+              type="button"
               onClick={() => {
-                handleAddText("Add a Luxury Heading", "heading");
+                handleAddText("Your Custom Text", "body");
                 setMobileSheetOpen(false);
               }}
-              className="w-full p-3.5 rounded-2xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-serif font-bold text-sm hover:scale-[1.02] transition-transform shadow-md cursor-pointer text-center"
+              className="w-full py-2.5 px-3 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
             >
-              + Add Luxury Heading
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Add Text Box</span>
             </button>
 
-            <button
-              onClick={() => {
-                handleAddText("Sophia & Alexander", "heading");
-                setMobileSheetOpen(false);
-              }}
-              className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[#1E293B] font-serif italic text-xs hover:border-[#991B1B] hover:bg-red-50/50 transition-all cursor-pointer text-center"
-            >
-              + Add Couple Names
-            </button>
+            {/* Preset Typography Styles */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                Quick Presets
+              </span>
 
-            <button
-              onClick={() => {
-                handleAddText("OCTOBER 30, 2026", "date");
-                setMobileSheetOpen(false);
-              }}
-              className="w-full p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-[#991B1B] font-mono text-[11px] uppercase tracking-widest hover:border-[#991B1B] hover:bg-red-50/50 transition-all cursor-pointer text-center"
-            >
-              + Add Wedding Date
-            </button>
+              {/* 1. Luxury Heading */}
+              <div
+                onClick={() => {
+                  handleAddText("Add a Luxury Heading", "heading");
+                  setMobileSheetOpen(false);
+                }}
+                className="p-3 rounded-2xl bg-white border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+              >
+                <div className="min-w-0 pr-2">
+                  <span className="font-serif font-bold text-sm text-slate-900 group-hover:text-[#991B1B] transition-colors block truncate">
+                    Luxury Heading
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Cormorant Garamond • Bold
+                  </span>
+                </div>
+                <span className="w-6 h-6 rounded-lg bg-red-50 text-[#991B1B] border border-red-200 flex items-center justify-center text-xs font-bold group-hover:bg-[#991B1B] group-hover:text-white transition-colors shrink-0">
+                  +
+                </span>
+              </div>
 
-            <button
-              onClick={() => {
-                handleAddText(personalization.venue, "body");
-                setMobileSheetOpen(false);
-              }}
-              className="w-full p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs hover:border-[#991B1B] hover:bg-red-50/50 transition-all cursor-pointer text-center"
-            >
-              + Add Venue Name
-            </button>
+              {/* 2. Script Couple Names */}
+              <div
+                onClick={() => {
+                  handleAddText(personalization.coupleNames || "Sophia & Alexander", "heading");
+                  setMobileSheetOpen(false);
+                }}
+                className="p-3 rounded-2xl bg-white border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+              >
+                <div className="min-w-0 pr-2">
+                  <span className="font-serif italic font-medium text-sm text-slate-900 group-hover:text-[#991B1B] transition-colors block truncate">
+                    {personalization.coupleNames || "Sophia & Alexander"}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Great Vibes • Cursive Script
+                  </span>
+                </div>
+                <span className="w-6 h-6 rounded-lg bg-red-50 text-[#991B1B] border border-red-200 flex items-center justify-center text-xs font-bold group-hover:bg-[#991B1B] group-hover:text-white transition-colors shrink-0">
+                  +
+                </span>
+              </div>
 
-            <button
-              onClick={() => {
-                handleAddText(personalization.address, "body");
-                setMobileSheetOpen(false);
-              }}
-              className="w-full p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs hover:border-[#991B1B] hover:bg-red-50/50 transition-all cursor-pointer font-semibold text-center"
-            >
-              + Add Full Address Details
-            </button>
+              {/* 3. Event Date & Time */}
+              <div
+                onClick={() => {
+                  handleAddText(personalization.date || "OCTOBER 30, 2026", "date");
+                  setMobileSheetOpen(false);
+                }}
+                className="p-3 rounded-2xl bg-white border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+              >
+                <div className="min-w-0 pr-2">
+                  <span className="font-mono text-xs font-bold tracking-widest text-[#991B1B] block truncate uppercase">
+                    {personalization.date || "OCTOBER 30, 2026"}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Event Date • Letter Spaced
+                  </span>
+                </div>
+                <span className="w-6 h-6 rounded-lg bg-red-50 text-[#991B1B] border border-red-200 flex items-center justify-center text-xs font-bold group-hover:bg-[#991B1B] group-hover:text-white transition-colors shrink-0">
+                  +
+                </span>
+              </div>
+
+              {/* 4. Venue Name */}
+              <div
+                onClick={() => {
+                  handleAddText(personalization.venue || "The Grand Palace Hall", "body");
+                  setMobileSheetOpen(false);
+                }}
+                className="p-3 rounded-2xl bg-white border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+              >
+                <div className="min-w-0 pr-2">
+                  <span className="text-xs font-bold text-slate-900 group-hover:text-[#991B1B] transition-colors block truncate">
+                    {personalization.venue || "The Grand Palace Hall"}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Venue Subheading
+                  </span>
+                </div>
+                <span className="w-6 h-6 rounded-lg bg-red-50 text-[#991B1B] border border-red-200 flex items-center justify-center text-xs font-bold group-hover:bg-[#991B1B] group-hover:text-white transition-colors shrink-0">
+                  +
+                </span>
+              </div>
+
+              {/* 5. Address & Subtext */}
+              <div
+                onClick={() => {
+                  handleAddText(personalization.address || "Request the honour of your presence...", "body");
+                  setMobileSheetOpen(false);
+                }}
+                className="p-3 rounded-2xl bg-white border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+              >
+                <div className="min-w-0 pr-2">
+                  <span className="text-xs text-slate-700 group-hover:text-slate-900 block truncate">
+                    {personalization.address || "Request the honour of your presence..."}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Invitation Body Paragraph
+                  </span>
+                </div>
+                <span className="w-6 h-6 rounded-lg bg-red-50 text-[#991B1B] border border-red-200 flex items-center justify-center text-xs font-bold group-hover:bg-[#991B1B] group-hover:text-white transition-colors shrink-0">
+                  +
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* TAB: ELEMENTS */}
+        {/* TAB: ELEMENTS (ONLY THIS TEMPLATE'S PNG ELEMENTS) */}
         {tabToRender === "elements" && (
           <div className="space-y-3.5">
             {(() => {
-              const availableElements = GRAPHIC_ELEMENTS.filter(
-                (e) => e.templateId === activeTemplateId || e.templateId === "all"
-              );
-              const activeTplObj = allTemplates.find((t) => t.id === activeTemplateId);
+              // 1. Collect all PNG motifs used in current template across all pages
+              const templateMotifs: any[] = [];
+              pages.forEach((p, pIdx) => {
+                p.elements.forEach((el, eIdx) => {
+                  if (el.type === "image" && el.src) {
+                    if (!templateMotifs.some((m) => m.src === el.src)) {
+                      templateMotifs.push({
+                        id: `tpl-motif-${p.id}-${el.id || eIdx}`,
+                        name: el.text || `Template Element #${templateMotifs.length + 1}`,
+                        category: "template",
+                        icon: "✨",
+                        src: el.src,
+                        templateId: activeTemplateId,
+                      });
+                    }
+                  }
+                });
+              });
+
+              // Combine template motifs and user custom uploads
+              const availableElements = [
+                ...templateMotifs,
+                ...userUploadedElements,
+              ];
 
               return (
                 <>
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
-                    <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider truncate max-w-[170px]">
-                      {activeTplObj?.name || "Active Model"} Motifs
-                    </span>
-                    <span className="text-[9px] font-mono font-bold text-slate-500">
-                      {availableElements.length} Items
-                    </span>
-                  </div>
+                  {/* Upload Custom PNG / Photo Button (Disabled for User) */}
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-2.5 px-3 bg-slate-50 border-2 border-dashed border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center gap-2 text-xs font-extrabold cursor-not-allowed select-none opacity-60 shadow-2xs"
+                    title="Custom uploads are disabled"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-slate-400" />
+                    <span>+ Upload Custom PNG / Photo</span>
+                  </button>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableElements.map((elem) => (
-                      <div
-                        key={elem.id}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("application/json", JSON.stringify(elem));
-                          e.dataTransfer.effectAllowed = "copy";
-                        }}
-                        onClick={() => {
-                          handleAddGraphic(elem);
-                          setMobileSheetOpen(false);
-                        }}
-                        className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center gap-1.5 hover:border-[#991B1B] hover:bg-red-50/50 transition-all group cursor-grab active:cursor-grabbing shadow-xs select-none"
-                        title="Click to add or Drag & Drop directly onto card"
-                      >
-                        {elem.src ? (
-                          <img src={elem.src} alt={elem.name} className="h-8 object-contain my-0.5 pointer-events-none" />
-                        ) : (
-                          <span className="text-2xl pointer-events-none">{elem.icon}</span>
-                        )}
-                        <span className="text-[9px] font-bold text-slate-700 group-hover:text-[#991B1B] text-center leading-tight pointer-events-none">
-                          {elem.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Elements Grid */}
+                  {availableElements.length === 0 ? (
+                    <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4 space-y-1.5">
+                      <p className="text-xs font-bold text-slate-700">No PNG elements on this template</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {availableElements.map((elem) => (
+                        <div
+                          key={elem.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("application/json", JSON.stringify(elem));
+                            e.dataTransfer.effectAllowed = "copy";
+                          }}
+                          onClick={() => {
+                            handleAddGraphic(elem);
+                            setMobileSheetOpen(false);
+                          }}
+                          className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center gap-1.5 hover:border-[#991B1B] hover:bg-red-50/50 transition-all group cursor-grab active:cursor-grabbing shadow-xs select-none relative"
+                          title="Click to add or Drag & Drop directly onto card"
+                        >
+                          {elem.src ? (
+                            <img
+                              src={elem.src}
+                              alt={elem.name}
+                              className="h-14 w-auto max-w-[85%] object-contain my-1 pointer-events-none group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <span className="text-2xl pointer-events-none">{elem.icon}</span>
+                          )}
+                          <span className="text-[9px] font-bold text-slate-700 group-hover:text-[#991B1B] text-center leading-tight pointer-events-none truncate max-w-full">
+                            {elem.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </>
               );
             })()}
           </div>
         )}
 
-        {/* TAB: LAYERS */}
+        {/* TAB: LAYERS (CARD DECK VISUALIZER & SHEETS) */}
         {tabToRender === "layers" && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold text-[#991B1B] uppercase tracking-wider">Canvas Layers</h3>
-            <div className="space-y-2">
-              {elements.map((el, i) => (
-                <div
-                  key={el.id}
-                  onClick={() => {
-                    setSelectedId(el.id);
-                    setMobileSheetOpen(false);
-                  }}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs font-bold cursor-pointer transition-colors ${
-                    el.id === selectedId ? "bg-red-50 border-[#991B1B] text-[#991B1B]" : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
+          <div className="space-y-4">
+            
+            {/* ── 1. 2.5D DECK PREVIEW (CLEAN WHITE & RED) ── */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Ruler className="w-3.5 h-3.5 text-[#991B1B]" />
+                  <h3 className="text-xs font-extrabold text-[#991B1B] uppercase tracking-wider">
+                    Deck Preview
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStackModal(true)}
+                  className="px-2.5 py-1 rounded-xl bg-red-50 text-[#991B1B] hover:bg-red-100 text-[10px] font-extrabold flex items-center gap-1 border border-red-200 transition-colors cursor-pointer"
+                  title="Open Fullscreen Stack Visualizer"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  <span>Enlarge</span>
+                </button>
+              </div>
+
+              {/* Red & White Alignment Selector */}
+              <div className="flex items-center p-1 bg-red-50/60 rounded-2xl border border-red-100 text-[10px] font-extrabold">
+                <button
+                  type="button"
+                  onClick={() => setStackAlign("bottom")}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                    stackAlign === "bottom"
+                      ? "bg-[#991B1B] text-white shadow-xs"
+                      : "text-slate-700 hover:text-[#991B1B]"
                   }`}
                 >
-                  <span className="truncate">{el.text || (el.type === "image" ? "Graphic Image" : `Layer #${i + 1}`)}</span>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const updatedPages = pages.map((pg, idx) =>
-                          idx === activePageIndex
-                            ? {
-                                ...pg,
-                                elements: pg.elements.map((item) =>
-                                  item.id === el.id ? { ...item, isHidden: !item.isHidden } : item
-                                ),
-                              }
-                            : pg
-                        );
-                        setPages(updatedPages);
-                        pushState(updatedPages);
-                        setHasUnsavedChanges(true);
-                      }}
-                      className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-                      title={el.isHidden ? "Unhide Layer" : "Hide Layer"}
-                    >
-                      {el.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const updatedPages = pages.map((pg, idx) =>
-                          idx === activePageIndex
-                            ? {
-                                ...pg,
-                                elements: pg.elements.map((item) =>
-                                  item.id === el.id ? { ...item, isLocked: !item.isLocked } : item
-                                ),
-                              }
-                            : pg
-                        );
-                        setPages(updatedPages);
-                        pushState(updatedPages);
-                        setHasUnsavedChanges(true);
-                      }}
-                      className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-                      title={el.isLocked ? "Unlock Layer" : "Lock Layer"}
-                    >
-                      {el.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
+                  Bottom Stepped
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStackAlign("top")}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                    stackAlign === "top"
+                      ? "bg-[#991B1B] text-white shadow-xs"
+                      : "text-slate-700 hover:text-[#991B1B]"
+                  }`}
+                >
+                  Top Stepped
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStackAlign("center")}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                    stackAlign === "center"
+                      ? "bg-[#991B1B] text-white shadow-xs"
+                      : "text-slate-700 hover:text-[#991B1B]"
+                  }`}
+                >
+                  Center
+                </button>
+              </div>
+
+              {/* 2.5D Live Stack Preview Box (Clean White & Red Canvas) */}
+              <div
+                className="h-56 bg-gradient-to-b from-red-50/30 via-white to-red-50/50 rounded-2xl p-4 flex items-center justify-center relative border border-red-100 shadow-sm overflow-hidden select-none"
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(#fecaca_1px,transparent_1px)] [background-size:12px_12px] opacity-60 pointer-events-none" />
+
+                {/* Stack Container */}
+                <div
+                  className={`relative w-full h-full flex justify-center ${
+                    stackAlign === "bottom"
+                      ? "items-end"
+                      : stackAlign === "top"
+                      ? "items-start"
+                      : "items-center"
+                  }`}
+                >
+                  {(() => {
+                    const baseLayer = pages.find((p) => p.isBase) || pages[0];
+                    const baseDim = getLayerDimensions(baseLayer, baseLayer);
+                    const maxHeightPx = 180;
+                    const scaleFactor = maxHeightPx / baseDim.height;
+
+                    const sortedForStack = [...pages]
+                      .map((p, origIdx) => ({ page: p, origIdx }))
+                      .sort((a, b) => {
+                        const aPct = a.page.isBase !== false ? 100 : a.page.heightPercent || 85;
+                        const bPct = b.page.isBase !== false ? 100 : b.page.heightPercent || 85;
+                        return bPct - aPct;
+                      });
+
+                    return sortedForStack.map((item, stackPos) => {
+                      const { page: p, origIdx } = item;
+                      const isSelected = origIdx === activePageIndex;
+                      const pDim = getPhysicalDimensions(p, baseLayer);
+                      const renderW = Math.round(pDim.pixelW * scaleFactor);
+                      const renderH = Math.round(pDim.pixelH * scaleFactor);
+
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            setActivePageIndex(origIdx);
+                            setSelectedId(null);
+                          }}
+                          style={{
+                            width: `${renderW}px`,
+                            height: `${renderH}px`,
+                            zIndex: stackPos + 10,
+                            backgroundColor: p.backgroundColor || "#FFFFFF",
+                            backgroundImage: p.backgroundImage ? `url(${p.backgroundImage})` : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
+                          className={`absolute rounded-xl transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl flex flex-col justify-between p-2 border ${
+                            isSelected
+                              ? "ring-2 ring-[#991B1B] border-[#991B1B] shadow-xl scale-[1.02]"
+                              : "border-slate-200 hover:border-slate-300 hover:scale-[1.01]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span
+                              className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-md truncate max-w-[100px] shadow-2xs ${
+                                isSelected
+                                  ? "bg-[#991B1B] text-white"
+                                  : "bg-slate-900/80 text-white backdrop-blur-xs"
+                              }`}
+                            >
+                              {p.title || p.name || `Sheet ${origIdx + 1}`}
+                            </span>
+                            <span className="text-[8px] font-mono font-bold bg-white text-slate-800 px-1 py-0.5 rounded border border-slate-200 shadow-2xs">
+                              {pDim.pct}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
-              ))}
+              </div>
             </div>
+
+
+            {/* ── 4. CANVAS ELEMENTS ON ACTIVE SHEET ── */}
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                Elements on Active Sheet ({elements.length})
+              </h3>
+              <div className="space-y-1.5">
+                {elements.length === 0 ? (
+                  <div className="text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+                    No elements on this card insert sheet yet.
+                  </div>
+                ) : (
+                  elements.map((el, i) => (
+                    <div
+                      key={el.id}
+                      onClick={() => {
+                        setSelectedId(el.id);
+                        setMobileSheetOpen(false);
+                      }}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs font-bold cursor-pointer transition-colors ${
+                        el.id === selectedId
+                          ? "bg-red-50 border-[#991B1B] text-[#991B1B]"
+                          : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
+                      }`}
+                    >
+                      <span className="truncate">
+                        {el.text || (el.type === "image" ? "Graphic Image" : `Layer #${i + 1}`)}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const updatedPages = pages.map((pg, idx) =>
+                              idx === activePageIndex
+                                ? {
+                                    ...pg,
+                                    elements: pg.elements.map((item) =>
+                                      item.id === el.id ? { ...item, isHidden: !item.isHidden } : item
+                                    ),
+                                  }
+                                : pg
+                            );
+                            setPages(updatedPages);
+                            pushState(updatedPages);
+                            setHasUnsavedChanges(true);
+                          }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                          title={el.isHidden ? "Unhide Layer" : "Hide Layer"}
+                        >
+                          {el.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const updatedPages = pages.map((pg, idx) =>
+                              idx === activePageIndex
+                                ? {
+                                    ...pg,
+                                    elements: pg.elements.map((item) =>
+                                      item.id === el.id ? { ...item, isLocked: !item.isLocked } : item
+                                    ),
+                                  }
+                                : pg
+                            );
+                            setPages(updatedPages);
+                            pushState(updatedPages);
+                            setHasUnsavedChanges(true);
+                          }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                          title={el.isLocked ? "Unlock Layer" : "Lock Layer"}
+                        >
+                          {el.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
           </div>
         )}
       </div>
@@ -4067,13 +4781,391 @@ export default function CanvaCardStudio() {
     );
   };
 
+  const renderFormatContent = () => {
+    if (!activeElement) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center py-16 px-4 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-[#991B1B]">
+            <MousePointer className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-bold text-slate-800">Select an Element</h4>
+          <p className="text-xs text-slate-500 max-w-[220px] leading-relaxed">
+            Click on any text or graphic on the card to edit its font, colors, dimensions, and positioning here.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Active Element Header & Quick Actions */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 truncate">
+            <span className="px-2 py-0.5 rounded-full bg-[#991B1B] text-white text-[9px] font-extrabold uppercase tracking-wider">
+              {activeElement.type === "text" ? "Text" : "Graphic"}
+            </span>
+            <span className="text-xs font-bold text-slate-800 truncate">
+              {activeElement.text || (activeElement.type === "image" ? "Graphic Image" : "Layer")}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Duplicate */}
+            <button
+              onClick={handleDuplicate}
+              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+              title="Duplicate Element"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Lock / Unlock */}
+            <button
+              onClick={handleToggleLock}
+              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+              title={activeElement.isLocked ? "Unlock Element" : "Lock Element"}
+            >
+              {activeElement.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* Hide / Unhide */}
+            <button
+              onClick={() => updateActiveElement({ isHidden: !activeElement.isHidden })}
+              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+              title={activeElement.isHidden ? "Unhide Element" : "Hide Element"}
+            >
+              {activeElement.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* Delete */}
+            <button
+              onClick={handleDelete}
+              className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+              title="Delete Element"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 1. TEXT EDITING (For Text Elements) */}
+        {activeElement.type === "text" && (
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
+              Text Content
+            </label>
+            <div className="space-y-1.5">
+              <textarea
+                value={activeElement.text || ""}
+                onChange={(e) => updateActiveElement({ text: e.target.value })}
+                rows={2}
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 focus:border-[#991B1B] rounded-xl text-xs font-medium text-slate-900 outline-none resize-y"
+                placeholder="Type text..."
+              />
+              <button
+                type="button"
+                onClick={() => updateActiveElement({ text: (activeElement.text || "") + "\n" })}
+                className="w-full py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <WrapText className="w-3.5 h-3.5 text-[#991B1B]" />
+                <span>Add Next Line / Line Break</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 2. TYPOGRAPHY (For Text Elements) */}
+        {activeElement.type === "text" && (
+          <div className="space-y-3 pt-2 border-t border-slate-100">
+            <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
+              Typography &amp; Style
+            </label>
+
+            {/* Font Family */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-slate-500 font-bold">Font Family</span>
+              <select
+                value={activeElement.fontFamily}
+                onChange={(e) => updateActiveElement({ fontFamily: e.target.value })}
+                className="w-full bg-slate-50 text-slate-800 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none cursor-pointer focus:border-[#991B1B]"
+              >
+                {FONTS.map((f) => (
+                  <option key={f.name} value={f.family}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Font Size & Color */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500 font-bold">Font Size</span>
+                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1">
+                  <button
+                    onClick={() => updateActiveElement({ fontSize: Math.max(8, (activeElement.fontSize || 20) - 2) })}
+                    className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <input
+                    type="number"
+                    value={activeElement.fontSize || 20}
+                    onChange={(e) => updateActiveElement({ fontSize: Number(e.target.value) })}
+                    className="w-full bg-transparent text-xs font-bold text-center outline-none text-slate-800"
+                  />
+                  <button
+                    onClick={() => updateActiveElement({ fontSize: Math.min(200, (activeElement.fontSize || 20) + 2) })}
+                    className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500 font-bold">Text Color</span>
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1 px-2 h-[34px]">
+                  <input
+                    type="color"
+                    value={activeElement.color || "#1E293B"}
+                    onChange={(e) => updateActiveElement({ color: e.target.value })}
+                    className="w-6 h-6 bg-transparent border-0 cursor-pointer rounded overflow-hidden"
+                  />
+                  <span className="font-mono text-[11px] font-bold text-slate-700 truncate">
+                    {activeElement.color || "#1E293B"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Color Palette Swatches */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              {["#1E293B", "#991B1B", "#B45309", "#065F46", "#1E3A8A", "#581C87", "#F3EAD8", "#FFFFFF"].map((col) => (
+                <button
+                  key={col}
+                  type="button"
+                  onClick={() => updateActiveElement({ color: col })}
+                  style={{ backgroundColor: col }}
+                  className={`w-5 h-5 rounded-full border border-slate-300 transition-transform cursor-pointer ${
+                    activeElement.color === col ? "ring-2 ring-[#991B1B] scale-110" : "hover:scale-110"
+                  }`}
+                  title={col}
+                />
+              ))}
+            </div>
+
+            {/* Alignment */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-slate-500 font-bold">Text Alignment</span>
+              <div className="grid grid-cols-3 gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => updateActiveElement({ textAlign: "left" })}
+                  className={`py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                    activeElement.textAlign === "left" ? "bg-[#991B1B] text-white" : "text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <AlignLeft className="w-3.5 h-3.5" />
+                  <span>Left</span>
+                </button>
+                <button
+                  onClick={() => updateActiveElement({ textAlign: "center" })}
+                  className={`py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                    !activeElement.textAlign || activeElement.textAlign === "center"
+                      ? "bg-[#991B1B] text-white"
+                      : "text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <AlignCenter className="w-3.5 h-3.5" />
+                  <span>Center</span>
+                </button>
+                <button
+                  onClick={() => updateActiveElement({ textAlign: "right" })}
+                  className={`py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                    activeElement.textAlign === "right" ? "bg-[#991B1B] text-white" : "text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <AlignRight className="w-3.5 h-3.5" />
+                  <span>Right</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. SIZE & DIMENSIONS */}
+        <div className="space-y-2 pt-2 border-t border-slate-100">
+          <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
+            Dimensions &amp; Width
+          </label>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
+              <span>Card Width %</span>
+              <span className="font-mono text-slate-800 font-bold">{Math.round(activeElement.width || 80)}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => updateActiveElement({ width: Math.max(5, (activeElement.width || 80) - 5) })}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-700 transition-colors cursor-pointer"
+                title="Decrease Width"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <input
+                type="range"
+                min={5}
+                max={100}
+                value={Math.round(activeElement.width || 80)}
+                onChange={(e) => updateActiveElement({ width: Number(e.target.value) })}
+                className="flex-1 accent-[#991B1B] cursor-pointer"
+              />
+              <button
+                onClick={() => updateActiveElement({ width: Math.min(100, (activeElement.width || 80) + 5) })}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-700 transition-colors cursor-pointer"
+                title="Increase Width"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleAlign("center")}
+            className="w-full py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#991B1B] hover:text-white text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <AlignCenter className="w-3.5 h-3.5 text-[#991B1B]" />
+            <span>Align Horizontally to Center</span>
+          </button>
+        </div>
+
+        {/* 4. POSITION & NUDGE */}
+        <div className="space-y-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+              Nudge Position
+            </label>
+            <button
+              onClick={() => setNudgeStep((prev) => (prev === 1 ? 5 : prev === 5 ? 0.5 : 1))}
+              className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+              title="Change nudge step percentage"
+            >
+              Step: {nudgeStep}%
+            </button>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+            <button
+              onClick={() => handleNudge("up")}
+              className="p-2 rounded-xl bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer shadow-2xs"
+              title="Move Up"
+            >
+              <ArrowUp className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleNudge("left")}
+                className="p-2 rounded-xl bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer shadow-2xs"
+                title="Move Left"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="w-8 h-8 rounded-xl bg-slate-200 flex items-center justify-center text-[10px] font-mono font-bold text-slate-600">
+                {nudgeStep}%
+              </div>
+              <button
+                onClick={() => handleNudge("right")}
+                className="p-2 rounded-xl bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer shadow-2xs"
+                title="Move Right"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => handleNudge("down")}
+              className="p-2 rounded-xl bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer shadow-2xs"
+              title="Move Down"
+            >
+              <ArrowDown className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 5. ARRANGE / LAYER ORDER */}
+        <div className="space-y-2 pt-2 border-t border-slate-100">
+          <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
+            Layer Order
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => handleArrange("forward")}
+              className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+              <span>Forward</span>
+            </button>
+            <button
+              onClick={() => handleArrange("backward")}
+              className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+              <span>Backward</span>
+            </button>
+            <button
+              onClick={() => handleArrange("front")}
+              className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ChevronsUp className="w-3.5 h-3.5" />
+              <span>To Front</span>
+            </button>
+            <button
+              onClick={() => handleArrange("back")}
+              className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ChevronsDown className="w-3.5 h-3.5" />
+              <span>To Back</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const basePage = pages.find((p) => p.isBase) || pages[0];
+  const activeDimensions = getLayerDimensions(currentPage, basePage);
+
   const getCanvasDimensions = () => {
-    if (aspectRatio === "square") return { width: "480px", height: "480px", ratio: "1:1" };
-    if (aspectRatio === "portrait") return { width: "400px", height: "660px", ratio: "9:16" };
-    return { width: "440px", height: "620px", ratio: "5:7" };
+    return {
+      width: `${activeDimensions.width}px`,
+      height: `${activeDimensions.height}px`,
+      ratio: activeDimensions.ratioStr,
+    };
   };
 
   const canvasDim = getCanvasDimensions();
+
+  // Dynamic Fit to screen helper (ensures entire card fits without needing scrollbars)
+  const handleFitToScreen = useCallback(() => {
+    if (!workspaceRef.current) return;
+    const containerH = workspaceRef.current.clientHeight - 130;
+    const containerW = workspaceRef.current.clientWidth - 36;
+    if (containerH <= 0 || containerW <= 0) return;
+    const scaleH = containerH / activeDimensions.height;
+    const scaleW = containerW / activeDimensions.width;
+    const fitScale = Math.min(scaleH, scaleW, 0.9);
+    setZoomLevel(Math.max(30, Math.round(fitScale * 100)));
+  }, [activeDimensions.width, activeDimensions.height]);
+
+  // Auto-fit on mount, window resize, active page switch, or dimension change
+  useEffect(() => {
+    handleFitToScreen();
+    const timer = setTimeout(handleFitToScreen, 150);
+    window.addEventListener("resize", handleFitToScreen);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleFitToScreen);
+    };
+  }, [handleFitToScreen, activePageIndex, currentPage.aspectRatio, currentPage.heightPercent]);
 
   return (
     <div
@@ -4081,6 +5173,36 @@ export default function CanvaCardStudio() {
       className="h-screen max-h-screen w-full bg-slate-50 text-[#1E293B] flex flex-col font-sans overflow-hidden select-none"
     >
       
+      {/* ── ADMIN ORDER EDITING BANNER ── */}
+      {adminOrderContext && (
+        <div className="w-full bg-[#991B1B] text-white px-3 sm:px-6 py-2 flex items-center justify-between shadow-md z-50 text-xs sm:text-sm font-bold shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono uppercase tracking-wider shrink-0">
+              🛠️ Admin Studio Mode
+            </span>
+            <span className="truncate">
+              Order #{adminOrderContext.orderNumber} &bull; {adminOrderContext.templateName}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => router.push(`/admin/orders/${adminOrderContext.orderId}`)}
+              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-xl transition-colors cursor-pointer text-xs font-medium"
+            >
+              Back to Order
+            </button>
+            <button
+              onClick={handleSaveAdminOrder}
+              disabled={savingAdminOrder}
+              className="px-4 py-1 bg-white text-[#991B1B] hover:bg-red-50 rounded-xl shadow-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+            >
+              {savingAdminOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>{savingAdminOrder ? "Saving..." : "Save to Order"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── 1. TOP NAVIGATION BAR ── */}
       <header data-lenis-prevent className="h-14 sm:h-16 bg-white border-b border-slate-200 px-2 sm:px-4 md:px-6 flex items-center justify-between gap-1 sm:gap-3 shrink-0 z-40 shadow-xs overflow-x-auto no-scrollbar whitespace-nowrap flex-nowrap">
         
@@ -4225,295 +5347,260 @@ export default function CanvaCardStudio() {
             )}
           </div>
 
-          {/* 🌟 DOWNLOAD / EXPORT BUTTON 🌟 */}
+          {/* 🌟 DOWNLOAD / EXPORT BUTTON (DISABLED) 🌟 */}
           <button
-            onClick={() => setShowDownloadModal(true)}
-            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#991B1B] text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider hover:bg-[#7F1D1D] transition-all shadow-xs flex items-center gap-1 shrink-0 cursor-pointer"
-            title="Download Card (JPG, PNG, PDF)"
+            type="button"
+            disabled
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-2xs flex items-center gap-1 shrink-0 cursor-not-allowed opacity-60 select-none"
+            title="Download is disabled"
           >
-            <Download className="w-3.5 h-3.5 fill-current" />
+            <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Download</span>
             <span className="sm:hidden">Export</span>
           </button>
 
-          {/* 🌟 ORDER PRINTS (PRIMARY ACTION) 🌟 */}
-          <button
-            onClick={handleOpenOrderModal}
-            className="px-2.5 xs:px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer hover:scale-105"
-            title="Order Physical Cards & Prints or Add to Cart"
-          >
-            <ShoppingCart className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden xs:inline">Order Prints</span>
-            <span className="xs:hidden">Order</span>
-          </button>
+          {/* 🌟 ACTION BUTTON: SAVE FOR ADMIN OR ORDER FOR CUSTOMER 🌟 */}
+          {adminOrderContext ? (
+            <button
+              onClick={handleSaveAdminOrder}
+              disabled={savingAdminOrder}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
+              title="Save changes directly to customer order"
+            >
+              {savingAdminOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>{savingAdminOrder ? "Saving..." : "Save to Order"}</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenOrderModal}
+              className="px-2.5 xs:px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer hover:scale-105"
+              title="Order Physical Cards & Prints or Add to Cart"
+            >
+              <ShoppingCart className="w-3.5 h-3.5 text-amber-300" />
+              <span className="hidden xs:inline">Order Prints</span>
+              <span className="xs:hidden">Order</span>
+            </button>
+          )}
 
         </div>
       </header>
 
-      {/* ── 2. TOP CONTEXTUAL BAR ── */}
-      {activeElement && (
-        <div data-lenis-prevent className="h-12 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center gap-2.5 sm:gap-4 text-xs shrink-0 overflow-x-auto z-40 shadow-xs whitespace-nowrap no-scrollbar scroll-smooth">
-          {/* Text Content Input & Next Line Support */}
-          {activeElement.type === "text" && (
-            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200 shrink-0">
-              <Edit3 className="w-3.5 h-3.5 text-[#991B1B]" />
-              <input
-                type="text"
-                value={activeElement.text || ""}
-                onChange={(e) => updateActiveElement({ text: e.target.value })}
-                placeholder="Edit text..."
-                className="w-36 sm:w-52 bg-white text-slate-900 border border-slate-200 rounded-lg px-2 py-0.5 text-xs font-semibold outline-none focus:border-[#991B1B]"
-                title="Type text. Press Enter on canvas (or double-click) to add next line"
-              />
-              <button
-                onClick={() => updateActiveElement({ text: (activeElement.text || "") + "\n" })}
-                className="px-2 py-0.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                title="Add Next Line / Line Break"
-              >
-                <WrapText className="w-3 h-3 text-[#991B1B]" />
-                <span>Next Line</span>
-              </button>
-            </div>
-          )}
-
-          {/* Text Font Family & Color */}
-          {activeElement.type === "text" && (
-            <>
-              <select
-                value={activeElement.fontFamily}
-                onChange={(e) => updateActiveElement({ fontFamily: e.target.value })}
-                className="bg-slate-50 text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer focus:border-[#991B1B]"
-              >
-                {FONTS.map((f) => (
-                  <option key={f.name} value={f.family}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-slate-500 uppercase font-bold">Color:</span>
-                <input
-                  type="color"
-                  value={activeElement.color || "#1E293B"}
-                  onChange={(e) => updateActiveElement({ color: e.target.value })}
-                  className="w-6 h-6 bg-transparent border-0 cursor-pointer rounded overflow-hidden"
-                />
-              </div>
-            </>
-          )}
-
-          {/* Dedicated Element WIDTH Controls (Shrink Width, % Input, Expand Width) */}
-          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 shrink-0">
-            <span className="text-[10px] text-slate-500 uppercase font-extrabold">Width:</span>
-            <button
-              onClick={() => updateActiveElement({ width: Math.max(5, (activeElement.width || 80) - 5) })}
-              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-              title="Reduce Element Width (-5%)"
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-            <input
-              type="number"
-              min={5}
-              max={100}
-              value={Math.round(activeElement.width || 80)}
-              onChange={(e) => updateActiveElement({ width: Math.max(5, Math.min(100, Number(e.target.value))) })}
-              className="w-11 bg-white text-slate-800 border border-slate-200 rounded-lg py-0.5 text-xs font-bold text-center outline-none focus:border-[#991B1B]"
-            />
-            <button
-              onClick={() => updateActiveElement({ width: Math.min(100, (activeElement.width || 80) + 5) })}
-              className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-              title="Increase Element Width (+5%)"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-          </div>
-
-          {/* Universal Font SIZE / Element Scale Controls */}
-          {activeElement.type === "text" && (
-            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 shrink-0">
-              <span className="text-[10px] text-slate-500 uppercase font-extrabold">Font Size:</span>
-              <button
-                onClick={() => updateActiveElement({ fontSize: Math.max(8, (activeElement.fontSize || 20) - 2) })}
-                className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-                title="Decrease Font Size"
-              >
-                <Minimize2 className="w-3.5 h-3.5" />
-              </button>
-              <input
-                type="number"
-                value={activeElement.fontSize || 20}
-                onChange={(e) => updateActiveElement({ fontSize: Number(e.target.value) })}
-                className="w-11 bg-white text-slate-800 border border-slate-200 rounded-lg py-0.5 text-xs font-bold text-center outline-none focus:border-[#991B1B]"
-              />
-              <button
-                onClick={() => updateActiveElement({ fontSize: Math.min(200, (activeElement.fontSize || 20) + 2) })}
-                className="p-1 rounded-lg bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 transition-colors cursor-pointer"
-                title="Increase Font Size"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* 1-Click Align Center Button */}
-          <button
-            onClick={() => updateActiveElement({ x: Math.round((100 - activeElement.width) / 2) })}
-            className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer shrink-0"
-            title="Align Horizontally to Canvas Center"
-          >
-            <AlignCenter className="w-3.5 h-3.5 text-[#991B1B]" />
-            <span>Center</span>
-          </button>
-
-          {/* Hide / Unhide Eye Button */}
-          <button
-            onClick={() => updateActiveElement({ isHidden: !activeElement.isHidden })}
-            className={`px-2.5 py-1 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 ${
-              activeElement.isHidden
-                ? "bg-rose-100 text-rose-800 border-rose-300 shadow-xs"
-                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-[#991B1B] hover:text-white"
-            }`}
-            title={activeElement.isHidden ? "Unhide Element" : "Hide Element"}
-          >
-            {activeElement.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
-            <span>{activeElement.isHidden ? "Hidden" : "Hide"}</span>
-          </button>
-
-          {/* Nudge Position Controls */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
-            <span className="text-[10px] text-slate-500 font-extrabold uppercase px-1">Move:</span>
-            <button
-              onClick={() => handleNudge("left")}
-              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
-              title="Move Left (ArrowLeft)"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => handleNudge("up")}
-              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
-              title="Move Up (ArrowUp)"
-            >
-              <ArrowUp className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => handleNudge("down")}
-              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
-              title="Move Down (ArrowDown)"
-            >
-              <ArrowDown className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => handleNudge("right")}
-              className="p-1 rounded bg-white hover:bg-[#991B1B] hover:text-white border border-slate-200 text-slate-800 font-bold transition-colors cursor-pointer"
-              title="Move Right (ArrowRight)"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setNudgeStep((prev) => (prev === 1 ? 5 : prev === 5 ? 0.5 : 1))}
-              className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 text-slate-800 hover:bg-slate-300 transition-colors ml-0.5 cursor-pointer"
-              title="Toggle Nudge Step Size"
-            >
-              {nudgeStep}%
-            </button>
-          </div>
-
-          {/* Duplicate & Delete Buttons */}
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-            <button
-              onClick={handleDuplicate}
-              className="px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              <span>Duplicate</span>
-            </button>
-
-            <button
-              onClick={handleDelete}
-              className="px-2.5 py-1 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-[#991B1B] hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ── 3. MAIN THREE-COLUMN STUDIO BODY (Responsive Flex) ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden relative pb-16 lg:pb-0">
         
-        {/* ── DESKTOP LEFT COLUMN 1: Clean White & Red Vertical Icon Toolbar ── */}
-        <div className="hidden lg:flex w-20 bg-white border-r border-slate-200 flex-col items-center py-4 gap-3 shrink-0 z-20">
-          <button
-            onClick={() => setActiveTab("templates")}
-            className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              activeTab === "templates"
-                ? "bg-[#991B1B] text-white shadow-md font-bold"
-                : "text-slate-600 hover:text-[#991B1B] hover:bg-red-50"
-            }`}
-          >
-            <Layers className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Templates</span>
-          </button>
+        {/* ── DESKTOP LEFT SIDEBAR: UNIFIED TABBED SIDEBAR (MATCHING ADMIN BUILDER) ── */}
+        <aside className="hidden lg:flex w-80 xl:w-84 h-full flex-col bg-white border-r border-slate-200 shrink-0 z-10 shadow-xs">
+          {/* Navigation Tabs */}
+          <div className="shrink-0 grid grid-cols-4 p-2 gap-1 bg-slate-50 border-b border-slate-200 text-[11px] font-bold">
+            <button
+              onClick={() => setActiveTab("templates")}
+              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "templates" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Templates</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("text")}
-            className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              activeTab === "text"
-                ? "bg-[#991B1B] text-white shadow-md font-bold"
-                : "text-slate-600 hover:text-[#991B1B] hover:bg-red-50"
-            }`}
-          >
-            <Type className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Text</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("text")}
+              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "text" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Type className="w-3.5 h-3.5" />
+              <span>Text</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("elements")}
-            className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              activeTab === "elements"
-                ? "bg-[#991B1B] text-white shadow-md font-bold"
-                : "text-slate-600 hover:text-[#991B1B] hover:bg-red-50"
-            }`}
-          >
-            <Sparkles className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Elements</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("elements")}
+              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "elements" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Elements</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("layers")}
-            className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              activeTab === "layers"
-                ? "bg-[#991B1B] text-white shadow-md font-bold"
-                : "text-slate-600 hover:text-[#991B1B] hover:bg-red-50"
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Layers</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setActiveTab("layers")}
+              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "layers" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Layers</span>
+            </button>
+          </div>
 
-        {/* ── DESKTOP LEFT COLUMN 2: Light Secondary Tool Panels Drawer ── */}
-        <div
-          data-lenis-prevent
-          className="hidden lg:flex w-72 bg-white border-r border-slate-200 p-3.5 flex-col gap-4 overflow-y-auto overscroll-contain h-full shrink-0 z-10 custom-scrollbar"
-        >
-          {renderLeftToolsDrawerContent(activeTab)}
-        </div>
+          {/* Scrollable Left Tab Body */}
+          <div
+            data-lenis-prevent
+            className="flex-1 min-h-0 overflow-y-auto custom-scrollbar select-auto overscroll-contain bg-white p-3.5"
+          >
+            {renderLeftToolsDrawerContent(activeTab)}
+          </div>
+        </aside>
 
         {/* ── CENTER COLUMN: CANVAS WORKSPACE (Responsive Full-Width on Mobile) ── */}
-        <div
-          ref={workspaceRef}
-          onWheel={handleWheelZoom}
-          onClick={() => setSelectedId(null)}
-          className="flex-1 w-full bg-[#EAEAEA] flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-y-auto overflow-x-auto h-full cursor-default"
-        >
+        <div className="flex-1 h-full min-h-0 relative overflow-hidden bg-[#EAEAEA] flex flex-col">
+          {/* ── MOBILE TOGGLEABLE HORIZONTAL LAYER THUMBNAILS TRAY ── */}
+          <div className="lg:hidden absolute top-2.5 left-2 right-2 z-20 flex flex-col items-center gap-1.5 pointer-events-none">
+            {/* Toggle Pill Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileLayers(!showMobileLayers)}
+              className="pointer-events-auto px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 shadow-md text-slate-800 text-[10.5px] font-extrabold flex items-center gap-1.5 cursor-pointer hover:bg-red-50 hover:text-[#991B1B] hover:border-red-200 transition-all active:scale-95"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+              <span className="truncate max-w-[140px]">
+                {currentPage.title || currentPage.name || `Sheet ${activePageIndex + 1}`} ({activePageIndex + 1}/{pages.length})
+              </span>
+              <span className="text-[9px] text-[#991B1B] bg-red-50 px-1.5 py-0.2 rounded font-bold">
+                {showMobileLayers ? "▲ Hide" : "▼ Layers"}
+              </span>
+            </button>
+
+            {/* Expandable Horizontal Thumbnails Strip */}
+            {showMobileLayers && (
+              <div className="pointer-events-auto w-full max-w-sm bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl rounded-2xl p-2.5 animate-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center gap-2.5 overflow-x-auto custom-scrollbar pb-1">
+                  {pages.map((layer, idx) => {
+                    const isSelected = idx === activePageIndex;
+                    const lDim = getLayerDimensions(layer, basePage);
+                    const scale = Math.min(38 / lDim.width, 54 / lDim.height);
+                    const thumbW = Math.max(24, Math.round(lDim.width * scale));
+                    const thumbH = Math.max(24, Math.round(lDim.height * scale));
+
+                    return (
+                      <div
+                        key={layer.id}
+                        onClick={() => {
+                          setActivePageIndex(idx);
+                          setSelectedId(null);
+                        }}
+                        className="flex flex-col items-center gap-1 shrink-0 cursor-pointer group relative"
+                      >
+                        <div
+                          style={{
+                            width: `${thumbW}px`,
+                            height: `${thumbH}px`,
+                            backgroundColor:
+                              layer.backgroundColor && (layer.backgroundColor.startsWith("#") || layer.backgroundColor.startsWith("rgb"))
+                                ? layer.backgroundColor
+                                : undefined,
+                            backgroundImage: layer.backgroundImage
+                              ? `url(${layer.backgroundImage})`
+                              : layer.backgroundColor && layer.backgroundColor.includes("gradient")
+                              ? layer.backgroundColor
+                              : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
+                          className={`rounded-xs transition-all relative select-none ${
+                            isSelected
+                              ? "opacity-100 border-2 border-[#991B1B] shadow-xs bg-white scale-105"
+                              : "opacity-45 hover:opacity-85 border border-slate-300 bg-white"
+                          }`}
+                        >
+                          {/* Mini Elements */}
+                          {layer.elements.map((el) => (
+                            <div
+                              key={el.id}
+                              style={{
+                                position: "absolute",
+                                left: `${el.x}%`,
+                                top: `${el.y}%`,
+                                width: `${el.width}%`,
+                                height: el.height ? `${el.height}%` : "auto",
+                                transform: `rotate(${el.rotation || 0}deg)`,
+                                opacity: 0.85,
+                              }}
+                              className="pointer-events-none"
+                            >
+                              {el.type === "image" && el.src && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={el.src} alt="" className="w-full h-full object-contain" />
+                              )}
+                              {el.type === "text" && (
+                                <div
+                                  style={{
+                                    fontSize: "3.5px",
+                                    color: el.color || "#1E293B",
+                                    textAlign: el.textAlign || "center",
+                                  }}
+                                  className="truncate font-sans leading-none"
+                                >
+                                  {el.text}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        <span
+                          className={`text-[8.5px] truncate max-w-[55px] text-center ${
+                            isSelected ? "text-[#991B1B] font-extrabold" : "text-slate-500 font-medium"
+                          }`}
+                        >
+                          {layer.title || layer.name || `Sheet ${idx + 1}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+
+                  {/* + Add Button in Mobile Tray */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextIdx = pages.length + 1;
+                      const newId = `layer-${Date.now()}`;
+                      const defaultPct = nextIdx === 2 ? 85 : nextIdx === 3 ? 72 : 60;
+                      const baseDim = getLayerDimensions(basePage, basePage);
+                      const newLayer: CanvasPage = {
+                        id: newId,
+                        title: `Insert Sheet ${nextIdx}`,
+                        name: `Insert Sheet ${nextIdx}`,
+                        isBase: false,
+                        heightPercent: defaultPct,
+                        aspectRatio: currentPage.aspectRatio || "classic",
+                        customWidth: Math.round(baseDim.width * (defaultPct / 100)),
+                        customHeight: Math.round(baseDim.height * (defaultPct / 100)),
+                        lockRatio: true,
+                        backgroundColor: "#FFFFFF",
+                        backgroundImage: null,
+                        bgMode: "textures",
+                        elements: [],
+                      };
+                      setPages([...pages, newLayer]);
+                      setActivePageIndex(pages.length);
+                    }}
+                    className="w-8 h-8 rounded-full bg-white hover:bg-red-50 border border-slate-300 hover:border-[#991B1B] text-slate-600 hover:text-[#991B1B] flex items-center justify-center shrink-0 shadow-2xs transition-all cursor-pointer group"
+                    title="Add another card layer"
+                  >
+                    <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Canvas Viewport (Scrollable with guaranteed top clearance) */}
+          <div
+            ref={workspaceRef}
+            onWheel={handleWheelZoom}
+            onClick={() => setSelectedId(null)}
+            className="flex-1 w-full flex flex-col items-center justify-center p-2 sm:p-6 pb-28 overflow-y-auto overflow-x-auto h-full cursor-default custom-scrollbar select-none min-h-0"
+          >
           
-          {/* Main Canvas Card */}
-          <div className="my-auto flex flex-col items-center py-4 sm:py-6">
+          {/* Main Canvas Card Container (Exact scaled dimensions so top is never hidden on zoom) */}
+          <div
+            style={{
+              width: `${Math.round(activeDimensions.width * (zoomLevel / 100))}px`,
+              height: `${Math.round(activeDimensions.height * (zoomLevel / 100))}px`,
+            }}
+            className="relative shrink-0 my-auto mx-auto"
+          >
             <div
               ref={canvasRef}
               onClick={(e) => {
@@ -4545,9 +5632,12 @@ export default function CanvaCardStudio() {
                 width: canvasDim.width,
                 height: canvasDim.height,
                 transform: `scale(${zoomLevel / 100})`,
-                transformOrigin: "center center",
+                transformOrigin: "0 0",
+                position: "absolute",
+                top: 0,
+                left: 0,
               }}
-              className="relative shadow-2xl rounded-3xl transition-transform duration-100 flex-shrink-0 overflow-hidden"
+              className="shadow-2xl rounded-3xl transition-transform duration-100 overflow-hidden"
             >
               {/* INNER ARTWORK CONTAINER */}
               <div
@@ -5030,8 +6120,10 @@ export default function CanvaCardStudio() {
             </div>
           </div>
 
-          {/* Bottom Floating Canvas Bar: Zoom & Grid (Responsive placement) */}
-          <div className="absolute bottom-18 lg:bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md border border-gray-200/90 rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xl flex items-center gap-2 sm:gap-3 text-xs z-30 pointer-events-auto">
+          </div>
+
+          {/* Bottom Floating Canvas Bar: Zoom & Grid (Stationary on scroll) */}
+          <div className="absolute bottom-18 lg:bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md border border-gray-200/90 rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xl flex items-center gap-2 sm:gap-3 text-xs z-30 pointer-events-auto select-none">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setZoomLevel(Math.max(40, zoomLevel - 10))}
@@ -5052,6 +6144,16 @@ export default function CanvaCardStudio() {
 
             <div className="h-4 w-px bg-gray-300" />
 
+            {/* Fit to Screen Button */}
+            <button
+              onClick={handleFitToScreen}
+              className="px-2 sm:px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-[#991B1B] hover:bg-red-100 text-[10px] sm:text-[11px] transition-colors cursor-pointer font-extrabold flex items-center gap-1"
+              title="Auto-Fit Card to Screen without Scrolling"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span>Fit</span>
+            </button>
+
             <button
               onClick={() => setShowGrid(!showGrid)}
               className={`px-2 sm:px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] sm:text-[11px] transition-colors cursor-pointer font-bold ${
@@ -5065,12 +6167,200 @@ export default function CanvaCardStudio() {
 
         </div>
 
-        {/* ── DESKTOP RIGHT COLUMN: LIGHT SMART PERSONALIZATION PANEL ── */}
+        {/* ── RIGHT COLUMN 1: MINIMAL FLOATING CARD THUMBNAILS STACK (RIGHT SIDEBAR EXACTLY AS IN ADMIN) ── */}
+        <div className="hidden lg:flex w-28 sm:w-32 h-full flex-col items-center shrink-0 py-6 px-1 z-10 select-none overflow-y-auto custom-scrollbar bg-slate-50 border-l border-slate-200">
+          <div className="flex flex-col items-center gap-4 w-full">
+            {pages.map((layer, idx) => {
+              const isSelected = idx === activePageIndex;
+              const lDim = getLayerDimensions(layer, basePage);
+
+              // Compact thumbnail calculation (max bounded box: 56px W, 80px H)
+              const maxThumbW = 56;
+              const maxThumbH = 80;
+              const scale = Math.min(maxThumbW / lDim.width, maxThumbH / lDim.height);
+              const thumbW = Math.max(36, Math.round(lDim.width * scale));
+              const thumbH = Math.max(36, Math.round(lDim.height * scale));
+
+              return (
+                <div
+                  key={layer.id}
+                  onClick={() => {
+                    setActivePageIndex(idx);
+                    setSelectedId(null);
+                  }}
+                  className="flex flex-col items-center gap-1 w-full cursor-pointer group relative"
+                >
+                  {/* Proportional Card Frame with Active Selection Handles */}
+                  <div className="relative p-1.5 flex items-center justify-center">
+                    <div
+                      style={{
+                        width: `${thumbW}px`,
+                        height: `${thumbH}px`,
+                        backgroundColor:
+                          layer.backgroundColor && (layer.backgroundColor.startsWith("#") || layer.backgroundColor.startsWith("rgb"))
+                            ? layer.backgroundColor
+                            : undefined,
+                        backgroundImage: layer.backgroundImage
+                          ? `url(${layer.backgroundImage})`
+                          : layer.backgroundColor && layer.backgroundColor.includes("gradient")
+                          ? layer.backgroundColor
+                          : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                      className={`rounded-md overflow-visible transition-all relative select-none ${
+                        isSelected
+                          ? "opacity-100 ring-2 ring-blue-500 border-2 border-blue-500 shadow-sm bg-white scale-102"
+                          : "opacity-30 hover:opacity-75 border border-slate-300 bg-white"
+                      }`}
+                    >
+                      {/* Mini Thumbnail Elements */}
+                      {layer.elements.map((el) => (
+                        <div
+                          key={el.id}
+                          style={{
+                            position: "absolute",
+                            left: `${el.x}%`,
+                            top: `${el.y}%`,
+                            width: `${el.width}%`,
+                            height: el.height ? `${el.height}%` : "auto",
+                            transform: `rotate(${el.rotation || 0}deg)`,
+                            opacity: 0.8,
+                          }}
+                          className="pointer-events-none"
+                        >
+                          {el.type === "image" && el.src && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={el.src} alt="" className="w-full h-full object-contain" />
+                          )}
+                          {el.type === "text" && (
+                            <div
+                              style={{
+                                fontSize: "4.5px",
+                                color: el.color || "#1E293B",
+                                textAlign: el.textAlign || "center",
+                              }}
+                              className="truncate font-sans leading-none"
+                            >
+                              {el.text}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* 8-Point Blue Selection Handles for Selected Thumbnail */}
+                      {isSelected && (
+                        <>
+                          <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-1.5 h-1.5 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-1.5 h-1.5 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-blue-500 rounded-xs border border-white shadow-2xs z-30" />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sheet Name & Ratio */}
+                  <span
+                    className={`text-[9.5px] text-center truncate max-w-[84px] transition-colors leading-tight ${
+                      isSelected ? "font-bold text-slate-900" : "font-medium text-slate-500 group-hover:text-slate-700"
+                    }`}
+                  >
+                    {layer.title || layer.name || `Sheet ${idx + 1}`}
+                  </span>
+                  <span className="text-[8px] font-mono text-slate-400">
+                    {lDim.ratioStr} {layer.isBase ? "(Base)" : `${layer.heightPercent || 85}%`}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* Plus Button to Add Card Insert Sheet */}
+            <button
+              type="button"
+              onClick={() => {
+                const nextIdx = pages.length + 1;
+                const newId = `layer-${Date.now()}`;
+                const defaultPct = nextIdx === 2 ? 85 : nextIdx === 3 ? 72 : 60;
+                const baseDim = getLayerDimensions(basePage, basePage);
+                const newLayer: CanvasPage = {
+                  id: newId,
+                  title: `Insert Sheet ${nextIdx}`,
+                  name: `Insert Sheet ${nextIdx}`,
+                  isBase: false,
+                  heightPercent: defaultPct,
+                  aspectRatio: currentPage.aspectRatio || "classic",
+                  customWidth: Math.round(baseDim.width * (defaultPct / 100)),
+                  customHeight: Math.round(baseDim.height * (defaultPct / 100)),
+                  lockRatio: true,
+                  backgroundColor: "#FFFFFF",
+                  backgroundImage: null,
+                  bgMode: "textures",
+                  elements: [],
+                };
+                setPages([...pages, newLayer]);
+                setActivePageIndex(pages.length);
+                setSelectedId(null);
+              }}
+              className="w-8 h-8 rounded-full border border-slate-300 hover:border-[#991B1B] hover:bg-red-50 text-slate-500 hover:text-[#991B1B] flex items-center justify-center transition-all cursor-pointer shadow-2xs mt-1"
+              title="Add new card insert sheet"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── DESKTOP RIGHT COLUMN 2: SMART PERSONALIZATION & FORMAT TABS ── */}
         <div
           data-lenis-prevent
-          className="hidden lg:flex w-80 bg-white border-l border-slate-200 p-5 flex-col justify-between gap-5 overflow-y-auto overscroll-contain h-full shrink-0 z-20 custom-scrollbar"
+          className="hidden lg:flex w-84 xl:w-90 bg-white border-l border-slate-200 flex-col h-full shrink-0 z-20 custom-scrollbar overflow-hidden"
         >
-          {renderPersonalizationContent()}
+          {/* Top Tab Switcher */}
+          <div className="p-3 border-b border-slate-200 bg-slate-50/80 shrink-0">
+            <div className="flex p-1 bg-slate-200/80 rounded-xl border border-slate-200 gap-1">
+              <button
+                type="button"
+                onClick={() => setRightPanelTab("personalize")}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  rightPanelTab === "personalize"
+                    ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Personalize</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRightPanelTab("format")}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+                  rightPanelTab === "format"
+                    ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Format</span>
+                {activeElement && (
+                  <span className="w-2 h-2 rounded-full bg-[#991B1B]" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content Container */}
+          <div className="flex-1 overflow-y-auto overscroll-contain p-4 custom-scrollbar">
+            {rightPanelTab === "personalize" ? (
+              renderPersonalizationContent()
+            ) : (
+              renderFormatContent()
+            )}
+          </div>
         </div>
 
       </div>
@@ -5146,14 +6436,25 @@ export default function CanvaCardStudio() {
           <span className="text-[9px] sm:text-[10px] mt-0.5 font-bold">Form</span>
         </button>
 
-        {/* 🌟 DIRECT ORDER PRINTS TAB ON MOBILE BOTTOM BAR 🌟 */}
-        <button
-          onClick={handleOpenOrderModal}
-          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold shadow-md border border-red-200 transition-all cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <ShoppingCart className="w-4 h-4 text-amber-300" />
-          <span className="text-[9px] mt-0.5 font-extrabold text-white">Order</span>
-        </button>
+        {/* 🌟 DIRECT ACTION TAB ON MOBILE BOTTOM BAR 🌟 */}
+        {adminOrderContext ? (
+          <button
+            onClick={handleSaveAdminOrder}
+            disabled={savingAdminOrder}
+            className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold shadow-md border border-red-200 transition-all cursor-pointer"
+          >
+            {savingAdminOrder ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span className="text-[9px] mt-0.5 font-extrabold text-white">Save</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleOpenOrderModal}
+            className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold shadow-md border border-red-200 transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <ShoppingCart className="w-4 h-4 text-amber-300" />
+            <span className="text-[9px] mt-0.5 font-extrabold text-white">Order</span>
+          </button>
+        )}
       </nav>
 
       {/* ── 🌟 MOBILE SLIDE-UP BOTTOM SHEET MODAL 🌟 ── */}
@@ -5193,12 +6494,52 @@ export default function CanvaCardStudio() {
               </button>
             </div>
 
+            {/* Mobile Personalize / Format Subtabs when in Personalize tab */}
+            {mobileTab === "personalize" && (
+              <div className="px-4 pt-2">
+                <div className="flex p-1 bg-slate-200/80 rounded-xl border border-slate-200 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setRightPanelTab("personalize")}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      rightPanelTab === "personalize"
+                        ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    <span>Personalize</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRightPanelTab("format")}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+                      rightPanelTab === "format"
+                        ? "bg-white text-[#991B1B] shadow-xs border border-slate-200 font-bold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Format</span>
+                    {activeElement && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#991B1B]" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Sheet Scrollable Content */}
             <div
               data-lenis-prevent
               className="p-4 overflow-y-auto overscroll-contain flex-1 custom-scrollbar space-y-4 pb-10"
             >
-              {mobileTab === "personalize" ? renderPersonalizationContent() : renderLeftToolsDrawerContent(mobileTab)}
+              {mobileTab === "personalize"
+                ? rightPanelTab === "personalize"
+                  ? renderPersonalizationContent()
+                  : renderFormatContent()
+                : renderLeftToolsDrawerContent(mobileTab)}
             </div>
           </div>
         </div>
@@ -5343,16 +6684,245 @@ export default function CanvaCardStudio() {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => handleExport("png")}
-                className="px-6 py-3 rounded-xl bg-[#991B1B] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#7F1D1D] cursor-pointer shadow-md"
+                type="button"
+                disabled
+                className="px-6 py-3 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-60"
+                title="Download is disabled"
               >
-                Download PNG
+                Download PNG (Disabled)
               </button>
               <button
                 onClick={() => setShowPreviewModal(false)}
                 className="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 cursor-pointer"
               >
                 Back to Editor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 🌟 FULLSCREEN MULTI-DECK LAYER STACK VISUALIZER MODAL 🌟 ── */}
+      {showStackModal && (
+        <div className="fixed inset-0 z-[105] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-200 text-[#991B1B] flex items-center justify-center font-bold">
+                  <Ruler className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-slate-900">
+                    Multi-Deck Physical Stack Visualizer
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Visualize how the layered cards align and step over one another when physically printed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Alignment Toggle */}
+                <div className="flex items-center gap-1 bg-slate-200/80 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("bottom")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "bottom"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Bottom Stepped
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("top")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "top"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Top Stepped
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("center")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "center"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Center
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowStackModal(false)}
+                  className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors cursor-pointer"
+                  title="Close Visualizer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+              {/* Large 2.5D Stack Preview Area */}
+              <div className="h-80 sm:h-96 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200/90 rounded-3xl p-6 flex items-center justify-center relative border border-slate-200 shadow-inner overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+
+                <div
+                  className={`relative w-full h-full flex justify-center ${
+                    stackAlign === "bottom"
+                      ? "items-end"
+                      : stackAlign === "top"
+                      ? "items-start"
+                      : "items-center"
+                  }`}
+                >
+                  {(() => {
+                    const baseLayer = pages.find((p) => p.isBase) || pages[0];
+                    const baseDim = getLayerDimensions(baseLayer, baseLayer);
+                    const maxHeightPx = 280;
+                    const scaleFactor = maxHeightPx / baseDim.height;
+
+                    const sortedForStack = [...pages]
+                      .map((p, origIdx) => ({ page: p, origIdx }))
+                      .sort((a, b) => {
+                        const aPct = a.page.isBase !== false ? 100 : a.page.heightPercent || 85;
+                        const bPct = b.page.isBase !== false ? 100 : b.page.heightPercent || 85;
+                        return bPct - aPct;
+                      });
+
+                    return sortedForStack.map((item, stackPos) => {
+                      const { page: p, origIdx } = item;
+                      const isSelected = origIdx === activePageIndex;
+                      const pDim = getPhysicalDimensions(p, baseLayer);
+                      const renderW = Math.round(pDim.pixelW * scaleFactor);
+                      const renderH = Math.round(pDim.pixelH * scaleFactor);
+
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            setActivePageIndex(origIdx);
+                            setSelectedId(null);
+                          }}
+                          style={{
+                            width: `${renderW}px`,
+                            height: `${renderH}px`,
+                            zIndex: stackPos + 10,
+                            backgroundColor: p.backgroundColor || "#FFFFFF",
+                            backgroundImage: p.backgroundImage ? `url(${p.backgroundImage})` : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
+                          className={`absolute rounded-2xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl group flex flex-col justify-between p-3 border ${
+                            isSelected
+                              ? "ring-4 ring-[#991B1B]/40 border-[#991B1B] shadow-2xl scale-[1.02]"
+                              : "border-slate-300 hover:scale-[1.01]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span
+                              className={`text-[10px] sm:text-xs font-extrabold px-2 py-0.5 rounded-lg truncate max-w-[140px] ${
+                                isSelected
+                                  ? "bg-[#991B1B] text-white shadow-2xs"
+                                  : "bg-black/60 text-white backdrop-blur-xs"
+                              }`}
+                            >
+                              {p.title || p.name || `Sheet ${origIdx + 1}`}
+                            </span>
+                            <span className="text-[9px] sm:text-[10px] font-mono font-bold bg-white/90 text-slate-900 px-1.5 py-0.5 rounded-md shadow-2xs">
+                              {pDim.pct}%
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-center w-full">
+                            <span className="text-[9px] sm:text-[10px] font-mono font-extrabold bg-white/95 text-slate-900 px-2 py-1 rounded-lg border border-slate-200 shadow-md">
+                              {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Specifications Grid Breakdown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {(() => {
+                  const baseLayer = pages.find((p) => p.isBase) || pages[0];
+                  return pages.map((p, idx) => {
+                    const isSelected = idx === activePageIndex;
+                    const pDim = getPhysicalDimensions(p, baseLayer);
+
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setActivePageIndex(idx);
+                          setSelectedId(null);
+                        }}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                          isSelected
+                            ? "bg-red-50/80 border-[#991B1B] ring-2 ring-[#991B1B]/30 shadow-xs"
+                            : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shrink-0 ${
+                              p.isBase
+                                ? "bg-[#991B1B] text-white"
+                                : "bg-slate-200 text-slate-800"
+                            }`}
+                          >
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-slate-900">
+                                {p.title || p.name || `Sheet ${idx + 1}`}
+                              </h4>
+                              {p.isBase && (
+                                <span className="text-[9px] font-extrabold bg-red-100 text-[#991B1B] px-1.5 py-0.5 rounded-md">
+                                  Base
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-600 mt-0.5">
+                              {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-mono font-extrabold text-[#991B1B] bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs block">
+                            {pDim.pct}% Height
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-200 flex items-center justify-end bg-slate-50 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowStackModal(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Close Visualizer
               </button>
             </div>
           </div>
@@ -5432,8 +7002,9 @@ export default function CanvaCardStudio() {
         isOpen={showOrderModal}
         onClose={() => setShowOrderModal(false)}
         templateId={String(activeTemplateId)}
-        templateName={allTemplates.find((t) => t.id === activeTemplateId)?.name || docTitle}
-        previewImage={orderPreviewUrl || allTemplates.find((t) => t.id === activeTemplateId)?.previewImage || "/images/canva/template1-thumb.webp"}
+        templateName={allTemplates.find((t) => t.id === activeTemplateId || (t as any).dbId === activeTemplateId || (t as any).slug === activeTemplateId || t.name === docTitle)?.name || docTitle}
+        basePrice={allTemplates.find((t) => t.id === activeTemplateId || (t as any).dbId === activeTemplateId || (t as any).slug === activeTemplateId || t.name === docTitle)?.pricePerCard}
+        previewImage={orderPreviewUrl || allTemplates.find((t) => t.id === activeTemplateId || (t as any).dbId === activeTemplateId || (t as any).slug === activeTemplateId || t.name === docTitle)?.previewImage || "/images/canva/template1-thumb.webp"}
         cardDetails={{
           coupleNames: personalization.coupleNames || "",
           groom: personalization.modernGroom || personalization.modern3GroomFirst || "",
@@ -5446,6 +7017,25 @@ export default function CanvaCardStudio() {
           aspectRatio,
           backgroundColor: pages[activePageIndex]?.backgroundColor || allTemplates.find((t) => t.id === activeTemplateId)?.backgroundColor,
           backgroundImage: pages[activePageIndex]?.backgroundImage || allTemplates.find((t) => t.id === activeTemplateId)?.backgroundImage,
+          pages: pages.map((pg, idx) => {
+            const baseLayer = pages.find((p) => p.isBase) || pages[0];
+            const pDim = getPhysicalDimensions(pg, baseLayer);
+            return {
+              ...pg,
+              index: idx + 1,
+              sheetName: pg.title || pg.name || `Sheet ${idx + 1}`,
+              widthInches: pDim.widthInches,
+              heightInches: pDim.heightInches,
+              widthMm: pDim.widthMm,
+              heightMm: pDim.heightMm,
+              pixelW: pDim.pixelW,
+              pixelH: pDim.pixelH,
+              heightPercent: pDim.pct,
+              physicalDimensions: pDim,
+            };
+          }),
+          layerCount: pages.length,
+          baseDimensions: getPhysicalDimensions(basePage, basePage),
         }}
         elements={elements}
         onCartSuccess={() => {
@@ -5454,6 +7044,30 @@ export default function CanvaCardStudio() {
           }
         }}
       />
+
+      {/* ── TOAST NOTIFICATION ── */}
+      {toastNotification && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-200 pointer-events-none">
+          <div
+            className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-xs sm:text-sm font-bold pointer-events-auto ${
+              toastNotification.type === "success"
+                ? "bg-slate-900 text-white border-emerald-500/50 shadow-emerald-950/30"
+                : "bg-red-950 text-white border-red-500/50 shadow-red-950/30"
+            }`}
+          >
+            {toastNotification.type === "success" ? (
+              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+              </span>
+            ) : (
+              <span className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-4 h-4 text-red-400 stroke-[3]" />
+              </span>
+            )}
+            <span>{toastNotification.message}</span>
+          </div>
+        </div>
+      )}
 
     </div>
   );

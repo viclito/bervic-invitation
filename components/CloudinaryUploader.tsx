@@ -9,6 +9,7 @@ interface CloudinaryUploaderProps {
   value: string;
   onChange: (url: string) => void;
   placeholder?: string;
+  target?: "templates" | "canva" | "shop";
 }
 
 export default function CloudinaryUploader({
@@ -16,6 +17,7 @@ export default function CloudinaryUploader({
   value,
   onChange,
   placeholder = "/images/templates/couple-photo.jpg",
+  target = "templates",
 }: CloudinaryUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -31,7 +33,7 @@ export default function CloudinaryUploader({
       await fetch("/api/upload", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: imageUrl }),
+        body: JSON.stringify({ url: imageUrl, target }),
       });
     } catch (err) {
       console.error("Failed to delete old Cloudinary image:", err);
@@ -57,6 +59,7 @@ export default function CloudinaryUploader({
 
       const formData = new FormData();
       formData.append("file", optimizedFile);
+      formData.append("target", target);
 
       const res = await fetch("/api/upload", {
         method: "POST",

@@ -320,7 +320,7 @@ export default function MidnightGoldGalaInvitation(
               style={{
                 backgroundImage: `url('${
                   props.heroImage ||
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuD0UYLzxxkzcgL_Ry2JKz9_ej15-wsUHOVw6BET408ObWqPcQjCean3UdBgo0qj1fHjBbN_PCvlkLkFN023hfOj017BIio-GRlcqsUHan_rE7lDUP8v3cDzzG2HlGZy_eetgAm4EOm-37ekPuw3ntOMf1p5UMGlfj1i5sMBpLC9ttj0w4f8bcDr4FKFhLsd7RFgSGdXSFIAy8oYRjVe_hweChFpRaZxMncqEFzDSu7RNEWvY4xXWzep"
+                  "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80"
                 }')`,
               }}
             ></div>

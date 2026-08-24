@@ -38,6 +38,7 @@ import {
   Search,
 } from "lucide-react";
 import CartDrawer from "@/components/cart/CartDrawer";
+import { CARD_PRICING_TIERS, calculateTieredCardPrice } from "@/lib/pricing";
 
 export interface ShopProductItem {
   id: string;
@@ -366,26 +367,99 @@ export default function TraditionalShopClient() {
 
     if (isGift) {
       if (stepNumber === 1) {
+        const qty = getQuantity(previewProduct.id, 20);
+        if (qty < 1) {
+          errors.copies = "Please select valid gift piece quantity.";
+        }
+      } else if (stepNumber === 2) {
         if (!printForm.brideName.trim() && !printForm.groomName.trim()) {
           errors.couple = "Please enter Couple / Celebrant or Family name for the gift tag.";
+        }
+      } else if (stepNumber === 3) {
+        const effectiveDeliveryName = (
+          printForm.deliveryName ||
+          session?.user?.name ||
+          ""
+        ).trim();
+        if (!effectiveDeliveryName) {
+          errors.deliveryName = "Please enter recipient name.";
+        }
+        const effectivePhone = (printForm.deliveryPhone || "").trim();
+        const phoneDigits = effectivePhone.replace(/\D/g, "");
+        if (!effectivePhone || phoneDigits.length < 10) {
+          errors.deliveryPhone = "Please enter a valid 10-digit phone number.";
+        }
+        if (!printForm.deliveryAddress.trim()) {
+          errors.deliveryAddress = "Please enter delivery shipping address.";
+        }
+        if (!printForm.deliveryCity.trim()) {
+          errors.deliveryCity = "City / District / State is required.";
+        }
+        const pincodeDigits = printForm.deliveryPincode.replace(/\D/g, "");
+        if (!printForm.deliveryPincode.trim() || pincodeDigits.length !== 6) {
+          errors.deliveryPincode = "Please enter a valid 6-digit postal pincode.";
         }
       }
     } else {
       if (stepNumber === 1) {
+        const copies = getQuantity(previewProduct.id, 50);
+        if (copies < 50) {
+          errors.copies = "Minimum print run is 50 copies.";
+        }
+      } else if (stepNumber === 2) {
         if (!printForm.brideName.trim()) {
           errors.brideName = "Bride's full name is required for printing.";
         }
         if (!printForm.groomName.trim()) {
           errors.groomName = "Groom's full name is required for printing.";
         }
-      }
-      if (stepNumber === 2) {
+      } else if (stepNumber === 3) {
         if (!printForm.eventDate.trim()) {
           errors.eventDate = "Wedding / event date is required.";
         }
         const hasValidVenue = printForm.venues.some((v) => v.name.trim());
         if (!hasValidVenue) {
           errors.venue = "Please enter at least one venue / marriage hall name.";
+        }
+      } else if (stepNumber === 4) {
+        const effectiveDeliveryName = (
+          printForm.deliveryName ||
+          session?.user?.name ||
+          printForm.brideName ||
+          printForm.groomName ||
+          ""
+        ).trim();
+
+        if (!effectiveDeliveryName || effectiveDeliveryName.length < 2) {
+          errors.deliveryName = "Please enter a valid recipient / contact name.";
+        }
+
+        const effectivePhone = (printForm.deliveryPhone || printForm.rsvpContact || "").trim();
+        const phoneDigits = effectivePhone.replace(/\D/g, "");
+        if (!effectivePhone || phoneDigits.length < 10) {
+          errors.deliveryPhone = "Please enter a valid 10-digit WhatsApp or mobile number.";
+        }
+
+        const effectiveAddress = (
+          printForm.deliveryAddress ||
+          printForm.brideAddress ||
+          printForm.groomAddress ||
+          (printForm.venues[0]?.address || "")
+        ).trim();
+
+        if (!effectiveAddress || effectiveAddress.length < 5) {
+          errors.deliveryAddress = "Please enter complete delivery address (House/Flat No, Street, Landmark).";
+        }
+
+        if (!printForm.deliveryCity.trim()) {
+          errors.deliveryCity = "City / District / State is required.";
+        }
+
+        const pincodeDigits = printForm.deliveryPincode.replace(/\D/g, "");
+        if (!printForm.deliveryPincode.trim()) {
+          errors.deliveryPincode = "Postal pincode is required.";
+        } else if (pincodeDigits.length !== 6) {
+          errors.deliveryPincode = "Please enter a valid 6-digit postal pincode (e.g. 600001).";
         }
       }
     }
@@ -404,108 +478,24 @@ export default function TraditionalShopClient() {
   };
 
   const validatePrintForm = (product: ShopProductItem, isDirectOrder: boolean = false): boolean => {
-    const errors: Record<string, string> = {};
     const isGift =
       product.category === "return_gifts" ||
       ["brass", "hampers", "silver", "bags", "candles"].includes(product.category);
+    const maxSteps = isGift ? 3 : 4;
+    const targetSteps = isDirectOrder ? maxSteps : (isGift ? 2 : 3);
 
-    if (isGift) {
-      if (!printForm.brideName.trim() && !printForm.groomName.trim()) {
-        errors.couple = "Please enter Couple / Celebrant or Family name for the gift tag.";
-      }
-    } else {
-      if (!printForm.brideName.trim()) {
-        errors.brideName = "Bride's full name is required for printing.";
-      }
-      if (!printForm.groomName.trim()) {
-        errors.groomName = "Groom's full name is required for printing.";
-      }
-      if (!printForm.eventDate.trim()) {
-        errors.eventDate = "Wedding / event date is required.";
-      }
-      const hasValidVenue = printForm.venues.some((v) => v.name.trim());
-      if (!hasValidVenue) {
-        errors.venue = "Please enter at least one venue / marriage hall name.";
+    for (let s = 1; s <= targetSteps; s++) {
+      if (!validateStep(s)) {
+        setActiveStep(s);
+        return false;
       }
     }
-
-    if (isDirectOrder) {
-      const effectiveDeliveryName = (
-        printForm.deliveryName ||
-        session?.user?.name ||
-        printForm.brideName ||
-        printForm.groomName ||
-        ""
-      ).trim();
-
-      if (!effectiveDeliveryName || effectiveDeliveryName.length < 2) {
-        errors.deliveryName = "Please enter a valid recipient / contact name.";
-      }
-
-      const effectivePhone = (printForm.deliveryPhone || printForm.rsvpContact || "").trim();
-      const phoneDigits = effectivePhone.replace(/\D/g, "");
-      if (!effectivePhone || phoneDigits.length < 10) {
-        errors.deliveryPhone = "Please enter a valid 10-digit WhatsApp or mobile number.";
-      }
-
-      const effectiveAddress = (
-        printForm.deliveryAddress ||
-        printForm.brideAddress ||
-        printForm.groomAddress ||
-        (printForm.venues[0]?.address || "")
-      ).trim();
-
-      if (!effectiveAddress || effectiveAddress.length < 5) {
-        errors.deliveryAddress = "Please enter complete delivery address (House/Flat No, Street, Landmark).";
-      }
-
-      if (!printForm.deliveryCity.trim()) {
-        errors.deliveryCity = "City / District / State is required.";
-      }
-
-      const pincodeDigits = printForm.deliveryPincode.replace(/\D/g, "");
-      if (!printForm.deliveryPincode.trim()) {
-        errors.deliveryPincode = "Postal pincode is required.";
-      } else if (pincodeDigits.length !== 6) {
-        errors.deliveryPincode = "Please enter a valid 6-digit postal pincode (e.g. 600001).";
-      }
-    }
-
-    setFormErrors(errors);
-
-    if (Object.keys(errors).length > 0) {
-      // Jump to the active step with error
-      if (!isGift) {
-        if (errors.brideName || errors.groomName) {
-          setActiveStep(1);
-        } else if (errors.eventDate || errors.venue) {
-          setActiveStep(2);
-        } else if (errors.deliveryName || errors.deliveryPhone || errors.deliveryAddress || errors.deliveryCity || errors.deliveryPincode) {
-          setActiveStep(3);
-        }
-      } else {
-        if (errors.couple) {
-          setActiveStep(1);
-        } else if (errors.deliveryName || errors.deliveryPhone || errors.deliveryAddress || errors.deliveryCity || errors.deliveryPincode) {
-          setActiveStep(2);
-        }
-      }
-
-      setTimeout(() => {
-        const firstErrorEl = document.querySelector(".has-validation-error");
-        if (firstErrorEl) {
-          firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 50);
-      return false;
-    }
-
     return true;
   };
 
   const handleAddToCart = async (product: ShopProductItem, customCopies?: number) => {
     if (!session) {
-      router.push(`/auth/login?redirect=/shop`);
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent("/shop")}`);
       return;
     }
 
@@ -516,8 +506,11 @@ export default function TraditionalShopClient() {
 
     setFormErrors({});
 
-    const copies = customCopies || getQuantity(product.id, product.minCopies);
-    const totalPrice = copies * product.pricePerCard;
+    const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(product.category);
+    const copies = customCopies || getQuantity(product.id, isGift ? product.minCopies || 25 : product.minCopies || 50);
+    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift);
+    const effectiveUnitPrice = priceCalc.unitPrice;
+    const totalPrice = priceCalc.totalPrice;
 
     setAddingCardId(product.id);
 
@@ -526,7 +519,11 @@ export default function TraditionalShopClient() {
     const cardDetails = {
       paperType: product.paperType,
       dimensions: product.dimensions,
-      pricePerCard: product.pricePerCard,
+      basePricePerCard: product.pricePerCard,
+      pricePerCard: effectiveUnitPrice,
+      tierMultiplier: priceCalc.multiplier,
+      tierLabel: priceCalc.tierLabel,
+      totalPrice,
       brideName: printForm.brideName.trim(),
       brideQualification: printForm.brideQualification.trim(),
       brideParents: printForm.brideParents.trim(),
@@ -603,14 +600,19 @@ export default function TraditionalShopClient() {
 
   const handleDirectOrder = async (product: ShopProductItem, customCopies?: number) => {
     if (!session) {
-      router.push(`/auth/login?redirect=/shop`);
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent("/shop")}`);
       return;
     }
 
     if (!validatePrintForm(product, true)) return;
 
     setFormErrors({});
-    const copies = customCopies || getQuantity(product.id, product.minCopies);
+    const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(product.category);
+    const copies = customCopies || getQuantity(product.id, isGift ? product.minCopies || 25 : product.minCopies || 50);
+    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift);
+    const effectiveUnitPrice = priceCalc.unitPrice;
+    const totalPrice = priceCalc.totalPrice;
+
     setPlacingOrderId(product.id);
 
     const effectiveDeliveryName = (
@@ -635,7 +637,11 @@ export default function TraditionalShopClient() {
     const cardDetails = {
       paperType: product.paperType,
       dimensions: product.dimensions,
-      pricePerCard: product.pricePerCard,
+      basePricePerCard: product.pricePerCard,
+      pricePerCard: effectiveUnitPrice,
+      tierMultiplier: priceCalc.multiplier,
+      tierLabel: priceCalc.tierLabel,
+      totalPrice,
       brideName: printForm.brideName.trim(),
       brideQualification: printForm.brideQualification.trim(),
       brideParents: printForm.brideParents.trim(),
@@ -695,7 +701,7 @@ export default function TraditionalShopClient() {
               templateName: product.name,
               previewImage: product.previewImage,
               copies,
-              price: product.pricePerCard,
+              price: effectiveUnitPrice,
               customNotes,
               cardDetails,
             },
@@ -978,6 +984,10 @@ export default function TraditionalShopClient() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (!session) {
+                              router.push(`/auth/login?callbackUrl=${encodeURIComponent("/shop")}`);
+                              return;
+                            }
                             setPreviewProduct(product);
                           }}
                           className="w-full py-1.5 sm:py-2 px-2 rounded-lg sm:rounded-xl bg-red-50 hover:bg-[#991B1B] text-[#991B1B] hover:text-white border border-red-200 text-[10px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all shadow-2xs group-hover:bg-[#991B1B] group-hover:text-white cursor-pointer"
@@ -1078,21 +1088,25 @@ export default function TraditionalShopClient() {
         const isGift =
           previewProduct.category === "return_gifts" ||
           ["brass", "hampers", "silver", "bags", "candles"].includes(previewProduct.category);
-        const maxSteps = isGift ? 2 : 3;
 
         const steps = isGift
           ? [
-              { number: 1, title: "Gift Tag Details", icon: "🏷️" },
-              { number: 2, title: "Delivery & Order", icon: "📦" },
+              { number: 1, title: "Quantity & Pieces", icon: "🎁" },
+              { number: 2, title: "Gift Tag Details", icon: "🏷️" },
+              { number: 3, title: "Delivery & Order", icon: "🚚" },
             ]
           : [
-              { number: 1, title: "Bride & Groom", icon: "👰" },
-              { number: 2, title: "Event & Venues", icon: "📅" },
-              { number: 3, title: "RSVP & Delivery", icon: "📦" },
+              { number: 1, title: "Copies & Pricing", icon: "📦" },
+              { number: 2, title: "Couple & Parents", icon: "👰" },
+              { number: 3, title: "Event & Venues", icon: "📅" },
+              { number: 4, title: "RSVP & Delivery", icon: "🚚" },
             ];
+        const maxSteps = steps.length;
 
-        const copies = getQuantity(previewProduct.id, previewProduct.minCopies);
-        const totalPrice = copies * previewProduct.pricePerCard;
+        const copies = getQuantity(previewProduct.id, isGift ? previewProduct.minCopies || 25 : previewProduct.minCopies || 50);
+        const priceCalc = calculateTieredCardPrice(previewProduct.pricePerCard, copies, isGift);
+        const effectiveUnitPrice = priceCalc.unitPrice;
+        const totalPrice = priceCalc.totalPrice;
         const isOrdering = placingOrderId === previewProduct.id;
         const isAdding = addingCardId === previewProduct.id;
 
@@ -1130,58 +1144,58 @@ export default function TraditionalShopClient() {
               </button>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-                {/* Left Column: Product Snapshot, Gallery Thumbnails, Specs & Copies */}
-                <div className="lg:col-span-4 space-y-3">
+                {/* Left Column: Product Snapshot, Gallery Thumbnails, Title & Specs */}
+                <div className="lg:col-span-4 space-y-3.5">
                   <div className="relative aspect-[3/4] bg-red-50/40 rounded-2xl overflow-hidden border-2 border-red-100 p-4 flex items-center justify-center shadow-inner">
-                        <img
-                          src={currentDisplayedImage}
-                          alt={previewProduct.name}
-                          className="w-full h-full object-contain p-2 transition-all duration-300"
-                        />
-                        {previewProduct.badge && (
-                          <span className="absolute top-3.5 left-3.5 bg-[#991B1B] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md border border-red-300 uppercase tracking-wider">
-                            {previewProduct.badge}
-                          </span>
-                        )}
-                        <div className="absolute bottom-3.5 right-3.5 bg-slate-900/90 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-md border border-slate-700 backdrop-blur-xs">
-                          ₹{previewProduct.pricePerCard} {isGift ? "/ piece" : "/ card"}
-                        </div>
-                      </div>
+                    <img
+                      src={currentDisplayedImage}
+                      alt={previewProduct.name}
+                      className="w-full h-full object-contain p-2 transition-all duration-300"
+                    />
+                    {previewProduct.badge && (
+                      <span className="absolute top-3.5 left-3.5 bg-[#991B1B] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md border border-red-300 uppercase tracking-wider">
+                        {previewProduct.badge}
+                      </span>
+                    )}
+                    <div className="absolute bottom-3.5 right-3.5 bg-slate-900/90 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-md border border-slate-700 backdrop-blur-xs">
+                      ₹{effectiveUnitPrice} {isGift ? "/ pc" : "/ card"}
+                    </div>
+                  </div>
 
-                      {/* Sub-Images / Gallery Thumbnails Selector */}
-                      {allDisplayImages.length > 1 && (
-                        <div className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar">
-                          {allDisplayImages.map((imgUrl, imgIdx) => {
-                            const isSelected = imgUrl === currentDisplayedImage;
-                            return (
-                              <button
-                                key={imgIdx}
-                                type="button"
-                                onClick={() => setActiveModalImage(imgUrl)}
-                                className={`w-14 h-16 rounded-xl overflow-hidden bg-white border-2 p-0.5 shrink-0 transition-all cursor-pointer relative ${
-                                  isSelected
-                                    ? "border-[#991B1B] ring-2 ring-red-300 shadow-md scale-105"
-                                    : "border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-400"
-                                }`}
-                              >
-                                <img
-                                  src={imgUrl}
-                                  alt={`Angle ${imgIdx + 1}`}
-                                  className="w-full h-full object-contain"
-                                />
-                                {imgIdx === 0 && (
-                                  <span className="absolute bottom-0.5 right-0.5 bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded">
-                                    MAIN
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                  {/* Sub-Images / Gallery Thumbnails Selector */}
+                  {allDisplayImages.length > 1 && (
+                    <div className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar">
+                      {allDisplayImages.map((imgUrl, imgIdx) => {
+                        const isSelected = imgUrl === currentDisplayedImage;
+                        return (
+                          <button
+                            key={imgIdx}
+                            type="button"
+                            onClick={() => setActiveModalImage(imgUrl)}
+                            className={`w-14 h-16 rounded-xl overflow-hidden bg-white border-2 p-0.5 shrink-0 transition-all cursor-pointer relative ${
+                              isSelected
+                                ? "border-[#991B1B] ring-2 ring-red-300 shadow-md scale-105"
+                                : "border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-400"
+                            }`}
+                          >
+                            <img
+                              src={imgUrl}
+                              alt={`Angle ${imgIdx + 1}`}
+                              className="w-full h-full object-contain"
+                            />
+                            {imgIdx === 0 && (
+                              <span className="absolute bottom-0.5 right-0.5 bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded">
+                                MAIN
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 fill-current" /> {previewProduct.rating || 5.0}
                       </span>
@@ -1190,13 +1204,28 @@ export default function TraditionalShopClient() {
                         {isGift ? "Return Gift" : previewProduct.category}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold font-serif text-slate-900 leading-snug">{previewProduct.name}</h3>
-                    <p className="text-lg font-extrabold text-[#991B1B] mt-0.5">
-                      ₹{previewProduct.pricePerCard}{" "}
-                      <span className="text-xs font-normal text-slate-500">
-                        {isGift ? "per gift piece / hamper" : "per printed card"}
+                    <h3 className="text-lg font-bold font-serif text-slate-900 leading-snug">{previewProduct.name}</h3>
+                    <div className="flex items-baseline gap-2 pt-0.5">
+                      <span className="text-2xl font-black text-[#991B1B]">₹{effectiveUnitPrice}</span>
+                      <span className="text-xs font-medium text-slate-500">
+                        {isGift ? "per gift piece" : "/ card"}
                       </span>
-                    </p>
+                      {!isGift && priceCalc.markupPercent > 0 && (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                          +{priceCalc.markupPercent}% Tier
+                        </span>
+                      )}
+                      {!isGift && priceCalc.markupPercent === 0 && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          Base Rate
+                        </span>
+                      )}
+                    </div>
+                    {!isGift && (
+                      <p className="text-[10.5px] text-slate-500 font-medium">
+                        Base rate: ₹{previewProduct.pricePerCard}/card for 1000+ prints
+                      </p>
+                    )}
                   </div>
 
                   {/* Canva Studio Direct Customization Button (Only shown if linked to Canva template) */}
@@ -1205,7 +1234,7 @@ export default function TraditionalShopClient() {
                       href={`/canva?template=${encodeURIComponent(previewProduct.canvaTemplateId)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-[#991B1B] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer no-underline text-center group border border-amber-300"
+                      className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-[#991B1B] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer no-underline text-center group border border-amber-300"
                     >
                       <Sparkles className="w-4 h-4 text-amber-200 animate-pulse" />
                       <span>Customize Design in Studio</span>
@@ -1223,48 +1252,6 @@ export default function TraditionalShopClient() {
                       <span>📏</span>
                       <span>Dimensions: {previewProduct.dimensions}</span>
                     </p>
-                  </div>
-
-                  {/* Copies / Pieces Selector */}
-                  <div className="bg-white p-3 rounded-2xl border border-red-100 space-y-2 shadow-2xs">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-800">
-                        {isGift ? "Select Order Quantity:" : "Select Print Copies:"}
-                      </span>
-                      {isGift ? (
-                        <select
-                          value={copies}
-                          onChange={(e) => setQuantity(previewProduct.id, Number(e.target.value))}
-                          className="bg-red-50/50 border border-red-200 rounded-lg px-2.5 py-1 text-xs font-bold text-[#991B1B] focus:outline-none focus:ring-1 focus:ring-[#991B1B]"
-                        >
-                          <option value={20}>20 Pieces (₹{20 * previewProduct.pricePerCard})</option>
-                          <option value={25}>25 Pieces (₹{25 * previewProduct.pricePerCard})</option>
-                          <option value={50}>50 Pieces (₹{50 * previewProduct.pricePerCard})</option>
-                          <option value={100}>100 Pieces (₹{100 * previewProduct.pricePerCard})</option>
-                          <option value={150}>150 Pieces (₹{150 * previewProduct.pricePerCard})</option>
-                          <option value={200}>200 Pieces (₹{200 * previewProduct.pricePerCard})</option>
-                          <option value={300}>300 Pieces (₹{300 * previewProduct.pricePerCard})</option>
-                          <option value={500}>500 Pieces (₹{500 * previewProduct.pricePerCard})</option>
-                        </select>
-                      ) : (
-                        <select
-                          value={copies}
-                          onChange={(e) => setQuantity(previewProduct.id, Number(e.target.value))}
-                          className="bg-red-50/50 border border-red-200 rounded-lg px-2.5 py-1 text-xs font-bold text-[#991B1B] focus:outline-none focus:ring-1 focus:ring-[#991B1B]"
-                        >
-                          <option value={50}>50 Cards (₹{50 * previewProduct.pricePerCard})</option>
-                          <option value={100}>100 Cards (₹{100 * previewProduct.pricePerCard})</option>
-                          <option value={150}>150 Cards (₹{150 * previewProduct.pricePerCard})</option>
-                          <option value={200}>200 Cards (₹{200 * previewProduct.pricePerCard})</option>
-                          <option value={300}>300 Cards (₹{300 * previewProduct.pricePerCard})</option>
-                          <option value={500}>500 Cards (₹{500 * previewProduct.pricePerCard})</option>
-                        </select>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 font-bold">
-                      <span className="text-slate-600">Total Estimation:</span>
-                      <span className="text-[#991B1B] text-sm font-extrabold">₹{totalPrice}</span>
-                    </div>
                   </div>
                 </div>
 
@@ -1308,7 +1295,7 @@ export default function TraditionalShopClient() {
                                 }
                               }
                             }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2.5 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                               isCurrent
                                 ? "bg-[#991B1B] text-white shadow-md ring-2 ring-red-200"
                                 : isCompleted
@@ -1349,8 +1336,172 @@ export default function TraditionalShopClient() {
                     </div>
                   )}
 
-                  {/* STEP 1: COUPLE / BRIDE & GROOM DETAILS OR GIFT TAG */}
+                  {/* ════════════════════════════════════════════════════════════
+                      STEP 1: COPIES & TIERED PRICING (Moved to Stepper)
+                      ════════════════════════════════════════════════════════════ */}
                   {activeStep === 1 && (
+                    <div className="space-y-4 animate-in fade-in duration-200">
+                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-4 shadow-2xs">
+                        <div className="flex items-center justify-between border-b border-red-100 pb-2.5">
+                          <div className="flex items-center gap-2 text-[#991B1B] font-extrabold text-xs">
+                            <Package className="w-4 h-4 text-[#991B1B]" />
+                            <span>{isGift ? "Select Gift Pieces Required" : "Select Physical Print Run (Min 50 Copies)"}</span>
+                          </div>
+                          <span className="px-3 py-1 rounded-xl bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
+                            {copies} {isGift ? "Pieces" : "Cards Selected"}
+                          </span>
+                        </div>
+
+                        {/* Preset Quantity Buttons */}
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Choose Quantity Preset:
+                          </label>
+                          {!isGift ? (
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                              {[50, 80, 100, 150, 200, 300, 500, 1000].map((preset) => {
+                                const isSelected = copies === preset;
+                                const calc = calculateTieredCardPrice(previewProduct.pricePerCard, preset, false);
+                                return (
+                                  <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => {
+                                      setQuantity(previewProduct.id, preset);
+                                      clearFieldError("copies");
+                                    }}
+                                    className={`py-2.5 px-1 rounded-2xl font-bold text-center transition-all border cursor-pointer flex flex-col items-center justify-center ${
+                                      isSelected
+                                        ? "bg-[#991B1B] text-white border-[#991B1B] shadow-md scale-102 ring-2 ring-red-200"
+                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#991B1B]"
+                                    }`}
+                                  >
+                                    <span className="text-sm font-black">{preset}</span>
+                                    <span className={`text-[10px] ${isSelected ? "text-red-100" : "text-[#991B1B] font-extrabold"}`}>
+                                      ₹{calc.unitPrice}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                              {[20, 25, 50, 100, 150, 200, 300, 500].map((preset) => {
+                                const isSelected = copies === preset;
+                                return (
+                                  <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => {
+                                      setQuantity(previewProduct.id, preset);
+                                      clearFieldError("copies");
+                                    }}
+                                    className={`py-2.5 px-1 rounded-2xl font-bold text-center transition-all border cursor-pointer flex flex-col items-center justify-center ${
+                                      isSelected
+                                        ? "bg-[#991B1B] text-white border-[#991B1B] shadow-md scale-102"
+                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#991B1B]"
+                                    }`}
+                                  >
+                                    <span className="text-sm font-black">{preset}</span>
+                                    <span className={`text-[10px] ${isSelected ? "text-red-100" : "text-[#991B1B] font-extrabold"}`}>
+                                      ₹{previewProduct.pricePerCard}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Live Active Tier & Calculation Card */}
+                        {!isGift ? (
+                          <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-200 space-y-2.5">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5">
+                              <span className="font-extrabold text-amber-950 text-xs flex items-center gap-1.5">
+                                <Zap className="w-4 h-4 text-amber-600" />
+                                <span>Volume Tier Rate: {priceCalc.tierLabel}</span>
+                              </span>
+                              <span className="text-[11px] font-mono font-bold text-amber-900 bg-white px-2.5 py-0.5 rounded-lg border border-amber-300">
+                                Base: ₹{previewProduct.pricePerCard}/card (1000+)
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                              <div className="bg-white p-3 rounded-xl border border-amber-200/80">
+                                <span className="text-[10px] font-bold text-slate-500 block uppercase">Price Per Card</span>
+                                <div className="flex items-baseline gap-2 mt-0.5">
+                                  <span className="text-2xl font-extrabold text-[#991B1B]">₹{effectiveUnitPrice}</span>
+                                  <span className="text-xs text-slate-500 font-normal">/ card</span>
+                                  {priceCalc.markupPercent > 0 ? (
+                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                                      +{priceCalc.markupPercent}% Tier
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                                      Base Rate
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="bg-white p-3 rounded-xl border border-amber-200/80 flex flex-col justify-between">
+                                <span className="text-[10px] font-bold text-slate-500 block uppercase">
+                                  Estimated Total ({copies} Cards)
+                                </span>
+                                <span className="text-2xl font-black text-slate-900 mt-0.5">₹{totalPrice}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-200 flex items-center justify-between font-bold text-amber-950">
+                            <div>
+                              <span className="text-[10px] text-slate-500 block uppercase">Estimated Subtotal ({copies} Pieces)</span>
+                              <span className="text-2xl font-black text-[#991B1B]">₹{totalPrice}</span>
+                            </div>
+                            <span className="text-xs bg-white px-3 py-1.5 rounded-xl border border-amber-300 font-extrabold text-slate-800">
+                              ₹{previewProduct.pricePerCard} / piece
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Paper & Specs Info */}
+                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                          <div className="space-y-0.5">
+                            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                              <span>{isGift ? "🎁" : "📄"}</span>
+                              <span>{previewProduct.paperType}</span>
+                            </span>
+                            <span className="text-[11px] text-slate-500 block">Dimensions: {previewProduct.dimensions}</span>
+                          </div>
+                          <span className="text-[10.5px] font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                            Premium Board
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Step 1 Continue Button */}
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (validateStep(1)) {
+                              setFormErrors({});
+                              setActiveStep(2);
+                            }
+                          }}
+                          className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-102"
+                        >
+                          <span>{isGift ? "Continue to Gift Tag Details" : "Continue to Couple & Parents"}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ════════════════════════════════════════════════════════════
+                      STEP 2: COUPLE & PARENTS (Cards) / GIFT TAG DETAILS (Gifts)
+                      ════════════════════════════════════════════════════════════ */}
+                  {activeStep === 2 && (
                     <div className="space-y-4 animate-in fade-in duration-200">
                       {isGift ? (
                         /* Return Gifts Personalized Tag Box */
@@ -1475,7 +1626,7 @@ export default function TraditionalShopClient() {
                                   type="text"
                                   value={printForm.brideParents}
                                   onChange={(e) => setPrintForm({ ...printForm, brideParents: e.target.value })}
-                                  placeholder="e.g. Mr. Rajesh Sharma & Mrs. Kavita Sharma"
+                                  placeholder="e.g. Mr. Rajesh Sharma & Mrs. Meena Sharma"
                                   className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                                 />
                               </div>
@@ -1488,7 +1639,7 @@ export default function TraditionalShopClient() {
                                   type="text"
                                   value={printForm.brideAddress}
                                   onChange={(e) => setPrintForm({ ...printForm, brideAddress: e.target.value })}
-                                  placeholder="e.g. No. 42, Lotus Villa, Gandhi Road, Chennai"
+                                  placeholder="e.g. 45 Green Avenue, Gandhi Nagar, Chennai"
                                   className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                                 />
                               </div>
@@ -1566,7 +1717,7 @@ export default function TraditionalShopClient() {
                                   type="text"
                                   value={printForm.groomAddress}
                                   onChange={(e) => setPrintForm({ ...printForm, groomAddress: e.target.value })}
-                                  placeholder="e.g. No. 18, Royal Heights, Indiranagar, Bangalore"
+                                  placeholder="e.g. 18 Royal Heights, Bangalore"
                                   className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                                 />
                               </div>
@@ -1575,14 +1726,23 @@ export default function TraditionalShopClient() {
                         </>
                       )}
 
-                      {/* Step 1 Navigation Button */}
-                      <div className="flex justify-end pt-2">
+                      {/* Step 2 Navigation Buttons */}
+                      <div className="flex items-center justify-between pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveStep(1)}
+                          className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          <span>Back to Copies &amp; Pricing</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => {
-                            if (validateStep(1)) {
+                            if (validateStep(2)) {
                               setFormErrors({});
-                              setActiveStep(2);
+                              setActiveStep(3);
                             }
                           }}
                           className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer"
@@ -1594,8 +1754,10 @@ export default function TraditionalShopClient() {
                     </div>
                   )}
 
-                  {/* STEP 2: WEDDING DATE & VENUES (or Delivery for gifts) */}
-                  {activeStep === 2 && !isGift && (
+                  {/* ════════════════════════════════════════════════════════════
+                      STEP 3: EVENT & VENUES (Cards) / DELIVERY & ORDER (Gifts)
+                      ════════════════════════════════════════════════════════════ */}
+                  {activeStep === 3 && !isGift && (
                     <div className="space-y-4 animate-in fade-in duration-200">
                       {/* Wedding Date & Timing */}
                       <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
@@ -1700,9 +1862,9 @@ export default function TraditionalShopClient() {
                                   />
                                 </div>
 
-                                <div className={`sm:col-span-2 ${formErrors.venue && idx === 0 ? "has-validation-error" : ""}`}>
+                                <div>
                                   <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    Venue / Marriage Hall Name <span className="text-[#991B1B]">*</span>
+                                    Hall / Hotel Name <span className="text-[#991B1B]">*</span>
                                   </label>
                                   <input
                                     type="text"
@@ -1712,39 +1874,20 @@ export default function TraditionalShopClient() {
                                       handleVenueChange(idx, "name", e.target.value);
                                       clearFieldError("venue");
                                     }}
-                                    placeholder="e.g. Grand Palace Convention Hall"
-                                    className={`w-full p-2 rounded-lg border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                      formErrors.venue && !venue.name.trim()
-                                        ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                        : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                <div className="sm:col-span-2">
-                                  <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    City &amp; Full Location Address
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={venue.address}
-                                    onChange={(e) => handleVenueChange(idx, "address", e.target.value)}
-                                    placeholder="e.g. Anna Salai, Chennai, Tamil Nadu - 600002"
-                                    className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
+                                    placeholder="e.g. Grand Palace Hall"
+                                    className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 font-semibold focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                                   />
                                 </div>
 
                                 <div>
                                   <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    Timing / Time
+                                    Address &amp; Landmark
                                   </label>
                                   <input
                                     type="text"
-                                    value={venue.time || ""}
-                                    onChange={(e) => handleVenueChange(idx, "time", e.target.value)}
-                                    placeholder="e.g. 9:00 AM onwards"
+                                    value={venue.address}
+                                    onChange={(e) => handleVenueChange(idx, "address", e.target.value)}
+                                    placeholder="e.g. Anna Salai, Chennai"
                                     className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                                   />
                                 </div>
@@ -1761,11 +1904,11 @@ export default function TraditionalShopClient() {
                         )}
                       </div>
 
-                      {/* Step 2 Navigation Buttons */}
+                      {/* Step 3 Navigation Buttons */}
                       <div className="flex items-center justify-between pt-2">
                         <button
                           type="button"
-                          onClick={() => setActiveStep(1)}
+                          onClick={() => setActiveStep(2)}
                           className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
                         >
                           <ChevronLeft className="w-4 h-4" />
@@ -1775,34 +1918,36 @@ export default function TraditionalShopClient() {
                         <button
                           type="button"
                           onClick={() => {
-                            if (validateStep(2)) {
+                            if (validateStep(3)) {
                               setFormErrors({});
-                              setActiveStep(3);
+                              setActiveStep(4);
                             }
                           }}
                           className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer"
                         >
-                          <span>Continue to Delivery &amp; RSVP</span>
+                          <span>Continue to Delivery &amp; Order</span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* FINAL STEP: DELIVERY ADDRESS & RSVP (Step 3 for cards, Step 2 for gifts) */}
-                  {((!isGift && activeStep === 3) || (isGift && activeStep === 2)) && (
+                  {/* ════════════════════════════════════════════════════════════
+                      STEP 4: DELIVERY ADDRESS, RSVP & ORDER (Step 4 for Cards, Step 3 for Gifts)
+                      ════════════════════════════════════════════════════════════ */}
+                  {((!isGift && activeStep === 4) || (isGift && activeStep === 3)) && (
                     <div className="space-y-4 animate-in fade-in duration-200">
                       {!isGift && (
                         /* RSVP Contact */
                         <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                          <label className="font-bold text-slate-900 block mb-1">
+                          <label className="font-bold text-slate-900 block mb-1 text-xs">
                             📞 RSVP Names &amp; Contact Phone Numbers
                           </label>
                           <input
                             type="text"
                             value={printForm.rsvpContact}
                             onChange={(e) => setPrintForm({ ...printForm, rsvpContact: e.target.value })}
-                            placeholder="e.g. Sharma Family: +91 98765 43210 / Verma Family: +91 91234 56789"
+                            placeholder="e.g. Sharma Family: +91 98765 43210"
                             className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
                           />
                         </div>
@@ -1873,7 +2018,7 @@ export default function TraditionalShopClient() {
 
                         <div className={formErrors.deliveryAddress ? "has-validation-error" : ""}>
                           <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                            Complete Shipping Address (House/Street/Landmark) <span className="text-[#991B1B]">*</span>
+                            Complete Shipping Address <span className="text-[#991B1B]">*</span>
                           </label>
                           <textarea
                             rows={2}
@@ -1883,7 +2028,7 @@ export default function TraditionalShopClient() {
                               setPrintForm({ ...printForm, deliveryAddress: e.target.value });
                               clearFieldError("deliveryAddress");
                             }}
-                            placeholder="e.g. Flat 402, Royal Palms Apartment, 12th Main Road, Indiranagar"
+                            placeholder="e.g. Flat 402, Royal Palms, Indiranagar"
                             className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 focus:outline-none transition-colors ${
                               formErrors.deliveryAddress
                                 ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
@@ -1958,8 +2103,8 @@ export default function TraditionalShopClient() {
 
                       {/* Special Instructions / Religion Symbol */}
                       <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                        <label className="font-bold text-slate-900 block mb-1">
-                          ✨ Special Notes / Religious Symbols / Specific Wording <span className="text-[10px] text-slate-400">(Optional)</span>
+                        <label className="font-bold text-slate-900 block mb-1 text-xs">
+                          ✨ Special Notes / Religious Symbols / Custom Proof Notes <span className="text-[10px] text-slate-400">(Optional)</span>
                         </label>
                         <textarea
                           rows={2}
@@ -1970,12 +2115,41 @@ export default function TraditionalShopClient() {
                         />
                       </div>
 
+                      {/* Order Summary Box */}
+                      <div className="bg-red-50/70 border border-red-200 rounded-2xl p-4 space-y-2">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#991B1B] block">
+                          Order Summary Review
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                          <div>
+                            <span className="text-slate-500 block text-[10px]">Print Run:</span>
+                            <strong className="text-slate-900">{copies} {isGift ? "Pieces" : "Cards"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px]">Estimated Subtotal:</span>
+                            <strong className="text-[#991B1B] font-extrabold text-sm block">
+                              ₹{totalPrice}
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px]">Paper Finish:</span>
+                            <strong className="text-slate-900 truncate block">{previewProduct.paperType}</strong>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px]">{isGift ? "Couple/Family:" : "Celebrants:"}</span>
+                            <strong className="text-slate-900 truncate block">
+                              {printForm.brideName || printForm.groomName ? `${printForm.brideName} & ${printForm.groomName}` : "Not specified"}
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Final Stepper Action Buttons */}
                       <div className="pt-3 border-t border-red-100 space-y-3">
                         <div className="flex flex-col sm:flex-row gap-3">
                           <button
                             type="button"
-                            onClick={() => setActiveStep(isGift ? 1 : 2)}
+                            onClick={() => setActiveStep(isGift ? 2 : 3)}
                             className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                           >
                             <ChevronLeft className="w-4 h-4" />

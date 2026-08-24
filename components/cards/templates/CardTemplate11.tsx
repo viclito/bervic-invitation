@@ -25,18 +25,7 @@ export default function CardTemplate11({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        background: 'radial-gradient(circle at center, #FFF0F5 0%, #F0F4FF 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "'Playfair Display', serif",
-      }}
+      style={{ width: '1080px', height: '1080px', background: 'radial-gradient(circle at center, #FFF0F5 0%, #F0F4FF 100%)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Playfair Display', serif" }}
     >
       <style>
         {`
@@ -69,57 +58,42 @@ export default function CardTemplate11({
 
       <div style={{ zIndex: 10, width: '100%', padding: '0 80px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         
-        <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '18px', letterSpacing: '10px', color: '#6A5ACD', textTransform: 'uppercase', marginBottom: '40px', opacity: 0.8 }}>
+        <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '28px', letterSpacing: '8px', fontWeight: 600, color: '#6A5ACD', textTransform: 'uppercase', marginBottom: '40px', opacity: 0.8 }}>
           {tagline}
         </p>
 
         <div style={{ position: 'relative', width: '250px', height: '250px', marginBottom: '50px' }}>
-          <div style={{
-            position: 'absolute',
-            top: '-15px', left: '-15px', right: '-15px', bottom: '-15px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.6)',
-            filter: 'blur(10px)',
-            zIndex: 1,
-          }} />
+          <div style={{ position: 'absolute', top: '-15px', left: '-15px', right: '-15px', bottom: '-15px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.6)', filter: 'blur(10px)', zIndex: 1 }} />
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              zIndex: 2,
-              border: '2px solid rgba(255, 255, 255, 0.8)',
-            }}
+            style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', zIndex: 2, border: '2px solid rgba(255, 255, 255, 0.8)' }}
           />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', marginBottom: '30px', width: '100%' }}>
-          <h1 style={{ fontSize: '56px', fontStyle: 'italic', color: '#4A3E56', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerOne}</h1>
-          <span style={{ fontSize: '36px', color: '#9370DB', fontStyle: 'normal', margin: '2px 0' }}>&amp;</span>
-          <h1 style={{ fontSize: '56px', fontStyle: 'italic', color: '#4A3E56', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerTwo}</h1>
+          <h1 style={{ fontSize: '76px', fontStyle: 'italic', color: '#4A3E56', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerOne}</h1>
+          <span style={{ fontSize: '44px', color: '#9370DB', fontStyle: 'normal', margin: '2px 0' }}>&amp;</span>
+          <h1 style={{ fontSize: '76px', fontStyle: 'italic', color: '#4A3E56', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerTwo}</h1>
         </div>
 
         <div style={{ width: '60px', height: '2px', backgroundColor: '#9370DB', opacity: 0.3, marginBottom: '30px' }}></div>
 
         <div style={{ fontFamily: "'Lato', sans-serif", color: '#4A3E56', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <p style={{ fontSize: '24px', margin: 0, fontWeight: 300, letterSpacing: '4px' }}>
+          <p style={{ fontSize: '34px', fontWeight: 300, margin: 0, letterSpacing: '4px' }}>
             {weddingDate} <span style={{ margin: '0 15px', opacity: 0.5 }}>|</span> {weddingTime}
           </p>
-          <p style={{ fontSize: '22px', margin: 0, fontWeight: 400, letterSpacing: '2px', opacity: 0.9 }}>
+          <p style={{ fontSize: '32px', fontWeight: 400, margin: 0, letterSpacing: '2px', opacity: 0.9 }}>
             {venue}
           </p>
-          <p style={{ fontSize: '18px', margin: 0, fontWeight: 300, textTransform: 'uppercase', letterSpacing: '6px', opacity: 0.7 }}>
+          <p style={{ fontSize: '26px', fontWeight: 300, margin: 0, textTransform: 'uppercase', letterSpacing: '6px', opacity: 0.7 }}>
             {city}
           </p>
         </div>
 
         <div style={{ marginTop: '60px' }}>
-          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '16px', color: '#6A5ACD', fontWeight: 400, letterSpacing: '4px', opacity: 0.8 }}>
+          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '26px', fontWeight: 400, color: '#6A5ACD', letterSpacing: '4px', opacity: 0.8 }}>
             {hashtag}
           </p>
         </div>

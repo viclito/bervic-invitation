@@ -10,8 +10,8 @@ export const sampleBirthdayData: TemplateClassicFloralProps = {
   inviteLine: "Join us in celebrating Berglin's 28th birthday. An evening of unprecedented revelry, commemorating another illustrious year in the annals of history.",
   weddingDate: "2026-11-24T09:30:00.000Z",
   weddingTime: "Tuesday, 24th November 2026 at 9:30 AM",
-  heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbj6E_qQBW8N2ekBWlNRTe3cHrgYRMT4QzPd43bvCMBA7Bl6HjAkpuZqvTe__V8hRoA2cLJpxwnpp7wbvCQPktW5Wy49-XG1Y1u9QwL9qXNRTnR2KYvCPYcqgrqJtYSBcXixeYf200LnvQ_ZYdOBdVti2jGn10c4_li63voJM0kByRtKG13sLM-HyR-nWViDmm0QJUi8Ru7jubY98alvyIVdP_1eTY2sw1jz2hGG_7Mv4UyREs4tw8",
-  coupleImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuArG5YFkRTyG0NbTRVMqnmH7qfHqXAFAyK9JzYzo8qCgb5rl-LsBpf_yfiu6j1B5B-pS3COjC9Zvf5xCmQWnOci5lJyAwvFF6deG8F2jdka4FfDAsO2XcwegK14vWOKrCgrOjviqY8ei882FdnnfnL0fcl7-gbrMahUOousxE2MhxV44VfugAIk0O2C2UoLNZQprgDmCkbJfVVcUt5ZQ1I4lAaOlbjmPoRR5NTrOeTVk0aIg86H_iIy",
+  heroImage: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80",
+  coupleImage: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
   venuePlace: "The Secret Level, 123 Coastal Breeze Way, Mediterranean Coast",
   events: [
     {
@@ -70,22 +70,23 @@ export const sampleBirthdayData: TemplateClassicFloralProps = {
     },
   ],
   loveStoryText:
-    "Embracing the slow living and organic textures of the Mediterranean mixed with a touch of island spirit. This celebration is designed to be a sensory experience, focusing on culinary arts, natural pigments, and intimate connections.",
+    "Celebrating another glorious year filled with laughter, love, and vibrant memories. This special milestone brings together our favorite people for an unforgettable night of joy, delicious feasts, and dancing!",
   loveStoryVideoUrl: "",
   showVideoSection: false,
   locations: [
     {
-      name: "The Setting",
+      name: "The Celebration Lounge",
       venueLabel: "The Secret Level",
       address: "123 Coastal Breeze Way, Mediterranean Coast",
       mapLink: "https://maps.google.com",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq",
+      image: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
     },
   ],
   galleryImages: [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDh4Z4xW8jzsbsKdg5ia6FglPseQmsZ1nlzUwtc2WJydYhxTuHb_NyigRGCYeKiuvRuXRXP_vtYDpZ3DiXo_J0Ke9Msny6YhJr3-1mqXCVUPUSMrdHol2HuTcrR3GbXkIjnxjzlnKhHkdi1qS6i_mCRPL23DzBAjE2IUqGXEzkii77HGn1cKN8lsCHGmZwg5RGM-V5NHCELiJ5_IxMqlW4AkYgBBaekk7zQYi7vFV9k64W1oXZSC_uJ",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBHAT2ujkSkrVrFXNwYxZGWYhPp0bwVfn-zm21_weAMJfQsLRgq7pY4rT43s6LhRoCy3OrGVWc-Szfw9c-zK6eGTqqhFNDTQVkXGGYQGfMwcVdCChKLt5L4icxEBD8kVNbERV6WydO45gJ2cMRST9M0ALo-Sa0jOv2xNcZylaE1DsyHfCB2J4lWMWVB718CzJWM_QKb6Bx7zTuCy6EUWp2jFXXzanaZbT_FswQOkO-NWpwwarWorryv",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCkq4ouHRpN0B0WcEm_ER0duJsqd7R-7EwHEaKpCwBrnnK8HQK_Wnlqs0t2Jmohk-cIv1jJSf8-Zk8iS0CSFP1NLZ0dX9T1XhgdjBEJ32_A5enxenXClguGj5JSnEVYI260DDmBk3dBo1my50UbFtx12HNjUyUbamsFmpARWfmRNMCWuXVEDE8xjckOGz9YKI54iD-A-jGSzI7aTfNvJ4ERdzNQkumZwVufEZny5Fx_kNJyANgebXar",
+    "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=80",
   ],
   contactPhone: "+1 555-019-2834",
   contactAddress: "Mediterranean Coast",

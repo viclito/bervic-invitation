@@ -32,7 +32,7 @@ export default function WhimsicalStorybookInvitation(
     props.coupleImage ||
     props.coverImage ||
     props.heroImage ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAZJB7Ka0QuhOUlCq-WvrM9YMyT_qQPfo-5wStIzRDkI1rE9oGCRjHJdaWYb_Tt-1-cPvwl3V18SoideDwVuoURk_6KoaSahb4uvAzqjvjXFmcYtpduAe51zfVp1BCorfBQSLC8RNBqc0bQNLVdgOOboQj_9n5bUQOH1TNuz9dZ0-wAoMjGXonAU0jf1DHmoeXBD6f0kRy5N8hp_UHBZqxTOxq-l-hRSVSKr_AMKMmRVNBpLpeFr_Og";
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   const coverImg =
     props.coverImage ||

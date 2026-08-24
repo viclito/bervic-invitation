@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   X,
   ShoppingCart,
@@ -89,6 +90,7 @@ function getCardFallbackPreview(templateId?: string, templateName?: string): str
 
 export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawerProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
@@ -650,6 +652,10 @@ export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawer
                   <button
                     type="button"
                     onClick={() => {
+                      if (!session) {
+                        router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+                        return;
+                      }
                       setSelectedItemForCheckout(item);
                       setIsCheckingOut(true);
                     }}
@@ -710,6 +716,10 @@ export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawer
               <button
                 type="button"
                 onClick={() => {
+                  if (!session) {
+                    router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+                    return;
+                  }
                   setSelectedItemForCheckout(null);
                   setIsCheckingOut(true);
                 }}

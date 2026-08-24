@@ -274,6 +274,7 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
         partnerTwo={props.partnerTwo}
         weddingTime={props.weddingTime}
         isCustomizer={props.isCustomizer}
+        isPreview={props.isPreview}
         templateSlug={currentSlug}
       />
 

@@ -25,18 +25,8 @@ export default function CardTemplate13({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#D8C3A5', // Warm wood/cork texture color
-        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 20%), radial-gradient(circle, rgba(0,0,0,0.05) 1%, transparent 20%)',
-        backgroundSize: '10px 10px',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#D8C3A5', // Warm wood/cork texture color
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 20%), radial-gradient(circle, rgba(0,0,0,0.05) 1%, transparent 20%)', backgroundSize: '10px 10px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
     >
       <style>
         {`
@@ -45,26 +35,16 @@ export default function CardTemplate13({
       </style>
 
       {/* Scattered Elements (Background decoration) */}
-      <div style={{ position: 'absolute', top: '100px', left: '100px', fontFamily: "'Shadows Into Light', cursive", fontSize: '30px', color: 'rgba(0,0,0,0.3)', transform: 'rotate(-15deg)' }}>
+      <div style={{ position: 'absolute', top: '100px', left: '100px', fontFamily: "'Shadows Into Light', cursive", fontSize: '36px', color: 'rgba(0,0,0,0.3)', transform: 'rotate(-15deg)' }}>
         {tagline}
       </div>
-      <div style={{ position: 'absolute', bottom: '150px', right: '150px', fontFamily: "'Shadows Into Light', cursive", fontSize: '24px', color: 'rgba(0,0,0,0.3)', transform: 'rotate(10deg)' }}>
+      <div style={{ position: 'absolute', bottom: '150px', right: '150px', fontFamily: "'Shadows Into Light', cursive", fontSize: '32px', color: 'rgba(0,0,0,0.3)', transform: 'rotate(10deg)' }}>
         {hashtag}
       </div>
 
       {/* Polaroid Container */}
       <div
-        style={{
-          width: '640px',
-          height: '740px',
-          backgroundColor: '#F9F9F9',
-          transform: 'rotate(-3deg)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.1)',
-          padding: '30px 30px 100px 30px',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-        }}
+        style={{ width: '640px', height: '740px', backgroundColor: '#F9F9F9', transform: 'rotate(-3deg)', boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.1)', padding: '30px 30px 100px 30px', display: 'flex', flexDirection: 'column', position: 'relative' }}
       >
         {/* Vintage Tape SVG */}
         <svg
@@ -79,53 +59,25 @@ export default function CardTemplate13({
 
         {/* Polaroid Photo Slot */}
         <div
-          style={{
-            width: '580px',
-            height: '520px',
-            backgroundColor: '#222222',
-            boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
-            overflow: 'hidden',
-          }}
+          style={{ width: '580px', height: '520px', backgroundColor: '#222222', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)', overflow: 'hidden' }}
         >
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              filter: 'sepia(20%) contrast(1.1) saturate(0.9)', // Vintage filter
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(20%) contrast(1.1) saturate(0.9)' }}
           />
         </div>
 
         {/* Handwritten Text on Margin */}
         <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h1 style={{ 
-            fontFamily: "'Caveat', cursive", 
-            fontSize: '54px', 
-            color: '#222222', 
-            margin: '10px 0 0 0',
-            fontWeight: 600,
-            lineHeight: 1
-          }}>
-            {partnerOne} <span style={{ fontSize: '42px', fontStyle: 'italic', opacity: 0.7 }}>&amp;</span> {partnerTwo}
+          <h1 style={{ fontFamily: "'Caveat', cursive", fontSize: '76px', color: '#222222', margin: '10px 0 0 0', fontWeight: 600, lineHeight: 1 }}>
+            {partnerOne} <span style={{ fontSize: '48px', fontStyle: 'italic', opacity: 0.7 }}>&amp;</span> {partnerTwo}
           </h1>
-          <p style={{ 
-            fontFamily: "'Shadows Into Light', cursive", 
-            fontSize: '28px', 
-            color: '#444444', 
-            margin: '5px 0 0 0' 
-          }}>
+          <p style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: '36px', fontWeight: 600, color: '#444444', margin: '5px 0 0 0' }}>
             {weddingDate} • {weddingTime}
           </p>
-          <p style={{ 
-            fontFamily: "'Shadows Into Light', cursive", 
-            fontSize: '22px', 
-            color: '#555555', 
-            margin: '5px 0 0 0' 
-          }}>
+          <p style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: '30px', fontWeight: 600, color: '#555555', margin: '5px 0 0 0' }}>
             {venue}, {city}
           </p>
         </div>

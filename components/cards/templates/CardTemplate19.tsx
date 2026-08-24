@@ -25,19 +25,7 @@ export default function CardTemplate19({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#F4EBE1',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#F4EBE1', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box', backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")' }}
     >
       <style>
         {`
@@ -54,82 +42,41 @@ export default function CardTemplate19({
       </svg>
 
       <div
-        style={{
-          width: '900px',
-          padding: '60px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          color: '#332211',
-          zIndex: 1,
-        }}
+        style={{ width: '920px', padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#332211', zIndex: 1 }}
       >
-        <div style={{ fontFamily: "'EB Garamond', serif", fontSize: '24px', fontStyle: 'italic', marginBottom: '30px', color: '#5C4A3D' }}>
+        <div style={{ fontFamily: "'EB Garamond', serif", fontSize: '30px', fontWeight: 600, fontStyle: 'italic', marginBottom: '20px', color: '#5C4A3D' }}>
           {tagline}
         </div>
 
         {/* Painted Edge Photo Frame */}
         <div
-          style={{
-            position: 'relative',
-            width: '480px',
-            height: '580px',
-            marginBottom: '40px',
-            backgroundColor: '#fff',
-            padding: '20px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-            borderRadius: '2px',
-          }}
+          style={{ position: 'relative', width: '380px', height: '340px', marginBottom: '24px', backgroundColor: '#fff', padding: '12px', boxShadow: '0 16px 36px rgba(0,0,0,0.12)', borderRadius: '2px' }}
         >
           <div
-            style={{
-              width: '100%',
-              height: '100%',
-              overflow: 'hidden',
-              position: 'relative',
-              maskImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' preserveAspectRatio=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M 2 2 L 98 3 L 97 98 L 3 97 Z\' fill=\'black\'/%3E%3C/svg%3E")',
-              WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' preserveAspectRatio=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M 2 2 L 98 3 L 97 98 L 3 97 Z\' fill=\'black\'/%3E%3C/svg%3E")',
-              maskSize: '100% 100%',
-              WebkitMaskSize: '100% 100%',
-            }}
+            style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', maskImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' preserveAspectRatio=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M 2 2 L 98 3 L 97 98 L 3 97 Z\' fill=\'black\'/%3E%3C/svg%3E")', WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' preserveAspectRatio=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M 2 2 L 98 3 L 97 98 L 3 97 Z\' fill=\'black\'/%3E%3C/svg%3E")', maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}
           >
             <img
               src={couplePhoto}
               alt="Couple"
               crossOrigin="anonymous"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                filter: 'sepia(0.3) saturate(1.2) contrast(1.1)',
-              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(0.3) saturate(1.2) contrast(1.1)' }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', margin: '0 0 20px 0', width: '100%' }}>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '54px', lineHeight: 1.1, fontWeight: 700, textAlign: 'center', color: '#332211', margin: 0 }}>{partnerOne}</h1>
-          <span style={{ fontSize: '36px', color: '#CC7722', margin: '2px 0' }}>&amp;</span>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '54px', lineHeight: 1.1, fontWeight: 700, textAlign: 'center', color: '#332211', margin: 0 }}>{partnerTwo}</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', textAlign: 'center', margin: '0 0 16px 0', width: '100%' }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '68px', lineHeight: 1.05, fontWeight: 700, textAlign: 'center', color: '#332211', margin: 0 }}>{partnerOne}</h1>
+          <span style={{ fontSize: '38px', color: '#CC7722', margin: '0' }}>&amp;</span>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '68px', lineHeight: 1.05, fontWeight: 700, textAlign: 'center', color: '#332211', margin: 0 }}>{partnerTwo}</h1>
         </div>
 
         <div
-          style={{
-            fontFamily: "'EB Garamond', serif",
-            fontSize: '20px',
-            letterSpacing: '2px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '10px',
-            textTransform: 'uppercase',
-            color: '#5C4A3D',
-          }}
+          style={{ fontFamily: "'EB Garamond', serif", fontSize: '30px', fontWeight: 600, letterSpacing: '1px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textTransform: 'uppercase', color: '#5C4A3D', textAlign: 'center' }}
         >
-          <div>{weddingDate} | {weddingTime}</div>
-          <div>{venue}, {city}</div>
-          <div style={{ marginTop: '10px', fontStyle: 'italic', textTransform: 'none', fontSize: '22px', fontWeight: 600 }}>
+          <div style={{ fontSize: '34px', fontWeight: 700, color: '#332211' }}>{weddingDate} &bull; {weddingTime}</div>
+          <div style={{ fontSize: '30px' }}>{venue}</div>
+          <div style={{ fontSize: '26px', color: '#6A574A' }}>{city}</div>
+          <div style={{ marginTop: '12px', fontStyle: 'italic', textTransform: 'none', fontSize: '28px', fontWeight: 700, color: '#CC7722' }}>
             {hashtag}
           </div>
         </div>

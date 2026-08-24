@@ -5,12 +5,10 @@ import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
-import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { TemplateClassicFloralProps } from "@/types/template";
 
 function ScrollScrubberContent() {
-  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates/scroll-scrubber");
   const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
 
   useEffect(() => {
@@ -54,7 +52,7 @@ function ScrollScrubberContent() {
 
   return (
     <div className="relative min-h-screen">
-      <DynamicTemplateCard {...invitationData} templateSlug="scroll-scrubber" />
+      <DynamicTemplateCard {...invitationData} isPreview={true} templateSlug="scroll-scrubber" />
       {!isThumbnail && (
         <TemplatePreviewBottomBar
           slug="scroll-scrubber"

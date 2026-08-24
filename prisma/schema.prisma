@@ -333,6 +333,10 @@ model CanvaTemplate {
   name              String
   topic             String   @default("vintage") // "vintage" | "modern"
   category          String   @default("Vintage Floral")
+  pricePerCard      Float    @default(30)
+  minCopies         Int      @default(50)
+  paperType         String?  @default("350 GSM Textured Metallic Gold Cardstock")
+  badge             String?
   aspectRatio       String   @default("classic") // "portrait" | "square" | "classic"
   backgroundColor   String   @default("#F3EAD8")
   backgroundImage   String?  @db.Text

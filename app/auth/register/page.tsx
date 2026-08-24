@@ -44,34 +44,39 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-red-50/70 via-white to-red-50/40 text-slate-900 relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-red-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center py-28 px-4 sm:px-6">
-        <div className="w-full max-w-md bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow relative overflow-hidden">
+      <main className="flex-1 flex items-center justify-center py-28 px-4 sm:px-6 relative z-10">
+        <div className="w-full max-w-md bg-white border border-red-100/80 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-red-950/10 relative overflow-hidden backdrop-blur-xs">
           {/* Top Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto mb-3">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-red-50/80 p-2 shadow-xs border border-red-200 flex items-center justify-center mx-auto mb-3">
               <img src="/logo.svg" alt="Bervic Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-[#221C17]">Create Your Account</h1>
-            <p className="text-sm text-[#221C17]/70 mt-1 font-medium">
-              Start creating & sharing digital invitations in minutes
+            <h1 className="text-2xl sm:text-3xl font-bold font-serif text-slate-900">Create Your Account</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
+              Start creating &amp; sharing digital invitations in minutes
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-[#7A1F2B]/10 border border-[#7A1F2B]/30 text-[#7A1F2B] text-xs font-semibold text-center">
+            <div className="mb-6 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold text-center">
               {error}
             </div>
           )}
 
           {/* Google OAuth Button */}
           <button
+            type="button"
             onClick={() => signIn("google", { callbackUrl: "/templates" })}
-            className="w-full py-3.5 px-4 rounded-full border-2 border-[#D9A441]/50 bg-[#F8F3EA] text-[#221C17] text-sm font-semibold hover:border-[#D9A441] hover:bg-[#F4EBDB] transition-all flex items-center justify-center gap-3 shadow-sm mb-6"
+            className="w-full py-3.5 px-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-all flex items-center justify-center gap-3 shadow-xs mb-6 cursor-pointer"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -93,69 +98,69 @@ export default function RegisterPage() {
           </button>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-[1px] bg-[#D9A441]/30" />
-            <span className="text-xs uppercase text-[#221C17]/50 font-bold tracking-wider">or fill details</span>
-            <div className="flex-1 h-[1px] bg-[#D9A441]/30" />
+            <div className="flex-1 h-[1px] bg-slate-200" />
+            <span className="text-[11px] uppercase text-slate-400 font-bold tracking-wider">or fill details</span>
+            <div className="flex-1 h-[1px] bg-slate-200" />
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#221C17]/80 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Terance"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F8F3EA] border border-[#D9A441]/40 text-sm focus:outline-none focus:border-[#7A1F2B]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#221C17]/80 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F8F3EA] border border-[#D9A441]/40 text-sm focus:outline-none focus:border-[#7A1F2B]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#221C17]/80 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Phone Number (Optional)
               </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Phone className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+91 98765 43210"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F8F3EA] border border-[#D9A441]/40 text-sm focus:outline-none focus:border-[#7A1F2B]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#221C17]/80 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   required
@@ -163,7 +168,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F8F3EA] border border-[#D9A441]/40 text-sm focus:outline-none focus:border-[#7A1F2B]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -171,17 +176,17 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-maroon w-full py-4 text-sm font-semibold flex items-center justify-center gap-2 mt-6 shadow-md"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all cursor-pointer disabled:opacity-50 mt-6"
             >
-              <Sparkles className="w-4 h-4 text-[#D9A441]" />
+              <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{loading ? "Creating Account..." : "Register & Verify Email"}</span>
-              <ArrowRight className="w-4 h-4 text-[#D9A441]" />
+              <ArrowRight className="w-4 h-4 text-amber-300" />
             </button>
           </form>
 
-          <p className="text-center text-xs text-[#221C17]/70 mt-6">
+          <p className="text-center text-xs text-slate-600 mt-6">
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-bold text-[#7A1F2B] hover:underline">
+            <Link href="/auth/login" className="font-bold text-[#991B1B] hover:underline">
               Sign In
             </Link>
           </p>

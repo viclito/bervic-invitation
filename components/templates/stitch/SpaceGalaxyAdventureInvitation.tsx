@@ -133,8 +133,8 @@ export default function SpaceGalaxyAdventureInvitation(
   const celebrantPortrait =
     props.coupleImage ||
     props.coverImage ||
-    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCckQlOtAYjoW-p2VtsankHVm7_IT6RoNnX28VToM16IqMpbgM1xwYL9T1JrRvVfhw4AFugtO7iDGfOFYfNrX1AWk0MsQq6WGXRT5SNETghBBeQ9MHOX2YH5AW4ih6eI0TdzwsGmnaezT9HYj_E69FGPCzTKMBpO6_M4zrpIX_4QvXAmqp053d4Ns3t-VVqLG2TouvG1l7rxSxJ2bmLsiz746MTo3hs9rgxeALwpq5D6YAYr_V4PXzW";
+    (props.heroImage && !props.heroImage.includes("wedding") ? props.heroImage : undefined) ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   return (
     <div className="bg-[#0b1326] text-[#dae2fd] font-sans antialiased overflow-x-hidden relative selection:bg-[#7c3aed]/30 selection:text-[#d2bbff] min-h-screen">

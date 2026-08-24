@@ -56,23 +56,22 @@ export default function ZenJapandiCalmInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCNwqi234BE9QmwnrysNENt7qR5469NSENJVC2JJGl5NRYiCs9tFiWCie8l-DsmDINWoIqgKKnuYT41DMb6Dy_TDp5oL6rPyu1VIcrWC_oW8Os_4S8roRwy0F8GDW1rnwHXHPjCJRcbk0P_s6fDRjc2tgo_Fg1WfPiWl6fLNgyFufX7DdqG7nLdpugTqhEfPrH0KindZeBV4AgYd8cFpPnsp1Ldv4aXiMFj8X4DYkOugv_9Oy5-PaQv",
-            caption: "Minimalist table setting",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
+            caption: "Celebration Cake",
             rotate: "rotate-1",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB7kkZLcgtRsPCvKndKS8Fikp3jBEpBxrIGcBXPUaIZ1sZI6zGxMeR6t7CoIBG74B4dxbuA_3RHKmC-KFwIkFTPiU2qk4go9SnRNJmt_1802oh6_0vUmqwITJOMToWCGrrN6zaWJpQF_QhEPDv9P5qjGREjlwS9Kl_cZpcjE3NqNJyrR_eWo4G3LtQGZqtYjZmJaWSH2FkldCdWaBCuML6YwjYZzWKjc8-QbehQskd6zgM3wJEuWLHu",
-            caption: "Ceramics and dried flowers",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
+            caption: "Party Balloons",
             rotate: "rotate-[-2deg]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUJU6AiPtZe1zQI_GDNKEukBB7sZIo0cHAn0ea53Hrx9ZcTQFkYcHC9CxhXlvozySp3rx9rOXML1uExoHMROGG0lxBB_7q5877tct5LDAlr-TtYto-aZtA7BRm8TgPoi87oEeeB6u43BC_wzEryl1iHVybHl_15wXQiRkqxC3VuPwizKCQjUOEgMixgX9xuHwWhwJlsUaHa_vTOg4YN6o_rBylCCWC-YlK9f5z9aYXIySjGV-YI2a5",
-            caption: "Natural light streaming in",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+            caption: "Evening Lights",
             rotate: "rotate-2",
           },
         ];
 
-  // Timeline items matching exact Stitch screen a439264a19914fe392d707563594c943
   const timelineSteps =
     props.timelineDay && props.timelineDay.length > 0
       ? props.timelineDay
@@ -97,13 +96,13 @@ export default function ZenJapandiCalmInvitation(
           },
         ];
 
-  // Venue location matching exact Stitch screen a439264a19914fe392d707563594c943
   const mapQuery = encodeURIComponent(
     props.contactAddress ||
       props.venuePlace ||
       (props.locations && props.locations[0] && props.locations[0].address) ||
       "123 Calm Way, Tranquil Hills"
   );
+
   const mainVenue =
     props.locations && props.locations[0]
       ? {
@@ -116,27 +115,18 @@ export default function ZenJapandiCalmInvitation(
             props.locations[0].mapLink !== "https://maps.google.com/"
               ? props.locations[0].mapLink
               : `https://maps.google.com/?q=${mapQuery}`,
+          image: props.locations[0].image || "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         }
       : {
           name: props.venuePlace || "The Serene Estate",
           address: props.contactAddress || props.venuePlace || "123 Calm Way, Tranquil Hills",
           mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          image: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };
 
-  // Hero image fallback matching Japandi serenity
-  const isNonJapandiHero =
-    !props.heroImage ||
-    props.heroImage.includes("unsplash.com") ||
-    props.heroImage.includes("wedding") ||
-    props.heroImage.includes("photo-1519741497674") ||
-    props.heroImage.includes("photo-1511795409834") ||
-    props.heroImage.includes("AB6AXuCbj6E_qQBW8N2") ||
-    Boolean(props.partnerTwo && props.partnerTwo.trim() !== "");
-
   const displayHeroImage =
-    props.heroImage && !isNonJapandiHero
-      ? props.heroImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuCwStl7oL6JNsQipmukGmF1Ybs5-Hh28xDfmcpE33duw7cgIfQjq6efgoSXIPfSWkib7UtwiIbPGtx36ySUc-7Gz-nlm5jsQ2MEhltR9z7QSL7qJAnvvoyM8ZylgSXTpB72FH8Sqv6ypw1EBq5DGc-WabiXYifw7eZYYAwU7lSlHI8ONceDTUfh3n3DDjSrAp2zL1mQZVJlua5ozso3M3ba4hVa9hFXkBZ-K-yTu59cQmYO2OCfFt0-";
+    props.heroImage ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   return (
     <div className="bg-[#fcf9f4] text-[#1c1c19] font-sans antialiased overflow-x-hidden relative selection:bg-[#60291e]/20 selection:text-[#60291e] min-h-screen flex flex-col">

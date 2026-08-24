@@ -15,13 +15,6 @@ function SectionSkeleton({ height = "h-[400px]", id }: { height?: string; id?: s
   );
 }
 
-const QuickStartDetailsWizard = dynamic(
-  () => import("@/components/QuickStartDetailsWizard"),
-  {
-    loading: () => <SectionSkeleton id="details-form" height="h-[600px]" />,
-  }
-);
-
 // Below the Fold Sections — Dynamic Imports with Skeletons
 const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTemplatesShowcase"), {
   loading: () => <SectionSkeleton height="h-[750px]" />,
@@ -41,10 +34,6 @@ const CanvaStudioSection = dynamic(
   }
 );
 
-// const HowItWorks = dynamic(() => import("@/components/HowItWorks"), {
-//   loading: () => <SectionSkeleton height="h-[650px]" />,
-// });
-
 const PricingSection = dynamic(() => import("@/components/PricingSection"), {
   loading: () => <SectionSkeleton height="h-[700px]" />,
 });
@@ -57,20 +46,14 @@ const FinalCTA = dynamic(() => import("@/components/FinalCTA"), {
   loading: () => <SectionSkeleton height="h-[500px]" />,
 });
 
-import AutoScrollToForm from "@/components/AutoScrollToForm";
-
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-[#991B1B] selection:text-white">
-      <AutoScrollToForm />
       {/* Sticky Navbar */}
       <Navbar />
 
       {/* Hero Section */}
       <Hero />
-
-      {/* Interactive Quick-Start Details Collection Wizard (Upload or 1-to-3 Question Form) */}
-      <QuickStartDetailsWizard />
 
       {/* 3D Coverflow Popular Invitation Templates Showcase */}
       <PopularTemplatesShowcase />
@@ -81,8 +64,7 @@ export default function Home() {
       {/* Dedicated Instagram & WhatsApp Announcement Post Cards Showcase Section */}
       <InstagramCardsSection />
 
-      {/* Lazy-Loaded Below the Fold Sections */}
-      {/* <HowItWorks /> */}
+      {/* Pricing, FAQ, and CTA Sections */}
       <PricingSection />
       <FAQSection />
       <FinalCTA />

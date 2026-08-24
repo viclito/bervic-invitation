@@ -323,7 +323,7 @@ export default function MinimalistScandinavianInvitation(
             style={{
               backgroundImage: `url('${
                 props.heroImage ||
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuBie-JLofKmJ4k3YcsHl5WkK-mHrvLcX7PXi0vV50AZm24iJeVmVSmqsvUysmpQO0js7RsNPVQoGgU8iJJ3Th8O9we9LO8SFebBvWH5BbEJYa9UiZQrh-RCzFx5FQELWZM83aXAUko19ASQM4HVK1P4l7Y60qK4gx60XaycbqDqMyYoTFtYAbPjAKEcGHdUj6yb26QZNh4C6oYEGAx1ecKwENkNdMVxg3-fxacscLGWXyiv9jY59Z2c"
+                "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80"
               }')`,
             }}
           ></div>
@@ -497,7 +497,7 @@ export default function MinimalistScandinavianInvitation(
               className="mx-auto rounded-2xl shadow-2xl w-full max-w-4xl h-[350px] md:h-[400px] object-cover"
               src={
                 props.heroImage ||
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuCFT5-OI1W0ZrbzmbcAu1yCvuO8IJfYw1ytJEMiCRAewHzo4iY1-moW-k9V4e3zQyJ3tpF8ImL_tW6JcZ3T1D_3tTMWz_WlCIWr10z4WkheX0dyNsaj8d8Eh4Fda1pJO89l9afO4iTHZm13P_Qg2-bBM6apE4dmkCwT1AwrMwvGJF3Ca5vdCbXc3zKvZop7Smj5xmW27L5my_JpRZYoEvNMWynZAJVKgCB2V5UGP2nbhRu5vdyele93"
+                "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80"
               }
             />
           </div>

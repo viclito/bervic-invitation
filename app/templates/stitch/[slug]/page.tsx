@@ -5,19 +5,15 @@ import { useParams } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import DynamicTemplateCard from "@/components/templates/DynamicTemplateCard";
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
-import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { sampleBirthdayData } from "@/data/sampleBirthdayData";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
-import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import { TemplateClassicFloralProps } from "@/types/template";
 
 export default function StitchTemplatePage() {
   const params = useParams();
   const slug = (params?.slug as string) || "olive-ochre";
-  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails(`/templates/stitch/${slug}`);
-  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
 
   const targetTemplate =
     templatesRegistry.find((t) => t.slug === slug && t.category === "birthday") ||
@@ -27,6 +23,8 @@ export default function StitchTemplatePage() {
     targetTemplate?.category === "birthday"
       ? sampleBirthdayData
       : sampleWeddingData;
+
+  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(initialData);
 
   useEffect(() => {
     let activeDraft: Record<string, unknown> | null = null;
@@ -69,14 +67,10 @@ export default function StitchTemplatePage() {
       });
   }, [slug, targetTemplate?.category, initialData]);
 
-  if (isLoading || !hasCompletedDetails) {
-    return <TemplatePreviewSkeleton />;
-  }
-
   return (
     <div className="relative min-h-screen">
       <AnimatePresence mode="wait">
-        <DynamicTemplateCard key={slug} {...invitationData} templateSlug={slug} />
+        <DynamicTemplateCard key={slug} {...invitationData} isPreview={true} templateSlug={slug} />
       </AnimatePresence>
       <TemplatePreviewBottomBar slug={slug} displayData={invitationData} />
     </div>

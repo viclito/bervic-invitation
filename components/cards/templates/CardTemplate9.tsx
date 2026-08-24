@@ -1,4 +1,4 @@
-﻿interface CardProps {
+interface CardProps {
   partnerOne?: string; partnerTwo?: string; weddingDate?: string; weddingTime?: string;
   venue?: string; city?: string; tagline?: string; couplePhoto?: string; hashtag?: string;
 }
@@ -14,21 +14,21 @@ export default function CardTemplate9({ partnerOne='Sophia', partnerTwo='Alexand
         <path d="M 780 930 Q 900 1000 1080 900" stroke="#7A9A60" strokeWidth="3" fill="none" opacity="0.4" />
       </svg>
       <div style={{ position: 'absolute', inset: 40, border: '2px solid rgba(122,154,96,0.4)', borderRadius: 12 }} />
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 80px', width: '100%', boxSizing: 'border-box' }}>
-        <p style={{ fontSize: 24, letterSpacing: 8, color: '#7A9A60', textTransform: 'uppercase', marginBottom: 16 }}>Whimsical Garden Wedding</p>
+      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 70px', width: '100%', boxSizing: 'border-box' }}>
+        <p style={{ fontSize: 28, letterSpacing: 8, color: '#4E7234', textTransform: 'uppercase', marginBottom: 16, fontWeight: 600 }}>Whimsical Garden Wedding</p>
         {couplePhoto && (
-          <div style={{ width: 240, height: 240, borderRadius: '50%', overflow: 'hidden', border: '6px solid #7A9A60', marginBottom: 28, boxShadow: '0 8px 30px rgba(122,154,96,0.25)' }}>
+          <div style={{ width: 220, height: 220, borderRadius: '50%', overflow: 'hidden', border: '6px solid #7A9A60', marginBottom: 20, boxShadow: '0 8px 30px rgba(122,154,96,0.25)' }}>
             <img src={couplePhoto} alt="Couple" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
         )}
-        <p style={{ fontSize: 78, fontStyle: 'italic', color: '#2F4F2F', lineHeight: 1, marginBottom: 6 }}>{partnerOne}</p>
-        <p style={{ fontSize: 32, color: '#7A9A60', letterSpacing: 8, marginBottom: 6 }}>&amp;</p>
-        <p style={{ fontSize: 78, fontStyle: 'italic', color: '#2F4F2F', lineHeight: 1, marginBottom: 24 }}>{partnerTwo}</p>
-        <p style={{ fontSize: 26, color: '#556B2F', fontStyle: 'italic', marginBottom: 20 }}>{tagline}</p>
-        <p style={{ fontSize: 30, color: '#2F4F2F', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>{weddingDate}</p>
-        <p style={{ fontSize: 24, color: '#7A9A60', marginBottom: 4 }}>{weddingTime} • {venue}</p>
-        <p style={{ fontSize: 20, color: '#556B2F', marginBottom: 20 }}>{city}</p>
-        <p style={{ fontSize: 22, color: '#7A9A60', letterSpacing: 2 }}>{hashtag}</p>
+        <p style={{ fontSize: 82, fontStyle: 'italic', color: '#2F4F2F', lineHeight: 1.05, fontWeight: 600, marginBottom: 4 }}>{partnerOne}</p>
+        <p style={{ fontSize: 40, color: '#7A9A60', letterSpacing: 6, marginBottom: 4, fontWeight: 500 }}>&amp;</p>
+        <p style={{ fontSize: 82, fontStyle: 'italic', color: '#2F4F2F', lineHeight: 1.05, fontWeight: 600, marginBottom: 18 }}>{partnerTwo}</p>
+        <p style={{ fontSize: 32, color: '#3E5C20', fontStyle: 'italic', marginBottom: 16, fontWeight: 500 }}>{tagline}</p>
+        <p style={{ fontSize: 36, color: '#2F4F2F', letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>{weddingDate}</p>
+        <p style={{ fontSize: 30, color: '#4E7234', marginBottom: 4, fontWeight: 600 }}>{weddingTime} • {venue}</p>
+        <p style={{ fontSize: 26, color: '#3E5C20', marginBottom: 16, fontWeight: 500 }}>{city}</p>
+        <p style={{ fontSize: 26, color: '#4E7234', letterSpacing: 3, fontWeight: 600 }}>{hashtag}</p>
       </div>
     </div>
   );

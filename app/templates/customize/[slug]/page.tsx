@@ -140,14 +140,15 @@ function CustomizerContent({ templateSlug }: { templateSlug: string }) {
 
   const defaultSampleData = isBirthday ? sampleBirthdayData : sampleWeddingData;
 
-  // Redirect to dedicated Event Profile Form Page
+  // Redirect to dedicated Event Profile Form Page with returnToTemplate preserved
   useEffect(() => {
+    const targetUrl = `/dashboard/event-profile?returnToTemplate=${templateSlug}`;
     if (status === "unauthenticated") {
-      router.push(`/auth/login?callbackUrl=/dashboard/event-profile`);
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(targetUrl)}`);
     } else if (status === "authenticated") {
-      router.replace(`/dashboard/event-profile`);
+      router.replace(targetUrl);
     }
-  }, [status, router]);
+  }, [status, router, templateSlug]);
 
   // Form State
   const [formData, setFormData] = useState<TemplateClassicFloralProps>({

@@ -25,16 +25,7 @@ export default function CardTemplate20({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#1A1A1A',
-        position: 'relative',
-        display: 'flex',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        color: '#FFFFFF',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#1A1A1A', position: 'relative', display: 'flex', overflow: 'hidden', boxSizing: 'border-box', color: '#FFFFFF' }}
     >
       <style>
         {`
@@ -44,19 +35,7 @@ export default function CardTemplate20({
 
       {/* Film Strip Left Side */}
       <div
-        style={{
-          width: '500px',
-          height: '100%',
-          backgroundColor: '#000000',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 0',
-          boxSizing: 'border-box',
-          borderRight: '2px solid #333',
-        }}
+        style={{ width: '500px', height: '100%', backgroundColor: '#000000', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0', boxSizing: 'border-box', borderRight: '2px solid #333' }}
       >
         {/* Sprocket holes left */}
         <div style={{ position: 'absolute', left: '15px', top: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
@@ -74,40 +53,17 @@ export default function CardTemplate20({
 
         {/* Film Frame Content */}
         <div
-          style={{
-            width: '380px',
-            height: '550px',
-            backgroundColor: '#111',
-            border: '2px solid #333',
-            padding: '5px',
-            boxSizing: 'border-box',
-          }}
+          style={{ width: '380px', height: '550px', backgroundColor: '#111', border: '2px solid #333', padding: '5px', boxSizing: 'border-box' }}
         >
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              filter: 'grayscale(100%) contrast(1.2)',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }}
           />
         </div>
         <div
-          style={{
-            fontFamily: "'Courier Prime', monospace",
-            fontSize: '14px',
-            color: '#E5A93C',
-            letterSpacing: '2px',
-            marginTop: '20px',
-            writingMode: 'vertical-rl',
-            transform: 'rotate(180deg)',
-            position: 'absolute',
-            left: '55px',
-            bottom: '100px',
-          }}
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '26px', fontWeight: 700, color: '#E5A93C', letterSpacing: '2px', marginTop: '20px', writingMode: 'vertical-rl', transform: 'rotate(180deg)', position: 'absolute', left: '55px', bottom: '100px' }}
         >
           KODAK 400TX
         </div>
@@ -115,31 +71,23 @@ export default function CardTemplate20({
 
       {/* Typography Right Side Panel */}
       <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '80px',
-          boxSizing: 'border-box',
-          fontFamily: "'Oswald', sans-serif",
-        }}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '80px', boxSizing: 'border-box', fontFamily: "'Oswald', sans-serif" }}
       >
-        <div style={{ fontSize: '20px', letterSpacing: '8px', color: '#E5A93C', textTransform: 'uppercase', marginBottom: '20px' }}>
+        <div style={{ fontSize: '28px', fontWeight: 600, letterSpacing: '8px', color: '#E5A93C', textTransform: 'uppercase', marginBottom: '20px' }}>
           {tagline}
         </div>
 
-        <h1 style={{ fontSize: '90px', margin: '0 0 -20px 0', fontWeight: 600, textTransform: 'uppercase', lineHeight: 1 }}>
+        <h1 style={{ fontSize: '96px', fontWeight: 600, margin: '0 0 -20px 0', textTransform: 'uppercase', lineHeight: 1 }}>
           {partnerOne}
         </h1>
-        <div style={{ fontSize: '40px', color: '#E5A93C', margin: '10px 0' }}>&</div>
-        <h1 style={{ fontSize: '90px', margin: '0 0 50px 0', fontWeight: 600, textTransform: 'uppercase', lineHeight: 1 }}>
+        <div style={{ fontSize: '48px', color: '#E5A93C', margin: '10px 0' }}>&</div>
+        <h1 style={{ fontSize: '96px', fontWeight: 600, margin: '0 0 50px 0', textTransform: 'uppercase', lineHeight: 1 }}>
           {partnerTwo}
         </h1>
 
         <div style={{ width: '60px', height: '4px', backgroundColor: '#E5A93C', marginBottom: '40px' }}></div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '18px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '30px', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ color: '#E5A93C', fontWeight: 600 }}>DATE //</span> {weddingDate}
           </div>
@@ -155,7 +103,7 @@ export default function CardTemplate20({
           </div>
         </div>
 
-        <div style={{ marginTop: '50px', fontSize: '22px', color: '#555', letterSpacing: '1px' }}>
+        <div style={{ marginTop: '50px', fontSize: '28px', fontWeight: 600, color: '#555', letterSpacing: '1px' }}>
           {hashtag}
         </div>
       </div>

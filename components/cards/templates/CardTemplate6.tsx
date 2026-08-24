@@ -36,9 +36,9 @@ export default function CardTemplate6({ partnerOne='Sophia', partnerTwo='Alexand
       <div style={{ position: 'relative', zIndex: 10, width: 780, background: '#F5EDD8', borderRadius: 6, padding: '52px 60px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, boxShadow: '0 8px 40px rgba(61,37,16,0.3)' }}>
         {/* Stamp circle */}
         <div style={{ position: 'absolute', top: 28, right: 28, width: 80, height: 80, borderRadius: '50%', border: '3px solid #3D2510', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3, transform: 'rotate(-15deg)' }}>
-          <span style={{ fontSize: 9, color: '#3D2510', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Est. 2025</span>
+          <span style={{ fontSize: 16, color: '#3D2510', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Est. 2025</span>
         </div>
-        <p style={{ fontSize: 22, letterSpacing: 6, color: '#5C3D2E', textTransform: 'uppercase', marginBottom: 14, fontWeight: 400 }}>The Wedding of</p>
+        <p style={{ fontSize: 28, letterSpacing: 6, fontWeight: 400, color: '#5C3D2E', textTransform: 'uppercase', marginBottom: 14 }}>The Wedding of</p>
         {/* Rope divider */}
         <div style={{ width: '100%', borderTop: '2px dashed rgba(61,37,16,0.3)', marginBottom: 22 }} />
         {/* Photo */}
@@ -47,16 +47,16 @@ export default function CardTemplate6({ partnerOne='Sophia', partnerTwo='Alexand
             <img src={couplePhoto} alt="Couple" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(0.15)' }} crossOrigin="anonymous" />
           </div>
         )}
-        <p style={{ fontSize: 78, fontWeight: 400, color: '#3D2510', lineHeight: 1, textAlign: 'center', fontStyle: 'italic', marginBottom: 6 }}>{partnerOne}</p>
-        <p style={{ fontSize: 30, color: '#8B6A4A', letterSpacing: 6, marginBottom: 6 }}>& </p>
-        <p style={{ fontSize: 78, fontWeight: 400, color: '#3D2510', lineHeight: 1, textAlign: 'center', fontStyle: 'italic', marginBottom: 24 }}>{partnerTwo}</p>
+        <p style={{ fontSize: 84, fontWeight: 600, color: '#3D2510', lineHeight: 1, textAlign: 'center', fontStyle: 'italic', marginBottom: 6 }}>{partnerOne}</p>
+        <p style={{ fontSize: 42, color: '#8B6A4A', fontWeight: 500, letterSpacing: 6, marginBottom: 6 }}>& </p>
+        <p style={{ fontSize: 84, fontWeight: 600, color: '#3D2510', lineHeight: 1, textAlign: 'center', fontStyle: 'italic', marginBottom: 24 }}>{partnerTwo}</p>
         <div style={{ width: '100%', borderTop: '2px dashed rgba(61,37,16,0.3)', marginBottom: 22 }} />
-        <p style={{ fontSize: 26, color: '#5C3D2E', fontStyle: 'italic', marginBottom: 18 }}>{tagline}</p>
-        <p style={{ fontSize: 30, color: '#3D2510', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>{weddingDate}</p>
-        <p style={{ fontSize: 24, color: '#5C3D2E', marginBottom: 4 }}>{weddingTime}  •  {venue}</p>
-        <p style={{ fontSize: 20, color: '#8B6A4A', marginBottom: 18 }}>{city}</p>
+        <p style={{ fontSize: 32, color: '#5C3D2E', fontWeight: 500, fontStyle: 'italic', marginBottom: 18 }}>{tagline}</p>
+        <p style={{ fontSize: 36, color: '#3D2510', fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>{weddingDate}</p>
+        <p style={{ fontSize: 30, color: '#5C3D2E', fontWeight: 500, marginBottom: 4 }}>{weddingTime}  •  {venue}</p>
+        <p style={{ fontSize: 26, color: '#8B6A4A', fontWeight: 500, marginBottom: 18 }}>{city}</p>
         <div style={{ width: '100%', borderTop: '2px dashed rgba(61,37,16,0.2)', marginBottom: 14 }} />
-        <p style={{ fontSize: 22, color: '#5C3D2E', letterSpacing: 2, fontStyle: 'italic' }}>{hashtag}</p>
+        <p style={{ fontSize: 26, color: '#5C3D2E', fontWeight: 600, letterSpacing: 2, fontStyle: 'italic' }}>{hashtag}</p>
       </div>
     </div>
   );

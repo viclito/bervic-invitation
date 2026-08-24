@@ -85,18 +85,18 @@ export default function TropicalLuauSplashInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDh4Z4xW8jzsbsKdg5ia6FglPseQmsZ1nlzUwtc2WJydYhxTuHb_NyigRGCYeKiuvRuXRXP_vtYDpZ3DiXo_J0Ke9Msny6YhJr3-1mqXCVUPUSMrdHol2HuTcrR3GbXkIjnxjzlnKhHkdi1qS6i_mCRPL23DzBAjE2IUqGXEzkii77HGn1cKN8lsCHGmZwg5RGM-V5NHCELiJ5_IxMqlW4AkYgBBaekk7zQYi7vFV9k64W1oXZSC_uJ",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             caption: "Summer Celebrations",
             rotate: "-rotate-2",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBHAT2ujkSkrVrFXNwYxZGWYhPp0bwVfn-zm21_weAMJfQsLRgq7pY4rT43s6LhRoCy3OrGVWc-Szfw9c-zK6eGTqqhFNDTQVkXGGYQGfMwcVdCChKLt5L4icxEBD8kVNbERV6WydO45gJ2cMRST9M0ALo-Sa0jOv2xNcZylaE1DsyHfCB2J4lWMWVB718CzJWM_QKb6Bx7zTuCy6EUWp2jFXXzanaZbT_FswQOkO-NWpwwarWorryv",
-            caption: "Tuscany Adventures",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+            caption: "Birthday Party Glow",
             rotate: "rotate-3",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCkq4ouHRpN0B0WcEm_ER0duJsqd7R-7EwHEaKpCwBrnnK8HQK_Wnlqs0t2Jmohk-cIv1jJSf8-Zk8iS0CSFP1NLZ0dX9T1XhgdjBEJ32_A5enxenXClguGj5JSnEVYI260DDmBk3dBo1my50UbFtx12HNjUyUbamsFmpARWfmRNMCWuXVEDE8xjckOGz9YKI54iD-A-jGSzI7aTfNvJ4ERdzNQkumZwVufEZny5Fx_kNJyANgebXar",
-            caption: "29th Birthday Glow",
+            url: "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=1200&q=80",
+            caption: "Festive Sparkles",
             rotate: "-rotate-1",
           },
         ];

@@ -59,36 +59,26 @@ export default function EvelynsCelebrationMasterpieceInvitation(
     return () => clearInterval(interval);
   }, [props.weddingDate, props.weddingTime]);
 
-  // Hero image fallback matching Stitch screen dcadce93dda94b86b70ee38c4c08e8a1
-  const isNonMasterpieceHero =
-    !props.heroImage ||
-    props.heroImage.includes("unsplash.com") ||
-    props.heroImage.includes("wedding") ||
-    props.heroImage.includes("photo-1519741497674") ||
-    props.heroImage.includes("photo-1511795409834") ||
-    props.heroImage.includes("AB6AXuCbj6E_qQBW8N2") ||
-    Boolean(props.partnerTwo && props.partnerTwo.trim() !== "");
-
   const displayHeroImage =
-    props.heroImage && !isNonMasterpieceHero
-      ? props.heroImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuDPNnny-dlognAkhDvCNhFRNyGdojg7bnFj9koTHxsIkmDMy9nv5DW7U0sXvez0NdnLDBzJQ6PvCHZR9AS2jITAmqVVxSufalgrhBrSBTPIvD--MbXtkg9fIiOYoMjfDqBBXZB8eiJJDcdjhIXBxHAkPd9wImdF-x76N_PDM5xs7wjIwV8ruvkfZa4hLejyc3xLQlDdzHrJ6g90juloHzWGSTBzYafBH3TYgbA2plyz-2xVOzLfvtZ1";
+    props.heroImage ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
+
   const galleryList =
     props.galleryImages && props.galleryImages.filter(img => Boolean(Boolean(img && String(img).trim()))).length > 0
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD-CHnc6isuaO6BcUDnVVjJfYt0sIuwluvudEeEmkaSasB5cKtOCEaaYcnuCGaUoNrLUYdQ9UW7QOHe8XSTTAFU14Dm3T-DVGMM9ypzgWv7KSF8-Oyn4SU59i8VEtFyJVTiITxYBGLFDc79h6qscWLlY3hKycCtB_OFAYezyxOC5N-WYQhu5OsnWsr-9A_1yNg5dZWX7qtqUnjGqregZmVCVIAn90Y6HT64P_OUPLhjTJEjROypjUTQ",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             caption: "Summer '22",
             rotate: "rotate-[-2deg]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDgpgUGapB_XqNzx8AlEjaxluFc98vsyFpVwKovkqm9Ape8Lr2r3BIGgyNTCn8j_4BcoxIgTezUJkTCGT409uz4KR50fp3Qw0CtYjXviTibQ2gBk2Ll17sYwInbC7YcgojYBx5qYSi79eshrWsPtFP1rxQUFxGoiwLIarj9hGwhh2BQogM9wLe7Aol3hgjQmhLmVRxAeg1OIfPmFihhJAPdRLp2Yoqlbky4mElULSXsa8hS9PMmxf5_",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             caption: "Sweet details",
             rotate: "rotate-[3deg] md:mt-12",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             caption: "The Venue",
             rotate: "rotate-[-1deg]",
           },
@@ -109,7 +99,7 @@ export default function EvelynsCelebrationMasterpieceInvitation(
             props.contactAddress || props.venuePlace || "Beverly Hills, CA"
           )}`,
           image:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87",
+            "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };
 
   // Timeline events fallback

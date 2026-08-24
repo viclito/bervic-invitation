@@ -25,20 +25,7 @@ const CardTemplate28: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#141E18',
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px',
-        boxSizing: 'border-box',
-        color: '#E5C158',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#141E18', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', boxSizing: 'border-box', color: '#E5C158' }}
     >
       <style>
         {`
@@ -84,74 +71,50 @@ const CardTemplate28: React.FC<CardProps> = ({
         </svg>
       ))}
 
-      <div style={{ textAlign: 'center', zIndex: 2, marginTop: '20px' }}>
-        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '24px', letterSpacing: '8px', textTransform: 'uppercase', color: '#D4AF37', margin: '0 0 40px 0' }}>
+      <div style={{ textAlign: 'center', zIndex: 2, marginBottom: '16px' }}>
+        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '28px', fontWeight: 600, letterSpacing: '8px', textTransform: 'uppercase', color: '#D4AF37', margin: 0 }}>
           {tagline}
         </p>
       </div>
 
       <div
-        style={{
-          position: 'relative',
-          width: '500px',
-          height: '500px',
-          margin: '20px 0 50px 0',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 2,
-        }}
+        style={{ position: 'relative', width: '340px', height: '340px', margin: '14px 0 20px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2 }}
       >
         <div
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            border: '2px solid #D4AF37',
-            transform: 'rotate(45deg)',
-          }}
+          style={{ position: 'absolute', width: '100%', height: '100%', border: '2px solid #D4AF37', transform: 'rotate(45deg)' }}
         />
         <div
-          style={{
-            position: 'absolute',
-            width: '92%',
-            height: '92%',
-            border: '1px solid #D4AF37',
-            transform: 'rotate(45deg)',
-          }}
+          style={{ position: 'absolute', width: '90%', height: '90%', border: '1px solid #D4AF37', transform: 'rotate(45deg)' }}
         />
         
         <div
-          style={{
-            width: '460px',
-            height: '460px',
-            overflow: 'hidden',
-            clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-          }}
+          style={{ width: '300px', height: '300px', overflow: 'hidden', clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)' }}
         >
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', zIndex: 2 }}>
-        <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '46px', fontWeight: 'bold', margin: '0 0 20px 0', color: '#E5C158', lineHeight: 1.2, textTransform: 'uppercase' }}>
-          {partnerOne} <br /><span style={{ fontSize: '30px', fontWeight: 300, color: '#D4AF37' }}>&amp;</span><br />{partnerTwo}
-        </h1>
+      <div style={{ textAlign: 'center', zIndex: 2, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', textAlign: 'center', marginBottom: '14px' }}>
+          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '66px', fontWeight: 700, margin: 0, color: '#E5C158', lineHeight: 1.05, textTransform: 'uppercase' }}>
+            {partnerOne}
+          </h1>
+          <span style={{ fontSize: '36px', color: '#D4AF37', margin: '0' }}>&amp;</span>
+          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '66px', fontWeight: 700, margin: 0, color: '#E5C158', lineHeight: 1.05, textTransform: 'uppercase' }}>
+            {partnerTwo}
+          </h1>
+        </div>
         
-        <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '22px', color: '#D4AF37', lineHeight: 1.8, letterSpacing: '3px' }}>
-          <div>{weddingDate} &nbsp;|&nbsp; {weddingTime}</div>
-          <div>{venue}</div>
-          <div>{city}</div>
-          <div style={{ marginTop: '20px', fontSize: '18px', fontWeight: 300 }}>{hashtag}</div>
+        <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '28px', fontWeight: 600, color: '#D4AF37', lineHeight: 1.4, letterSpacing: '2px', textAlign: 'center' }}>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#FFF' }}>{weddingDate} &nbsp;|&nbsp; {weddingTime}</div>
+          <div style={{ marginTop: '6px', fontSize: '30px' }}>{venue}</div>
+          <div style={{ fontSize: '26px', color: '#C8A845' }}>{city}</div>
+          <div style={{ marginTop: '14px', fontSize: '26px', fontWeight: 600, color: '#E5C158', letterSpacing: '3px' }}>{hashtag}</div>
         </div>
       </div>
     </div>

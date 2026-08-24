@@ -13,8 +13,17 @@ function EventProfileContent() {
   const profileId = searchParams.get("id") || undefined;
   const invitationId = searchParams.get("invitationId") || undefined;
   const eventTypeParam = searchParams.get("eventType") || undefined;
+  const returnToTemplate = searchParams.get("returnToTemplate") || searchParams.get("template") || undefined;
   const isNewProfile = searchParams.get("new") === "true";
   const fromTab = searchParams.get("from") || searchParams.get("tab") || (invitationId ? "invitations" : "profiles");
+
+  const handleFinished = () => {
+    if (returnToTemplate) {
+      router.push(`/templates/${returnToTemplate}`);
+    } else {
+      router.push(`/dashboard?tab=${fromTab}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white sm:bg-slate-50 flex flex-col font-sans">
@@ -28,8 +37,8 @@ function EventProfileContent() {
           isNewProfile={isNewProfile}
           initialEventType={eventTypeParam}
           startAtStepOne={false}
-          onClose={() => router.push(`/dashboard?tab=${fromTab}`)}
-          onComplete={() => router.push(`/dashboard?tab=${fromTab}`)}
+          onClose={handleFinished}
+          onComplete={handleFinished}
         />
       </main>
 

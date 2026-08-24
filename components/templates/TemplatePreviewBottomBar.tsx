@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, ArrowRight, Edit3, Sparkles, LayoutGrid, Globe, Crown, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit3, Sparkles, LayoutGrid, Globe, Crown, Check, Video, X } from "lucide-react";
 import MakeItYoursModal from "./MakeItYoursModal";
 import { templatesRegistry } from "@/data/templatesRegistry";
 
@@ -32,6 +32,18 @@ export default function TemplatePreviewBottomBar({
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [userSubscription, setUserSubscription] = useState<any>(null);
   const [myInvitations, setMyInvitations] = useState<any[]>([]);
+  const [videoBannerDismissed, setVideoBannerDismissed] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("bervic_preview_video_banner_dismissed") === "true";
+    }
+    return false;
+  });
+
+  const isVideoActive = Boolean(
+    displayData?.showVideoSection ||
+    displayData?.loveStoryVideoUrl ||
+    displayData?.videoUrl
+  );
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -92,9 +104,20 @@ export default function TemplatePreviewBottomBar({
   );
   const isTemplateOwned = Boolean(matchingOwnedInv);
 
-  const handleMakeItYoursClick = async () => {
+  const handleEditEventDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const eventType = currentCategory === "birthday" ? "BIRTHDAY" : "WEDDING";
+    const editUrl = `/dashboard/event-profile?eventType=${eventType}&returnToTemplate=${slug}`;
     if (status === "unauthenticated") {
-      router.push(`/auth/login?callbackUrl=/templates/${slug}`);
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(editUrl)}`);
+    } else {
+      router.push(editUrl);
+    }
+  };
+
+  const handleMakeItYoursClick = async () => {
+    if (status !== "authenticated" || !session) {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/templates/${slug}`)}`);
       return;
     }
 
@@ -207,14 +230,58 @@ export default function TemplatePreviewBottomBar({
           <span>All Templates</span>
         </Link>
 
-        <Link
-          href={categoryParam === "birthday" ? "/dashboard/event-profile?eventType=BIRTHDAY" : "/dashboard/event-profile?eventType=WEDDING"}
+        <button
+          type="button"
+          onClick={handleEditEventDetails}
           className="pointer-events-auto px-4 py-2 rounded-full bg-[#7A1F2B] text-[#F8F3EA] border-2 border-[#D9A441] text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-xl hover:bg-[#9B2C3B] hover:scale-105 transition-all cursor-pointer"
         >
           <Edit3 className="w-4 h-4 text-[#D9A441]" />
           <span>Edit Event Details</span>
-        </Link>
+        </button>
       </div>
+
+      {/* 🌟 Floating Video Section Activation Reminder Notification 🌟 */}
+      {!isVideoActive && !videoBannerDismissed && (
+        <div className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[95] w-[calc(100%-2rem)] max-w-lg bg-white/95 text-slate-900 border-2 border-red-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-red-50 text-[#991B1B] border border-red-100 flex items-center justify-center shrink-0 shadow-xs">
+              <Video className="w-4 h-4 text-[#991B1B]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold text-slate-900 leading-tight">
+                Activate Video Section
+              </p>
+              <p className="text-[11px] text-slate-600 truncate">
+                Video section is inactive. Add your YouTube love story or teaser in Event Details!
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleEditEventDetails}
+              className="px-3 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-1 cursor-pointer hover:scale-105"
+            >
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>Activate</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setVideoBannerDismissed(true);
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("bervic_preview_video_banner_dismissed", "true");
+                }
+              }}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Sticky Bottom CTA Bar */}
       <div className="fixed bottom-6 inset-x-4 max-w-xl mx-auto z-[90] bg-[#221C17]/95 backdrop-blur-md border-2 border-[#D9A441] text-[#F8F3EA] p-3 rounded-full shadow-2xl flex items-center justify-between gap-2 sm:gap-3">

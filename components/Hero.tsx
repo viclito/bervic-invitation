@@ -83,24 +83,6 @@ export default function Hero() {
           >
             <Link
               href="/templates"
-              onClick={(e) => {
-                const hasDetails = typeof window !== "undefined" && localStorage.getItem("bervic_user_has_details") === "true";
-                if (!hasDetails) {
-                  e.preventDefault();
-                  const el = document.getElementById("details-form");
-                  if (el) {
-                    if ((window as any).lenis) {
-                      (window as any).lenis.scrollTo(el, { offset: -80 });
-                    } else {
-                      const rect = el.getBoundingClientRect();
-                      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                      window.scrollTo({ top: Math.max(0, rect.top + scrollTop - 80), behavior: "smooth" });
-                    }
-                  } else {
-                    window.location.href = "/?redirectFromTemplates=true#details-form";
-                  }
-                }
-              }}
               className="px-9 py-4 sm:py-4.5 rounded-full bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold text-sm sm:text-base tracking-wider uppercase flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-red-900/25 w-full sm:w-auto group cursor-pointer"
             >
               <span>CREATE INVITATION</span>
@@ -109,24 +91,6 @@ export default function Hero() {
 
             <Link
               href="/templates"
-              onClick={(e) => {
-                const hasDetails = typeof window !== "undefined" && localStorage.getItem("bervic_user_has_details") === "true";
-                if (!hasDetails) {
-                  e.preventDefault();
-                  const el = document.getElementById("details-form");
-                  if (el) {
-                    if ((window as any).lenis) {
-                      (window as any).lenis.scrollTo(el, { offset: -80 });
-                    } else {
-                      const rect = el.getBoundingClientRect();
-                      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                      window.scrollTo({ top: Math.max(0, rect.top + scrollTop - 80), behavior: "smooth" });
-                    }
-                  } else {
-                    window.location.href = "/?redirectFromTemplates=true#details-form";
-                  }
-                }
-              }}
               className="px-9 py-4 sm:py-4.5 rounded-full bg-white/95 hover:bg-white border-2 border-slate-200 hover:border-[#991B1B] text-[#991B1B] font-extrabold text-sm sm:text-base tracking-wider uppercase flex items-center justify-center transition-all duration-300 shadow-sm backdrop-blur-xs w-full sm:w-auto cursor-pointer"
             >
               <span>SEE TEMPLATES</span>

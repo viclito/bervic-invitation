@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Sparkles, Mail, Volume2, VolumeX } from "lucide-react";
 import { templatesRegistry } from "@/data/templatesRegistry";
 
@@ -10,6 +10,7 @@ interface PersonalizedEnvelopeCoverProps {
   partnerTwo: string;
   weddingTime: string;
   isCustomizer?: boolean;
+  isPreview?: boolean;
   templateSlug?: string;
 }
 
@@ -19,15 +20,30 @@ export default function PersonalizedEnvelopeCover({
   partnerTwo,
   weddingTime,
   isCustomizer = false,
+  isPreview = false,
   templateSlug = "classic-floral",
 }: PersonalizedEnvelopeCoverProps) {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // In the customizer/editor or during thumbnail capture, skip the envelope entirely so designers/previews can
-  // see the actual invitation content without having to click through it.
-  if (isCustomizer || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true")) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // In customizer, preview, or during server render, return null identically to prevent hydration mismatch
+  if (isCustomizer || isPreview) return null;
+  if (!mounted) return null;
+
+  // In template preview mode (/templates/*) or during thumbnail capture, skip envelope cover
+  const isPreviewMode =
+    typeof window !== "undefined" &&
+    (window.location.pathname.startsWith("/templates") ||
+      new URLSearchParams(window.location.search).get("preview") === "true" ||
+      new URLSearchParams(window.location.search).get("thumbnail") === "true");
+
+  if (isPreviewMode) return null;
 
   const activeGuestName = guestName ? decodeURIComponent(guestName) : "Honored Guest";
 

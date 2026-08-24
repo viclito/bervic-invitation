@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   X,
   ShoppingCart,
@@ -15,7 +16,9 @@ import {
   Layers,
   Plus,
   Trash2,
+  Zap,
 } from "lucide-react";
+import { calculateTieredCardPrice } from "@/lib/pricing";
 
 export interface OrderModalProps {
   isOpen: boolean;
@@ -25,6 +28,7 @@ export interface OrderModalProps {
   previewImage?: string;
   cardDetails: Record<string, unknown>;
   elements?: unknown[];
+  basePrice?: number;
   onOrderSuccess?: (orderNumber: string) => void;
   onCartSuccess?: () => void;
 }
@@ -65,7 +69,7 @@ const PAPER_OPTIONS = [
   "400 GSM Ultra-Thick Cotton Card",
 ];
 
-const PRESET_COPIES = [50, 100, 150, 200, 300, 500];
+const PRESET_COPIES = [50, 80, 100, 150, 200, 300, 500, 1000];
 
 function getCardFallbackPreview(templateId?: string, templateName?: string): string {
   const id = String(templateId || "").toLowerCase();
@@ -117,10 +121,12 @@ export default function OrderOrCartModal({
   previewImage,
   cardDetails = {},
   elements = [],
+  basePrice,
   onOrderSuccess,
   onCartSuccess,
 }: OrderModalProps) {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const [copies, setCopies] = useState<number>(100);
   const [customCopiesInput, setCustomCopiesInput] = useState<string>("");
@@ -160,6 +166,16 @@ export default function OrderOrCartModal({
   const [loadingAction, setLoadingAction] = useState<"cart" | "order" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
+
+  const [linkedShopProduct, setLinkedShopProduct] = useState<{
+    id: string;
+    name: string;
+    pricePerCard: number;
+    minCopies: number;
+    paperType: string;
+    badge?: string | null;
+  } | null>(null);
+  const [checkingShopProduct, setCheckingShopProduct] = useState(false);
 
   const autoFetchEventDetails = useCallback(async () => {
     try {
@@ -238,9 +254,116 @@ export default function OrderOrCartModal({
     }
   }, [isOpen, session, autoFetchEventDetails]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    async function checkLinkedShopProduct() {
+      setCheckingShopProduct(true);
+      try {
+        const cleanId = String(templateId || "").trim().toLowerCase();
+        const cleanName = String(templateName || "").trim().toLowerCase();
+        let foundProduct: any = null;
+
+        if (basePrice && Number(basePrice) > 0) {
+          foundProduct = {
+            id: templateId,
+            name: templateName,
+            pricePerCard: Number(basePrice),
+            minCopies: 50,
+            paperType: PAPER_OPTIONS[0],
+            badge: null,
+          };
+        }
+
+        // 1. Check Canva templates table for admin-configured price
+        try {
+          const cRes = await fetch("/api/canva/templates", { cache: "no-store" });
+          const cData = await cRes.json();
+          if (isMounted && cRes.ok && Array.isArray(cData.templates)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const cFound = cData.templates.find((t: any) => {
+              const tSlug = String(t.id || "").trim().toLowerCase();
+              const tDbId = String(t.dbId || "").trim().toLowerCase();
+              const tName = String(t.name || "").trim().toLowerCase();
+              return (cleanId && (tSlug === cleanId || tDbId === cleanId)) || (cleanName && tName === cleanName);
+            });
+            if (cFound && Number(cFound.pricePerCard) > 0) {
+              foundProduct = {
+                id: cFound.dbId || cFound.id,
+                name: cFound.name || templateName,
+                pricePerCard: Number(cFound.pricePerCard),
+                minCopies: Number(cFound.minCopies) || 50,
+                paperType: cFound.paperType || PAPER_OPTIONS[0],
+                badge: cFound.badge || null,
+              };
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        // 2. Check if product is registered in physical shop catalog
+        try {
+          const res = await fetch("/api/shop/products?limit=all", { cache: "no-store" });
+          const data = await res.json();
+          if (isMounted && res.ok && Array.isArray(data.products)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const found = data.products.find((p: any) => {
+              const pCanvaId = String(p.canvaTemplateId || "").trim().toLowerCase();
+              const pId = String(p.id || "").trim().toLowerCase();
+              const pName = String(p.name || "").trim().toLowerCase();
+              return (pCanvaId && pCanvaId === cleanId) || (pId && pId === cleanId) || (cleanName && pName === cleanName);
+            });
+            if (found && Number(found.pricePerCard) > 0) {
+              foundProduct = {
+                id: found.id,
+                name: found.name || templateName,
+                pricePerCard: Number(found.pricePerCard),
+                minCopies: Number(found.minCopies) || 50,
+                paperType: found.paperType || PAPER_OPTIONS[0],
+                badge: found.badge || null,
+              };
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        if (isMounted) {
+          if (foundProduct) {
+            setLinkedShopProduct(foundProduct);
+            if (foundProduct.paperType && PAPER_OPTIONS.includes(foundProduct.paperType)) {
+              setForm((prev) => ({ ...prev, paperType: foundProduct.paperType }));
+            }
+          } else {
+            setLinkedShopProduct(null);
+          }
+        }
+      } catch {
+        if (isMounted) setLinkedShopProduct(null);
+      } finally {
+        if (isMounted) setCheckingShopProduct(false);
+      }
+    }
+
+    checkLinkedShopProduct();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, templateId, templateName, basePrice]);
+
   if (!isOpen) return null;
 
   const currentCopies = customCopiesInput ? parseInt(customCopiesInput, 10) : copies;
+  const isLinked = !!linkedShopProduct;
+  const basePricePerCard = linkedShopProduct?.pricePerCard || 0;
+  const priceCalc = isLinked
+    ? calculateTieredCardPrice(basePricePerCard, currentCopies, false)
+    : null;
+  const unitPrice = priceCalc ? priceCalc.unitPrice : 0;
+  const totalPrice = priceCalc ? priceCalc.totalPrice : 0;
+
   const effectivePreviewImage =
     previewImage && previewImage.trim().length > 5
       ? previewImage
@@ -296,8 +419,8 @@ export default function OrderOrCartModal({
     const errors: Record<string, string> = {};
 
     if (stepNumber === 1) {
-      if (isNaN(currentCopies) || currentCopies < 1) {
-        errors.copies = "Please select or enter print quantity (minimum 1 copy).";
+      if (isNaN(currentCopies) || currentCopies < 50) {
+        errors.copies = "Please select or enter print quantity (minimum 50 copies).";
       }
       if (!form.paperType) {
         errors.paperType = "Please select a paper finish.";
@@ -380,15 +503,27 @@ export default function OrderOrCartModal({
     const compiledCardDetails = {
       ...cardDetails,
       paperType: form.paperType,
+      basePricePerCard: isLinked ? basePricePerCard : null,
+      pricePerCard: unitPrice,
+      totalPrice,
+      priceStatus: isLinked ? "CONFIRMED" : "PENDING_ADMIN_QUOTE",
+      linkedShopProductId: linkedShopProduct?.id || null,
+      tierMultiplier: priceCalc?.multiplier || null,
+      tierLabel: priceCalc?.tierLabel || "Custom Admin Quote",
       brideName: form.brideName.trim(),
-      groomName: form.groomName.trim(),
+      brideQualification: form.brideQualification.trim(),
       brideParents: form.brideParents.trim(),
+      brideAddress: form.brideAddress.trim(),
+      groomName: form.groomName.trim(),
+      groomQualification: form.groomQualification.trim(),
       groomParents: form.groomParents.trim(),
+      groomAddress: form.groomAddress.trim(),
       eventDate: form.eventDate.trim(),
       eventTime: form.eventTime.trim(),
       venues: validVenues.length > 0 ? validVenues : form.venues,
       primaryVenue: validVenues[0]?.name || form.venues[0]?.name || "",
       rsvpContact: form.rsvpContact.trim(),
+      specialInstructions: form.specialInstructions.trim(),
       deliveryName: (form.deliveryName || session?.user?.name || form.brideName || form.groomName || "Valued Customer").trim(),
       deliveryPhone: (form.deliveryPhone || form.rsvpContact || "").trim(),
       deliveryAddress: (form.deliveryAddress || form.brideAddress || form.groomAddress || (form.venues[0]?.address || "")).trim(),
@@ -397,9 +532,23 @@ export default function OrderOrCartModal({
     };
 
     const lines: string[] = [];
+    if (isLinked) {
+      lines.push(`Catalog Pricing: ₹${unitPrice}/card (${priceCalc?.tierLabel}) • Total: ₹${totalPrice}`);
+    } else {
+      lines.push(`Pricing: Custom Studio Design (Pending Admin Quote)`);
+    }
     if (form.paperType) lines.push(`Paper Finish: ${form.paperType}`);
     if (form.specialInstructions.trim()) lines.push(`Notes: ${form.specialInstructions.trim()}`);
     if (form.rsvpContact.trim()) lines.push(`RSVP: ${form.rsvpContact.trim()}`);
+    if (form.groomQualification.trim() || form.brideQualification.trim()) {
+      lines.push(`Qualifications: Groom (${form.groomQualification.trim() || "N/A"}) | Bride (${form.brideQualification.trim() || "N/A"})`);
+    }
+    if (form.groomParents.trim() || form.brideParents.trim()) {
+      lines.push(`Parents: Groom's (${form.groomParents.trim() || "N/A"}) | Bride's (${form.brideParents.trim() || "N/A"})`);
+    }
+    if (form.groomAddress.trim() || form.brideAddress.trim()) {
+      lines.push(`Native Address: Groom (${form.groomAddress.trim() || "N/A"}) | Bride (${form.brideAddress.trim() || "N/A"})`);
+    }
     const compiledCustomNotes = lines.join("\n\n");
 
     return { compiledCardDetails, compiledCustomNotes };
@@ -407,7 +556,7 @@ export default function OrderOrCartModal({
 
   const handleAddToCart = async () => {
     if (!session) {
-      setErrorMsg("Please log in to add items to your cart.");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/canva")}`);
       return;
     }
 
@@ -440,7 +589,7 @@ export default function OrderOrCartModal({
           cardDetails: compiledCardDetails,
           elements,
           customNotes: compiledCustomNotes,
-          price: 0,
+          price: unitPrice,
         }),
       });
 
@@ -462,7 +611,7 @@ export default function OrderOrCartModal({
 
   const handlePlaceOrder = async () => {
     if (!session) {
-      setErrorMsg("Please log in to place an order.");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/canva")}`);
       return;
     }
 
@@ -511,7 +660,7 @@ export default function OrderOrCartModal({
               cardDetails: compiledCardDetails,
               elements,
               customNotes: compiledCustomNotes,
-              price: 0,
+              price: unitPrice,
             },
           ],
         }),
@@ -665,15 +814,91 @@ export default function OrderOrCartModal({
                 )}
 
                 <div className="flex-1 space-y-2 text-xs text-slate-700 text-center sm:text-left">
-                  <div className="inline-block px-3 py-1 rounded-full bg-red-50 text-[#991B1B] border border-red-200 text-[10px] font-extrabold uppercase tracking-wider">
-                    Custom Studio Design
+                  <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                    <span className={`px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                      isLinked
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-red-50 text-[#991B1B] border border-red-200"
+                    }`}>
+                      {isLinked ? "Linked Catalog Design" : "Custom Studio Design"}
+                    </span>
+                    {linkedShopProduct?.badge && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#991B1B] text-white text-[9.5px] font-black uppercase">
+                        {linkedShopProduct.badge}
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base font-serif font-bold text-slate-900">{templateName}</h3>
                   <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
-                    Select your preferred physical print run and cardstock paper finish. In the next steps, you will specify couple names, auspicious timings, and shipping address.
+                    {isLinked
+                      ? `Connected to physical catalog item "${linkedShopProduct?.name}". Tiered volume pricing is automatically applied based on print run.`
+                      : "Select your preferred physical print run and cardstock paper finish. Price quotation will be reviewed & confirmed by Admin upon order."}
                   </p>
                 </div>
               </div>
+
+              {/* ── LIVE PRICING & TIER BREAKDOWN BANNER ── */}
+              {isLinked ? (
+                <div className="p-4 rounded-3xl bg-emerald-50/90 border-2 border-emerald-200 text-xs space-y-2.5 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-emerald-200/80 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-extrabold uppercase tracking-wide">
+                        Catalog Pricing
+                      </span>
+                      <span className="font-extrabold text-emerald-950 text-xs">
+                        {linkedShopProduct?.name}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono font-extrabold text-emerald-900 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">
+                      Base Rate: ₹{basePricePerCard}/card (1000+ prints)
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-bold block uppercase">
+                        Volume Rate for {currentCopies} Copies ({priceCalc?.tierLabel})
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className="text-2xl font-extrabold text-[#991B1B]">₹{unitPrice}</span>
+                        <span className="text-xs text-slate-500 font-normal">/ card</span>
+                        {priceCalc && priceCalc.markupPercent > 0 ? (
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                            +{priceCalc.markupPercent}% Tier
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            Base Bulk Rate
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right sm:border-l sm:border-slate-200 sm:pl-4 self-stretch sm:self-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">Estimated Subtotal</span>
+                      <span className="text-xl font-extrabold text-slate-900">₹{totalPrice}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-3xl bg-amber-50/90 border-2 border-amber-200 text-xs space-y-2 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-600 text-white text-[10px] font-extrabold uppercase tracking-wide">
+                      Custom Studio Design
+                    </span>
+                    <span className="font-extrabold text-amber-950 text-xs flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Price Quote Provided by Admin</span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                    This invitation is crafted separately in Canva Studio. When you place your order, our printing team will calculate the custom paper stock &amp; manufacturing rate for {currentCopies} copies and confirm the quote with you.
+                  </p>
+                  <div className="bg-white p-2.5 rounded-2xl border border-amber-200 flex items-center justify-between font-bold text-amber-950">
+                    <span>Estimated Print Total:</span>
+                    <span className="text-[#991B1B] font-extrabold text-sm">Quote on Admin Review</span>
+                  </div>
+                </div>
+              )}
 
               {/* Number of Copies Needed */}
               <div className="space-y-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-2xs">
@@ -719,13 +944,13 @@ export default function OrderOrCartModal({
                   <span className="text-xs text-slate-600 font-bold">Or enter exact custom count:</span>
                   <input
                     type="number"
-                    min="1"
-                    placeholder="e.g. 250"
+                    min="50"
+                    placeholder="Min 50 (e.g. 250)"
                     value={customCopiesInput}
                     onChange={(e) => {
                       setCustomCopiesInput(e.target.value);
                       const val = parseInt(e.target.value, 10);
-                      if (val >= 1) {
+                      if (val >= 50) {
                         clearFieldError("copies");
                       }
                     }}
@@ -1302,16 +1527,18 @@ export default function OrderOrCartModal({
                     <strong className="text-slate-900">{currentCopies} Copies</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[10px]">Paper:</span>
+                    <span className="text-slate-500 block text-[10px]">Estimated Total:</span>
+                    <strong className="text-[#991B1B] text-xs font-extrabold block truncate">
+                      {isLinked ? `₹${totalPrice} (₹${unitPrice}/card)` : "Price on Admin Review"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Paper Stock:</span>
                     <strong className="text-slate-900 truncate block">{form.paperType}</strong>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[10px]">Celebrants:</span>
-                    <strong className="text-slate-900 truncate block">{form.brideName} &amp; {form.groomName}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[10px]">Event Date:</span>
-                    <strong className="text-slate-900 truncate block">{form.eventDate || "Not specified"}</strong>
+                    <strong className="text-slate-900 truncate block">{form.brideName || "Bride"} &amp; {form.groomName || "Groom"}</strong>
                   </div>
                 </div>
               </div>

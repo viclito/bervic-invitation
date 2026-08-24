@@ -25,17 +25,7 @@ export default function CardTemplate14({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#FDFBF7',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxSizing: 'border-box',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#FDFBF7', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
     >
       <style>
         {`
@@ -72,7 +62,7 @@ export default function CardTemplate14({
 
       <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 80px' }}>
         
-        <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: '18px', letterSpacing: '8px', color: '#B76E79', textTransform: 'uppercase', marginBottom: '40px' }}>
+        <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: '28px', letterSpacing: '6px', fontWeight: 600, color: '#B76E79', textTransform: 'uppercase', marginBottom: '40px' }}>
           {tagline}
         </p>
 
@@ -83,42 +73,38 @@ export default function CardTemplate14({
               src={couplePhoto}
               alt="Couple"
               crossOrigin="anonymous"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
         </div>
 
         {/* Names */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', marginBottom: '24px', width: '100%' }}>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '54px', fontStyle: 'italic', color: '#5A2A38', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerOne}</h1>
-          <span style={{ fontFamily: "'Raleway', sans-serif", fontStyle: 'normal', fontSize: '36px', color: '#B76E79', margin: '2px 0' }}>&amp;</span>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '54px', fontStyle: 'italic', color: '#5A2A38', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerTwo}</h1>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '76px', fontStyle: 'italic', color: '#5A2A38', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerOne}</h1>
+          <span style={{ fontFamily: "'Raleway', sans-serif", fontStyle: 'normal', fontSize: '44px', color: '#B76E79', margin: '2px 0' }}>&amp;</span>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '76px', fontStyle: 'italic', color: '#5A2A38', margin: 0, fontWeight: 400, lineHeight: 1.1 }}>{partnerTwo}</h1>
         </div>
 
         <div style={{ width: '150px', height: '1px', backgroundColor: '#5A2A38', opacity: 0.3, marginBottom: '30px' }}></div>
 
         {/* Details */}
         <div style={{ fontFamily: "'Raleway', sans-serif", color: '#333333', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div style={{ fontSize: '22px', fontWeight: 400, letterSpacing: '3px', color: '#5A2A38' }}>
+          <div style={{ fontSize: '34px', fontWeight: 400, letterSpacing: '3px', color: '#5A2A38' }}>
             {weddingDate}
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 300, letterSpacing: '2px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 300, letterSpacing: '2px' }}>
             {weddingTime}
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 400, letterSpacing: '1px', marginTop: '10px' }}>
+          <div style={{ fontSize: '32px', fontWeight: 400, letterSpacing: '1px', marginTop: '10px' }}>
             {venue}
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 300, textTransform: 'uppercase', letterSpacing: '4px', color: '#666666' }}>
+          <div style={{ fontSize: '26px', fontWeight: 300, textTransform: 'uppercase', letterSpacing: '4px', color: '#666666' }}>
             {city}
           </div>
         </div>
 
         <div style={{ marginTop: '50px' }}>
-          <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: '16px', color: '#B76E79', fontWeight: 500, letterSpacing: '5px' }}>
+          <p style={{ fontFamily: "'Raleway', sans-serif", fontSize: '26px', fontWeight: 500, color: '#B76E79', letterSpacing: '5px' }}>
             {hashtag}
           </p>
         </div>

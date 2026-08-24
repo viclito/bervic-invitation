@@ -52,8 +52,8 @@ export default function ArtDecoGrandeurInvitation(
   const celebrantPhoto =
     props.coupleImage ||
     props.coverImage ||
-    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuB_JH44cFP46ThEWh6od0hSuOU9vdctmMvd58Y8c7Mvl-JL8gRP6m_BnaYteF6eHdYGMH1V-gf0VyuR33V-4oFOKrmYY2xK4Cr1qoes3zkq-vFTTX5e4SQDNyhAoDYpuwXDnuz8JmnlM6HTHqkGnq2IfjY0gOMMK6Fuc9a2zxzOaKGGaKzUL6J5hyNOjxx203TU50rf8fjXLtDg1snZ6XQNef1O1JS8wuuBQcjpO_iA-fd-eQ000rKA";
+    (props.heroImage && !props.heroImage.includes("wedding") ? props.heroImage : undefined) ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -94,17 +94,17 @@ export default function ArtDecoGrandeurInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_JH44cFP46ThEWh6od0hSuOU9vdctmMvd58Y8c7Mvl-JL8gRP6m_BnaYteF6eHdYGMH1V-gf0VyuR33V-4oFOKrmYY2xK4Cr1qoes3zkq-vFTTX5e4SQDNyhAoDYpuwXDnuz8JmnlM6HTHqkGnq2IfjY0gOMMK6Fuc9a2zxzOaKGGaKzUL6J5hyNOjxx203TU50rf8fjXLtDg1snZ6XQNef1O1JS8wuuBQcjpO_iA-fd-eQ000rKA",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             numeral: "I",
             rotate: "rotate-[-2deg]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_BZeacw_hip-3hinpK1xnBJjKXlRW4ipj9rG92kOuyDeKKbCMSoBZdMpc5mjF3I-HW6QmC-ckNEkwDZaFhWMpys_F5n1hAf2rtrRm7hZUItTTQNoGKxvOOz7RZdrPqG4In_8ILYO8cYK2k5hlKehNkMLjaL6Wy4qlQ36LGdRV4_r1ZJJrglBLYd1z5SqINVpbf6LgxoI51_l_0cXs6rVMC6I_zPJAWfWF1SYru7Ca0ySCjHL5R7gG",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             numeral: "II",
             rotate: "rotate-[3deg] translate-y-6",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6E1WoKLtT8MMieGenO-MGCkF-utFe4EIv9ODuhzsO8GKAETRhW0Z-lVbKr23UO3ZBQQDiZPihHTQaWk6HBYNFC2d1-XEu1JOAtD213iHKpv5YVNZRM5-S2YWd0od2UAPTKBQ0uVu6wqdyc7zA4qRffQ1L7Crl9_lc9IGe7gyqvRPSLPQwrUzDgK2LAJZOsgEShUKLQkXjBsIDPKASdUUlP1HHyV9iHKRFtuFaL7MR_JH_i25cW898",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             numeral: "III",
             rotate: "rotate-[-1deg]",
           },

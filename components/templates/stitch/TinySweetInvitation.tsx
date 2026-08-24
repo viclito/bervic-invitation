@@ -55,18 +55,18 @@ export default function TinySweetInvitation(
 
   const defaultGalleryList = [
     {
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDWm7Yc6PDowZdcXKTMz7D0wfPgnJ7vM_k9Z1MP_SH3XPt7edMg_qOj_A4CsY1y8vWssWIarJw-Z1Wilze7httykt5Fo_pD94Fnhnbka5Ko-moJS8zXl7q6ZVwaXbNPftr8ydvE0j4yu8Cf70ZqZTGSrmM4ovVOkgFD9wiZnZJBF9Y8PeN7q39TZCBtraUSvcE9GSB_C4VA_GvQQUGO80g9iDd1Ak-YgqWX3olqK4izL-JFOpnE75Yi",
-      caption: "First Smiles",
+      url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
+      caption: "Sweet Moments",
       rotate: "-rotate-3",
     },
     {
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOFKB8R9Y6Ss2l1cC15_HHbtsndt4Tg8TsXksD2xVl_jagbI8JRqWU7MZS8J-gurq4N-vrqKR800k3-0cqCqn2J2V_zQ3eQwjmA8bS9mmNOU7nXjbvyR-wvhmxX2ARQYNcJr2zapC7wwGieGk0YGVHqMwbmNBvRkBC5IjCYXmVlTWHI5T0VqpYqsS5Xaq5N2oLj_jgiCUPr2AT2u54JjQjyT_SJgmhoQSu9XHmmBwpml5JYRhKguVW",
-      caption: "On the Move",
+      url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
+      caption: "Party Joy",
       rotate: "rotate-2 md:mt-8",
     },
     {
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAeHiZdA5QfYEQAh-5pLXHm8wXeJb4eWT2jt9cry8wWzCP_LNyFoG53BLpBH-MIoNEWoVog4WKzQLpqAAI7V01H8_nzOH77HYf6gavyQtD_fAXkmoQocsvirTlKsQ7WpMSHYtfeCo-fgSJ6Iu_XypBA_7wS5ngfBqsYJXg_G4WSODsyjRhx_236TGKFMF3cStQu_Y3GfxbLMLmUPCvuQKmdZ8RhhVG5nTTHviyELB2VToJQvcBOXSHc",
-      caption: "Special Moments",
+      url: "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=1200&q=80",
+      caption: "Cake & Confetti",
       rotate: "-rotate-2",
     },
   ];
@@ -318,7 +318,7 @@ export default function TinySweetInvitation(
                 <img
                   alt={celebrantName}
                   className="w-full h-full object-cover clip-cloud soft-shadow border-4 border-white"
-                  src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBpe710EgUA8jejL2m8yFPevpulHGGvyWeCBoXiLn8mjGTVP8cAzCiDPY6XOno0S5eARTmpX9rWsTv5-RG8X6g7nOYP_vVeHjwmBCJEqw7f34Yt1L0RonhUKuSkC-wHb70C-m77lvUsJoiG479dqkD8lPJVqxSMKlpieOyrxrM_mudqSS1uqfPKQmptWNn2FNy6HQn9E96gW4w_FUXTlMUuajKHSnOG6qkjHPbFas87r-tVUGrYXK-A"}
+                  src={props.coupleImage || props.heroImage || "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80"}
                 />
               </div>
             </div>

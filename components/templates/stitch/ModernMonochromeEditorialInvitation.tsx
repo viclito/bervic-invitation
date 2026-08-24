@@ -109,31 +109,12 @@ export default function ModernMonochromeEditorialInvitation(
           },
         ];
 
-  const isNonEditorialHero =
-    !props.heroImage ||
-    props.heroImage.includes("unsplash.com") ||
-    props.heroImage.includes("wedding") ||
-    props.heroImage.includes("photo-1519741497674") ||
-    props.heroImage.includes("photo-1511795409834") ||
-    props.heroImage.includes("AB6AXuCbj6E_qQBW8N2") ||
-    Boolean(props.partnerTwo && props.partnerTwo.trim() !== "");
-
   const displayHeroImage =
-    props.heroImage && !isNonEditorialHero
-      ? props.heroImage
-      : "https://images.pexels.com/photos/38471603/pexels-photo-38471603.jpeg?_gl=1*1c5oplg*_ga*NzM2MzIzMTQ0LjE2NjI3MjcxNjg.*_ga_8JE65Q40S6*czE3ODU3NDY2Nzkkbzc2JGcxJHQxNzg1NzQ2NzAzJGozNiRsMCRoMA..";
+    props.heroImage || "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   // Story portrait image sanitization
-  const isWeddingCoupleImage =
-    props.coupleImage &&
-    (props.coupleImage.includes("wedding") ||
-      props.coupleImage.includes("AB6AXuArG5YFkRTyG0NbTRVMqnmH7qfHqXAFAyK9JzYzo") ||
-      props.coupleImage.includes("AB6AXuCqCEp1yGZWj7bxmvIrpv5xGR3"));
-
   const displayCoupleImage =
-    props.coupleImage && !isWeddingCoupleImage
-      ? props.coupleImage
-      : "https://lh3.googleusercontent.com/aida-public/AB6AXuCEdDZx1aRPUE3fFkophuJEeS31oluEC0l7esbN7rHFetOJbnlEFxPjR5YLKWxoZS6_iaaPXSaREWsNcQyE-wRdIZ6B57dx4NLkONSTJLw_YoqOBW1EJM4OO_MAYABhtRgz3rbnYfn5FO-FKUUKOQDJ7URWNVF0H7nPUBHn23BcS0K4dvzGDj5q_6JCegOi1Enllf2fF2dxma3Xs5kkHcCUURM6dXG7erffgQF29bVZFGAHbcAI08RA";
+    props.coupleImage || "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80";
 
   // Story narrative text sanitization
   const isWeddingStoryText =

@@ -1343,7 +1343,7 @@ export default function QuickStartDetailsWizard({
         <LoginModal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
-          callbackUrl="/#details-form"
+          callbackUrl="/dashboard/event-profile"
           title="Sign In to Auto-Fill Details"
           subtitle="Log in or create an account to upload your invitation and let our AI personalize your digital suite."
         />

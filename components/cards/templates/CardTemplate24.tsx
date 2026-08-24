@@ -25,18 +25,7 @@ export default function CardTemplate24({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#FAFAF7',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#FAFAF7', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box' }}
     >
       <style>
         {`
@@ -86,22 +75,13 @@ export default function CardTemplate24({
         </g>
       </svg>
 
-      <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '18px', letterSpacing: '6px', color: '#5C7658', textTransform: 'uppercase', marginBottom: '40px', zIndex: 1 }}>
+      <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '28px', fontWeight: 600, letterSpacing: '6px', color: '#5C7658', textTransform: 'uppercase', marginBottom: '40px', zIndex: 1 }}>
         {tagline}
       </p>
 
       {/* Oval Photo */}
       <div
-        style={{
-          width: '260px',
-          height: '340px',
-          marginBottom: '50px',
-          borderRadius: '50%',
-          border: '4px solid #E4EBE4',
-          padding: '8px',
-          boxSizing: 'border-box',
-          zIndex: 1,
-        }}
+        style={{ width: '260px', height: '340px', marginBottom: '50px', borderRadius: '50%', border: '4px solid #E4EBE4', padding: '8px', boxSizing: 'border-box', zIndex: 1 }}
       >
         <img
           src={couplePhoto}
@@ -112,25 +92,25 @@ export default function CardTemplate24({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', zIndex: 1, width: '100%' }}>
-        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '54px', fontStyle: 'italic', color: '#334433', margin: '0', lineHeight: '1.1' }}>
+        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '74px', fontStyle: 'italic', color: '#334433', margin: '0', lineHeight: '1.1' }}>
           {partnerOne}
         </h1>
-        <span style={{ fontFamily: '"Playfair Display", serif', fontSize: '36px', fontStyle: 'italic', color: '#5C7658', margin: '2px 0' }}>&amp;</span>
-        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '54px', fontStyle: 'italic', color: '#334433', margin: '0', lineHeight: '1.1' }}>
+        <span style={{ fontFamily: '"Playfair Display", serif', fontSize: '44px', fontStyle: 'italic', color: '#5C7658', margin: '2px 0' }}>&amp;</span>
+        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '74px', fontStyle: 'italic', color: '#334433', margin: '0', lineHeight: '1.1' }}>
           {partnerTwo}
         </h1>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', zIndex: 1, gap: '10px' }}>
-        <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '24px', fontWeight: '400', color: '#334433', margin: '0', letterSpacing: '2px' }}>
+        <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '32px', fontWeight: '400', color: '#334433', margin: '0', letterSpacing: '2px' }}>
           {weddingDate}
         </p>
-        <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '20px', fontWeight: '300', color: '#5C7658', margin: '0', letterSpacing: '1px' }}>
+        <p style={{ fontFamily: '"Jost", sans-serif', fontSize: '28px', fontWeight: '300', color: '#5C7658', margin: '0', letterSpacing: '1px' }}>
           {venue} &bull; {city} &bull; {weddingTime}
         </p>
       </div>
 
-      <p style={{ fontFamily: '"Playfair Display", serif', fontSize: '24px', color: '#334433', margin: '40px 0 0 0', zIndex: 1 }}>
+      <p style={{ fontFamily: '"Playfair Display", serif', fontSize: '32px', fontWeight: 600, color: '#334433', margin: '40px 0 0 0', zIndex: 1 }}>
         {hashtag}
       </p>
     </div>

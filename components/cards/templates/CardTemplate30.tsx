@@ -25,20 +25,7 @@ const CardTemplate30: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#0B0E14',
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px',
-        boxSizing: 'border-box',
-        color: '#E2E8F0',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#0B0E14', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', boxSizing: 'border-box', color: '#E2E8F0' }}
     >
       <style>
         {`
@@ -49,15 +36,7 @@ const CardTemplate30: React.FC<CardProps> = ({
 
       {/* Starry Night / Moon SVG */}
       <svg
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-          opacity: 0.6,
-        }}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.6 }}
       >
         <circle cx="10%" cy="20%" r="1.5" fill="#E2E8F0" />
         <circle cx="25%" cy="15%" r="2.5" fill="#E2E8F0" opacity="0.8" />
@@ -73,80 +52,49 @@ const CardTemplate30: React.FC<CardProps> = ({
       </svg>
 
       <div style={{ textAlign: 'center', zIndex: 2, marginBottom: '50px' }}>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '32px', color: '#CBD5E1', margin: 0, letterSpacing: '4px' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '38px', fontWeight: 700, color: '#CBD5E1', margin: 0, letterSpacing: '4px' }}>
           {tagline}
         </p>
       </div>
 
       <div
-        style={{
-          position: 'relative',
-          width: '400px',
-          height: '520px',
-          margin: '0 0 60px 0',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 2,
-        }}
+        style={{ position: 'relative', width: '400px', height: '520px', margin: '0 0 60px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2 }}
       >
         <div
-          style={{
-            position: 'absolute',
-            width: '104%',
-            height: '104%',
-            border: '2px solid rgba(226, 232, 240, 0.4)',
-            borderRadius: '50%',
-          }}
+          style={{ position: 'absolute', width: '104%', height: '104%', border: '2px solid rgba(226, 232, 240, 0.4)', borderRadius: '50%' }}
         />
         <div
-          style={{
-            position: 'absolute',
-            width: '110%',
-            height: '110%',
-            border: '1px solid rgba(226, 232, 240, 0.2)',
-            borderRadius: '50%',
-          }}
+          style={{ position: 'absolute', width: '110%', height: '110%', border: '1px solid rgba(226, 232, 240, 0.2)', borderRadius: '50%' }}
         />
         
         <div
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            border: '4px solid #E2E8F0',
-          }}
+          style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', border: '4px solid #E2E8F0' }}
         >
           <img
             src={couplePhoto}
             alt="Couple"
             crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
       </div>
 
       <div style={{ textAlign: 'center', zIndex: 2, width: '100%' }}>
-        <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '74px', fontWeight: 600, margin: '0 0 30px 0', letterSpacing: '2px' }}>
-          {partnerOne} <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 300, fontSize: '60px' }}>&</span> {partnerTwo}
+        <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: '86px', fontWeight: 600, margin: '0 0 30px 0', letterSpacing: '2px' }}>
+          {partnerOne} <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 300, fontSize: '66px' }}>&</span> {partnerTwo}
         </h1>
         
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', fontFamily: "'Cormorant Garamond', serif", fontSize: '28px', color: '#CBD5E1', letterSpacing: '3px', textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', fontFamily: "'Cormorant Garamond', serif", fontSize: '34px', fontWeight: 600, color: '#CBD5E1', letterSpacing: '3px', textTransform: 'uppercase' }}>
           <span>{weddingDate}</span>
-          <span style={{ fontSize: '18px' }}>✦</span>
+          <span style={{ fontSize: '30px', fontWeight: 500 }}>✦</span>
           <span>{weddingTime}</span>
         </div>
         
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '26px', color: '#CBD5E1', marginTop: '20px', letterSpacing: '2px' }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '30px', fontWeight: 600, color: '#CBD5E1', marginTop: '20px', letterSpacing: '2px' }}>
           {venue}, {city}
         </div>
         
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '18px', color: '#94A3B8', marginTop: '40px', letterSpacing: '4px' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '30px', fontWeight: 500, color: '#94A3B8', marginTop: '40px', letterSpacing: '4px' }}>
           {hashtag}
         </div>
       </div>

@@ -54,37 +54,37 @@ export interface CardFormData {
 }
 
 const TEMPLATES = [
-  { id: 1, name: 'Pink Floral', tag: 'Romantic', color: '#F4C6C6', bg: '#FDF6F0' },
-  { id: 2, name: 'Boho Earthy', tag: 'Bohemian', color: '#C4714A', bg: '#F5E6D3' },
-  { id: 3, name: 'Classic Mono', tag: 'Formal', color: '#1A1A1A', bg: '#FFFFFF' },
-  { id: 4, name: 'Modern Side', tag: 'Modern', color: '#1C2B4A', bg: '#F8F5F0' },
-  { id: 5, name: 'Blue Floral', tag: 'Dreamy', color: '#4A7FA5', bg: '#EEF4FB' },
-  { id: 6, name: 'Rustic Kraft', tag: 'Rustic', color: '#5C3D2E', bg: '#C8A97A' },
-  { id: 7, name: 'Verdant Gold', tag: 'Luxury', color: '#D4AF70', bg: '#1C3A2A' },
-  { id: 8, name: 'Art Deco', tag: 'Glamour', color: '#D4AF37', bg: '#0F0F0F' },
-  { id: 9, name: 'Whimsical Garden', tag: 'Botanical', color: '#7A9A60', bg: '#F4F8F1' },
-  { id: 10, name: 'Industrial Copper', tag: 'Vintage', color: '#C87D55', bg: '#1E1A17' },
-  { id: 11, name: 'Ethereal Soft', tag: 'Pastel', color: '#B8A8D4', bg: '#FFF0F5' },
-  { id: 12, name: 'Minimalist Overlay', tag: 'Minimal', color: '#111111', bg: '#FAFAFA' },
-  { id: 13, name: 'Polaroid Nostalgia', tag: 'Retro', color: '#D8C3A5', bg: '#F5EDD8' },
-  { id: 14, name: 'Floral Frame Inset', tag: 'Elegance', color: '#5A2A38', bg: '#FDFBF7' },
-  { id: 15, name: 'Double Exposure', tag: 'Artistic', color: '#E6C280', bg: '#121824' },
+  { id: 1, name: 'Scandi Minimalist', tag: 'Scandi', color: '#111111', bg: '#FFFFFF' },
+  { id: 2, name: 'Midnight Elegance', tag: 'Silver Blue', color: '#E2E8F0', bg: '#0B0E14' },
+  { id: 3, name: 'Split Screen Floral', tag: 'Dual Tone', color: '#7A1F2B', bg: '#FBEAEB' },
+  { id: 4, name: 'Gold Leaf Accent', tag: 'Forest Gold', color: '#D4AF37', bg: '#141E18' },
+  { id: 5, name: 'Vintage Postcard', tag: 'Airmail', color: '#4A3525', bg: '#F5E8D0' },
+  { id: 6, name: 'Circular Bloom', tag: 'Blush Floral', color: '#6B2D3E', bg: '#FFF9F5' },
+  { id: 7, name: 'Frosted Glass', tag: 'Modern Blur', color: '#1E293B', bg: '#E2E8F0' },
+  { id: 8, name: 'Botanical Border', tag: 'Eucalyptus', color: '#5C7658', bg: '#FAFAF7' },
+  { id: 9, name: 'Script Overlay', tag: 'Bold Photo', color: '#FFFFFF', bg: '#222222' },
+  { id: 10, name: 'Archway Garden', tag: 'Garden', color: '#2D4A3E', bg: '#F0F4EC' },
+  { id: 11, name: 'Classic Bordered', tag: 'Traditional', color: '#7A1F2B', bg: '#F9F6F0' },
+  { id: 12, name: 'Vertical Film Strip', tag: 'Cinema', color: '#E5A93C', bg: '#1A1A1A' },
+  { id: 13, name: 'Painted Canvas', tag: 'Fine Art', color: '#708238', bg: '#F4EBE1' },
+  { id: 14, name: 'Geometric Glass', tag: 'Glassmorphism', color: '#F1C40F', bg: '#0D2818' },
+  { id: 15, name: 'Golden Hour Glow', tag: 'Warmth', color: '#FF8C42', bg: '#6B2D5C' },
   { id: 16, name: 'Torn Paper Edge', tag: 'Textured', color: '#2B2B2B', bg: '#EFEBE4' },
-  { id: 17, name: 'Golden Hour Glow', tag: 'Warmth', color: '#FF8C42', bg: '#6B2D5C' },
-  { id: 18, name: 'Geometric Glass', tag: 'Glassmorphism', color: '#F1C40F', bg: '#0D2818' },
-  { id: 19, name: 'Painted Canvas', tag: 'Fine Art', color: '#708238', bg: '#F4EBE1' },
-  { id: 20, name: 'Vertical Film Strip', tag: 'Cinema', color: '#E5A93C', bg: '#1A1A1A' },
-  { id: 21, name: 'Classic Bordered', tag: 'Traditional', color: '#7A1F2B', bg: '#F9F6F0' },
-  { id: 22, name: 'Archway Garden', tag: 'Garden', color: '#2D4A3E', bg: '#F0F4EC' },
-  { id: 23, name: 'Script Overlay', tag: 'Bold Photo', color: '#FFFFFF', bg: '#222222' },
-  { id: 24, name: 'Botanical Border', tag: 'Eucalyptus', color: '#5C7658', bg: '#FAFAF7' },
-  { id: 25, name: 'Frosted Glass', tag: 'Modern Blur', color: '#1E293B', bg: '#E2E8F0' },
-  { id: 26, name: 'Circular Bloom', tag: 'Blush Floral', color: '#6B2D3E', bg: '#FFF9F5' },
-  { id: 27, name: 'Vintage Postcard', tag: 'Airmail', color: '#4A3525', bg: '#F5E8D0' },
-  { id: 28, name: 'Gold Leaf Accent', tag: 'Forest Gold', color: '#D4AF37', bg: '#141E18' },
-  { id: 29, name: 'Split Screen Floral', tag: 'Dual Tone', color: '#7A1F2B', bg: '#FBEAEB' },
-  { id: 30, name: 'Midnight Elegance', tag: 'Silver Blue', color: '#E2E8F0', bg: '#0B0E14' },
-  { id: 31, name: 'Scandi Minimalist', tag: 'Scandi', color: '#111111', bg: '#FFFFFF' },
+  { id: 17, name: 'Double Exposure', tag: 'Artistic', color: '#E6C280', bg: '#121824' },
+  { id: 18, name: 'Floral Frame Inset', tag: 'Elegance', color: '#5A2A38', bg: '#FDFBF7' },
+  { id: 19, name: 'Polaroid Nostalgia', tag: 'Retro', color: '#D8C3A5', bg: '#F5EDD8' },
+  { id: 20, name: 'Minimalist Overlay', tag: 'Minimal', color: '#111111', bg: '#FAFAFA' },
+  { id: 21, name: 'Ethereal Soft', tag: 'Pastel', color: '#B8A8D4', bg: '#FFF0F5' },
+  { id: 22, name: 'Industrial Copper', tag: 'Vintage', color: '#C87D55', bg: '#1E1A17' },
+  { id: 23, name: 'Whimsical Garden', tag: 'Botanical', color: '#7A9A60', bg: '#F4F8F1' },
+  { id: 24, name: 'Art Deco', tag: 'Glamour', color: '#D4AF37', bg: '#0F0F0F' },
+  { id: 25, name: 'Verdant Gold', tag: 'Luxury', color: '#D4AF70', bg: '#1C3A2A' },
+  { id: 26, name: 'Rustic Kraft', tag: 'Rustic', color: '#5C3D2E', bg: '#C8A97A' },
+  { id: 27, name: 'Blue Floral', tag: 'Dreamy', color: '#4A7FA5', bg: '#EEF4FB' },
+  { id: 28, name: 'Modern Side', tag: 'Modern', color: '#1C2B4A', bg: '#F8F5F0' },
+  { id: 29, name: 'Classic Mono', tag: 'Formal', color: '#1A1A1A', bg: '#FFFFFF' },
+  { id: 30, name: 'Boho Earthy', tag: 'Bohemian', color: '#C4714A', bg: '#F5E6D3' },
+  { id: 31, name: 'Pink Floral', tag: 'Romantic', color: '#F4C6C6', bg: '#FDF6F0' },
 ];
 
 const DEFAULT_DATA: CardFormData = {
@@ -101,37 +101,37 @@ const DEFAULT_DATA: CardFormData = {
 
 function CardRenderer({ templateId, data }: { templateId: number; data: CardFormData }) {
   const props = { ...data };
-  if (templateId === 1) return <CardTemplate1 {...props} />;
-  if (templateId === 2) return <CardTemplate2 {...props} />;
-  if (templateId === 3) return <CardTemplate3 {...props} />;
-  if (templateId === 4) return <CardTemplate4 {...props} />;
-  if (templateId === 5) return <CardTemplate5 {...props} />;
-  if (templateId === 6) return <CardTemplate6 {...props} />;
-  if (templateId === 7) return <CardTemplate7 {...props} />;
-  if (templateId === 8) return <CardTemplate8 {...props} />;
-  if (templateId === 9) return <CardTemplate9 {...props} />;
-  if (templateId === 10) return <CardTemplate10 {...props} />;
-  if (templateId === 11) return <CardTemplate11 {...props} />;
-  if (templateId === 12) return <CardTemplate12 {...props} />;
-  if (templateId === 13) return <CardTemplate13 {...props} />;
-  if (templateId === 14) return <CardTemplate14 {...props} />;
-  if (templateId === 15) return <CardTemplate15 {...props} />;
+  if (templateId === 1) return <CardTemplate31 {...props} />;
+  if (templateId === 2) return <CardTemplate30 {...props} />;
+  if (templateId === 3) return <CardTemplate29 {...props} />;
+  if (templateId === 4) return <CardTemplate28 {...props} />;
+  if (templateId === 5) return <CardTemplate27 {...props} />;
+  if (templateId === 6) return <CardTemplate26 {...props} />;
+  if (templateId === 7) return <CardTemplate25 {...props} />;
+  if (templateId === 8) return <CardTemplate24 {...props} />;
+  if (templateId === 9) return <CardTemplate23 {...props} />;
+  if (templateId === 10) return <CardTemplate22 {...props} />;
+  if (templateId === 11) return <CardTemplate21 {...props} />;
+  if (templateId === 12) return <CardTemplate20 {...props} />;
+  if (templateId === 13) return <CardTemplate19 {...props} />;
+  if (templateId === 14) return <CardTemplate18 {...props} />;
+  if (templateId === 15) return <CardTemplate17 {...props} />;
   if (templateId === 16) return <CardTemplate16 {...props} />;
-  if (templateId === 17) return <CardTemplate17 {...props} />;
-  if (templateId === 18) return <CardTemplate18 {...props} />;
-  if (templateId === 19) return <CardTemplate19 {...props} />;
-  if (templateId === 20) return <CardTemplate20 {...props} />;
-  if (templateId === 21) return <CardTemplate21 {...props} />;
-  if (templateId === 22) return <CardTemplate22 {...props} />;
-  if (templateId === 23) return <CardTemplate23 {...props} />;
-  if (templateId === 24) return <CardTemplate24 {...props} />;
-  if (templateId === 25) return <CardTemplate25 {...props} />;
-  if (templateId === 26) return <CardTemplate26 {...props} />;
-  if (templateId === 27) return <CardTemplate27 {...props} />;
-  if (templateId === 28) return <CardTemplate28 {...props} />;
-  if (templateId === 29) return <CardTemplate29 {...props} />;
-  if (templateId === 30) return <CardTemplate30 {...props} />;
-  if (templateId === 31) return <CardTemplate31 {...props} />;
+  if (templateId === 17) return <CardTemplate15 {...props} />;
+  if (templateId === 18) return <CardTemplate14 {...props} />;
+  if (templateId === 19) return <CardTemplate13 {...props} />;
+  if (templateId === 20) return <CardTemplate12 {...props} />;
+  if (templateId === 21) return <CardTemplate11 {...props} />;
+  if (templateId === 22) return <CardTemplate10 {...props} />;
+  if (templateId === 23) return <CardTemplate9 {...props} />;
+  if (templateId === 24) return <CardTemplate8 {...props} />;
+  if (templateId === 25) return <CardTemplate7 {...props} />;
+  if (templateId === 26) return <CardTemplate6 {...props} />;
+  if (templateId === 27) return <CardTemplate5 {...props} />;
+  if (templateId === 28) return <CardTemplate4 {...props} />;
+  if (templateId === 29) return <CardTemplate3 {...props} />;
+  if (templateId === 30) return <CardTemplate2 {...props} />;
+  if (templateId === 31) return <CardTemplate1 {...props} />;
   return null;
 }
 
@@ -343,7 +343,7 @@ export default function CardGenerator() {
   };
 
   const [mobileTab, setMobileTab] = useState<'details' | 'preview' | 'templates'>('details');
-  const [previewScale, setPreviewScale] = useState(0.35);
+  const [previewScale, setPreviewScale] = useState(0.36);
 
   useEffect(() => {
     const handleResize = () => {
@@ -351,14 +351,14 @@ export default function CardGenerator() {
       const screenW = window.innerWidth;
       if (screenW < 480) {
         // Mobile (iPhone / Android)
-        const targetW = Math.min(screenW - 32, 380);
+        const targetW = Math.min(screenW - 32, 360);
         setPreviewScale(targetW / 1080);
       } else if (screenW < 768) {
-        setPreviewScale(Math.min(0.38, (screenW - 48) / 1080));
+        setPreviewScale(Math.min(0.36, (screenW - 48) / 1080));
       } else if (screenW < 1200) {
         setPreviewScale(0.35);
       } else {
-        setPreviewScale(0.40);
+        setPreviewScale(0.38);
       }
     };
     handleResize();
@@ -373,18 +373,22 @@ export default function CardGenerator() {
     setShowConfirmModal(true);
   };
 
-  const CATEGORIES = ['All', 'Romantic', 'Bohemian', 'Formal', 'Modern', 'Dreamy', 'Rustic', 'Luxury', 'Glamour', 'Botanical'];
+  const CATEGORIES = ['All', 'Romantic', 'Bohemian', 'Formal', 'Modern', 'Dreamy', 'Rustic', 'Luxury', 'Glamour', 'Botanical', 'Minimal', 'Vintage', 'Artistic', 'Retro'];
 
   const filteredTemplates = TEMPLATES.filter(t => selectedCategory === 'All' || t.tag === selectedCategory);
 
   const currentTemplateObj = TEMPLATES.find(t => t.id === selectedTemplate) || TEMPLATES[0];
 
   const handleNextTemplate = () => {
-    setSelectedTemplate(prev => (prev >= TEMPLATES.length ? 1 : prev + 1));
+    const currentIndex = TEMPLATES.findIndex(t => t.id === selectedTemplate);
+    const nextIndex = (currentIndex + 1) % TEMPLATES.length;
+    setSelectedTemplate(TEMPLATES[nextIndex].id);
   };
 
   const handlePrevTemplate = () => {
-    setSelectedTemplate(prev => (prev <= 1 ? TEMPLATES.length : prev - 1));
+    const currentIndex = TEMPLATES.findIndex(t => t.id === selectedTemplate);
+    const prevIndex = (currentIndex - 1 + TEMPLATES.length) % TEMPLATES.length;
+    setSelectedTemplate(TEMPLATES[prevIndex].id);
   };
 
   const inputClass = {
@@ -710,7 +714,7 @@ export default function CardGenerator() {
               </button>
               <div>
                 <span className="text-[#991B1B] text-[9px] sm:text-[10px] font-bold tracking-wider uppercase block">
-                  Template {selectedTemplate} of {TEMPLATES.length}
+                  Template {TEMPLATES.findIndex(t => t.id === selectedTemplate) + 1} of {TEMPLATES.length}
                 </span>
                 <div className="text-slate-900 text-xs sm:text-sm font-bold">{currentTemplateObj.name}</div>
               </div>

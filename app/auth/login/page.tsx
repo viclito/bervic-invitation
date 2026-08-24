@@ -49,20 +49,20 @@ function LoginForm() {
   };
 
   return (
-    <div className="max-w-md w-full bg-[#F8F3EA] border-2 border-[#D9A441]/40 rounded-3xl p-8 sm:p-10 card-shadow space-y-6">
+    <div className="max-w-md w-full bg-white border border-red-100/80 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-red-950/10 space-y-6 relative z-10 backdrop-blur-xs">
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white p-1 shadow-md border-2 border-[#D9A441]/50 flex items-center justify-center mx-auto">
+        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-red-50/80 p-2 shadow-xs border border-red-200 flex items-center justify-center mx-auto">
           <img src="/logo.svg" alt="Bervic Logo" className="w-full h-full object-contain" />
         </div>
-        <h1 className="text-2xl font-bold text-[#221C17]">Welcome Back</h1>
-        <p className="text-xs text-[#221C17]/70">
+        <h1 className="text-2xl sm:text-3xl font-bold font-serif text-slate-900">Welcome Back</h1>
+        <p className="text-xs text-slate-600">
           Sign in to manage and customize your Bervic invitations
         </p>
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 rounded-2xl bg-[#7A1F2B]/10 border border-[#7A1F2B]/30 text-[#7A1F2B] text-xs font-semibold flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-[#991B1B] text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[#991B1B]" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -71,7 +71,7 @@ function LoginForm() {
       <button
         type="button"
         onClick={handleGoogleLogin}
-        className="w-full py-3 px-4 rounded-2xl bg-white border border-[#D9A441]/40 text-[#221C17] font-semibold text-xs flex items-center justify-center gap-3 hover:bg-[#EFE7D8]/50 transition-all shadow-sm"
+        className="w-full py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-xs flex items-center justify-center gap-3 transition-all shadow-xs cursor-pointer"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24">
           <path
@@ -95,8 +95,8 @@ function LoginForm() {
       </button>
 
       <div className="relative flex items-center justify-center my-4">
-        <div className="border-t border-[#D9A441]/30 w-full" />
-        <span className="bg-[#F8F3EA] px-3 text-[11px] text-[#221C17]/50 font-bold uppercase tracking-wider">
+        <div className="border-t border-slate-200 w-full" />
+        <span className="bg-white px-3 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
           OR EMAIL
         </span>
       </div>
@@ -104,7 +104,7 @@ function LoginForm() {
       {/* Credentials Email/Password Login Form */}
       <form onSubmit={handleCredentialsLogin} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
             Email Address
           </label>
           <div className="relative">
@@ -114,14 +114,14 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
             />
-            <Mail className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-3" />
+            <Mail className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-3" />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-[#221C17]/80 mb-1">
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
             Password
           </label>
           <div className="relative">
@@ -131,27 +131,27 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F8F3EA] border border-[#D9A441]/40 text-xs focus:outline-none focus:border-[#7A1F2B]"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
             />
-            <Lock className="w-4 h-4 text-[#7A1F2B] absolute left-3.5 top-3" />
+            <Lock className="w-4 h-4 text-[#991B1B] absolute left-3.5 top-3" />
           </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="btn-maroon w-full py-3.5 text-xs font-bold flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+          className="w-full py-3.5 px-4 rounded-2xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all cursor-pointer disabled:opacity-50"
         >
           <span>{loading ? "Signing in..." : "Sign In to Account"}</span>
-          <ArrowRight className="w-4 h-4 text-[#D9A441]" />
+          <ArrowRight className="w-4 h-4 text-amber-300" />
         </button>
       </form>
 
-      <p className="text-center text-xs text-[#221C17]/70">
+      <p className="text-center text-xs text-slate-600">
         Don&apos;t have an account yet?{" "}
         <Link
           href={`/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-          className="text-[#7A1F2B] font-bold underline"
+          className="text-[#991B1B] font-bold hover:underline"
         >
           Create Account
         </Link>
@@ -162,10 +162,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F3EA] text-[#221C17]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-red-50/70 via-white to-red-50/40 text-slate-900 relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-red-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-28 relative">
-        <Suspense fallback={<div className="text-xs font-bold text-[#7A1F2B]">Loading...</div>}>
+      <main className="flex-1 flex items-center justify-center px-4 py-28 relative z-10">
+        <Suspense fallback={<div className="text-xs font-bold text-[#991B1B]">Loading...</div>}>
           <LoginForm />
         </Suspense>
       </main>

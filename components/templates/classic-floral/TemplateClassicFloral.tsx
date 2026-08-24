@@ -21,6 +21,7 @@ export default function TemplateClassicFloral(props: TemplateClassicFloralProps)
         partnerTwo={props.partnerTwo}
         weddingTime={props.weddingTime}
         isCustomizer={props.isCustomizer}
+        isPreview={props.isPreview}
       />
 
       {/* Fixed/Sticky Navigation */}

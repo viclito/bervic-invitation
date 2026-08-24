@@ -34,7 +34,7 @@ export default function CardTemplate7({ partnerOne='Sophia', partnerTwo='Alexand
       <div style={{ position: 'absolute', inset: 52, border: '0.5px solid rgba(212,175,112,0.3)' }} />
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '70px 120px', width: '100%', boxSizing: 'border-box' }}>
-        <p style={{ fontSize: 22, letterSpacing: 8, color: '#D4AF70', textTransform: 'uppercase', marginBottom: 22, fontWeight: 400 }}>We Are Getting Married</p>
+        <p style={{ fontSize: 28, letterSpacing: 8, fontWeight: 400, color: '#D4AF70', textTransform: 'uppercase', marginBottom: 22 }}>We Are Getting Married</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 30, width: '70%' }}>
           <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, #C9A84C)' }} />
           <span style={{ color: '#D4AF70', fontSize: 26 }}>❧</span>
@@ -46,20 +46,20 @@ export default function CardTemplate7({ partnerOne='Sophia', partnerTwo='Alexand
             <img src={couplePhoto} alt="Couple" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
         )}
-        <p style={{ fontSize: 76, fontWeight: 400, color: '#D4AF70', lineHeight: 1.05, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, marginBottom: 8 }}>{partnerOne}</p>
-        <p style={{ fontSize: 32, color: 'rgba(212,175,112,0.6)', letterSpacing: 10, marginBottom: 8 }}>AND</p>
-        <p style={{ fontSize: 76, fontWeight: 400, color: '#D4AF70', lineHeight: 1.05, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, marginBottom: 28 }}>{partnerTwo}</p>
-        <p style={{ fontSize: 26, color: 'rgba(212,175,112,0.7)', fontStyle: 'italic', marginBottom: 26 }}>{tagline}</p>
+        <p style={{ fontSize: 82, fontWeight: 600, color: '#D4AF70', lineHeight: 1.05, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, marginBottom: 8 }}>{partnerOne}</p>
+        <p style={{ fontSize: 42, color: 'rgba(212,175,112,0.8)', fontWeight: 500, letterSpacing: 10, marginBottom: 8 }}>AND</p>
+        <p style={{ fontSize: 82, fontWeight: 600, color: '#D4AF70', lineHeight: 1.05, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, marginBottom: 28 }}>{partnerTwo}</p>
+        <p style={{ fontSize: 32, color: 'rgba(212,175,112,0.85)', fontWeight: 500, fontStyle: 'italic', marginBottom: 26 }}>{tagline}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 26, width: '60%' }}>
           <div style={{ flex: 1, height: 0.5, background: 'rgba(212,175,112,0.4)' }} />
           <span style={{ color: '#C9A84C', fontSize: 18 }}>◆</span>
           <div style={{ flex: 1, height: 0.5, background: 'rgba(212,175,112,0.4)' }} />
         </div>
-        <p style={{ fontSize: 30, color: '#D4AF70', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 10 }}>{weddingDate}</p>
-        <p style={{ fontSize: 24, color: 'rgba(212,175,112,0.7)', marginBottom: 6 }}>{weddingTime}</p>
-        <p style={{ fontSize: 24, color: 'rgba(212,175,112,0.7)', marginBottom: 4, textAlign: 'center' }}>{venue}</p>
-        <p style={{ fontSize: 20, color: 'rgba(212,175,112,0.5)', marginBottom: 22 }}>{city}</p>
-        <p style={{ fontSize: 22, color: 'rgba(212,175,112,0.6)', letterSpacing: 2, fontStyle: 'italic' }}>{hashtag}</p>
+        <p style={{ fontSize: 36, color: '#D4AF70', fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 10 }}>{weddingDate}</p>
+        <p style={{ fontSize: 30, color: 'rgba(212,175,112,0.85)', fontWeight: 500, marginBottom: 6 }}>{weddingTime}</p>
+        <p style={{ fontSize: 30, color: 'rgba(212,175,112,0.85)', fontWeight: 500, marginBottom: 4, textAlign: 'center' }}>{venue}</p>
+        <p style={{ fontSize: 26, color: 'rgba(212,175,112,0.7)', fontWeight: 500, marginBottom: 22 }}>{city}</p>
+        <p style={{ fontSize: 26, color: 'rgba(212,175,112,0.85)', fontWeight: 600, letterSpacing: 2, fontStyle: 'italic' }}>{hashtag}</p>
       </div>
     </div>
   );

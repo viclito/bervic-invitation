@@ -118,6 +118,10 @@ export async function ensureDbSchema() {
             "name" TEXT NOT NULL,
             "topic" TEXT NOT NULL DEFAULT 'vintage',
             "category" TEXT NOT NULL DEFAULT 'Vintage Floral',
+            "pricePerCard" DOUBLE PRECISION NOT NULL DEFAULT 30,
+            "minCopies" INTEGER NOT NULL DEFAULT 50,
+            "paperType" TEXT DEFAULT '350 GSM Textured Metallic Gold Cardstock',
+            "badge" TEXT,
             "aspectRatio" TEXT NOT NULL DEFAULT 'classic',
             "backgroundColor" TEXT NOT NULL DEFAULT '#F3EAD8',
             "backgroundImage" TEXT,
@@ -129,6 +133,13 @@ export async function ensureDbSchema() {
             "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
             "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
           );
+        `);
+        await prisma.$executeRawUnsafe(`
+          ALTER TABLE "CanvaTemplate"
+            ADD COLUMN IF NOT EXISTS "pricePerCard" DOUBLE PRECISION DEFAULT 30,
+            ADD COLUMN IF NOT EXISTS "minCopies" INTEGER DEFAULT 50,
+            ADD COLUMN IF NOT EXISTS "paperType" TEXT DEFAULT '350 GSM Textured Metallic Gold Cardstock',
+            ADD COLUMN IF NOT EXISTS "badge" TEXT;
         `);
       } catch (err: unknown) {
         console.warn("Db Schema Auto-Migration warning:", (err as Error)?.message);

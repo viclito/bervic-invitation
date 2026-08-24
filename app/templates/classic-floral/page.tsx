@@ -5,12 +5,10 @@ import TemplateClassicFloral from "@/components/templates/classic-floral/Templat
 import TemplatePreviewBottomBar from "@/components/templates/TemplatePreviewBottomBar";
 import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
-import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { TemplateClassicFloralProps } from "@/types/template";
 
 function ClassicFloralContent() {
-  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates/classic-floral");
   const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(sampleWeddingData);
 
   useEffect(() => {
@@ -52,7 +50,7 @@ function ClassicFloralContent() {
 
   return (
     <div className="relative min-h-screen">
-      <TemplateClassicFloral {...invitationData} />
+      <TemplateClassicFloral {...invitationData} isPreview={true} />
       <TemplatePreviewBottomBar
         slug="classic-floral"
         templateTitle="Classic Floral Invitation"

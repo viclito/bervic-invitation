@@ -52,8 +52,8 @@ export default function EclecticChicMasterpieceInvitation(
   const celebrantPhoto =
     props.coupleImage ||
     props.coverImage ||
-    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBALjnlcLB5ZHG2lfteKyh3PuZVCTn8RWtH_XxucX6GvHv5VUFRosEdk81L1pJsr5slKlV5BFV-6jSGWND4QTj_d7jimD-PIjiHgcNtpqJqXvmCtS1LxMhUjAeL3BcVxR0UQQ3ShaZF8UuYJvUdiQ0d5HkM7dXeS9daiHM-T-jYV6YSXTGgzB4ofGkiJSicJo2OPFPCNCg0dSHub9DT4JHO3gyd67alU7RZkLzWxWGwSlGUNcp7YZbt";
+    (props.heroImage && !props.heroImage.includes("wedding") ? props.heroImage : undefined) ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -91,19 +91,19 @@ export default function EclecticChicMasterpieceInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCdKXCRxcIDBXoKSebaIZlcxJBDX_tkJeyzsH6j6gN1MVrqkV9Hl4c7t3PVD0H6LJPsV9MLQeR_quxN4vo7TO2fWB0LL4lwKKN7rFf6IkrAYqnli1m6hzJKFwysPogrgYC4PQZFXB9KLdcb7I5tnYtZ78GLO0dosXyL7fkd3CsZ5fb2V_J-LbqEiOgQU0YbPE43paxPBRwla3vp-7nCX-3fpsr4RCOLFxbPbg2kErJ_OBbO048x3kvQ",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             margin: "",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_g_bJbhH9dbAzj07IUxP5ec7aB_MMSmxmYPQ2UC0zkT3xQ7sXQaZe771wslYYs6ghlCwDcrW_hScK_eZhKnLNC3zh22hicVB2M1BA6VOvUCDRbhHzRMBtsSv788xvb4V0NR28MqSyDBTZoH_rdPElc70j0L1_6HHWO6TyJAa8lIYeIL--tMbX2gy0I3l39Y-EF8rgMHmrYcwv0uxGxk7Acj109_kf4xVUHnX0lHVIhsgolF9YXljm",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             margin: "mt-6 md:mt-10",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBH0-s4zXoSeI9Rf4iozsoeTrx6wvEOrJBEd-DhxoykTDkkmgiqRyIZFHGLXOn4e3Ue_iTQRZ12JwpkOJ3uVTo_ZAkmok3TKLJseHCUUOgXDQI3ZxyceQPlkhLP4vUMSLTOQ8sHxNygleqdo0owQWrS30bZ3iVEDU9D58ASsO3QJDZoiMKEwRsk8CA3kI4y7SCf4ttjCNMzT19cu1MTf4QSOOKWqJAMc-6vVpsvwtq9kCLEpL3U9tVl",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             margin: "",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCugwguA0QJJyPU9PriWc9GPniBIA16I4I3AoaDewf8ulmtXj63BNYpGl30FnibYVvw9yfvUjH-j-1blvMdr35wlkdfUmhRoH-oBzUHA9ZyUx9nB0nekF4LWYB5XxMG3HvP1nQwhukORE2k8J9TBUhdomfWxFmSku_Xik_KTxBRZ1kydFaQFDbl4ST1n4HDGDIQAZTcQGoV7muGQ3miphruYQIwqBuzpyCnAgf1AlVdjRryKJCUiNoQ",
+            url: "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=1200&q=80",
             margin: "mt-6 md:mt-10",
           },
         ];

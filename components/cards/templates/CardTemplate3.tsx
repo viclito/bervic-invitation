@@ -25,19 +25,7 @@ export default function CardTemplate3({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#FFFFFF',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "'Cinzel', serif",
-        overflow: 'hidden',
-        color: '#1A1A1A',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#FFFFFF', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cinzel', serif", overflow: 'hidden', color: '#1A1A1A' }}
     >
       <style>
         {`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');`}
@@ -45,27 +33,11 @@ export default function CardTemplate3({
 
       {/* Outer Border */}
       <div
-        style={{
-          position: 'absolute',
-          top: '30px',
-          left: '30px',
-          right: '30px',
-          bottom: '30px',
-          border: '2px solid #1A1A1A',
-          pointerEvents: 'none',
-        }}
+        style={{ position: 'absolute', top: '30px', left: '30px', right: '30px', bottom: '30px', border: '2px solid #1A1A1A', pointerEvents: 'none' }}
       ></div>
       {/* Inner Border */}
       <div
-        style={{
-          position: 'absolute',
-          top: '40px',
-          left: '40px',
-          right: '40px',
-          bottom: '40px',
-          border: '1px solid #1A1A1A',
-          pointerEvents: 'none',
-        }}
+        style={{ position: 'absolute', top: '40px', left: '40px', right: '40px', bottom: '40px', border: '1px solid #1A1A1A', pointerEvents: 'none' }}
       ></div>
 
       {/* Corner Ornaments */}
@@ -82,9 +54,9 @@ export default function CardTemplate3({
         <polygon points="50,0 100,50 50,100 0,50" />
       </svg>
 
-      <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 80px' }}>
+      <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 60px' }}>
         
-        <p style={{ fontSize: '18px', letterSpacing: '4px', textTransform: 'uppercase', fontVariant: 'small-caps', marginBottom: '40px' }}>
+        <p style={{ fontSize: '28px', letterSpacing: '6px', textTransform: 'uppercase', fontVariant: 'small-caps', fontWeight: 600, marginBottom: '28px' }}>
           With Joyful Hearts We Invite You
         </p>
 
@@ -92,35 +64,27 @@ export default function CardTemplate3({
           src={couplePhoto}
           crossOrigin="anonymous"
           alt="Couple"
-          style={{
-            width: '260px',
-            height: '260px',
-            objectFit: 'cover',
-            border: '4px solid #1A1A1A',
-            padding: '4px',
-            backgroundColor: '#FFFFFF',
-            marginBottom: '50px',
-          }}
+          style={{ width: '230px', height: '230px', objectFit: 'cover', border: '4px solid #1A1A1A', padding: '4px', backgroundColor: '#FFFFFF', marginBottom: '28px' }}
         />
 
-        <div style={{ marginBottom: '30px' }}>
-          <div style={{ fontSize: '66px', letterSpacing: '8px', textTransform: 'uppercase', lineHeight: '1.2' }}>{partnerOne}</div>
-          <div style={{ fontSize: '30px', margin: '15px 0', fontStyle: 'italic', color: '#C9A84C' }}>&amp;</div>
-          <div style={{ fontSize: '66px', letterSpacing: '8px', textTransform: 'uppercase', lineHeight: '1.2' }}>{partnerTwo}</div>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '76px', letterSpacing: '8px', textTransform: 'uppercase', fontWeight: 700, lineHeight: '1.05' }}>{partnerOne}</div>
+          <div style={{ fontSize: '42px', margin: '4px 0', fontStyle: 'italic', color: '#C9A84C', fontWeight: 600 }}>&amp;</div>
+          <div style={{ fontSize: '76px', letterSpacing: '8px', textTransform: 'uppercase', fontWeight: 700, lineHeight: '1.05' }}>{partnerTwo}</div>
         </div>
 
-        <div style={{ width: '150px', height: '2px', backgroundColor: '#C9A84C', margin: '30px 0' }}></div>
+        <div style={{ width: '180px', height: '3px', backgroundColor: '#C9A84C', margin: '20px 0' }}></div>
 
-        <div style={{ fontSize: '22px', letterSpacing: '2px', lineHeight: '1.8' }}>
-          <div>{weddingDate}</div>
-          <div>{weddingTime}</div>
-          <div style={{ marginTop: '20px' }}>{venue}</div>
-          <div>{city}</div>
+        <div style={{ fontSize: '28px', letterSpacing: '2px', lineHeight: '1.4' }}>
+          <div style={{ fontSize: '34px', fontWeight: 700, marginBottom: '4px' }}>{weddingDate}</div>
+          <div style={{ fontSize: '28px', fontWeight: 500, color: '#444' }}>{weddingTime}</div>
+          <div style={{ marginTop: '14px', fontSize: '32px', fontWeight: 700 }}>{venue}</div>
+          <div style={{ fontSize: '26px', color: '#444' }}>{city}</div>
         </div>
 
-        <div style={{ width: '80px', height: '1px', backgroundColor: '#C9A84C', margin: '30px 0' }}></div>
+        <div style={{ width: '100px', height: '2px', backgroundColor: '#C9A84C', margin: '20px 0' }}></div>
 
-        <p style={{ fontSize: '16px', letterSpacing: '2px' }}>
+        <p style={{ fontSize: '26px', letterSpacing: '3px', fontWeight: 600, color: '#C9A84C' }}>
           {tagline} | {hashtag}
         </p>
 

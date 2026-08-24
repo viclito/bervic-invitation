@@ -55,6 +55,7 @@ export interface TemplateClassicFloralProps {
   contactAddress: string;
   socialLinks: SocialLinks;
   isCustomizer?: boolean;
+  isPreview?: boolean;
   guestName?: string;
   guestPhone?: string;
   invitationId?: string;

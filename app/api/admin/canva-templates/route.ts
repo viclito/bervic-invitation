@@ -16,6 +16,8 @@ function slugify(text: string): string {
     .replace(/-+$/, "");
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     await ensureDbSchema();
@@ -25,22 +27,9 @@ export async function GET() {
       return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: auth.status || 401 });
     }
 
-    let templates: any[] = [];
-    try {
-      if ((prisma as any).canvaTemplate) {
-        templates = await (prisma as any).canvaTemplate.findMany({
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-        });
-      } else {
-        templates = await prisma.$queryRawUnsafe(`
-          SELECT * FROM "CanvaTemplate" ORDER BY "sortOrder" ASC, "createdAt" DESC
-        `);
-      }
-    } catch {
-      templates = await prisma.$queryRawUnsafe(`
-        SELECT * FROM "CanvaTemplate" ORDER BY "sortOrder" ASC, "createdAt" DESC
-      `);
-    }
+    const templates: any[] = await prisma.$queryRawUnsafe(`
+      SELECT * FROM "CanvaTemplate" ORDER BY "sortOrder" ASC, "createdAt" DESC
+    `);
 
     const formattedTemplates = (templates || []).map((t: any) => {
       let elements = [];
@@ -65,6 +54,10 @@ export async function GET() {
         name: t.name,
         topic: t.topic,
         category: t.category,
+        pricePerCard: t.pricePerCard !== undefined && t.pricePerCard !== null ? Number(t.pricePerCard) : 30,
+        minCopies: t.minCopies !== undefined && t.minCopies !== null ? Number(t.minCopies) : 50,
+        paperType: t.paperType || "350 GSM Textured Metallic Gold Cardstock",
+        badge: t.badge || null,
         aspectRatio: t.aspectRatio,
         backgroundColor: t.backgroundColor,
         backgroundImage: t.backgroundImage,
@@ -103,6 +96,10 @@ export async function POST(req: Request) {
       slug: customSlug,
       topic = "vintage",
       category = "Vintage Floral",
+      pricePerCard = 30,
+      minCopies = 50,
+      paperType = "350 GSM Textured Metallic Gold Cardstock",
+      badge = null,
       aspectRatio = "classic",
       backgroundColor = "#F3EAD8",
       backgroundImage = null,
@@ -129,6 +126,9 @@ export async function POST(req: Request) {
         : JSON.stringify(colorVariants)
       : null;
 
+    const numPrice = Number(pricePerCard) > 0 ? Number(pricePerCard) : 30;
+    const numMinCopies = Number(minCopies) > 0 ? Number(minCopies) : 50;
+
     let createdTemplate: any = null;
     let prismaFailed = false;
 
@@ -141,6 +141,10 @@ export async function POST(req: Request) {
             name: cleanName,
             topic: String(topic).toLowerCase() === "modern" ? "modern" : "vintage",
             category: String(category).trim(),
+            pricePerCard: numPrice,
+            minCopies: numMinCopies,
+            paperType: paperType ? String(paperType).trim() : "350 GSM Textured Metallic Gold Cardstock",
+            badge: badge ? String(badge).trim() : null,
             aspectRatio: String(aspectRatio).trim(),
             backgroundColor: String(backgroundColor).trim(),
             backgroundImage: backgroundImage ? String(backgroundImage).trim() : null,
@@ -159,13 +163,17 @@ export async function POST(req: Request) {
 
     if (!createdTemplate || prismaFailed) {
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "CanvaTemplate" ("id", "slug", "name", "topic", "category", "aspectRatio", "backgroundColor", "backgroundImage", "previewImage", "elementsJson", "colorVariantsJson", "isActive", "sortOrder", "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())`,
+        `INSERT INTO "CanvaTemplate" ("id", "slug", "name", "topic", "category", "pricePerCard", "minCopies", "paperType", "badge", "aspectRatio", "backgroundColor", "backgroundImage", "previewImage", "elementsJson", "colorVariantsJson", "isActive", "sortOrder", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())`,
         id,
         uniqueSlug,
         cleanName,
         String(topic).toLowerCase() === "modern" ? "modern" : "vintage",
         String(category).trim(),
+        numPrice,
+        numMinCopies,
+        paperType ? String(paperType).trim() : "350 GSM Textured Metallic Gold Cardstock",
+        badge ? String(badge).trim() : null,
         String(aspectRatio).trim(),
         String(backgroundColor).trim(),
         backgroundImage ? String(backgroundImage).trim() : null,
@@ -181,6 +189,28 @@ export async function POST(req: Request) {
         id
       );
       createdTemplate = rows[0];
+    }
+
+    // Sync any linked ShopProduct if present
+    try {
+      if ((prisma as any).shopProduct) {
+        await (prisma as any).shopProduct.updateMany({
+          where: {
+            OR: [
+              { canvaTemplateId: id },
+              { canvaTemplateId: uniqueSlug },
+              { name: cleanName },
+            ],
+          },
+          data: {
+            pricePerCard: numPrice,
+            paperType: paperType ? String(paperType).trim() : undefined,
+            badge: badge ? String(badge).trim() : undefined,
+          },
+        });
+      }
+    } catch {
+      // ignore sync warning
     }
 
     return NextResponse.json({ success: true, template: createdTemplate });

@@ -25,19 +25,7 @@ export default function CardTemplate21({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#F9F6F0',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        padding: '60px',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#F9F6F0', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box', padding: '60px' }}
     >
       <style>
         {`
@@ -47,26 +35,10 @@ export default function CardTemplate21({
 
       {/* Double-ruled border */}
       <div
-        style={{
-          position: 'absolute',
-          top: '40px',
-          left: '40px',
-          right: '40px',
-          bottom: '40px',
-          border: '2px solid #7A1F2B',
-          pointerEvents: 'none',
-        }}
+        style={{ position: 'absolute', top: '40px', left: '40px', right: '40px', bottom: '40px', border: '2px solid #7A1F2B', pointerEvents: 'none' }}
       />
       <div
-        style={{
-          position: 'absolute',
-          top: '50px',
-          left: '50px',
-          right: '50px',
-          bottom: '50px',
-          border: '1px solid #7A1F2B',
-          pointerEvents: 'none',
-        }}
+        style={{ position: 'absolute', top: '50px', left: '50px', right: '50px', bottom: '50px', border: '1px solid #7A1F2B', pointerEvents: 'none' }}
       />
 
       {/* Corner flourishes */}
@@ -79,13 +51,13 @@ export default function CardTemplate21({
           width="40"
           height="40"
           viewBox="0 0 100 100"
-          style={{ position: 'absolute', fill: 'none', stroke: '#7A1F2B', strokeWidth: 4, pointerEvents: 'none', ...pos }}
+          style={{ position: 'absolute', fill: 'none', stroke: '#7A1F2B', strokeWidth: 4, pointerEvents: 'none' }}
         >
           <path d="M0,20 Q20,20 20,0 M0,40 Q40,40 40,0 M0,60 Q60,60 60,0 M0,80 Q80,80 80,0" />
         </svg>
       ))}
 
-      <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '24px', letterSpacing: '6px', color: '#7A1F2B', textTransform: 'uppercase', marginBottom: '40px', marginTop: '-40px' }}>
+      <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '30px', fontWeight: 600, letterSpacing: '6px', color: '#7A1F2B', textTransform: 'uppercase', marginBottom: '40px', marginTop: '-40px' }}>
         {tagline}
       </p>
 
@@ -99,33 +71,33 @@ export default function CardTemplate21({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', width: '100%' }}>
-        <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '54px', fontWeight: '600', color: '#7A1F2B', margin: '0', fontStyle: 'italic', lineHeight: '1.1' }}>
+        <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '74px', fontWeight: '600', color: '#7A1F2B', margin: '0', fontStyle: 'italic', lineHeight: '1.1' }}>
           {partnerOne}
         </h1>
-        <span style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '36px', fontStyle: 'italic', color: '#D4AF37', margin: '2px 0' }}>&amp;</span>
-        <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '54px', fontWeight: '600', color: '#7A1F2B', margin: '0', fontStyle: 'italic', lineHeight: '1.1' }}>
+        <span style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '44px', fontStyle: 'italic', color: '#D4AF37', margin: '2px 0' }}>&amp;</span>
+        <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '74px', fontWeight: '600', color: '#7A1F2B', margin: '0', fontStyle: 'italic', lineHeight: '1.1' }}>
           {partnerTwo}
         </h1>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginTop: '50px' }}>
         <div style={{ width: '100px', height: '1px', backgroundColor: '#7A1F2B' }} />
-        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '22px', fontWeight: '400', color: '#7A1F2B', margin: '0', letterSpacing: '2px' }}>
+        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '32px', fontWeight: '400', color: '#7A1F2B', margin: '0', letterSpacing: '2px' }}>
           {weddingDate}
         </p>
         <div style={{ width: '100px', height: '1px', backgroundColor: '#7A1F2B' }} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '30px' }}>
-        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '20px', color: '#7A1F2B', margin: '0', letterSpacing: '1px' }}>
+        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '28px', fontWeight: 500, color: '#7A1F2B', margin: '0', letterSpacing: '1px' }}>
           {venue} | {city}
         </p>
-        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '20px', color: '#7A1F2B', margin: '0', letterSpacing: '1px' }}>
+        <p style={{ fontFamily: '"Montserrat", sans-serif', fontSize: '28px', fontWeight: 500, color: '#7A1F2B', margin: '0', letterSpacing: '1px' }}>
           {weddingTime}
         </p>
       </div>
 
-      <p style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '24px', fontStyle: 'italic', color: '#D4AF37', margin: '30px 0 0 0' }}>
+      <p style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '30px', fontWeight: 600, fontStyle: 'italic', color: '#D4AF37', margin: '30px 0 0 0' }}>
         {hashtag}
       </p>
     </div>

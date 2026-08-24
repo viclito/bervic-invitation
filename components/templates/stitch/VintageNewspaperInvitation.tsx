@@ -52,8 +52,8 @@ export default function VintageNewspaperInvitation(
   const celebrantPhoto =
     props.coupleImage ||
     props.coverImage ||
-    (props.heroImage && !props.heroImage.includes("wedding") && !props.heroImage.includes("photo-1519741497674") ? props.heroImage : undefined) ||
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCj3CvobW7gsQYwkfoAOootCuUgtdPvoOrhAs_N_lgeq9Arj1ulHZKjnXc7O9rJIJoLSp0ZlHmOaA6btrEP8CeFLaF_Pjw49qQi5JL_75EQioNX2QVVhtDjH1sr7zPKY6eDlXWb5SiSduZr-al3XItn_AmkNHx5KxdMnb9CqaumzJ3AUQY6kSgIdyvw8S2X4jnmpe7IDa24Se5LU5-aoqc8lOP9gRtbWoARW-iOEVAkgsFYyBpKoDJo";
+    (props.heroImage && !props.heroImage.includes("wedding") ? props.heroImage : undefined) ||
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80";
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
@@ -91,22 +91,22 @@ export default function VintageNewspaperInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCW-SJwPvD3NwRI7Xw3UR9x2l68xmKvVzmdmHFaRFC3q4Zxz1a33wdjiB4R_3RVUaZSEP0TxAxsvNoiHOkqUUnnzyZVLIO9NlC_FR_ndjM6EosYiMzK6BXJfnkTcwCmZWRE9tE9_Mpwt6cgX4zg2ttsMzzHWCtSNEdS1Ko8milCZG4S2TdSArYnYMo2Y_IDpo5ABDq2n1kxzIFbHih0DKnYxs3EE8Px4eso3TS8q1o1snzbe2VJl-h5",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             caption: "The Early Years",
             rotate: "-rotate-2",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCDc75eTcJrJFyqlT3xZ6qnw0MKXlrJa-qiPaht2mNk36bYfIJtmV4wKNbPtpT1-ivtz6feWPNZH1MlqezxC2V23mfCDMMlZ58XY-aVkYJY0fzm37o82M1fPgYIMPmVNZSC7RxlICx1mYf3gqW2YWC4EpezNyHy4dfrlOmdtNp_q--tFzcGD5DvITaW1JPZ6EGVO_xk2gacOJdAfNRXi4jNKx3VlDTzChmTHELt5sK-9x8A-1R5xluP",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             caption: "A Grand Affair",
             rotate: "rotate-3",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDs26g_jGdGVvZdN0Ajvzq882DwcJHRUcG3rg3Rhsz9nUmZVcxMNu3WhxPTjDrOlt9yUJRxRSSYoR1KUwYdXeP3EQCJDG36YQoAEPSYfs_GiNTpx-JhpuhKPhcumkoCEnAi4Rgsl0wjqSpISqY_2Ml3muRbO0_mzGRaIuyLM2pwR_FSgnMedUvx20jMq92iSly02XY9C0Qn4Q-obXaHNLvb4KiXm4dvhYqVePhUMWHHM9U9wADrR218",
-            caption: "Overseas Dispatch",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+            caption: "Party Lights",
             rotate: "-rotate-1",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3RyZDJvpuJF16bzgXVJhCVDZoXXVSNrlqf98SRgcoe0xS_CEu8r7YfoHeK48tMlUA52WlZV7GzpsXjAG3U_1n1g8L8gRSNEhAKm3RV7cz3P-UBJ-jQ3IKClXHNl06biCUmdzL6sqQdvmuh08m1UTm7pbysDWGY62oE9WEaMqGHHjmobaKsfZdjIZkTgT8k1ujRMM8RM_Zzw0R-Ky-0DRaivCVoHXvHRC9sURXSfAc3N3_J8215nKw",
+            url: "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?auto=format&fit=crop&w=1200&q=80",
             caption: "Unprecedented Joy",
             rotate: "rotate-2",
           },

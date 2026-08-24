@@ -25,18 +25,7 @@ export default function CardTemplate22({
 }: CardProps) {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#F0F4EC',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-      }}
+      style={{ width: '1080px', height: '1080px', backgroundColor: '#F0F4EC', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box' }}
     >
       <style>
         {`
@@ -67,22 +56,13 @@ export default function CardTemplate22({
         <ellipse cx="860" cy="250" rx="9" ry="4" transform="rotate(-20 860 250)" fill="#789A74" />
       </svg>
 
-      <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '20px', letterSpacing: '4px', color: '#2D4A3E', textTransform: 'uppercase', marginBottom: '40px', marginTop: '-80px', zIndex: 1 }}>
+      <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '28px', fontWeight: 500, letterSpacing: '4px', color: '#2D4A3E', textTransform: 'uppercase', marginBottom: '40px', marginTop: '-80px', zIndex: 1 }}>
         {tagline}
       </p>
 
       {/* Arch Photo Mask */}
       <div
-        style={{
-          width: '300px',
-          height: '420px',
-          marginBottom: '50px',
-          clipPath: 'path("M0,420 L0,150 A150,150 0 0,1 300,150 L300,420 Z")',
-          WebkitClipPath: 'path("M0,420 L0,150 A150,150 0 0,1 300,150 L300,420 Z")',
-          border: '2px solid #2D4A3E',
-          zIndex: 1,
-          overflow: 'hidden'
-        }}
+        style={{ width: '300px', height: '420px', marginBottom: '50px', clipPath: 'path("M0,420 L0,150 A150,150 0 0,1 300,150 L300,420 Z")', WebkitClipPath: 'path("M0,420 L0,150 A150,150 0 0,1 300,150 L300,420 Z")', border: '2px solid #2D4A3E', zIndex: 1, overflow: 'hidden' }}
       >
         <img
           src={couplePhoto}
@@ -93,25 +73,25 @@ export default function CardTemplate22({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center', zIndex: 1, width: '100%' }}>
-        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '54px', fontWeight: '400', color: '#2D4A3E', margin: '0', lineHeight: '1.1', textAlign: 'center' }}>
+        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '74px', fontWeight: '400', color: '#2D4A3E', margin: '0', lineHeight: '1.1', textAlign: 'center' }}>
           {partnerOne}
         </h1>
-        <span style={{ fontSize: '36px', fontStyle: 'italic', color: '#5C7658', margin: '2px 0' }}>&amp;</span>
-        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '54px', fontWeight: '400', color: '#2D4A3E', margin: '0', lineHeight: '1.1', textAlign: 'center' }}>
+        <span style={{ fontSize: '44px', fontStyle: 'italic', color: '#5C7658', margin: '2px 0' }}>&amp;</span>
+        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '74px', fontWeight: '400', color: '#2D4A3E', margin: '0', lineHeight: '1.1', textAlign: 'center' }}>
           {partnerTwo}
         </h1>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', zIndex: 1, gap: '12px' }}>
-        <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '22px', fontWeight: '300', color: '#2D4A3E', margin: '0', letterSpacing: '2px' }}>
+        <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '32px', fontWeight: '300', color: '#2D4A3E', margin: '0', letterSpacing: '2px' }}>
           {weddingDate} | {weddingTime}
         </p>
-        <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '20px', fontWeight: '400', color: '#2D4A3E', margin: '0', letterSpacing: '1px' }}>
+        <p style={{ fontFamily: '"Lato", sans-serif', fontSize: '28px', fontWeight: '400', color: '#2D4A3E', margin: '0', letterSpacing: '1px' }}>
           {venue}, {city}
         </p>
       </div>
 
-      <p style={{ fontFamily: '"Playfair Display", serif', fontSize: '22px', fontStyle: 'italic', color: '#5C7658', margin: '30px 0 0 0', zIndex: 1 }}>
+      <p style={{ fontFamily: '"Playfair Display", serif', fontSize: '32px', fontWeight: 600, fontStyle: 'italic', color: '#5C7658', margin: '30px 0 0 0', zIndex: 1 }}>
         {hashtag}
       </p>
     </div>

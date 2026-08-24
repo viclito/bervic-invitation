@@ -58,6 +58,8 @@ import {
   ShieldAlert,
   BarChart3,
 } from "lucide-react";
+import { optimizeImageForUpload } from "@/lib/imageOptimizer";
+import { CARD_PRICING_TIERS, calculateTieredCardPrice } from "@/lib/pricing";
 
 export interface AdminStaff {
   id: string;
@@ -268,6 +270,58 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"USERS" | "ORDERS" | "LOCKS" | "SHOP" | "CANVA_TEMPLATES" | "ADMIN_STAFF">("USERS");
   const [errorMsg, setErrorMsg] = useState("");
   const [showStatsPanel, setShowStatsPanel] = useState<boolean>(false);
+
+  // Tab Persistence Handler (Preserves tab across reloads & updates URL query)
+  const handleTabChange = (tab: "USERS" | "ORDERS" | "LOCKS" | "SHOP" | "CANVA_TEMPLATES" | "ADMIN_STAFF") => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("admin_active_tab", tab);
+        const url = new URL(window.location.href);
+        const tabParamMap: Record<string, string> = {
+          CANVA_TEMPLATES: "canva",
+          SHOP: "shop",
+          ORDERS: "orders",
+          LOCKS: "locks",
+          ADMIN_STAFF: "staff",
+          USERS: "users",
+        };
+        url.searchParams.set("tab", tabParamMap[tab] || "users");
+        window.history.replaceState(null, "", url.toString());
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
+
+  // Restore Active Tab on Mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get("tab")?.toLowerCase();
+        const savedTab = localStorage.getItem("admin_active_tab");
+
+        if (tabParam === "canva" || tabParam === "canva_templates" || tabParam === "canva-templates") {
+          setActiveTab("CANVA_TEMPLATES");
+        } else if (tabParam === "shop") {
+          setActiveTab("SHOP");
+        } else if (tabParam === "orders") {
+          setActiveTab("ORDERS");
+        } else if (tabParam === "locks") {
+          setActiveTab("LOCKS");
+        } else if (tabParam === "staff") {
+          setActiveTab("ADMIN_STAFF");
+        } else if (tabParam === "users") {
+          setActiveTab("USERS");
+        } else if (savedTab && ["USERS", "ORDERS", "LOCKS", "SHOP", "CANVA_TEMPLATES", "ADMIN_STAFF"].includes(savedTab)) {
+          setActiveTab(savedTab as any);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   // RBAC & Sub-Admin Management State
   const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
@@ -557,8 +611,14 @@ export default function AdminPage() {
     setUploadingProductImage(true);
     setUploadError("");
     try {
+      const optimizedFile = await optimizeImageForUpload(file, {
+        maxDimension: 2560,
+        quality: 0.92,
+      });
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", optimizedFile);
+      formData.append("target", "shop");
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
@@ -582,8 +642,13 @@ export default function AdminPage() {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const optimizedFile = await optimizeImageForUpload(file, {
+          maxDimension: 2560,
+          quality: 0.92,
+        });
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", optimizedFile);
+        formData.append("target", "shop");
         const res = await fetch("/api/upload", {
           method: "POST",
           body: formData,
@@ -1482,7 +1547,7 @@ export default function AdminPage() {
               {canAccess("USERS_MANAGE") && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("USERS")}
+                  onClick={() => handleTabChange("USERS")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeTab === "USERS"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -1507,7 +1572,7 @@ export default function AdminPage() {
               {canAccess("ORDERS_MANAGE") && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("ORDERS")}
+                  onClick={() => handleTabChange("ORDERS")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 relative ${
                     activeTab === "ORDERS"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -1535,7 +1600,7 @@ export default function AdminPage() {
               {canAccess("INVITATIONS_MANAGE") && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("LOCKS")}
+                  onClick={() => handleTabChange("LOCKS")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeTab === "LOCKS"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -1560,7 +1625,7 @@ export default function AdminPage() {
               {canAccess("SHOP_PRODUCTS_MANAGE") && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("SHOP")}
+                  onClick={() => handleTabChange("SHOP")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeTab === "SHOP"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -1585,7 +1650,7 @@ export default function AdminPage() {
               {canAccess("CANVA_TEMPLATES_MANAGE") && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("CANVA_TEMPLATES")}
+                  onClick={() => handleTabChange("CANVA_TEMPLATES")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeTab === "CANVA_TEMPLATES"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -1610,7 +1675,7 @@ export default function AdminPage() {
               {isSuperAdmin && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab("ADMIN_STAFF")}
+                  onClick={() => handleTabChange("ADMIN_STAFF")}
                   className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeTab === "ADMIN_STAFF"
                       ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
@@ -2525,7 +2590,7 @@ export default function AdminPage() {
                             <div className="space-y-0.5">
                               <span className="text-base font-extrabold text-[#991B1B]">₹{product.pricePerCard}</span>
                               <span className="text-[10px] text-slate-500 block font-medium">
-                                Min: {product.minCopies || (isGift ? 25 : 50)} {isGift ? "pcs" : "copies"}
+                                {isGift ? `Min: ${product.minCopies || 25} pcs` : `Base (1000+) • Min ${product.minCopies || 50}`}
                               </span>
                             </div>
                           </td>
@@ -3218,7 +3283,7 @@ export default function AdminPage() {
                     <label className="font-bold text-slate-800 block mb-1">
                       {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
                         ? "Price Per Unit / Piece (₹) *"
-                        : "Price Per Card (₹) *"}
+                        : "Base Price (1000+ prints) (₹) *"}
                     </label>
                     <input
                       type="number"
@@ -3234,13 +3299,13 @@ export default function AdminPage() {
                     <label className="font-bold text-slate-800 block mb-1">
                       {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
                         ? "Min Order Pieces"
-                        : "Min Order Copies"}
+                        : "Min Order Copies (Min 50)"}
                     </label>
                     <input
                       type="number"
-                      min={1}
-                      value={productForm.minCopies}
-                      onChange={(e) => setProductForm({ ...productForm, minCopies: Number(e.target.value) })}
+                      min={50}
+                      value={productForm.minCopies || 50}
+                      onChange={(e) => setProductForm({ ...productForm, minCopies: Math.max(50, Number(e.target.value) || 50) })}
                       className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                     />
                   </div>
@@ -3256,6 +3321,46 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
+
+                {/* ── LIVE TIERED VOLUME PRICING PREVIEW MATRIX ── */}
+                {!["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category) && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-amber-950 flex items-center gap-1.5 text-xs">
+                        <Zap className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Live Tiered Volume Pricing Matrix (Base: ₹{productForm.pricePerCard || 0} for 1000+ prints)</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md">
+                        Min 50 Copies
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 font-mono">
+                      {CARD_PRICING_TIERS.map((tier) => {
+                        const sampleQty = tier.min;
+                        const res = calculateTieredCardPrice(productForm.pricePerCard || 0, sampleQty);
+                        return (
+                          <div key={tier.label} className="bg-white p-2.5 rounded-xl border border-amber-200/70 shadow-2xs text-center">
+                            <span className="text-[10px] font-bold text-slate-500 block truncate" title={tier.label}>
+                              {tier.min}{tier.max ? `-${tier.max}` : "+"} copies
+                            </span>
+                            <div className="text-sm font-extrabold text-[#991B1B] my-0.5">
+                              ₹{res.unitPrice}
+                              <span className="text-[9px] font-normal text-slate-500 block">/ card</span>
+                            </div>
+                            <span className="text-[9px] font-bold text-amber-700 block">
+                              {tier.markupPercent === 0 ? "Base (0%)" : `+${tier.markupPercent}%`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-[11px] text-amber-900/90 font-sans leading-normal">
+                      💡 <strong>Tier Logic:</strong> 1000+ prints: base rate (₹{productForm.pricePerCard || 0}) • 500-999: <strong>+80%</strong> • 300-499: <strong>+180%</strong> • 150-299: <strong>+250%</strong> • 80-149: <strong>+300%</strong> • 50-79: <strong>+450%</strong> (Min 50 copies). All decimals are automatically rounded to whole numbers.
+                    </p>
+                  </div>
+                )}
 
                 {/* ── 1. MAIN COVER IMAGE UPLOAD ── */}
                 <div className="p-4 rounded-2xl border-2 border-red-200/80 bg-red-50/20 space-y-3">

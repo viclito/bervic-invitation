@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { prisma } from "@/lib/prisma";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY || process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { cloudinaryConfigPrimary } from "@/lib/cloudinary";
 
 export async function POST(req: Request) {
   try {
@@ -16,8 +11,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing invitationId or cardImageBase64" }, { status: 400 });
     }
 
-    // Upload base64 image data string directly to Cloudinary
+    // Upload base64 image data string directly to Cloudinary Account 1 (Templates & Cards)
     const uploadResult = await cloudinary.uploader.upload(cardImageBase64, {
+      ...cloudinaryConfigPrimary,
       folder: "bervic-card-previews",
       resource_type: "image",
     });

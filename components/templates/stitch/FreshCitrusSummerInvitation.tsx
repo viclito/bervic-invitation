@@ -56,11 +56,15 @@ export default function FreshCitrusSummerInvitation(
             props.locations[0].mapLink !== "https://maps.google.com/"
               ? props.locations[0].mapLink
               : `https://maps.google.com/?q=${mapQuery}`,
+          image:
+            (props.locations[0] as any).image ||
+            "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         }
       : {
           name: props.venuePlace || "The Orangery Botanical Pavilion",
           address: props.contactAddress || props.venuePlace || "123 Sunlit Avenue, Botanical Gardens",
           mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          image: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };
 
   // Celebrant portrait priority
@@ -106,17 +110,17 @@ export default function FreshCitrusSummerInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCSsKGaMuuDxgIaWJElIBuO9LMUZvIAPe_TZ99NLrT_RmiQmid1eHwWPgN01lxQwP6NJiC-Z0o2fxeTfB2UNm8GRJ7BKObTwA5qfk8sstLqYLwKIeBWUMDCD_rhUS9cL7K_HA_pmRR1ErDPHpYJZ7XYRoxwuiWAEr79G9nDuarVao0TFxMAqgQ8DfUCMe0YH0-z7ve0o3TMXBcLY6t-jCqFa2t8heaoMmTBwOH7rrh25AUSXRk92Rbd",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             caption: "Fresh Details",
             rotate: "rotate-[-2deg]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCz6IHDKKBoX41WAxmwji2X4g83f4HXWVoYyu-l3u-Pvbnrv2UAHC4pBL9jm18v7h5q1FUf5Zj5wf7eVaN69naKDxDBtlWhUz7xoq7LPwp3cAQXXuAv-awYeD3s3Riq5eUYtMJ_mHT6sYdGIn1AkcOumL2IhTIwNehwF_L8q7HaeX-SnOUIPq2v-pZvYAr-spSZ3ONFlnDhtpPQOJNgT3owQQXOs4Ox4c-SljHVceYfAoh-VI_zEQxW",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             caption: "The Tablescape",
             rotate: "rotate-[3deg] translate-y-4",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAGEXwHUm8LNh76mgGBWP6kijB-g6dNyXszqcLkwDF0nzOf9MEHGVi3-tGQqHS5zBRix1VD53kH6VOCC39mXdn7EgI2rIHXoIStSTXEocK4516r3sDNvO0kVS3n4g_broZDPn0XXAtTvvWqDIOwMyQYQHHZK9djCa4jfiZOVVEvyzeE9yuM6oJuR7POtSMbjk-oIVbYmgr9mvcC1jTp9yqi-XI-q7toGvAuKBAifA6farSWeqp2LiCi",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             caption: "Cheers!",
             rotate: "rotate-[-1deg]",
           },
@@ -489,7 +493,7 @@ export default function FreshCitrusSummerInvitation(
                   className="w-full h-[450px] bg-cover bg-center rounded-2xl shadow-lg relative z-10 border border-white/50 flex flex-col justify-end p-6 overflow-hidden"
                   style={{
                     backgroundImage:
-                      "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbHKejKdRUkXbCUxxcjo3sUqfciRib9IgPhlWMTI115yZLJev3rUMmMUtglPKEebM802jt0H4KNf8IxAuTQytYxSNFyu0tVwxxAdAoRxQ1_QYf46Ex_Yxxj7CpA0qZ20uqjKJd8WR214MBxDY5xHpBwRuwlaqei02_gHQ8EeKvK7ZTyDzcAVR_ATpjzKgiZFPnz5Tai16I72avsd0OKTYXB7aSuT2957Q-Ecp5zGpZQSfYa-hpB6gO')",
+                      `url('${mainVenue.image || "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80"}')`,
                   }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10" />

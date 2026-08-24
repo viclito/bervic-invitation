@@ -23,6 +23,9 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  Layers,
+  Ruler,
+  Maximize2,
 } from "lucide-react";
 
 interface CanvasElementData {
@@ -190,28 +193,77 @@ function getTemplateBackground(templateId?: string, templateName?: string, cardD
   };
 }
 
+export const ASPECT_RATIOS = [
+  { id: "classic", name: "Classic (5:7)", shortName: "Classic", width: 480, height: 672, ratioStr: "5:7" },
+  { id: "portrait", name: "Story (9:16)", shortName: "Story", width: 420, height: 746, ratioStr: "9:16" },
+  { id: "square", name: "Square (1:1)", shortName: "Square", width: 560, height: 560, ratioStr: "1:1" },
+  { id: "landscape", name: "Landscape (7:5)", shortName: "Landscape", width: 672, height: 480, ratioStr: "7:5" },
+  { id: "cinematic", name: "Cinematic (16:9)", shortName: "Cinematic", width: 746, height: 420, ratioStr: "16:9" },
+  { id: "bookmark", name: "Bookmark (1:2)", shortName: "Bookmark", width: 360, height: 720, ratioStr: "1:2" },
+  { id: "a4", name: "A4 Print (1:1.41)", shortName: "A4 Print", width: 480, height: 678, ratioStr: "1:1.41" },
+  { id: "custom", name: "Free Size", shortName: "Free Size", width: 480, height: 672, ratioStr: "Custom" },
+];
+
+export function getLayerDimensions(
+  layer: any,
+  baseLayer?: any
+): { width: number; height: number; ratioStr: string } {
+  const layerRatioObj = ASPECT_RATIOS.find((r) => r.id === layer?.aspectRatio);
+  const baseRatioObj = baseLayer
+    ? ASPECT_RATIOS.find((r) => r.id === baseLayer.aspectRatio) || ASPECT_RATIOS[0]
+    : ASPECT_RATIOS[0];
+
+  const rawBaseH = baseLayer?.customHeight || baseRatioObj.height;
+  const rawBaseW = baseLayer?.customWidth || baseRatioObj.width;
+
+  if (layer?.isBase !== false) {
+    return {
+      width: layer?.customWidth || (layerRatioObj ? layerRatioObj.width : rawBaseW),
+      height: layer?.customHeight || (layerRatioObj ? layerRatioObj.height : rawBaseH),
+      ratioStr: layerRatioObj ? layerRatioObj.ratioStr : "5:7",
+    };
+  }
+
+  const heightPct = (layer.heightPercent || 85) / 100;
+  const targetH = Math.max(160, Math.round(rawBaseH * heightPct));
+
+  let ratioFraction = 5 / 7;
+  if (layerRatioObj && layerRatioObj.id !== "custom") {
+    ratioFraction = layerRatioObj.width / layerRatioObj.height;
+  } else if (layer.customWidth && layer.customHeight) {
+    ratioFraction = layer.customWidth / layer.customHeight;
+  } else {
+    ratioFraction = rawBaseW / rawBaseH;
+  }
+
+  const targetW = Math.max(120, Math.round(targetH * ratioFraction));
+
+  return {
+    width: targetW,
+    height: targetH,
+    ratioStr: layerRatioObj ? layerRatioObj.ratioStr : "Custom",
+  };
+}
+
 function CardProofCanvas({
   item,
-  width = 160,
-  height = 225,
+  pageIndex = 0,
+  maxWidth = 360,
+  maxHeight = 500,
+  width,
+  height,
   onClick,
   showHover = true,
 }: {
   item: OrderItemData;
+  pageIndex?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   width?: number;
   height?: number;
   onClick?: () => void;
   showHover?: boolean;
 }) {
-  let elements: CanvasElementData[] = [];
-  try {
-    if (item.elementsJson) {
-      elements = JSON.parse(item.elementsJson);
-    }
-  } catch {
-    elements = [];
-  }
-
   let parsedDetails: Record<string, unknown> = {};
   try {
     if (item.cardDetailsJson) {
@@ -221,15 +273,55 @@ function CardProofCanvas({
     parsedDetails = {};
   }
 
-  const bgInfo = getTemplateBackground(item.templateId, item.templateName, parsedDetails);
-  const scale = width / 500;
+  const pages = Array.isArray(parsedDetails.pages) ? (parsedDetails.pages as any[]) : [];
+  const basePage = pages.find((p) => p.isBase) || pages[0] || null;
+  const activePage = pages[pageIndex] || null;
+
+  // Determine true aspect ratio dimensions
+  let layerDim = { width: 480, height: 672, ratioStr: "5:7" };
+  if (activePage) {
+    layerDim = getLayerDimensions(activePage, basePage);
+  } else if (parsedDetails.aspectRatio) {
+    const rObj = ASPECT_RATIOS.find((r) => r.id === parsedDetails.aspectRatio);
+    if (rObj) layerDim = { width: rObj.width, height: rObj.height, ratioStr: rObj.ratioStr };
+  }
+
+  // Calculate proportional render dimensions to fit within maxWidth and maxHeight bounds
+  const boundW = width || maxWidth;
+  const boundH = height || maxHeight;
+  const fitScale = Math.min(boundW / layerDim.width, boundH / layerDim.height);
+  const renderW = Math.max(100, Math.round(layerDim.width * fitScale));
+  const renderH = Math.max(100, Math.round(layerDim.height * fitScale));
+
+  let elements: CanvasElementData[] = [];
+  if (activePage && Array.isArray(activePage.elements)) {
+    elements = activePage.elements;
+  } else {
+    try {
+      if (item.elementsJson) {
+        elements = JSON.parse(item.elementsJson);
+      }
+    } catch {
+      elements = [];
+    }
+  }
+
+  const bgInfo = activePage
+    ? {
+        color: (activePage.backgroundColor as string) || "#FFFFFF",
+        image: (activePage.backgroundImage as string) || undefined,
+        thumbnail: (activePage.backgroundImage as string) || item.previewImage || "/images/canva/template1-thumb.webp",
+      }
+    : getTemplateBackground(item.templateId, item.templateName, parsedDetails);
+
+  const scale = renderW / 500;
   const hasElements = Array.isArray(elements) && elements.length > 0;
-  const hasValidImage = typeof item.previewImage === "string" && item.previewImage.trim().length > 5;
+  const hasValidImage = !activePage && typeof item.previewImage === "string" && item.previewImage.trim().length > 5;
 
   return (
     <div
       onClick={onClick}
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{ width: `${renderW}px`, height: `${renderH}px` }}
       className={`relative rounded-2xl overflow-hidden border-2 border-[#D9A441]/40 bg-white shadow-md select-none transition-all ${
         onClick ? "cursor-pointer group hover:border-[#D9A441] hover:shadow-lg" : ""
       }`}
@@ -360,6 +452,8 @@ export default function UserOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [previewModalItem, setPreviewModalItem] = useState<OrderItemData | null>(null);
+  const [previewModalPageIndex, setPreviewModalPageIndex] = useState<number>(0);
+  const [previewModalViewMode, setPreviewModalViewMode] = useState<"sheet" | "stack">("sheet");
   const [isProgressOpen, setIsProgressOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -700,6 +794,64 @@ export default function UserOrderDetailPage() {
                             )}
                           </div>
 
+                          {/* Multi-Layer Stepped Card Specifications */}
+                          {Array.isArray(parsedDetails.pages) && (parsedDetails.pages as any[]).length > 1 && (
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2 shadow-2xs">
+                              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#991B1B] flex items-center gap-1.5">
+                                <Layers className="w-3.5 h-3.5" />
+                                <span>Multi-Layer Deck Stack ({(parsedDetails.pages as any[]).length} Sheets):</span>
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {(parsedDetails.pages as any[]).map((pg: any, pIdx: number) => {
+                                  const pDim = pg.physicalDimensions || {
+                                    widthInches: pg.widthInches || "5.00\"",
+                                    heightInches: pg.heightInches || `${(((pg.heightPercent || 85) / 100) * 7.0).toFixed(2)}"`,
+                                    widthMm: pg.widthMm || "127 mm",
+                                    heightMm: pg.heightMm || `${Math.round(((pg.heightPercent || 85) / 100) * 178)} mm`,
+                                  };
+
+                                  return (
+                                    <div
+                                      key={pg.id || pIdx}
+                                      onClick={() => {
+                                        setPreviewModalItem(item);
+                                        setPreviewModalPageIndex(pIdx);
+                                        setPreviewModalViewMode("sheet");
+                                      }}
+                                      className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/30 transition-all cursor-pointer flex items-center justify-between gap-2 text-xs group"
+                                      title="Click to view full proof of this sheet"
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <span
+                                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                            pg.isBase ? "bg-[#991B1B] text-white" : "bg-slate-200 text-slate-700"
+                                          }`}
+                                        >
+                                          {pIdx + 1}
+                                        </span>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-slate-900 group-hover:text-[#991B1B] transition-colors truncate">
+                                            {pg.title || pg.name || `Sheet ${pIdx + 1}`}
+                                          </p>
+                                          <p className="text-[10px] font-mono text-slate-500">
+                                            {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <span
+                                        className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                                          pg.isBase ? "bg-red-50 text-[#991B1B] border border-red-200" : "bg-slate-100 text-slate-700"
+                                        }`}
+                                      >
+                                        {pg.isBase ? "Base" : `${pg.heightPercent || 85}%`}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Customer Custom Notes Box */}
                           {item.customNotes && (
                             <div className="bg-red-50/60 border-l-4 border-[#991B1B] p-3 sm:p-3.5 rounded-r-xl space-y-1">
@@ -915,51 +1067,194 @@ export default function UserOrderDetailPage() {
         )}
 
         {/* Modal: Full High-Definition Card Design Proof */}
-        {previewModalItem && (
-          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-            <div className="bg-white rounded-3xl p-5 sm:p-7 max-w-xl w-full flex flex-col items-center gap-4 relative shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
-              <button
-                onClick={() => setPreviewModalItem(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        {previewModalItem && (() => {
+          let modalDetails: Record<string, unknown> = {};
+          try {
+            modalDetails = JSON.parse(previewModalItem.cardDetailsJson || "{}");
+          } catch {}
+          const modalPages = Array.isArray(modalDetails.pages) ? (modalDetails.pages as any[]) : [];
+          const activePage = modalPages[previewModalPageIndex] || null;
+          const pDim = activePage ? (activePage.physicalDimensions || {
+            widthInches: activePage.widthInches || (activePage.isBase ? "5.00\"" : "5.00\""),
+            heightInches: activePage.heightInches || `${(((activePage.heightPercent || 85) / 100) * 7.0).toFixed(2)}"`,
+            widthMm: activePage.widthMm || "127 mm",
+            heightMm: activePage.heightMm || `${Math.round(((activePage.heightPercent || 85) / 100) * 178)} mm`,
+          }) : null;
 
-              <div className="text-center space-y-1">
-                <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900">
-                  Your Customized Card Proof
-                </h3>
-                <p className="text-xs text-slate-500 font-medium">
-                  Template: <strong className="text-[#991B1B]">{previewModalItem.templateName}</strong> • {previewModalItem.copies} Copies
-                </p>
-              </div>
-
-              {/* Large HD Card Canvas Proof */}
-              <div className="flex items-center justify-center p-2 rounded-2xl bg-slate-50 border border-slate-200">
-                <CardProofCanvas
-                  item={previewModalItem}
-                  width={340}
-                  height={485}
-                  showHover={false}
-                />
-              </div>
-
-              {/* Footer details badge */}
-              <div className="w-full bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
-                <span className="text-slate-600 font-medium">
-                  High-definition vector proof prepared for printing.
-                </span>
+          return (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 max-w-lg w-full max-h-[92vh] flex flex-col items-center gap-2.5 sm:gap-3 relative shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 overflow-y-auto custom-scrollbar my-auto">
                 <button
                   onClick={() => setPreviewModalItem(null)}
-                  className="btn-maroon px-4 py-1.5 rounded-xl text-white font-bold text-xs shadow-xs"
+                  className="absolute top-3 right-3 p-1.5 sm:p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer z-10"
+                  title="Close"
                 >
-                  Close Proof
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
+
+                <div className="text-center space-y-0.5 pt-1">
+                  <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900 leading-tight">
+                    Your Customized Card Proof
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                    Template: <strong className="text-[#991B1B]">{previewModalItem.templateName}</strong> • {previewModalItem.copies} Copies
+                  </p>
+                </div>
+
+                {/* Multi-Layer Sheet Selector Pills */}
+                {modalPages.length > 1 && (
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 bg-red-50/70 border border-red-100 rounded-2xl max-w-full">
+                    {modalPages.map((pg, pIdx) => (
+                      <button
+                        key={pg.id || pIdx}
+                        type="button"
+                        onClick={() => {
+                          setPreviewModalViewMode("sheet");
+                          setPreviewModalPageIndex(pIdx);
+                        }}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          previewModalViewMode === "sheet" && previewModalPageIndex === pIdx
+                            ? "bg-[#991B1B] text-white shadow-xs"
+                            : "bg-white text-slate-700 hover:text-[#991B1B] hover:bg-red-50/50"
+                        }`}
+                      >
+                        <span className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] ${
+                          previewModalViewMode === "sheet" && previewModalPageIndex === pIdx
+                            ? "bg-white text-[#991B1B]"
+                            : "bg-slate-100 text-slate-700"
+                        }`}>
+                          {pIdx + 1}
+                        </span>
+                        <span className="truncate max-w-[100px] sm:max-w-[120px]">{pg.title || pg.name || `Sheet ${pIdx + 1}`}</span>
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={() => setPreviewModalViewMode("stack")}
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        previewModalViewMode === "stack"
+                          ? "bg-[#991B1B] text-white shadow-xs"
+                          : "bg-white text-slate-700 hover:text-[#991B1B] hover:bg-red-50/50"
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>2.5D Stack View</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Large HD Card Canvas Proof or 2.5D Stack */}
+                <div className="flex items-center justify-center p-2 rounded-2xl bg-slate-50 border border-slate-200 shrink overflow-hidden max-h-[52vh]">
+                  {previewModalViewMode === "stack" && modalPages.length > 1 ? (
+                    <div className="w-[280px] sm:w-[330px] h-[320px] sm:h-[370px] bg-gradient-to-b from-red-50/30 via-white to-red-50/50 rounded-2xl p-3 flex items-center justify-center relative border border-red-100 shadow-inner overflow-hidden select-none">
+                      <div className="absolute inset-0 bg-[radial-gradient(#fecaca_1px,transparent_1px)] [background-size:14px_14px] opacity-60 pointer-events-none" />
+                      <div className="relative w-full h-full flex items-end justify-center">
+                        {(() => {
+                          const baseLayer = modalPages.find((p) => p.isBase) || modalPages[0];
+                          const maxHeightPx = 300;
+                          const baseH = baseLayer.customHeight || 700;
+                          const scaleFactor = maxHeightPx / baseH;
+
+                          const sortedForStack = [...modalPages]
+                            .map((p, origIdx) => ({ page: p, origIdx }))
+                            .sort((a, b) => {
+                              const aPct = a.page.isBase !== false ? 100 : a.page.heightPercent || 85;
+                              const bPct = b.page.isBase !== false ? 100 : b.page.heightPercent || 85;
+                              return bPct - aPct;
+                            });
+
+                          return sortedForStack.map((item, stackPos) => {
+                            const { page: p, origIdx } = item;
+                            const isSelected = origIdx === previewModalPageIndex;
+                            const pct = p.isBase !== false ? 100 : p.heightPercent || 85;
+                            const renderW = Math.round((p.customWidth || 500) * scaleFactor);
+                            const renderH = Math.round((p.customHeight || baseH * (pct / 100)) * scaleFactor);
+
+                            return (
+                              <div
+                                key={p.id || origIdx}
+                                onClick={() => {
+                                  setPreviewModalPageIndex(origIdx);
+                                  setPreviewModalViewMode("sheet");
+                                }}
+                                style={{
+                                  width: `${renderW}px`,
+                                  height: `${renderH}px`,
+                                  zIndex: stackPos + 10,
+                                  backgroundColor: p.backgroundColor || "#FFFFFF",
+                                  backgroundImage: p.backgroundImage ? `url(${p.backgroundImage})` : undefined,
+                                  backgroundSize: "cover",
+                                  backgroundPosition: "center",
+                                }}
+                                className={`absolute rounded-2xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl flex flex-col justify-between p-2.5 border ${
+                                  isSelected
+                                    ? "ring-2 ring-[#991B1B] border-[#991B1B] shadow-2xl scale-[1.02]"
+                                    : "border-slate-300 hover:scale-[1.01]"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span
+                                    className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md truncate max-w-[120px] shadow-2xs ${
+                                      isSelected ? "bg-[#991B1B] text-white" : "bg-slate-900/80 text-white backdrop-blur-xs"
+                                    }`}
+                                  >
+                                    {p.title || p.name || `Sheet ${origIdx + 1}`}
+                                  </span>
+                                  <span className="text-[8.5px] font-mono font-bold bg-white text-slate-800 px-1 py-0.5 rounded border border-slate-200 shadow-2xs">
+                                    {pct}%
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-center w-full">
+                                  <span className="text-[8.5px] font-mono font-bold bg-white/90 text-slate-900 px-1.5 py-0.5 rounded border border-slate-200 shadow-2xs">
+                                    {p.widthInches || "5.00\""} × {p.heightInches || `${((pct / 100) * 7).toFixed(2)}"`}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    <CardProofCanvas
+                      item={previewModalItem}
+                      pageIndex={previewModalPageIndex}
+                      maxWidth={320}
+                      maxHeight={360}
+                      showHover={false}
+                    />
+                  )}
+                </div>
+
+                {/* Active Sheet Dimensions Chip */}
+                {pDim && previewModalViewMode === "sheet" && (
+                  <div className="px-3 py-1 bg-red-50 border border-red-200 rounded-xl text-[11px] font-mono font-bold text-[#991B1B] flex items-center gap-1.5">
+                    <Ruler className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>
+                      {activePage?.title || activePage?.name || `Sheet ${previewModalPageIndex + 1}`}: {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                    </span>
+                  </div>
+                )}
+
+                {/* Footer details badge */}
+                <div className="w-full bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs mt-auto">
+                  <span className="text-slate-600 font-medium text-[11px]">
+                    {modalPages.length > 1
+                      ? `Viewing sheet ${previewModalPageIndex + 1} of ${modalPages.length}`
+                      : "HD vector proof prepared for printing."}
+                  </span>
+                  <button
+                    onClick={() => setPreviewModalItem(null)}
+                    className="btn-maroon px-3.5 py-1.5 rounded-xl text-white font-bold text-xs shadow-xs cursor-pointer"
+                  >
+                    Close Proof
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
       </main>
 

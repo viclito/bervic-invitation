@@ -3,20 +3,20 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
 import { Search, ExternalLink, Sparkles, Crown, Globe, Check } from "lucide-react";
 
-import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
 import TemplateGallerySkeleton from "@/components/skeletons/TemplateGallerySkeleton";
 import MakeItYoursModal from "@/components/templates/MakeItYoursModal";
 
 function TemplateGalleryContent() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails("/templates");
 
   const categoryParam = searchParams.get("category");
   const viewedParam = searchParams.get("viewed");
@@ -87,6 +87,21 @@ function TemplateGalleryContent() {
     }
   };
 
+  const handleMakeItYoursClick = (tpl: (typeof templatesRegistry)[0]) => {
+    if (status !== "authenticated" || !session) {
+      const returnUrl = `/templates/${tpl.slug}`;
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    setSelectedTemplateForModal({
+      slug: tpl.slug,
+      title: tpl.title,
+      isPremium: Boolean(tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"),
+      price: tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? 2000 : 599,
+    });
+  };
+
   const [profiles, setProfiles] = useState<{ id?: string; eventType?: string }[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
 
@@ -107,26 +122,12 @@ function TemplateGalleryContent() {
       .finally(() => setLoadingProfiles(false));
   }, [categoryParam]);
 
-  const hasWeddingProfile = profiles.length === 0 || profiles.some((p) => !p.eventType || p.eventType.toUpperCase() === "WEDDING");
-  const hasBirthdayProfile = profiles.some((p) => p.eventType && p.eventType.toUpperCase() === "BIRTHDAY");
-
-  const categories =
-    hasWeddingProfile && hasBirthdayProfile
-      ? [
-          { id: "all", label: "All Templates" },
-          { id: "wedding", label: "💒 Weddings" },
-          { id: "birthday", label: "🎂 Birthdays" },
-          { id: "cinematic", label: "👑 Premium" },
-        ]
-      : hasBirthdayProfile && !hasWeddingProfile
-      ? [
-          { id: "birthday", label: "🎂 Birthday Templates" },
-        ]
-      : [
-          { id: "all", label: "All Templates" },
-          { id: "cinematic", label: "👑 Premium" },
-          { id: "wedding", label: "Weddings" },
-        ];
+  const categories = [
+    { id: "all", label: "✨ All Templates" },
+    { id: "wedding", label: "💒 Weddings" },
+    { id: "birthday", label: "🎂 Birthdays" },
+    { id: "cinematic", label: "👑 Premium Cinematic" },
+  ];
 
   // Scroll to last viewed template if specified
   useEffect(() => {
@@ -142,18 +143,7 @@ function TemplateGalleryContent() {
   }, [viewedParam]);
 
   const filteredTemplates = templatesRegistry.filter((tpl) => {
-    // 1. Filter by user's created profiles
-    if (hasWeddingProfile && !hasBirthdayProfile) {
-      if (tpl.category !== "wedding") return false;
-    } else if (hasBirthdayProfile && !hasWeddingProfile) {
-      if (tpl.category !== "birthday") return false;
-    } else if (hasWeddingProfile && hasBirthdayProfile) {
-      if (tpl.category !== "wedding" && tpl.category !== "birthday") return false;
-    } else {
-      if (tpl.category !== "wedding") return false;
-    }
-
-    // 2. Filter by selected category pill
+    // Filter by selected category pill
     const matchesCategory =
       selectedCategory === "all"
         ? true
@@ -168,10 +158,6 @@ function TemplateGalleryContent() {
 
     return matchesCategory && matchesSearch;
   });
-
-  if (isLoading || !hasCompletedDetails) {
-    return <TemplateGallerySkeleton />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans">
@@ -382,14 +368,7 @@ function TemplateGalleryContent() {
                     ) : (
                       <button
                         type="button"
-                        onClick={() =>
-                          setSelectedTemplateForModal({
-                            slug: tpl.slug,
-                            title: tpl.title,
-                            isPremium: Boolean(tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber"),
-                            price: tpl.isCinematicExclusive || tpl.slug === "scroll-scrubber" ? 2000 : 599,
-                          })
-                        }
+                        onClick={() => handleMakeItYoursClick(tpl)}
                         className="btn-maroon py-2 px-1.5 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.01] transition-transform whitespace-nowrap cursor-pointer"
                       >
                         <Sparkles className="w-3 h-3 text-[#D9A441] shrink-0" />

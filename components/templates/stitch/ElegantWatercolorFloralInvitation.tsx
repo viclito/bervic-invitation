@@ -59,17 +59,17 @@ export default function ElegantWatercolorFloralInvitation(
       ? props.galleryImages
       : [
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCNwqi234BE9QmwnrysNENt7qR5469NSENJVC2JJGl5NRYiCs9tFiWCie8l-DsmDINWoIqgKKnuYT41DMb6Dy_TDp5oL6rPyu1VIcrWC_oW8Os_4S8roRwy0F8GDW1rnwHXHPjCJRcbk0P_s6fDRjc2tgo_Fg1WfPiWl6fLNgyFufX7DdqG7nLdpugTqhEfPrH0KindZeBV4AgYd8cFpPnsp1Ldv4aXiMFj8X4DYkOugv_9Oy5-PaQv",
+            url: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1200&q=80",
             caption: "Summer '22",
             rotate: "rotate-1",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB7kkZLcgtRsPCvKndKS8Fikp3jBEpBxrIGcBXPUaIZ1sZI6zGxMeR6t7CoIBG74B4dxbuA_3RHKmC-KFwIkFTPiU2qk4go9SnRNJmt_1802oh6_0vUmqwITJOMToWCGrrN6zaWJpQF_QhEPDv9P5qjGREjlwS9Kl_cZpcjE3NqNJyrR_eWo4G3LtQGZqtYjZmJaWSH2FkldCdWaBCuML6YwjYZzWKjc8-QbehQskd6zgM3wJEuWLHu",
+            url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
             caption: "Sweet Details",
             rotate: "rotate-[-2deg]",
           },
           {
-            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUJU6AiPtZe1zQI_GDNKEukBB7sZIo0cHAn0ea53Hrx9ZcTQFkYcHC9CxhXlvozySp3rx9rOXML1uExoHMROGG0lxBB_7q5877tct5LDAlr-TtYto-aZtA7BRm8TgPoi87oEeeB6u43BC_wzEryl1iHVybHl_15wXQiRkqxC3VuPwizKCQjUOEgMixgX9xuHwWhwJlsUaHa_vTOg4YN6o_rBylCCWC-YlK9f5z9aYXIySjGV-YI2a5",
+            url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
             caption: "The Venue",
             rotate: "rotate-2",
           },
@@ -392,7 +392,7 @@ export default function ElegantWatercolorFloralInvitation(
                 <img
                   alt="Birthday Highlight Video Placeholder"
                   className="w-full h-full object-cover"
-                  src={props.coupleImage || props.heroImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuAZCkfapr3kHN4Z2HWJgMAu969WaZErlUGyVg0mTlWmloy-uhdFfRMiSSCNhMo0C-ymAjjw4hxDsngLL1kGZQcnTHrhrm63ss5ivqgcXiOtTcj8G6v_UY8--i2XPajDm5JADtmZbg6N9vPSeCkzBig52dT2B-1wtrydI05mNhiBPwfoOqJ5cxKc3HLl449etoHZfdJpxUI4ECa_Beg6zBU_E1QoKzLveaLhiBIdyzLbh-FVDEfdEIgm"}
+                  src={props.coupleImage || props.heroImage || "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80"}
                 />
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center group cursor-pointer">
                   <div className="w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/50 transition-colors">

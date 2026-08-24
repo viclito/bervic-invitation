@@ -7,8 +7,6 @@ import { sampleWeddingData } from "@/data/sampleWeddingData";
 import { sampleBirthdayData } from "@/data/sampleBirthdayData";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import { mapEventProfileToInvitationData } from "@/lib/mapEventProfileToInvitationData";
-import { useRequireLoginAndDetails } from "@/lib/useRequireLoginAndDetails";
-import TemplatePreviewSkeleton from "@/components/skeletons/TemplatePreviewSkeleton";
 import { TemplateClassicFloralProps } from "@/types/template";
 
 interface Props {
@@ -17,9 +15,6 @@ interface Props {
 
 export default function GenericTemplatePreviewPage({ params }: Props) {
   const { slug } = use(params);
-  const { isLoading, hasCompletedDetails } = useRequireLoginAndDetails(`/templates/${slug}`);
-  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps | null>(null);
-
   const targetTemplate =
     templatesRegistry.find((t) => t.slug === slug && t.category === "birthday") ||
     templatesRegistry.find((t) => t.slug === slug);
@@ -28,6 +23,8 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
     targetTemplate?.category === "birthday"
       ? sampleBirthdayData
       : sampleWeddingData;
+
+  const [invitationData, setInvitationData] = useState<TemplateClassicFloralProps>(initialData);
 
   useEffect(() => {
     let activeDraft: Record<string, unknown> | null = null;
@@ -75,16 +72,12 @@ export default function GenericTemplatePreviewPage({ params }: Props) {
   const categoryParam = targetTemplate?.category || "all";
   const displayData = invitationData || initialData;
 
-  if (isLoading || !hasCompletedDetails) {
-    return <TemplatePreviewSkeleton />;
-  }
-
   const isThumbnail = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("thumbnail") === "true";
 
   return (
     <div className="relative min-h-screen">
       {/* Live Preview Full Invitation Screen */}
-      <DynamicTemplateCard {...displayData} templateSlug={slug} />
+      <DynamicTemplateCard {...displayData} isPreview={true} templateSlug={slug} />
 
       {/* Floating Bottom CTA Bar & Ownership Modal */}
       {!isThumbnail && (

@@ -25,15 +25,7 @@ const CardTemplate29: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      style={{
-        width: '1080px',
-        height: '1080px',
-        display: 'flex',
-        flexDirection: 'row',
-        position: 'relative',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-      }}
+      style={{ width: '1080px', height: '1080px', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}
     >
       <style>
         {`
@@ -44,20 +36,7 @@ const CardTemplate29: React.FC<CardProps> = ({
 
       {/* Left Panel */}
       <div
-        style={{
-          width: '540px',
-          height: '1080px',
-          backgroundColor: '#FBEAEB',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '60px',
-          boxSizing: 'border-box',
-          color: '#7A1F2B',
-          zIndex: 2,
-        }}
+        style={{ width: '540px', height: '1080px', backgroundColor: '#FBEAEB', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', boxSizing: 'border-box', color: '#7A1F2B', zIndex: 2 }}
       >
         {/* Watercolor abstract floral background shapes */}
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.15, pointerEvents: 'none' }}>
@@ -68,60 +47,44 @@ const CardTemplate29: React.FC<CardProps> = ({
         </svg>
 
         <div style={{ zIndex: 3, width: '100%', textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '20px', letterSpacing: '6px', textTransform: 'uppercase', marginBottom: '40px' }}>
+          <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '36px', fontWeight: 600, letterSpacing: '6px', textTransform: 'uppercase', marginBottom: '40px' }}>
             {tagline}
           </p>
 
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '70px', fontWeight: 'bold', margin: '0 0 20px 0', lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '84px', fontWeight: 'bold', margin: '0 0 20px 0', lineHeight: 1.1 }}>
             {partnerOne}
           </h1>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: '50px', margin: '10px 0' }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: '56px', margin: '10px 0' }}>
             and
           </div>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '70px', fontWeight: 'bold', margin: '0 0 60px 0', lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '84px', fontWeight: 'bold', margin: '0 0 60px 0', lineHeight: 1.1 }}>
             {partnerTwo}
           </h1>
 
           <div style={{ width: '80px', height: '2px', backgroundColor: '#7A1F2B', margin: '0 auto 60px auto' }} />
 
-          <div style={{ fontFamily: "'Lato', sans-serif", fontSize: '24px', lineHeight: 1.8, fontWeight: 300 }}>
-            <div style={{ fontWeight: 400, fontSize: '28px', marginBottom: '10px' }}>{weddingDate}</div>
+          <div style={{ fontFamily: "'Lato', sans-serif", fontSize: '34px', fontWeight: 300, lineHeight: 1.8 }}>
+            <div style={{ fontWeight: 700, fontSize: '36px', marginBottom: '10px' }}>{weddingDate}</div>
             <div>at {weddingTime}</div>
             <div style={{ marginTop: '30px' }}>{venue}</div>
             <div>{city}</div>
-            <div style={{ marginTop: '40px', fontSize: '20px', fontStyle: 'italic', letterSpacing: '2px' }}>{hashtag}</div>
+            <div style={{ marginTop: '40px', fontSize: '36px', fontWeight: 600, fontStyle: 'italic', letterSpacing: '2px' }}>{hashtag}</div>
           </div>
         </div>
       </div>
 
       {/* Right Panel */}
       <div
-        style={{
-          width: '540px',
-          height: '1080px',
-          position: 'relative',
-        }}
+        style={{ width: '540px', height: '1080px', position: 'relative' }}
       >
         <img
           src={couplePhoto}
           alt="Couple"
           crossOrigin="anonymous"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
         <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(to right, rgba(251,234,235,0.4) 0%, rgba(251,234,235,0) 20%)',
-            pointerEvents: 'none',
-          }}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(251,234,235,0.4) 0%, rgba(251,234,235,0) 20%)', pointerEvents: 'none' }}
         />
       </div>
     </div>
