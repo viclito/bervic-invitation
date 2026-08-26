@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/shop/products/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"D:\\Desktop\\NEXT\\bervic-invitation\\apps\\web\\app\\api\\shop\\products\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

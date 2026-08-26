@@ -1,8 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ==============================================================================
+# BERVIC MONOREPO .GITIGNORE
+# Next.js (Web) + React Native / Expo (Mobile) + Shared Packages + Turbo
+# ==============================================================================
 
-# dependencies
-/node_modules
-/.pnp
+# --- Dependencies & Package Managers ---
+node_modules/
+**/node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,32 +14,72 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# --- Monorepo & Build Cache ---
+.turbo/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
-# next.js
-/.next/
-/out/
+# --- Next.js Web App ---
+.next/
+**/.next/
+out/
+**/out/
+build/
+dist/
+**/dist/
+next-env.d.ts
+**/next-env.d.ts
 
-# production
-/build
+# --- React Native & Expo Mobile App ---
+.expo/
+**/.expo/
+expo-env.d.ts
+**/expo-env.d.ts
+web-build/
+android/
+ios/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
 
-# misc
-.DS_Store
+# --- Environment Variables & Secrets ---
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+**/.env
+**/.env*.local
+**/.env.production
 *.pem
 
-# debug
+# --- Logs, Debug & Telemetry ---
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# --- Vercel & Cloud Deployments ---
+.vercel/
 
-# vercel
-.vercel
+# --- Testing & Coverage ---
+coverage/
+**/coverage/
+.nyc_output/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# --- Operating System & Editor Files ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+
+# --- Temporary / Scratch Scripts & Models ---
+apps/web/scratch/
+apps/web/scratch_*.html
+apps/web/scratch_*.js
+apps/web/eng.traineddata

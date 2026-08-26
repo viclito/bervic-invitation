@@ -1,0 +1,3 @@
+module.exports=[2374,a=>{"use strict";var b=a.i(7997);let c=process.env.NEXT_PUBLIC_APP_URL||"https://www.bervic.in",d={title:"Log In to Your Account | Bervic Invitations",description:"Log in to your Bervic account to manage your digital invitations, track guest RSVPs, and create Instagram announcement cards.",alternates:{canonical:`${c}/auth/login`},robots:{index:!0,follow:!0}};a.s(["default",0,function({children:a}){return(0,b.jsx)(b.Fragment,{children:a})},"metadata",0,d])},75743,a=>{a.n(a.i(2374))}];
+
+//# sourceMappingURL=apps_web_app_auth_login_layout_tsx_0pb41vq._.js.map

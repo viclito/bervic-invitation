@@ -1,0 +1,574 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admin/orders/[id]",
+      "regex": "^/admin/orders/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/orders/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/canva-templates/[id]",
+      "regex": "^/api/admin/canva\\-templates/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/canva\\-templates/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/invitations/[id]",
+      "regex": "^/api/admin/invitations/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/invitations/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/orders/[id]",
+      "regex": "^/api/admin/orders/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/orders/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/orders/[id]/message",
+      "regex": "^/api/admin/orders/([^/]+?)/message(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/orders/(?<nxtPid>[^/]+?)/message(?:/)?$"
+    },
+    {
+      "page": "/api/admin/orders/[id]/status",
+      "regex": "^/api/admin/orders/([^/]+?)/status(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/orders/(?<nxtPid>[^/]+?)/status(?:/)?$"
+    },
+    {
+      "page": "/api/admin/shop/products/[id]",
+      "regex": "^/api/admin/shop/products/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/shop/products/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/auth/[...nextauth]",
+      "regex": "^/api/auth/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPnextauth": "nxtPnextauth"
+      },
+      "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/[id]/guests",
+      "regex": "^/api/invitations/([^/]+?)/guests(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/invitations/(?<nxtPid>[^/]+?)/guests(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/[id]/guests/batch",
+      "regex": "^/api/invitations/([^/]+?)/guests/batch(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/invitations/(?<nxtPid>[^/]+?)/guests/batch(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/[id]/rsvp",
+      "regex": "^/api/invitations/([^/]+?)/rsvp(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/invitations/(?<nxtPid>[^/]+?)/rsvp(?:/)?$"
+    },
+    {
+      "page": "/api/user/orders/[id]",
+      "regex": "^/api/user/orders/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/user/orders/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/invite-whatsapp/[id]",
+      "regex": "^/dashboard/invite\\-whatsapp/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/dashboard/invite\\-whatsapp/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/orders/[id]",
+      "regex": "^/dashboard/orders/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/dashboard/orders/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/invitations/[slug]",
+      "regex": "^/invitations/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/invitations/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/templates/customize/[slug]",
+      "regex": "^/templates/customize/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/templates/customize/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/templates/stitch/[slug]",
+      "regex": "^/templates/stitch/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/templates/stitch/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/templates/[slug]",
+      "regex": "^/templates/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/templates/(?<nxtPslug>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/canva-templates/builder",
+      "regex": "^/admin/canva\\-templates/builder(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/canva\\-templates/builder(?:/)?$"
+    },
+    {
+      "page": "/api/admin/canva-assets",
+      "regex": "^/api/admin/canva\\-assets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/canva\\-assets(?:/)?$"
+    },
+    {
+      "page": "/api/admin/canva-templates",
+      "regex": "^/api/admin/canva\\-templates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/canva\\-templates(?:/)?$"
+    },
+    {
+      "page": "/api/admin/canva-textures",
+      "regex": "^/api/admin/canva\\-textures(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/canva\\-textures(?:/)?$"
+    },
+    {
+      "page": "/api/admin/check",
+      "regex": "^/api/admin/check(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/check(?:/)?$"
+    },
+    {
+      "page": "/api/admin/grant-quota",
+      "regex": "^/api/admin/grant\\-quota(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/grant\\-quota(?:/)?$"
+    },
+    {
+      "page": "/api/admin/orders",
+      "regex": "^/api/admin/orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/orders(?:/)?$"
+    },
+    {
+      "page": "/api/admin/overview",
+      "regex": "^/api/admin/overview(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/overview(?:/)?$"
+    },
+    {
+      "page": "/api/admin/reset-purchases",
+      "regex": "^/api/admin/reset\\-purchases(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/reset\\-purchases(?:/)?$"
+    },
+    {
+      "page": "/api/admin/shop/products",
+      "regex": "^/api/admin/shop/products(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/shop/products(?:/)?$"
+    },
+    {
+      "page": "/api/admin/staff",
+      "regex": "^/api/admin/staff(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/staff(?:/)?$"
+    },
+    {
+      "page": "/api/admin/toggle-lock",
+      "regex": "^/api/admin/toggle\\-lock(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/toggle\\-lock(?:/)?$"
+    },
+    {
+      "page": "/api/auth/mobile-bridge",
+      "regex": "^/api/auth/mobile\\-bridge(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/mobile\\-bridge(?:/)?$"
+    },
+    {
+      "page": "/api/auth/mobile-bridge/success",
+      "regex": "^/api/auth/mobile\\-bridge/success(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/mobile\\-bridge/success(?:/)?$"
+    },
+    {
+      "page": "/api/auth/mobile-login",
+      "regex": "^/api/auth/mobile\\-login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/mobile\\-login(?:/)?$"
+    },
+    {
+      "page": "/api/auth/register",
+      "regex": "^/api/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/register(?:/)?$"
+    },
+    {
+      "page": "/api/auth/send-otp",
+      "regex": "^/api/auth/send\\-otp(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/send\\-otp(?:/)?$"
+    },
+    {
+      "page": "/api/auth/verify-otp",
+      "regex": "^/api/auth/verify\\-otp(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/verify\\-otp(?:/)?$"
+    },
+    {
+      "page": "/api/canva/templates",
+      "regex": "^/api/canva/templates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/canva/templates(?:/)?$"
+    },
+    {
+      "page": "/api/cart",
+      "regex": "^/api/cart(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cart(?:/)?$"
+    },
+    {
+      "page": "/api/guests/verify-pass",
+      "regex": "^/api/guests/verify\\-pass(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/guests/verify\\-pass(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/check-slug",
+      "regex": "^/api/invitations/check\\-slug(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invitations/check\\-slug(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/my-invitations",
+      "regex": "^/api/invitations/my\\-invitations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invitations/my\\-invitations(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/save",
+      "regex": "^/api/invitations/save(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invitations/save(?:/)?$"
+    },
+    {
+      "page": "/api/invitations/upload-card",
+      "regex": "^/api/invitations/upload\\-card(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/invitations/upload\\-card(?:/)?$"
+    },
+    {
+      "page": "/api/orders/create",
+      "regex": "^/api/orders/create(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/orders/create(?:/)?$"
+    },
+    {
+      "page": "/api/payment/create-order",
+      "regex": "^/api/payment/create\\-order(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payment/create\\-order(?:/)?$"
+    },
+    {
+      "page": "/api/payment/razorpay-callback",
+      "regex": "^/api/payment/razorpay\\-callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payment/razorpay\\-callback(?:/)?$"
+    },
+    {
+      "page": "/api/payment/verify",
+      "regex": "^/api/payment/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payment/verify(?:/)?$"
+    },
+    {
+      "page": "/api/shop/products",
+      "regex": "^/api/shop/products(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/shop/products(?:/)?$"
+    },
+    {
+      "page": "/api/templates",
+      "regex": "^/api/templates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/templates(?:/)?$"
+    },
+    {
+      "page": "/api/upload",
+      "regex": "^/api/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/upload(?:/)?$"
+    },
+    {
+      "page": "/api/user/cards/save",
+      "regex": "^/api/user/cards/save(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/cards/save(?:/)?$"
+    },
+    {
+      "page": "/api/user/event-draft",
+      "regex": "^/api/user/event\\-draft(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/event\\-draft(?:/)?$"
+    },
+    {
+      "page": "/api/user/event-draft/activate",
+      "regex": "^/api/user/event\\-draft/activate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/event\\-draft/activate(?:/)?$"
+    },
+    {
+      "page": "/api/user/event-draft/extract",
+      "regex": "^/api/user/event\\-draft/extract(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/event\\-draft/extract(?:/)?$"
+    },
+    {
+      "page": "/api/user/orders",
+      "regex": "^/api/user/orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/orders(?:/)?$"
+    },
+    {
+      "page": "/api/user/refresh-card-limit",
+      "regex": "^/api/user/refresh\\-card\\-limit(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/refresh\\-card\\-limit(?:/)?$"
+    },
+    {
+      "page": "/api/user/subscription",
+      "regex": "^/api/user/subscription(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/user/subscription(?:/)?$"
+    },
+    {
+      "page": "/apple-icon.png",
+      "regex": "^/apple\\-icon\\.png(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/apple\\-icon\\.png(?:/)?$"
+    },
+    {
+      "page": "/auth/login",
+      "regex": "^/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/login(?:/)?$"
+    },
+    {
+      "page": "/auth/mobile-google",
+      "regex": "^/auth/mobile\\-google(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/mobile\\-google(?:/)?$"
+    },
+    {
+      "page": "/auth/register",
+      "regex": "^/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/register(?:/)?$"
+    },
+    {
+      "page": "/auth/verify-otp",
+      "regex": "^/auth/verify\\-otp(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/verify\\-otp(?:/)?$"
+    },
+    {
+      "page": "/canva",
+      "regex": "^/canva(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/canva(?:/)?$"
+    },
+    {
+      "page": "/cards",
+      "regex": "^/cards(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cards(?:/)?$"
+    },
+    {
+      "page": "/checkout",
+      "regex": "^/checkout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/checkout(?:/)?$"
+    },
+    {
+      "page": "/checkout/mobile-pay",
+      "regex": "^/checkout/mobile\\-pay(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/checkout/mobile\\-pay(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/dashboard/event-profile",
+      "regex": "^/dashboard/event\\-profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/event\\-profile(?:/)?$"
+    },
+    {
+      "page": "/dashboard/orders",
+      "regex": "^/dashboard/orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/orders(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/icon.png",
+      "regex": "^/icon\\.png(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.png(?:/)?$"
+    },
+    {
+      "page": "/pricing",
+      "regex": "^/pricing(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/pricing(?:/)?$"
+    },
+    {
+      "page": "/robots.txt",
+      "regex": "^/robots\\.txt(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/robots\\.txt(?:/)?$"
+    },
+    {
+      "page": "/shop",
+      "regex": "^/shop(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/shop(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/templates",
+      "regex": "^/templates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/templates(?:/)?$"
+    },
+    {
+      "page": "/templates/classic-floral",
+      "regex": "^/templates/classic\\-floral(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/templates/classic\\-floral(?:/)?$"
+    },
+    {
+      "page": "/templates/scroll-scrubber",
+      "regex": "^/templates/scroll\\-scrubber(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/templates/scroll\\-scrubber(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

@@ -1,0 +1,3 @@
+{
+  "/api/invitations/upload-card/route": "app/api/invitations/upload-card/route.js"
+}

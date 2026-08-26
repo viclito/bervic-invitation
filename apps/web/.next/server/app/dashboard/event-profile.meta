@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/dashboard/layout,_N_T_/dashboard/event-profile/layout,_N_T_/dashboard/event-profile/page,_N_T_/dashboard/event-profile"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/dashboard/event-profile/__PAGE__",
+    "/dashboard/event-profile",
+    "/dashboard",
+    "/_index",
+    "/_head"
+  ]
+}

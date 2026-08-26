@@ -1,0 +1,3 @@
+{
+  "/api/user/event-draft/extract/route": "app/api/user/event-draft/extract/route.js"
+}

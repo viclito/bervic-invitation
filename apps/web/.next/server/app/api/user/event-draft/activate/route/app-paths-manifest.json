@@ -1,0 +1,3 @@
+{
+  "/api/user/event-draft/activate/route": "app/api/user/event-draft/activate/route.js"
+}
