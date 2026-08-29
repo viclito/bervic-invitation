@@ -79,7 +79,7 @@ export default function CanvaStudioSection() {
             {/* Headline */}
             <h2 className="text-3xl sm:text-4xl lg:text-[46px] font-serif font-bold text-slate-900 leading-[1.2] tracking-tight">
               Design Your Perfect Invitation with{" "}
-              <span className="text-[#991B1B] italic font-serif">Canva Studio</span>
+              <span className="text-[#991B1B] italic font-serif">Design Studio</span>
             </h2>
 
             {/* Feature Bullets Grid */}
