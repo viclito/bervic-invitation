@@ -11,6 +11,7 @@ import LocationsSection, { VenueLocation } from "./LocationsSection";
 import GallerySection from "./GallerySection";
 import RsvpSection from "./RsvpSection";
 import GlowinnFooter from "./GlowinnFooter";
+import BushOpeningCurtain from "./BushOpeningCurtain";
 import "./GlowinnTemplate.css";
 
 // High-speed CDN video stream with global edge caching
@@ -202,6 +203,15 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
         )}
         <div className="glowinn-fixed-bg__scrim" />
       </div>
+
+      {/* ── THEATRICAL BUSH OPENING CURTAIN ── */}
+      <BushOpeningCurtain
+        coupleNames={effectiveNames}
+        coupleInitials={effectiveInitials}
+        weddingDate={formattedDate}
+        welcomeLine={leadText || "Welcome to the Wedding of"}
+        autoOpenDelay={3000}
+      />
 
       {/* ── NAVIGATION ── */}
       <Navbar coupleNames={effectiveNames} coupleInitials={effectiveInitials} />

@@ -1,0 +1,181 @@
+/* ── THEATRICAL BUSH CURTAIN STAGE ── */
+.glowinn-curtain-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  pointer-events: auto;
+  user-select: none;
+  background: #020603;
+  cursor: pointer;
+}
+
+.glowinn-curtain-stage.is-opening {
+  pointer-events: none;
+}
+
+/* ── FULL SCREEN BUSH WALL BACKGROUND ── */
+.glowinn-curtain-bg-wall {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  will-change: opacity, transform;
+}
+
+.glowinn-curtain-bg-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(2, 6, 3, 0.45) 0%, rgba(2, 6, 3, 0.85) 100%);
+  z-index: 2;
+}
+
+/* ── OVERLAPPING DENSE FOLIAGE PANELS (LEFT & RIGHT) ── */
+.glowinn-curtain-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 68vw;
+  height: 100%;
+  z-index: 3;
+  will-change: transform;
+  filter: brightness(0.78) contrast(1.16) saturate(1.12);
+}
+
+.glowinn-curtain-panel--left {
+  left: 0;
+  transform-origin: left center;
+  filter: brightness(0.78) contrast(1.16) saturate(1.12) drop-shadow(15px 0 35px rgba(0, 0, 0, 0.95));
+}
+
+.glowinn-curtain-panel--right {
+  right: 0;
+  transform-origin: right center;
+  filter: brightness(0.78) contrast(1.16) saturate(1.12) drop-shadow(-15px 0 35px rgba(0, 0, 0, 0.95));
+}
+
+.glowinn-curtain-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── CENTER WELCOME CARD WITH BUSH IMAGE BACKGROUND ── */
+.glowinn-curtain-welcome-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: clamp(24px, 4.5vw, 36px) clamp(20px, 4vw, 40px);
+  border-radius: 28px;
+  /* Direct Bush Image Background with subtle dark overlay for crisp text */
+  background-image: linear-gradient(180deg, rgba(6, 14, 9, 0.5) 0%, rgba(6, 14, 9, 0.78) 100%), url('/templates/glowinn/bush-wall-bg.webp');
+  background-size: cover;
+  background-position: center;
+  border: 1.5px solid rgba(240, 180, 196, 0.45);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(240, 180, 196, 0.25);
+  max-width: 480px;
+  width: calc(100% - 32px);
+  will-change: opacity;
+}
+
+.glowinn-curtain-welcome-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f0b4c4;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+}
+
+.glowinn-curtain-welcome-names {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  line-height: 1.2;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+  margin: 2px 0;
+}
+
+.glowinn-curtain-seal__ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #2a3d31 0%, #101c15 70%, #050a07 100%);
+  border: 2px solid rgba(240, 180, 196, 0.65);
+  box-shadow: 0 0 24px rgba(240, 180, 196, 0.4), 0 6px 20px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 2px 0;
+}
+
+.glowinn-curtain-seal__ring::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  border: 1px dashed rgba(240, 180, 196, 0.4);
+}
+
+.glowinn-curtain-seal__initials {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #f0b4c4;
+  text-shadow: 0 0 10px rgba(240, 180, 196, 0.6);
+  white-space: nowrap;
+}
+
+.glowinn-curtain-welcome-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(10, 18, 13, 0.85);
+  border: 1px solid rgba(240, 180, 196, 0.35);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ── MOBILE RESPONSIVENESS ── */
+@media (max-width: 768px) {
+  .glowinn-curtain-panel {
+    width: 76vw;
+  }
+  .glowinn-curtain-welcome-card {
+    padding: 20px 16px;
+    gap: 10px;
+    max-width: 320px;
+  }
+  .glowinn-curtain-welcome-names {
+    font-size: 22px;
+  }
+  .glowinn-curtain-seal__ring {
+    width: 56px;
+    height: 56px;
+  }
+  .glowinn-curtain-seal__initials {
+    font-size: 13.5px;
+  }
+  .glowinn-curtain-welcome-lead {
+    font-size: 10.5px;
+  }
+}

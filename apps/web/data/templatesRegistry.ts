@@ -82,7 +82,7 @@ export const templatesRegistry: TemplateRegistryItem[] = [
     categoryLabel: "Beauty & Elegance",
     styleTag: "Full-Viewport Video Hero & Moss Glass Cards",
     description: "Deep green sunlit forest video hero with floating pill rail navigation, radiant headline typography, and mossy glass status cards.",
-    previewImage: "/templates/thumbnails/premium-scroll.jpg",
+    previewImage: "/templates/thumbnails/glowinn.webp",
     isPremium: true,
     badgeColor: "bg-[#f0b4c4]/20 text-[#f0b4c4] border-[#f0b4c4]/50",
     themeColor: "#16241b",
