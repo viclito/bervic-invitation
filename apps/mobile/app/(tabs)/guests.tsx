@@ -69,7 +69,7 @@ export default function GuestsScreen() {
 
   const sendWhatsAppInvite = (guest: GuestData) => {
     const inviteUrl = activeInvitation
-      ? `${PRODUCTION_WEB_URL}/${activeInvitation.slug}?code=${guest.uniqueCode || ""}`
+      ? `${PRODUCTION_WEB_URL}/invitations/${activeInvitation.slug}?code=${guest.uniqueCode || ""}`
       : PRODUCTION_WEB_URL;
 
     const message = encodeURIComponent(
@@ -83,9 +83,10 @@ export default function GuestsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
       <ScrollView
-        className="flex-1 px-4 pt-4"
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 150 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

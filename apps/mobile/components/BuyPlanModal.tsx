@@ -194,9 +194,17 @@ export function BuyPlanModal({
   };
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <View style={styles.backdrop}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.backdrop}>
+        {showRazorpayModal && razorpayOrder ? (
+          <RazorpayCheckoutModal
+            visible={showRazorpayModal}
+            orderData={razorpayOrder}
+            onSuccess={handlePaymentSuccess}
+            onFailure={handlePaymentFailure}
+            onClose={() => setShowRazorpayModal(false)}
+          />
+        ) : (
           <View style={styles.modalCard}>
             {/* Header */}
             <View style={styles.headerRow}>
@@ -316,18 +324,9 @@ export function BuyPlanModal({
               </View>
             </ScrollView>
           </View>
-        </View>
-      </Modal>
-
-      {/* In-App Native Razorpay Checkout Modal */}
-      <RazorpayCheckoutModal
-        visible={showRazorpayModal}
-        orderData={razorpayOrder}
-        onSuccess={handlePaymentSuccess}
-        onFailure={handlePaymentFailure}
-        onClose={() => setShowRazorpayModal(false)}
-      />
-    </>
+        )}
+      </View>
+    </Modal>
   );
 }
 

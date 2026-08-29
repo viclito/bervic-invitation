@@ -567,7 +567,12 @@ export function EventEditModal({
             </TouchableOpacity>
           </ScrollView>
 
-          <ScrollView showsVerticalScrollIndicator={false} style={{ marginBottom: 12 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1, marginBottom: 14 }}
+            contentContainerStyle={{ paddingBottom: 28 }}
+            keyboardShouldPersistTaps="handled"
+          >
             {/* ── TAB 1: BASICS & NAMES ── */}
             {activeTab === "basics" && (
               <View>
@@ -1190,14 +1195,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    padding: 24,
-    maxHeight: "94%",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === "ios" ? 36 : 20,
+    height: "90%",
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   headerLeft: {
     flexDirection: "row",
@@ -1231,19 +1238,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabsScrollContainer: {
-    maxHeight: 48,
-    marginBottom: 16,
+    flexGrow: 0,
+    flexShrink: 0,
+    height: 52,
+    minHeight: 52,
+    marginBottom: 14,
   },
   tabsContentContainer: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#F1F5F9",
-    padding: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 5,
     borderRadius: 16,
-    gap: 4,
+    gap: 6,
+    height: 48,
   },
   tabBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    height: 38,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -1253,16 +1266,18 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 3,
     elevation: 2,
   },
   tabText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: "#64748B",
+    lineHeight: 16,
   },
   tabTextActive: {
     color: "#DC2626",
+    fontWeight: "800",
   },
   sectionLabel: {
     fontSize: 11,

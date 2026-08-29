@@ -50,9 +50,11 @@ Every AI agent or developer making changes to this codebase **MUST** strictly ex
 ```
 
 ### 1.1 Pre-Flight Rules (Before Editing)
-1. **Never Assume Code Structure:** Always inspect existing files using `view_file` or code search tools before implementing features.
-2. **Multi-Tenant Boundary Check:** Ensure every database query involving user data strictly filters by `userId` to prevent data leakage across different accounts.
-3. **No Breaking API Contracts:** When altering API routes or Prisma models, locate all invocation sites and update them synchronously.
+1. **Strict Workspace Boundary Isolation (Expo Mobile vs. Website Code):** When implementing, chatting about, altering, or debugging features for the Expo / React Native mobile app (`apps/mobile`), **NEVER touch, edit, or modify website code (`apps/web`)** unless the user explicitly and intentionally directs website changes. Modifying website components, styles, or routes while working on Expo can introduce unexpected regressions on the live production website and disrupt web users. Keep mobile changes strictly isolated within `apps/mobile/`.
+2. **Never Assume Code Structure:** Always inspect existing files using `view_file` or code search tools before implementing features.
+3. **Multi-Tenant Boundary Check:** Ensure every database query involving user data strictly filters by `userId` to prevent data leakage across different accounts.
+4. **No Breaking API Contracts:** When altering API routes or Prisma models, locate all invocation sites and update them synchronously.
+5. **No Dummy / Mock Data:** NEVER insert fake, mock, placeholder, or dummy records into the database or hardcode mock fallback data into hooks/components. The database and client components must only contain and display genuine user and administrator data.
 
 ### 1.2 Post-Execution Verification Commands
 Before marking any chat request or command as complete, run the following verification steps:

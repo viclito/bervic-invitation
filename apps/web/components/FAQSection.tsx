@@ -86,6 +86,15 @@ export default function FAQSection() {
             Have a question that&apos;s not answered here? Reach out to our team at{" "}
             <a href="mailto:support@bervic.app" className="text-[#991B1B] font-semibold underline">
               support@bervic.app
+            </a>{" "}
+            or chat with us on{" "}
+            <a
+              href="https://wa.me/919042127115?text=Hi%20Bervic%2C%20I%20have%20an%20enquiry%20regarding%20digital%20invitations"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#25D366] hover:text-emerald-700 font-bold inline-flex items-center gap-1 underline"
+            >
+              WhatsApp (+91 90421 27115)
             </a>
           </p>
         </div>

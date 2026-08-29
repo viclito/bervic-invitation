@@ -200,7 +200,7 @@ function getTemplateBackground(templateId?: string, templateName?: string, cardD
   };
 }
 
-export const ASPECT_RATIOS = [
+const ASPECT_RATIOS = [
   { id: "classic", name: "Classic (5:7)", shortName: "Classic", width: 480, height: 672, ratioStr: "5:7" },
   { id: "portrait", name: "Story (9:16)", shortName: "Story", width: 420, height: 746, ratioStr: "9:16" },
   { id: "square", name: "Square (1:1)", shortName: "Square", width: 560, height: 560, ratioStr: "1:1" },
@@ -211,7 +211,7 @@ export const ASPECT_RATIOS = [
   { id: "custom", name: "Free Size", shortName: "Free Size", width: 480, height: 672, ratioStr: "Custom" },
 ];
 
-export function getLayerDimensions(
+function getLayerDimensions(
   layer: any,
   baseLayer?: any
 ): { width: number; height: number; ratioStr: string } {
@@ -594,6 +594,306 @@ async function renderOrderItemToDataUrl(
     return { dataUrl, width: canvasW, height: canvasH };
   } catch (err) {
     console.error("renderOrderItemToDataUrl error:", err);
+    return null;
+  }
+}
+
+async function renderOrderSpecificationsToCanvas(
+  details: Record<string, any>,
+  customNotes: string,
+  widthMm: number
+): Promise<{ dataUrl: string; widthMm: number; heightMm: number } | null> {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
+    container.style.width = `${Math.round(widthMm * 3.78)}px`;
+    container.style.backgroundColor = "#FFFFFF";
+    container.style.fontFamily =
+      "'Noto Sans Tamil', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Kannada', 'Noto Sans Gujarati', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif";
+    container.style.color = "#0F172A";
+    container.style.padding = "10px 12px";
+    container.style.borderRadius = "6px";
+    container.style.border = "1.5px solid #CBD5E1";
+    container.style.boxSizing = "border-box";
+
+    const bride = String(details.brideName || details.bride || "").trim();
+    const groom = String(details.groomName || details.groom || "").trim();
+    const brideQual = String(details.brideQualification || "").trim();
+    const groomQual = String(details.groomQualification || "").trim();
+    const brideReg = String(details.brideNameRegional || "").trim();
+    const groomReg = String(details.groomNameRegional || "").trim();
+
+    const brideParents = String(details.brideParents || "").trim();
+    const groomParents = String(details.groomParents || "").trim();
+    const brideParentsReg = String(details.brideParentsRegional || "").trim();
+    const groomParentsReg = String(details.groomParentsRegional || "").trim();
+
+    const brideAddress = String(details.brideAddress || "").trim();
+    const groomAddress = String(details.groomAddress || "").trim();
+    const brideAddressReg = String(details.brideAddressRegional || "").trim();
+    const groomAddressReg = String(details.groomAddressRegional || "").trim();
+
+    const eventDate = String(details.eventDate || details.date || "").trim();
+    const eventDateReg = String(details.eventDateRegional || "").trim();
+    const eventTime = String(details.eventTime || details.time || "").trim();
+    const eventTimeReg = String(details.eventTimeRegional || "").trim();
+
+    const rsvp = String(details.rsvpContact || details.rsvp || "").trim();
+    const rsvpReg = String(details.rsvpContactRegional || "").trim();
+    const notes = String(details.specialInstructions || "").trim();
+    const notesReg = String(details.specialInstructionsRegional || "").trim();
+
+    const paperType = String(details.paperType || "").trim();
+    const dimensions = String(details.dimensions || "").trim();
+    const langName = String(details.languageName || "").trim();
+    const langNative = String(details.languageNativeName || "").trim();
+    const langMode = String(details.languageMode || "").trim();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const venues: Array<any> =
+      Array.isArray(details.venues) && details.venues.length > 0
+        ? details.venues
+        : details.venue || details.primaryVenue
+        ? [
+            {
+              name: String(details.primaryVenue || details.venue),
+              address: String(details.city || ""),
+              functionType: "Wedding & Reception",
+              time: eventTime,
+            },
+          ]
+        : [];
+
+    const hasRegional = Boolean(
+      brideReg ||
+        groomReg ||
+        brideParentsReg ||
+        groomParentsReg ||
+        eventDateReg ||
+        eventTimeReg ||
+        rsvpReg ||
+        notesReg ||
+        venues.some((v) => v.nameRegional || v.addressRegional)
+    );
+
+    let html = `
+      <div style="margin-bottom: 8px; border-bottom: 1.5px solid #991B1B; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; font-weight: 800; color: #991B1B; text-transform: uppercase; letter-spacing: 0.5px;">
+          Special Requirements &amp; Multi-Language Invitation Content
+        </span>
+        ${
+          langName
+            ? `<span style="font-size: 10px; font-weight: 700; color: #047857; background: #ECFDF5; padding: 2px 8px; border-radius: 9999px; border: 1px solid #A7F3D0;">${
+                langNative || langName
+              } (${langMode === "REGIONAL_ONLY" ? "Regional Only" : "Dual Script"})</span>`
+            : ""
+        }
+      </div>
+    `;
+
+    // 🇬🇧 SECTION 1: ENGLISH SPECIFICATIONS
+    html += `
+      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 10px; margin-bottom: ${
+        hasRegional ? "8px" : "0px"
+      }; font-size: 10px; line-height: 1.5;">
+        <div style="font-weight: 800; color: #1E293B; font-size: 10.5px; border-bottom: 1px solid #E2E8F0; padding-bottom: 3px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+          <span>English Invitation Content</span>
+          ${
+            paperType
+              ? `<span style="font-weight: 600; color: #991B1B;">${paperType}${
+                  dimensions ? ` &bull; ${dimensions}` : ""
+                }</span>`
+              : ""
+          }
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px;">
+          <div><strong style="color: #64748B;">Couple:</strong> <span style="font-weight: 700; color: #0F172A;">${
+            groom ? `${groom}${groomQual ? ` (${groomQual})` : ""}` : ""
+          }${groom && bride ? " &amp; " : ""}${
+      bride ? `${bride}${brideQual ? ` (${brideQual})` : ""}` : ""
+    }</span></div>
+          <div><strong style="color: #64748B;">Date &amp; Time:</strong> <span style="font-weight: 700; color: #0F172A;">${
+            eventDate || "N/A"
+          }${eventTime ? ` &bull; ${eventTime}` : ""}</span></div>
+        </div>
+        ${
+          groomParents || brideParents || groomAddress || brideAddress
+            ? `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #E2E8F0;">
+            ${
+              groomParents || groomAddress
+                ? `<div><strong style="color: #64748B;">Groom's Family:</strong> ${
+                    groomParents ? `Parents: <strong>${groomParents}</strong>` : ""
+                  }${groomAddress ? ` | House: ${groomAddress}` : ""}</div>`
+                : "<div></div>"
+            }
+            ${
+              brideParents || brideAddress
+                ? `<div><strong style="color: #64748B;">Bride's Family:</strong> ${
+                    brideParents ? `Parents: <strong>${brideParents}</strong>` : ""
+                  }${brideAddress ? ` | House: ${brideAddress}` : ""}</div>`
+                : "<div></div>"
+            }
+          </div>
+        `
+            : ""
+        }
+        ${
+          venues.length > 0
+            ? `
+          <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #E2E8F0;">
+            <strong style="color: #64748B;">Venues &amp; Functions:</strong>
+            ${venues
+              .map(
+                (v) => `
+              <div style="margin-top: 2px; padding-left: 8px;">
+                &bull; <strong style="color: #0F172A;">${v.name || "Venue"}</strong>${
+                  v.address ? `, ${v.address}` : ""
+                } <span style="color: #991B1B; font-weight: 600;">(${v.functionType || "Function"}${
+                  v.time ? ` - ${v.time}` : ""
+                })</span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        `
+            : ""
+        }
+        ${
+          rsvp || notes
+            ? `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #E2E8F0;">
+            ${
+              rsvp
+                ? `<div><strong style="color: #64748B;">RSVP:</strong> <strong style="color: #0F172A;">${rsvp}</strong></div>`
+                : "<div></div>"
+            }
+            ${
+              notes
+                ? `<div><strong style="color: #64748B;">Notes:</strong> <span style="color: #0F172A;">${notes}</span></div>`
+                : "<div></div>"
+            }
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
+    // 🇮🇳 SECTION 2: REGIONAL SCRIPT CONTENT (தமிழ் / Regional Language)
+    if (hasRegional) {
+      html += `
+        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 6px; padding: 8px 10px; font-size: 10px; line-height: 1.5;">
+          <div style="font-weight: 800; color: #14532D; font-size: 10.5px; border-bottom: 1px solid #BBF7D0; padding-bottom: 3px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+            <span>${langNative || langName || "Regional Language"} Content (${
+        langNative || "வடிவம்"
+      })</span>
+            <span style="font-weight: 700; color: #15803D;">Verified Regional Translation</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px;">
+            <div><strong style="color: #15803D;">Couple (${langNative || "Regional"}):</strong> <span style="font-weight: 700; color: #052E16;">${
+        groomReg || ""
+      }${groomReg && brideReg ? " &amp; " : ""}${brideReg || ""}</span></div>
+            <div><strong style="color: #15803D;">Date &amp; Time (${langNative || "Regional"}):</strong> <span style="font-weight: 700; color: #052E16;">${
+        eventDateReg || "N/A"
+      }${eventTimeReg ? ` &bull; ${eventTimeReg}` : ""}</span></div>
+          </div>
+          ${
+            groomParentsReg || brideParentsReg || groomAddressReg || brideAddressReg
+              ? `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #BBF7D0;">
+              ${
+                groomParentsReg || groomAddressReg
+                  ? `<div><strong style="color: #15803D;">Groom's Family (${langNative || "Reg"}):</strong> ${
+                      groomParentsReg ? `Parents: <strong>${groomParentsReg}</strong>` : ""
+                    }${groomAddressReg ? ` | House: ${groomAddressReg}` : ""}</div>`
+                  : "<div></div>"
+              }
+              ${
+                brideParentsReg || brideAddressReg
+                  ? `<div><strong style="color: #15803D;">Bride's Family (${langNative || "Reg"}):</strong> ${
+                      brideParentsReg ? `Parents: <strong>${brideParentsReg}</strong>` : ""
+                    }${brideAddressReg ? ` | House: ${brideAddressReg}` : ""}</div>`
+                  : "<div></div>"
+              }
+            </div>
+          `
+              : ""
+          }
+          ${
+            venues.some((v) => v.nameRegional || v.addressRegional || v.functionTypeRegional)
+              ? `
+            <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #BBF7D0;">
+              <strong style="color: #15803D;">Venues &amp; Functions (${langNative || "Regional"}):</strong>
+              ${venues
+                .map((v) => {
+                  if (!v.nameRegional && !v.addressRegional && !v.functionTypeRegional) return "";
+                  return `
+                    <div style="margin-top: 2px; padding-left: 8px;">
+                      &bull; <strong style="color: #052E16;">${v.nameRegional || v.name}</strong>${
+                    v.addressRegional || v.address ? `, ${v.addressRegional || v.address}` : ""
+                  } <span style="color: #15803D; font-weight: 600;">(${
+                    v.functionTypeRegional || v.functionType || "Function"
+                  }${v.time ? ` - ${v.time}` : ""})</span>
+                    </div>
+                  `;
+                })
+                .filter(Boolean)
+                .join("")}
+            </div>
+          `
+              : ""
+          }
+          ${
+            rsvpReg || notesReg
+              ? `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #BBF7D0;">
+              ${
+                rsvpReg
+                  ? `<div><strong style="color: #15803D;">RSVP (${langNative || "Reg"}):</strong> <strong style="color: #052E16;">${rsvpReg}</strong></div>`
+                  : "<div></div>"
+              }
+              ${
+                notesReg
+                  ? `<div><strong style="color: #15803D;">Notes (${langNative || "Reg"}):</strong> <span style="color: #052E16;">${notesReg}</span></div>`
+                  : "<div></div>"
+              }
+            </div>
+          `
+              : ""
+          }
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(container, {
+      scale: 2.5,
+      useCORS: true,
+      backgroundColor: "#FFFFFF",
+      logging: false,
+    });
+
+    document.body.removeChild(container);
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const heightMm = (canvas.height / canvas.width) * widthMm;
+
+    return {
+      dataUrl,
+      widthMm,
+      heightMm,
+    };
+  } catch (err) {
+    console.error("renderOrderSpecificationsToCanvas error:", err);
     return null;
   }
 }
@@ -1033,7 +1333,8 @@ export default function AdminOrderDetailPage() {
 
       currentY += 8;
 
-      order.items.forEach((item, idx) => {
+      for (let idx = 0; idx < order.items.length; idx++) {
+        const item = order.items[idx];
         let details: any = {};
         try {
           details = JSON.parse(item.cardDetailsJson || "{}");
@@ -1072,85 +1373,14 @@ export default function AdminOrderDetailPage() {
         doc.setTextColor(153, 27, 27);
         doc.text(`${item.copies} Copies`, margin + 150, currentY + 7.5);
 
-        currentY += 12;
+        currentY += 10;
 
-        if (item.customNotes) {
-          const parts = item.customNotes
-            .split(/[|\n]/)
-            .map((p) => p.trim())
-            .filter(Boolean);
-
-          const parsedList = parts.map((part) => {
-            const colonIdx = part.indexOf(":");
-            if (colonIdx > 0) {
-              const key = part.slice(0, colonIdx).trim();
-              const val = part.slice(colonIdx + 1).trim();
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(9.5);
-              const keyW = doc.getTextWidth(`• ${key}: `);
-              doc.setFont("helvetica", "normal");
-              const remainingW = Math.max(45, contentWidth - 14 - keyW);
-              const valLines = doc.splitTextToSize(val, remainingW);
-              return { key, val, lines: valLines };
-            }
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(9.5);
-            return { key: "", val: part, lines: doc.splitTextToSize(part, contentWidth - 14) };
-          });
-
-          let p1ContentHeight = 0;
-          parsedList.forEach((n) => {
-            p1ContentHeight += Math.max(1, n.lines.length) * 5.2 + 1.2;
-          });
-          const noteBoxHeight = 8 + p1ContentHeight;
-
-          // Pure White Background with crisp border
-          doc.setFillColor(255, 255, 255);
-          doc.setDrawColor(203, 213, 225);
-          doc.rect(margin, currentY, contentWidth, noteBoxHeight, "FD");
-
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(9.5);
-          doc.setTextColor(153, 27, 27);
-          doc.text("Special Requirements / Custom Notes:", margin + 5, currentY + 5.5);
-
-          let p1NoteY = currentY + 11;
-          const p1StartX = margin + 5;
-
-          parsedList.forEach((n) => {
-            if (n.key) {
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              const keyPrefix = `• ${n.key}: `;
-              doc.text(keyPrefix, p1StartX, p1NoteY);
-              const keyW = doc.getTextWidth(keyPrefix);
-
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              if (n.lines.length > 0) {
-                doc.text(n.lines[0], p1StartX + keyW, p1NoteY);
-                for (let l = 1; l < n.lines.length; l++) {
-                  p1NoteY += 5.0;
-                  doc.text(n.lines[l], p1StartX + keyW, p1NoteY);
-                }
-              }
-            } else {
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              n.lines.forEach((lStr: string, lIdx: number) => {
-                if (lIdx > 0) p1NoteY += 5.0;
-                doc.text(`• ${lStr}`, p1StartX, p1NoteY);
-              });
-            }
-            p1NoteY += 5.4;
-          });
-
-          currentY += noteBoxHeight + 2;
+        const specImg = await renderOrderSpecificationsToCanvas(details, item.customNotes || "", contentWidth);
+        if (specImg && specImg.dataUrl) {
+          doc.addImage(specImg.dataUrl, "PNG", margin, currentY, contentWidth, specImg.heightMm, undefined, "FAST");
+          currentY += specImg.heightMm + 4;
         }
-      });
+      }
 
       currentY += 6;
 
@@ -1468,50 +1698,13 @@ export default function AdminOrderDetailPage() {
           doc.text(doc.splitTextToSize(rsvpContact || "N/A", 55)[0] || "N/A", specCol2X + 28, lineY);
 
           // Custom Notes Section (on sheet 1)
-          if (sIdx === 0 && parsedNotesList.length > 0) {
-            lineY += 6.5;
-            doc.setFillColor(255, 255, 255);
-            doc.setDrawColor(203, 213, 225);
-            doc.roundedRect(margin + 3, lineY, contentWidth - 6, noteBoxHeight, 1.5, 1.5, "FD");
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(8.5);
-            doc.setTextColor(153, 27, 27);
-            doc.text("Special Requirements / Customer Notes:", margin + 6, lineY + 5.0);
-
-            let currentNoteY = lineY + 10;
-            const noteStartX = margin + 6;
-
-            parsedNotesList.forEach((n) => {
-              if (n.key) {
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                const keyPrefix = `• ${n.key}: `;
-                doc.text(keyPrefix, noteStartX, currentNoteY);
-                const keyW = doc.getTextWidth(keyPrefix);
-
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                if (n.lines.length > 0) {
-                  doc.text(n.lines[0], noteStartX + keyW, currentNoteY);
-                  for (let l = 1; l < n.lines.length; l++) {
-                    currentNoteY += 4.6;
-                    doc.text(n.lines[l], noteStartX + keyW, currentNoteY);
-                  }
-                }
-              } else {
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                n.lines.forEach((lStr: string, lIdx: number) => {
-                  if (lIdx > 0) currentNoteY += 4.6;
-                  doc.text(`• ${lStr}`, noteStartX, currentNoteY);
-                });
-              }
-              currentNoteY += 4.8;
-            });
+          if (sIdx === 0) {
+            lineY += 4.0;
+            const specNotesImg = await renderOrderSpecificationsToCanvas(details, item.customNotes || "", contentWidth - 6);
+            if (specNotesImg && specNotesImg.dataUrl) {
+              doc.addImage(specNotesImg.dataUrl, "PNG", margin + 3, lineY, contentWidth - 6, Math.min(65, specNotesImg.heightMm), undefined, "FAST");
+              lineY += Math.min(65, specNotesImg.heightMm) + 2;
+            }
           }
 
           // Page Footer
@@ -1726,7 +1919,8 @@ export default function AdminOrderDetailPage() {
 
       currentY += 8;
 
-      order.items.forEach((item, idx) => {
+      for (let idx = 0; idx < order.items.length; idx++) {
+        const item = order.items[idx];
         let details: any = {};
         try {
           details = JSON.parse(item.cardDetailsJson || "{}");
@@ -1765,87 +1959,14 @@ export default function AdminOrderDetailPage() {
         doc.setTextColor(153, 27, 27);
         doc.text(`${item.copies} Copies`, margin + 150, currentY + 7.5);
 
-        currentY += 12;
+        currentY += 10;
 
-        if (item.customNotes) {
-          const parts = item.customNotes
-            .split(/[|\n]/)
-            .map((p) => p.trim())
-            .filter(Boolean);
-
-          const parsedList = parts.map((part) => {
-            const colonIdx = part.indexOf(":");
-            if (colonIdx > 0) {
-              const key = part.slice(0, colonIdx).trim();
-              const val = part.slice(colonIdx + 1).trim();
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(9.5);
-              const keyW = doc.getTextWidth(`• ${key}: `);
-              doc.setFont("helvetica", "normal");
-              const remainingW = Math.max(45, contentWidth - 14 - keyW);
-              const valLines = doc.splitTextToSize(val, remainingW);
-              return { key, val, lines: valLines };
-            }
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(9.5);
-            return { key: "", val: part, lines: doc.splitTextToSize(part, contentWidth - 14) };
-          });
-
-          let p1ContentHeight = 0;
-          parsedList.forEach((n) => {
-            p1ContentHeight += Math.max(1, n.lines.length) * 5.2 + 1.2;
-          });
-          const noteBoxHeight = 8 + p1ContentHeight;
-
-          // Pure White background with clean border
-          doc.setFillColor(255, 255, 255);
-          doc.setDrawColor(203, 213, 225);
-          doc.rect(margin, currentY, contentWidth, noteBoxHeight, "FD");
-
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(9.5);
-          doc.setTextColor(153, 27, 27);
-          doc.text("Special Requirements / Custom Notes:", margin + 5, currentY + 5.5);
-
-          let p1NoteY = currentY + 11;
-          const p1StartX = margin + 5;
-
-          parsedList.forEach((n) => {
-            if (n.key) {
-              // Key: Bold, Black
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              const keyPrefix = `• ${n.key}: `;
-              doc.text(keyPrefix, p1StartX, p1NoteY);
-              const keyW = doc.getTextWidth(keyPrefix);
-
-              // Value: Normal, Black
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              if (n.lines.length > 0) {
-                doc.text(n.lines[0], p1StartX + keyW, p1NoteY);
-                for (let l = 1; l < n.lines.length; l++) {
-                  p1NoteY += 5.0;
-                  doc.text(n.lines[l], p1StartX + keyW, p1NoteY);
-                }
-              }
-            } else {
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(9.5);
-              doc.setTextColor(15, 23, 42); // Black
-              n.lines.forEach((lStr: string, lIdx: number) => {
-                if (lIdx > 0) p1NoteY += 5.0;
-                doc.text(`• ${lStr}`, p1StartX, p1NoteY);
-              });
-            }
-            p1NoteY += 5.4;
-          });
-
-          currentY += noteBoxHeight + 2;
+        const specImg = await renderOrderSpecificationsToCanvas(details, item.customNotes || "", contentWidth);
+        if (specImg && specImg.dataUrl) {
+          doc.addImage(specImg.dataUrl, "PNG", margin, currentY, contentWidth, specImg.heightMm, undefined, "FAST");
+          currentY += specImg.heightMm + 4;
         }
-      });
+      }
 
       currentY += 6;
 
@@ -2161,50 +2282,13 @@ export default function AdminOrderDetailPage() {
           doc.text(doc.splitTextToSize(rsvpContact || "N/A", 55)[0] || "N/A", specCol2X + 28, lineY);
 
           // Custom Notes Section (on sheet 1)
-          if (sIdx === 0 && parsedNotesList.length > 0) {
-            lineY += 6.5;
-            doc.setFillColor(255, 255, 255);
-            doc.setDrawColor(203, 213, 225);
-            doc.roundedRect(margin + 3, lineY, contentWidth - 6, noteBoxHeight, 1.5, 1.5, "FD");
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(8.5);
-            doc.setTextColor(153, 27, 27);
-            doc.text("Special Requirements / Customer Notes:", margin + 6, lineY + 5.0);
-
-            let currentNoteY = lineY + 10;
-            const noteStartX = margin + 6;
-
-            parsedNotesList.forEach((n) => {
-              if (n.key) {
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                const keyPrefix = `• ${n.key}: `;
-                doc.text(keyPrefix, noteStartX, currentNoteY);
-                const keyW = doc.getTextWidth(keyPrefix);
-
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                if (n.lines.length > 0) {
-                  doc.text(n.lines[0], noteStartX + keyW, currentNoteY);
-                  for (let l = 1; l < n.lines.length; l++) {
-                    currentNoteY += 4.6;
-                    doc.text(n.lines[l], noteStartX + keyW, currentNoteY);
-                  }
-                }
-              } else {
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8.5);
-                doc.setTextColor(15, 23, 42); // Black
-                n.lines.forEach((lStr: string, lIdx: number) => {
-                  if (lIdx > 0) currentNoteY += 4.6;
-                  doc.text(`• ${lStr}`, noteStartX, currentNoteY);
-                });
-              }
-              currentNoteY += 4.8;
-            });
+          if (sIdx === 0) {
+            lineY += 4.0;
+            const specNotesImg = await renderOrderSpecificationsToCanvas(details, item.customNotes || "", contentWidth - 6);
+            if (specNotesImg && specNotesImg.dataUrl) {
+              doc.addImage(specNotesImg.dataUrl, "PNG", margin + 3, lineY, contentWidth - 6, Math.min(65, specNotesImg.heightMm), undefined, "FAST");
+              lineY += Math.min(65, specNotesImg.heightMm) + 2;
+            }
           }
 
           // Page Footer
@@ -2488,17 +2572,32 @@ export default function AdminOrderDetailPage() {
 
                   const brideName = String(parsedDetails.brideName || parsedDetails.bride || "").trim();
                   const groomName = String(parsedDetails.groomName || parsedDetails.groom || "").trim();
+                  const brideNameRegional = String(parsedDetails.brideNameRegional || "").trim();
+                  const groomNameRegional = String(parsedDetails.groomNameRegional || "").trim();
                   const brideQual = String(parsedDetails.brideQualification || "").trim();
                   const groomQual = String(parsedDetails.groomQualification || "").trim();
                   const brideParents = String(parsedDetails.brideParents || "").trim();
                   const groomParents = String(parsedDetails.groomParents || "").trim();
+                  const brideParentsRegional = String(parsedDetails.brideParentsRegional || "").trim();
+                  const groomParentsRegional = String(parsedDetails.groomParentsRegional || "").trim();
                   const brideAddress = String(parsedDetails.brideAddress || "").trim();
                   const groomAddress = String(parsedDetails.groomAddress || "").trim();
+                  const brideAddressRegional = String(parsedDetails.brideAddressRegional || "").trim();
+                  const groomAddressRegional = String(parsedDetails.groomAddressRegional || "").trim();
+                  const cardLanguage = String(parsedDetails.cardLanguage || "").trim();
+                  const languageName = String(parsedDetails.languageName || "").trim();
+                  const languageNativeName = String(parsedDetails.languageNativeName || "").trim();
+                  const languageMode = String(parsedDetails.languageMode || "").trim();
 
                   const eventDate = String(parsedDetails.eventDate || parsedDetails.date || "").trim();
+                  const eventDateRegional = String(parsedDetails.eventDateRegional || "").trim();
                   const eventTime = String(parsedDetails.eventTime || parsedDetails.time || "").trim();
+                  const eventTimeRegional = String(parsedDetails.eventTimeRegional || "").trim();
                   const paperType = String(parsedDetails.paperType || "").trim();
                   const rsvpContact = String(parsedDetails.rsvpContact || parsedDetails.rsvp || "").trim();
+                  const rsvpContactRegional = String(parsedDetails.rsvpContactRegional || "").trim();
+                  const specialInstructions = String(parsedDetails.specialInstructions || item.customNotes || "").trim();
+                  const specialInstructionsRegional = String(parsedDetails.specialInstructionsRegional || "").trim();
 
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const venuesList: Array<any> =
@@ -2600,9 +2699,16 @@ export default function AdminOrderDetailPage() {
                             <span>Edit in Canva Studio</span>
                           </Link>
 
-                          <span className="px-3 py-1 rounded-full bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
-                            {item.copies} Copies Requested
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {languageName && (
+                              <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200">
+                                🇮🇳 {languageNativeName || languageName} ({languageMode === "REGIONAL_ONLY" ? "Regional Only" : "Dual Script"})
+                              </span>
+                            )}
+                            <span className="px-3 py-1 rounded-full bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
+                              {item.copies} Copies Requested
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -2616,89 +2722,93 @@ export default function AdminOrderDetailPage() {
                         />
 
                         {/* Details parsed */}
-                        <div className="flex-1 space-y-2.5 text-xs">
-                          <div className="space-y-2.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                            {/* Couple Details */}
-                            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-slate-100 pb-2">
+                        <div className="flex-1 space-y-3 text-xs">
+                          {/* 🇬🇧 SECTION 1: ENGLISH SPECIFICATIONS */}
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                              <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                                <span className="text-sm">🇬🇧</span>
+                                <span className="uppercase tracking-wider">English Invitation Content</span>
+                              </div>
+                              {paperType && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-50 text-[#991B1B] font-bold text-[11px] border border-red-100">
+                                  📄 {paperType}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              {/* Couple */}
                               <div>
-                                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Couple / Celebrants</span>
-                                <div className="text-sm font-bold text-slate-900 flex flex-wrap items-baseline gap-1.5 mt-0.5">
+                                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Couple / Celebrants (English)</span>
+                                <div className="text-sm font-bold text-slate-900 flex flex-wrap items-baseline gap-1 mt-0.5">
                                   {groomName && (
                                     <span>
                                       {groomName}
                                       {groomQual && <span className="font-normal text-xs text-slate-500 ml-1">({groomQual})</span>}
                                     </span>
                                   )}
-                                  {groomName && brideName && <span className="text-[#991B1B] font-extrabold">&amp;</span>}
+                                  {groomName && brideName && <span className="text-[#991B1B] font-extrabold mx-0.5">&amp;</span>}
                                   {brideName && (
                                     <span>
                                       {brideName}
                                       {brideQual && <span className="font-normal text-xs text-slate-500 ml-1">({brideQual})</span>}
                                     </span>
                                   )}
-                                  {!groomName && !brideName && <span className="text-slate-500 font-medium">Card Design Item</span>}
+                                  {!groomName && !brideName && <span className="text-slate-400 font-medium">Not specified</span>}
                                 </div>
                               </div>
-                              {paperType && (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-50 text-[#991B1B] font-bold text-[11px] border border-red-100 self-start sm:self-auto">
-                                  📄 {paperType}
-                                </span>
-                              )}
+
+                              {/* Date & Time */}
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Event Date &amp; Timing (English)</span>
+                                <p className="font-bold text-slate-900 mt-0.5">
+                                  {eventDate ? (
+                                    <span>
+                                      {eventDate} {eventTime && <span className="font-medium text-slate-600">&bull; {eventTime}</span>}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400 font-medium">Date not specified</span>
+                                  )}
+                                </p>
+                              </div>
                             </div>
 
-                            {/* Event Date, Time & RSVP */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                              {eventDate && (
-                                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                  <span className="text-[10px] font-bold text-slate-400 block uppercase">Event Date &amp; Time</span>
-                                  <span className="font-bold text-slate-900">
-                                    {eventDate} {eventTime && <span className="font-medium text-slate-600">&bull; {eventTime}</span>}
-                                  </span>
-                                </div>
-                              )}
-                              {rsvpContact && (
-                                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                  <span className="text-[10px] font-bold text-slate-400 block uppercase">RSVP / Contact Phone</span>
-                                  <span className="font-bold text-slate-900">{rsvpContact}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Parents / Family Details */}
+                            {/* Parents Details in English */}
                             {(groomParents || brideParents || groomAddress || brideAddress) && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
                                 {(groomParents || groomAddress) && (
-                                  <div className="bg-slate-50/70 p-2 rounded-xl border border-slate-100">
-                                    <span className="text-[10px] font-bold text-slate-500 block uppercase">Groom&apos;s Family</span>
-                                    {groomParents && <p className="font-medium text-slate-900">Parents: <strong>{groomParents}</strong></p>}
-                                    {groomAddress && <p className="text-slate-600 text-[11px]">Native: {groomAddress}</p>}
+                                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Groom&apos;s Family (English)</span>
+                                    {groomParents && <p className="text-slate-900 font-medium">Parents: <strong>{groomParents}</strong></p>}
+                                    {groomAddress && <p className="text-slate-600 text-[11px]">House / Native: {groomAddress}</p>}
                                   </div>
                                 )}
                                 {(brideParents || brideAddress) && (
-                                  <div className="bg-red-50/40 p-2 rounded-xl border border-red-100">
-                                    <span className="text-[10px] font-bold text-[#991B1B] block uppercase">Bride&apos;s Family</span>
-                                    {brideParents && <p className="font-medium text-slate-900">Parents: <strong>{brideParents}</strong></p>}
-                                    {brideAddress && <p className="text-slate-600 text-[11px]">Native: {brideAddress}</p>}
+                                  <div className="bg-red-50/40 p-2.5 rounded-xl border border-red-100 space-y-0.5">
+                                    <span className="text-[10px] font-bold text-[#991B1B] uppercase block">Bride&apos;s Family (English)</span>
+                                    {brideParents && <p className="text-slate-900 font-medium">Parents: <strong>{brideParents}</strong></p>}
+                                    {brideAddress && <p className="text-slate-600 text-[11px]">House / Native: {brideAddress}</p>}
                                   </div>
                                 )}
                               </div>
                             )}
 
-                            {/* Functions & Venues List */}
+                            {/* Venues in English */}
                             {venuesList.length > 0 && (
-                              <div className="space-y-1.5 pt-1 border-t border-slate-100">
-                                <span className="text-[10px] font-bold text-slate-400 block uppercase">
-                                  {venuesList.length > 1 ? `Functions & Venues (${venuesList.length})` : "Venue / Location"}
+                              <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                                  {venuesList.length > 1 ? `Venues & Functions (${venuesList.length}) - English` : "Venue & Function (English)"}
                                 </span>
                                 <div className="space-y-1.5">
                                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                   {venuesList.map((v: any, vI: number) => (
-                                    <div key={vI} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                    <div key={vI} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                                       <div>
-                                        <span className="font-bold text-slate-900 text-xs">{v.name || "Venue Name"}</span>
+                                        <span className="font-bold text-slate-900">{v.name || "Venue Name"}</span>
                                         {v.address && <span className="text-slate-500 text-xs ml-1">({v.address})</span>}
                                       </div>
-                                      <div className="flex items-center gap-2 text-[11px] text-[#991B1B] font-bold">
+                                      <div className="flex items-center gap-2 text-[11px] text-[#991B1B] font-bold shrink-0">
                                         {v.functionType && <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">{v.functionType}</span>}
                                         {v.time && <span>{v.time}</span>}
                                       </div>
@@ -2707,7 +2817,135 @@ export default function AdminOrderDetailPage() {
                                 </div>
                               </div>
                             )}
+
+                            {/* RSVP & Notes in English */}
+                            {(rsvpContact || specialInstructions) && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+                                {rsvpContact && (
+                                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase block">RSVP / Contact (English)</span>
+                                    <span className="font-bold text-slate-900">{rsvpContact}</span>
+                                  </div>
+                                )}
+                                {specialInstructions && (
+                                  <div className="bg-amber-50/50 p-2 rounded-xl border border-amber-200/60">
+                                    <span className="text-[10px] font-bold text-amber-800 uppercase block">Special Notes (English)</span>
+                                    <span className="font-medium text-slate-900">{specialInstructions}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
+
+                          {/* 🇮🇳 SECTION 2: REGIONAL SCRIPT (தமிழ் வடிவம் / Regional Language) */}
+                          {(groomNameRegional || brideNameRegional || groomParentsRegional || brideParentsRegional || eventDateRegional || eventTimeRegional || specialInstructionsRegional || rsvpContactRegional || venuesList.some((v) => v.nameRegional || v.addressRegional)) && (
+                            <div className="bg-emerald-50/60 p-4 rounded-2xl border-2 border-emerald-200/90 shadow-2xs space-y-3">
+                              <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2.5">
+                                <div className="flex items-center gap-2 font-bold text-emerald-950 text-xs">
+                                  <span className="text-sm">🇮🇳</span>
+                                  <span className="uppercase tracking-wider">{languageNativeName || languageName || "Regional Language"} Content</span>
+                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-300">
+                                    {languageNativeName || languageName} Script
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-bold text-emerald-800">
+                                  {languageMode === "REGIONAL_ONLY" ? "Regional Only Mode" : "Dual Script Mode"}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                {/* Couple in Regional */}
+                                <div>
+                                  <span className="text-[10px] font-bold text-emerald-700 block uppercase tracking-wider">Couple / Celebrants ({languageNativeName || "Regional"})</span>
+                                  <div className="text-sm font-bold text-emerald-950 flex flex-wrap items-baseline gap-1 mt-0.5">
+                                    {groomNameRegional && <span>{groomNameRegional}</span>}
+                                    {groomNameRegional && brideNameRegional && <span className="text-emerald-700 mx-1">&amp;</span>}
+                                    {brideNameRegional && <span>{brideNameRegional}</span>}
+                                    {!groomNameRegional && !brideNameRegional && <span className="text-emerald-600 font-medium">Not specified</span>}
+                                  </div>
+                                </div>
+
+                                {/* Date & Time in Regional */}
+                                <div>
+                                  <span className="text-[10px] font-bold text-emerald-700 block uppercase tracking-wider">Event Date &amp; Timing ({languageNativeName || "Regional"})</span>
+                                  <p className="font-bold text-emerald-950 mt-0.5">
+                                    {eventDateRegional ? (
+                                      <span>
+                                        {eventDateRegional} {eventTimeRegional && <span className="font-medium text-emerald-800">&bull; {eventTimeRegional}</span>}
+                                      </span>
+                                    ) : (
+                                      <span className="text-emerald-600 font-medium">Date not specified</span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Parents Details in Regional */}
+                              {(groomParentsRegional || brideParentsRegional || groomAddressRegional || brideAddressRegional) && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-emerald-200/60">
+                                  {(groomParentsRegional || groomAddressRegional) && (
+                                    <div className="bg-white p-2.5 rounded-xl border border-emerald-200 space-y-0.5">
+                                      <span className="text-[10px] font-bold text-emerald-800 uppercase block">Groom&apos;s Family ({languageNativeName || "Regional"})</span>
+                                      {groomParentsRegional && <p className="text-emerald-950 font-bold">Parents: <strong>{groomParentsRegional}</strong></p>}
+                                      {groomAddressRegional && <p className="text-emerald-800 text-[11px]">House / Native: {groomAddressRegional}</p>}
+                                    </div>
+                                  )}
+                                  {(brideParentsRegional || brideAddressRegional) && (
+                                    <div className="bg-white p-2.5 rounded-xl border border-emerald-200 space-y-0.5">
+                                      <span className="text-[10px] font-bold text-emerald-800 uppercase block">Bride&apos;s Family ({languageNativeName || "Regional"})</span>
+                                      {brideParentsRegional && <p className="text-emerald-950 font-bold">Parents: <strong>{brideParentsRegional}</strong></p>}
+                                      {brideAddressRegional && <p className="text-emerald-800 text-[11px]">House / Native: {brideAddressRegional}</p>}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Venues in Regional */}
+                              {venuesList.some((v) => v.nameRegional || v.addressRegional || v.functionTypeRegional) && (
+                                <div className="pt-2 border-t border-emerald-200/60 space-y-1.5">
+                                  <span className="text-[10px] font-bold text-emerald-700 uppercase block">
+                                    Venues &amp; Functions ({languageNativeName || "Regional"})
+                                  </span>
+                                  <div className="space-y-1.5">
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    {venuesList.map((v: any, vI: number) => {
+                                      if (!v.nameRegional && !v.addressRegional && !v.functionTypeRegional) return null;
+                                      return (
+                                        <div key={vI} className="bg-white p-2.5 rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                                          <div>
+                                            <span className="font-bold text-emerald-950">{v.nameRegional || v.name}</span>
+                                            {(v.addressRegional || v.address) && <span className="text-emerald-700 text-xs ml-1">({v.addressRegional || v.address})</span>}
+                                          </div>
+                                          <div className="flex items-center gap-2 text-[11px] text-emerald-900 font-bold shrink-0">
+                                            {v.functionTypeRegional && <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800">{v.functionTypeRegional}</span>}
+                                            {v.time && <span>{v.time}</span>}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* RSVP & Notes in Regional */}
+                              {(rsvpContactRegional || specialInstructionsRegional) && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-emerald-200/60 text-xs">
+                                  {rsvpContactRegional && (
+                                    <div className="bg-white p-2 rounded-xl border border-emerald-200">
+                                      <span className="text-[10px] font-bold text-emerald-700 uppercase block">RSVP / Contact ({languageNativeName || "Regional"})</span>
+                                      <span className="font-bold text-emerald-950">{rsvpContactRegional}</span>
+                                    </div>
+                                  )}
+                                  {specialInstructionsRegional && (
+                                    <div className="bg-white p-2 rounded-xl border border-emerald-200">
+                                      <span className="text-[10px] font-bold text-emerald-700 uppercase block">Special Notes ({languageNativeName || "Regional"})</span>
+                                      <span className="font-bold text-emerald-950">{specialInstructionsRegional}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {/* Multi-Layer Stepped Card Specifications */}
                           {Array.isArray(parsedDetails.pages) && (parsedDetails.pages as any[]).length > 1 && (

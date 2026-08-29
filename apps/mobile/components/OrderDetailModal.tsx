@@ -49,7 +49,7 @@ export function OrderDetailModal({ visible, onClose, order }: OrderDetailModalPr
     const text = encodeURIComponent(
       `Hello Bervic Studio, I'm inquiring about my print order #${order.orderNumber || order.id.slice(-6)} for digital proof approval.`
     );
-    Linking.openURL(`https://wa.me/919876543210?text=${text}`);
+    Linking.openURL(`https://wa.me/919042127115?text=${text}`);
   };
 
   return (

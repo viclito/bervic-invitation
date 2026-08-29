@@ -506,6 +506,35 @@ export default function PricingPage() {
           </div>
         </section>
 
+        {/* WhatsApp Custom Enquiry Banner */}
+        <section className="max-w-[1100px] mx-auto px-4 sm:px-6 mb-16">
+          <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 rounded-3xl p-6 sm:p-10 border border-emerald-500/30 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+            <div className="space-y-2 text-center sm:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+                <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+                <span>INSTANT WHATSAPP SUPPORT</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-white font-serif">
+                Have questions before choosing a plan?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                Chat directly with our design consultants for custom template requests, bulk card orders, or instant onboarding assistance.
+              </p>
+            </div>
+            <a
+              href="https://wa.me/919042127115?text=Hi%20Bervic%2C%20I%20have%20an%20enquiry%20regarding%20pricing%20and%20invitation%20plans"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center gap-2.5 shrink-0 group hover:scale-105 active:scale-95"
+            >
+              <svg className="w-5 h-5 fill-slate-950 group-hover:rotate-6 transition-transform" viewBox="0 0 24 24">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.04 14.69 2 12.04 2ZM12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z" />
+              </svg>
+              <span>WhatsApp Us (90421 27115)</span>
+            </a>
+          </div>
+        </section>
+
         {/* FAQs */}
         <section className="max-w-[900px] mx-auto px-4 sm:px-6 mb-16">
           <div className="text-center mb-10">

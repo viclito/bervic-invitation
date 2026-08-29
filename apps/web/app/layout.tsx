@@ -3,9 +3,11 @@ import Script from "next/script";
 import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+import WhatsAppEnquiryButton from "@/components/WhatsAppEnquiryButton";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-83TR44K9KN";
+const fbPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1059240449093088";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -177,7 +179,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alex+Brush&family=Amatic+SC:wght@700&family=Bodoni+Moda:ital,wght@0,400..900;1,400..900&family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400..900&family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Dancing+Script:wght@700&family=Fredericka+the+Great&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800;900&family=Marcellus&family=Monoton&family=Montserrat:wght@400..900&family=Outfit:wght@400..900&family=Pacifico&family=Parisienne&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poiret+One&family=Prata&family=Rozha+One&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&family=Special+Elite&family=UnifrakturMaguntia&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alex+Brush&family=Amatic+SC:wght@700&family=Bodoni+Moda:ital,wght@0,400..900;1,400..900&family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400..900&family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Dancing+Script:wght@700&family=Fredericka+the+Great&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800;900&family=Marcellus&family=Monoton&family=Montserrat:wght@400..900&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Outfit:wght@400..900&family=Pacifico&family=Parisienne&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poiret+One&family=Prata&family=Rozha+One&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&family=Special+Elite&family=UnifrakturMaguntia&display=swap"
         />
         <script
           type="application/ld+json"
@@ -206,8 +208,35 @@ export default function RootLayout({
           `}
         </Script>
 
+        {/* Meta Pixel (Facebook Pixel) */}
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${fbPixelId}');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={`https://www.facebook.com/tr?id=${fbPixelId}&ev=PageView&noscript=1`}
+            alt=""
+          />
+        </noscript>
+
         <SessionProviderWrapper>
           <LenisProvider>{children}</LenisProvider>
+          <WhatsAppEnquiryButton />
         </SessionProviderWrapper>
 
         {/* Razorpay Official Checkout SDK */}

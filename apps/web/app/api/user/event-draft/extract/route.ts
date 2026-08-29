@@ -5,6 +5,125 @@ import { createWorker } from "tesseract.js";
 import path from "path";
 import sharp from "sharp";
 
+interface GeminiExtractedInvitation {
+  eventType?: string;
+  hostNameOne?: string;
+  hostNameTwo?: string;
+  eventTitle?: string;
+  eventDate?: string;
+  eventTime?: string;
+  venueName?: string;
+  venueAddress?: string;
+  receptionVenueName?: string;
+  receptionVenueAddress?: string;
+  rsvpContact?: string;
+  story?: string;
+  functions?: Array<{
+    id?: string;
+    title: string;
+    date: string;
+    time: string;
+    venue: string;
+    icon?: string;
+  }>;
+}
+
+// Exponential backoff fetcher for Gemini API rate limits (HTTP 429)
+async function fetchGeminiWithBackoff(
+  url: string,
+  options: RequestInit,
+  retries = 3,
+  initialDelay = 1000
+): Promise<Response> {
+  let delay = initialDelay;
+  for (let i = 0; i < retries; i++) {
+    const res = await fetch(url, options);
+    if (res.status !== 429) {
+      return res;
+    }
+    console.warn(`[Gemini Vision] 429 Rate Limit encountered. Retrying in ${delay}ms (attempt ${i + 1}/${retries})...`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    delay *= 2;
+  }
+  return fetch(url, options);
+}
+
+// Gemini Vision Multimodal Extraction
+async function extractWithGeminiVision(
+  base64Data: string,
+  mimeType: string,
+  apiKey: string
+): Promise<GeminiExtractedInvitation | null> {
+  const prompt = `You are an expert Indian and Western Wedding & Event Invitation Card Vision Parser.
+Examine this invitation image thoroughly and extract all structured event information into strict JSON.
+
+CRITICAL RULES:
+1. "hostNameOne": Groom's primary first and last name (or Primary Host name). DO NOT include parents, grandparents, elders, or "S/O".
+2. "hostNameTwo": Bride's primary first and last name (or Partner name). DO NOT include parents, grandparents, elders, or "D/O".
+3. "eventType": "WEDDING" | "BIRTHDAY" | "ANNIVERSARY" | "HOUSEWARMING" | "ENGAGEMENT".
+4. "eventTitle": An elegant display title e.g. "Groom & Bride's Wedding" or "Groom Weds Bride".
+5. "eventDate": Main ceremony date formatted strictly as ISO "YYYY-MM-DD" (e.g. "2026-11-12").
+6. "eventTime": Primary ceremony or muhurtham time in 24-hour "HH:mm" (e.g. "10:30" or "18:30").
+7. "venueName": Primary Ceremony / Church / Temple / Mandapam venue name.
+8. "venueAddress": Address / City / Location of ceremony venue.
+9. "receptionVenueName": Grand Reception Hall / Auditorium if distinct from ceremony.
+10. "receptionVenueAddress": Address of reception venue if distinct.
+11. "rsvpContact": Phone number / WhatsApp mobile number for RSVP.
+12. "functions": Array of sub-events mentioned (e.g. Haldi, Sangeet, Muhurtham, Marriage, Reception). Each item:
+    { "title": "...", "date": "YYYY-MM-DD", "time": "HH:mm", "venue": "..." }
+13. "story": Optional brief love quote, bible verse, or blessing line from the card.
+
+Return ONLY a valid JSON object matching this schema.`;
+
+  const payload = {
+    contents: [
+      {
+        parts: [
+          { text: prompt },
+          {
+            inline_data: {
+              mime_type: mimeType,
+              data: base64Data,
+            },
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.1,
+    },
+  };
+
+  const models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await fetchGeminiWithBackoff(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.warn(`[Gemini Vision] Model ${model} returned ${res.status}. Trying next model...`);
+        continue;
+      }
+
+      const json = await res.json();
+      const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (parsed && (parsed.hostNameOne || parsed.eventDate || parsed.venueName)) {
+        return parsed as GeminiExtractedInvitation;
+      }
+    } catch (err) {
+      console.warn(`[Gemini Vision] Model ${model} parsing error:`, err);
+    }
+  }
+  return null;
+}
+
 function cleanOcrArtifacts(text: string): string {
   return text
     .replace(/[“”"'«»]/g, "")
@@ -211,169 +330,143 @@ function extractHostNames(rawText: string): { hostNameOne: string; hostNameTwo: 
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const textContent = (formData.get("textContent") as string) || "";
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-    if (!file && !textContent) {
+    let base64Data = "";
+    let mimeType = "image/jpeg";
+    let rawText = "";
+    let fileName = "uploaded_invitation";
+    let isImageFile = false;
+    let fileBuffer: Buffer | null = null;
+
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const file = (formData.get("file") || formData.get("image")) as File | null;
+      const textContent = (formData.get("textContent") as string) || "";
+
+      if (textContent) rawText = textContent;
+      if (file) {
+        fileName = file.name.toLowerCase();
+        mimeType = file.type || "image/jpeg";
+        isImageFile = file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp)$/i.test(fileName);
+        fileBuffer = Buffer.from(await file.arrayBuffer());
+        base64Data = fileBuffer.toString("base64");
+      }
+    } else {
+      // JSON body (Mobile App or Base64 Payload)
+      const body = await req.json();
+      const rawBase64 = body.imageBase64 || body.base64 || body.image || "";
+      if (body.textContent) rawText = body.textContent;
+      if (body.mimeType) mimeType = body.mimeType;
+
+      if (rawBase64) {
+        isImageFile = true;
+        if (rawBase64.includes("base64,")) {
+          const parts = rawBase64.split("base64,");
+          const match = parts[0].match(/data:(.*?);/);
+          if (match && match[1]) mimeType = match[1];
+          base64Data = parts[1];
+        } else {
+          base64Data = rawBase64;
+        }
+        fileBuffer = Buffer.from(base64Data, "base64");
+      }
+    }
+
+    if (!base64Data && !rawText && !fileBuffer) {
       return NextResponse.json(
-        { success: false, message: "No file or text content provided" },
+        { success: false, message: "No file or text content provided for extraction." },
         { status: 400 }
       );
     }
 
-    let rawText = textContent;
-    const fileName = file ? file.name.toLowerCase() : "uploaded_document";
-    const isImageFile = file
-      ? file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp)$/i.test(fileName)
-      : false;
+    let geminiResult: GeminiExtractedInvitation | null = null;
 
-    if (file && !rawText) {
-      const buffer = Buffer.from(await file.arrayBuffer());
+    // STEP 1: Try Gemini Vision extraction if image and API key are available
+    if (apiKey && base64Data && isImageFile) {
+      try {
+        geminiResult = await extractWithGeminiVision(base64Data, mimeType, apiKey);
+      } catch (geminiErr) {
+        console.warn("[Gemini Extraction Warning]:", geminiErr);
+      }
+    }
 
-      if (isImageFile) {
+    // STEP 2: Fallback to Tesseract OCR if Gemini Vision did not yield results
+    if (!geminiResult && fileBuffer && isImageFile) {
+      try {
+        const workerPath = path.join(process.cwd(), "node_modules/tesseract.js/src/worker-script/node/index.js");
+        const corePath = path.join(process.cwd(), "node_modules/tesseract.js-core/tesseract-core.wasm.js");
+        const langPath = process.cwd();
+
+        const worker = await createWorker("eng", 1, {
+          workerPath,
+          corePath,
+          langPath,
+          cachePath: langPath,
+          gzip: false,
+        });
+
+        const retRaw = await worker.recognize(fileBuffer);
+        let contrastText = "";
         try {
-          const ocrPromise = (async () => {
-            const workerPath = path.join(process.cwd(), "node_modules/tesseract.js/src/worker-script/node/index.js");
-            const corePath = path.join(process.cwd(), "node_modules/tesseract.js-core/tesseract-core.wasm.js");
-            const langPath = process.cwd();
-
-            const worker = await createWorker("eng", 1, {
-              workerPath,
-              corePath,
-              langPath,
-              cachePath: langPath,
-              gzip: false,
-            });
-
-            // Pass 1: Raw buffer
-            const retRaw = await worker.recognize(buffer);
-
-            // Pass 2: Contrast boosted buffer with sharp
-            let contrastText = "";
-            try {
-              const contrastBuf = await sharp(buffer)
-                .resize({ width: 2200, withoutEnlargement: true })
-                .grayscale()
-                .linear(1.5, -30)
-                .sharpen()
-                .png()
-                .toBuffer();
-              const retContrast = await worker.recognize(contrastBuf);
-              contrastText = retContrast.data.text || "";
-            } catch (sharpErr) {
-              console.warn("Sharp contrast enhancement notice:", sharpErr);
-            }
-
-            await worker.terminate();
-            return (retRaw.data.text || "") + "\n" + contrastText;
-          })();
-
-          const timeoutPromise = new Promise<string>((_, reject) =>
-            setTimeout(() => reject(new Error("OCR timeout after 15 seconds")), 15000)
-          );
-
-          rawText = await Promise.race([ocrPromise, timeoutPromise]);
-        } catch (ocrErr) {
-          console.error("OCR ERROR DETAILS:", ocrErr);
-          rawText = file.name;
+          const contrastBuf = await sharp(fileBuffer)
+            .resize({ width: 2200, withoutEnlargement: true })
+            .grayscale()
+            .linear(1.5, -30)
+            .sharpen()
+            .png()
+            .toBuffer();
+          const retContrast = await worker.recognize(contrastBuf);
+          contrastText = retContrast.data.text || "";
+        } catch (sharpErr) {
+          console.warn("Sharp pre-processing notice:", sharpErr);
         }
-      } else {
-        const fileText = buffer.toString("utf-8", 0, Math.min(buffer.length, 50000));
-        rawText = fileText.replace(/[^\x20-\x7E\n\r\t]/g, " ");
+        await worker.terminate();
+        rawText = (retRaw.data.text || "") + "\n" + contrastText;
+      } catch (ocrErr) {
+        console.error("Tesseract fallback error:", ocrErr);
       }
     }
 
-    const lowerText = (rawText + " " + fileName).toLowerCase();
+    // STEP 3: Assemble Structured Extracted Data
+    let eventType = geminiResult?.eventType || "WEDDING";
+    let hostNameOne = geminiResult?.hostNameOne || "";
+    let hostNameTwo = geminiResult?.hostNameTwo || "";
+    let eventTitle = geminiResult?.eventTitle || "";
+    let eventDate = geminiResult?.eventDate || "";
+    let eventTime = geminiResult?.eventTime || "";
+    let venueName = geminiResult?.venueName || "";
+    let venueAddress = geminiResult?.venueAddress || "";
+    let receptionVenueName = geminiResult?.receptionVenueName || "";
+    let receptionVenueAddress = geminiResult?.receptionVenueAddress || "";
+    let rsvpContact = geminiResult?.rsvpContact || "";
 
-    // 1. Extract Event Type
-    let eventType = "WEDDING";
-    if (lowerText.includes("birthday") || lowerText.includes("turning")) {
-      eventType = "BIRTHDAY";
+    // Heuristic fallbacks if Gemini was not used or missed certain fields
+    if (!hostNameOne || !hostNameTwo) {
+      const fallbackNames = extractHostNames(rawText);
+      if (!hostNameOne && fallbackNames.hostNameOne) hostNameOne = fallbackNames.hostNameOne;
+      if (!hostNameTwo && fallbackNames.hostNameTwo) hostNameTwo = fallbackNames.hostNameTwo;
     }
 
-    // 2. Extract Event Date & Convert to ISO YYYY-MM-DD
-    let eventDate = parseExtractedDateToIso(rawText);
     if (!eventDate) {
-      const fallbackMatch = rawText.match(/(\d{1,2})\s*\|?\s*([A-Za-z]{3,9}),?\s*\|?\s*(\d{4})/i);
-      if (fallbackMatch) {
-        eventDate = parseExtractedDateToIso(fallbackMatch[0]);
-      }
+      eventDate = parseExtractedDateToIso(rawText);
     }
-
-    // 3. Extract Event Time
-    let eventTime = parseExtractedTime(rawText);
     if (!eventTime) {
-      const fallbackTime = rawText.match(/\b(\d{1,2}[:.]\d{2}\s*(?:am|pm)?|\d{1,2}\s*(?:am|pm))\b/i);
-      if (fallbackTime) {
-        eventTime = parseExtractedTime(fallbackTime[0]);
-      }
+      eventTime = parseExtractedTime(rawText);
     }
 
-    // 4. Extract Host / Couple Names accurately
-    const { hostNameOne, hostNameTwo } = extractHostNames(rawText);
-
-    const eventTitle = hostNameOne && hostNameTwo
-      ? `${hostNameOne} & ${hostNameTwo}'s Wedding`
-      : hostNameOne
-      ? `${hostNameOne}'s Event`
-      : "Wedding Celebration";
-
-    // 5. Extract Venue & Address (Marriage & Reception)
-    let venueName = "";
-    let venueAddress = "";
-    let receptionVenueName = "";
-    let receptionVenueAddress = "";
-
-    const cleanedText = cleanOcrArtifacts(rawText);
-    const lines = cleanedText.split("\n").map((l) => l.trim()).filter(Boolean);
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Place: Karumankoodal
-      if (/place[:\s]+/i.test(line)) {
-        const p = line.replace(/place[:\s]*/i, "").replace(/with\s+love.*/i, "").trim();
-        if (p && !venueAddress) venueAddress = p;
-      }
-
-      // Check for Church / Ceremony
-      if (/church|ceremony|temple|nuptials|marriage/i.test(line)) {
-        const churchPart = line.replace(/holy\s+loosiyal.*/i, "").replace(/auditorium.*/i, "").replace(/^(marriage|ceremony)[:\s]*/i, "").trim();
-        if (churchPart.length > 3 && !venueName) {
-          venueName = churchPart.replace(/^w/i, "").trim();
-        }
-      }
-
-      // Check for Auditorium / Reception
-      if (/auditorium|reception|hall|mahal/i.test(line)) {
-        const matchAud = line.match(/([A-Za-z\s\.\']+(?:Auditorium|Mahal|Hall|Palace|Hotel|Resort))/i);
-        if (matchAud && !receptionVenueName) {
-          receptionVenueName = matchAud[1].trim();
-        } else if (!receptionVenueName) {
-          const recPart = line.replace(/.*(?:church|temple|marriage)\s*/i, "").replace(/^(reception)[:\s]*/i, "").trim();
-          if (recPart.length > 3) receptionVenueName = recPart;
-        }
-      }
-
-      // Check for Location / Address
-      if (/location[:\s]+/i.test(line)) {
-        receptionVenueAddress = line.replace(/location[:\s]*/i, "").replace(/time.*/i, "").trim();
-      }
-    }
-
-    if (!venueName) {
-      const venueMatch = cleanedText.match(/([A-Z0-9\s\.\'\-]{3,35}(?:CHURCH|MAHAL|HALL|TEMPLE|VILLA|PALACE|HOTEL|RESORT|AUDITORIUM|GARDEN|CONVENTION))/i);
-      if (venueMatch) {
-        venueName = venueMatch[0].replace(/reception|follow|wedding/i, "").trim();
-      }
-    }
-
-    // 6. Extract RSVP Contact / Phone
-    let rsvpContact = "";
-    const phoneMatch = rawText.match(/\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b|\b\d{10}\b/);
-    if (phoneMatch) {
-      rsvpContact = phoneMatch[0];
+    if (!eventTitle) {
+      eventTitle = hostNameOne && hostNameTwo
+        ? `${hostNameOne} & ${hostNameTwo}'s Wedding`
+        : hostNameOne
+        ? `${hostNameOne}'s Celebration`
+        : "Wedding Celebration";
     }
 
     const completedFields: string[] = [];
@@ -417,13 +510,16 @@ export async function POST(req: Request) {
       eventTime: eventTime || "",
       venueName: venueName || "",
       venueAddress: venueAddress || "",
+      receptionVenueName: receptionVenueName || "",
+      receptionVenueAddress: receptionVenueAddress || "",
       locationsJson: JSON.stringify(locationsList),
       rsvpContact,
+      functions: geminiResult?.functions || [],
       extractedFromDoc: true,
       completedFields: JSON.stringify(completedFields),
     };
 
-    // Save to user draft if authenticated
+    // Multi-tenant safe update to user draft if authenticated
     const user = await getAuthUser(req);
     if (user) {
       const activeDraft = await prisma.userDraftDetails.findFirst({
@@ -434,7 +530,18 @@ export async function POST(req: Request) {
         await prisma.userDraftDetails.update({
           where: { id: activeDraft.id },
           data: {
-            ...extractedData,
+            eventType: extractedData.eventType,
+            hostNameOne: extractedData.hostNameOne || activeDraft.hostNameOne,
+            hostNameTwo: extractedData.hostNameTwo || activeDraft.hostNameTwo,
+            eventTitle: extractedData.eventTitle || activeDraft.eventTitle,
+            eventDate: extractedData.eventDate || activeDraft.eventDate,
+            eventTime: extractedData.eventTime || activeDraft.eventTime,
+            venueName: extractedData.venueName || activeDraft.venueName,
+            venueAddress: extractedData.venueAddress || activeDraft.venueAddress,
+            locationsJson: extractedData.locationsJson || activeDraft.locationsJson,
+            rsvpContact: extractedData.rsvpContact || activeDraft.rsvpContact,
+            extractedFromDoc: true,
+            completedFields: extractedData.completedFields,
             currentStep: 2,
           },
         });
@@ -444,7 +551,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       isIrrelevant: false,
-      message: `Successfully extracted ${completedFields.length} details from "${fileName}"!`,
+      message: `Successfully extracted ${completedFields.length} event details from "${fileName}" using AI Vision!`,
       extractedData,
       extractedCount: completedFields.length,
     });
@@ -453,7 +560,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to process file. Please fill out details manually.",
+        message: "Failed to process invitation file. Please enter details manually.",
       },
       { status: 500 }
     );

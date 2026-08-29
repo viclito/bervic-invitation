@@ -90,9 +90,10 @@ export default function EventsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
       <ScrollView
-        className="flex-1 px-4 pt-4"
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 150 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -199,11 +200,11 @@ export default function EventsScreen() {
                     {inv.partnerOne && inv.partnerTwo ? `${inv.partnerOne} & ${inv.partnerTwo}` : inv.slug}
                   </Text>
                   <Text className="text-red-800 text-xs mt-0.5 font-semibold">
-                    bervic.in/{inv.slug}
+                    bervic.in/invitations/{inv.slug}
                   </Text>
                 </View>
                 <Pressable
-                  onPress={() => Linking.openURL(`${PRODUCTION_WEB_URL}/${inv.slug}`)}
+                  onPress={() => Linking.openURL(`${PRODUCTION_WEB_URL}/invitations/${inv.slug}`)}
                   className="h-9 px-3.5 rounded-xl bg-red-600 flex-row items-center active:bg-red-700 shadow-sm"
                 >
                   <Text className="text-white font-bold text-xs mr-1">Open Link</Text>

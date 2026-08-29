@@ -1,16 +1,18 @@
 import React from "react";
 import {
-  Modal,
   View,
   TouchableOpacity,
   Text,
   StyleSheet,
   ActivityIndicator,
+  Linking,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { X, ShieldCheck } from "lucide-react-native";
 import { BRAND_COLORS } from "@bervic/shared";
+import { getBaseUrl } from "../lib/api";
 
 export interface RazorpayOrderData {
   orderId: string;
@@ -44,94 +46,15 @@ export function RazorpayCheckoutModal({
 }: Props) {
   if (!visible || !orderData) return null;
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0;
-      padding: 0;
-      background: #FEF2F2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    .loader {
-      width: 44px;
-      height: 44px;
-      border: 4px solid #DC2626;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 16px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .text {
-      color: #991B1B;
-      font-weight: 800;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-    }
-  </style>
-</head>
-<body>
-  <div class="loader"></div>
-  <div class="text">Opening Razorpay Secure Gateway...</div>
-  <script>
-    function notify(type, payload) {
-      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload }));
-      }
-    }
-
-    var options = {
-      key: "${orderData.keyId}",
-      amount: ${orderData.amount},
-      currency: "INR",
-      name: "Bervic Invitations",
-      description: "${orderData.planTitle || 'Subscription Pass'}",
-      order_id: "${orderData.orderId}",
-      prefill: {
-        name: "${orderData.name || 'Customer'}",
-        email: "${orderData.email || ''}",
-        contact: "${orderData.phone || ''}"
-      },
-      theme: { color: "#991B1B" },
-      modal: {
-        ondismiss: function() {
-          notify("CANCELLED", {});
-        }
-      },
-      handler: function(response) {
-        notify("SUCCESS", response);
-      }
-    };
-
-    window.onload = function() {
-      try {
-        var rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(resp) {
-          notify("FAILED", resp.error || {});
-        });
-        rzp.open();
-      } catch (err) {
-        notify("ERROR", { message: err.message });
-      }
-    };
-  </script>
-</body>
-</html>
-  `;
+  const checkoutUrl = `${getBaseUrl()}/mobile-checkout?orderId=${encodeURIComponent(
+    orderData.orderId
+  )}&amount=${orderData.amount}&keyId=${encodeURIComponent(
+    orderData.keyId
+  )}&plan=${encodeURIComponent(orderData.plan)}&planTitle=${encodeURIComponent(
+    orderData.planTitle
+  )}&name=${encodeURIComponent(orderData.name)}&email=${encodeURIComponent(
+    orderData.email
+  )}&phone=${encodeURIComponent(orderData.phone || "")}`;
 
   const handleMessage = (event: any) => {
     try {
@@ -140,29 +63,60 @@ export function RazorpayCheckoutModal({
         onSuccess(data.payload);
       } else if (data.type === "CANCELLED") {
         onClose();
-      } else if (data.type === "FAILED" || data.type === "ERROR") {
-        onFailure(data.payload?.description || data.payload?.message || "Payment cancelled or declined.");
+      } else if (data.type === "ERROR") {
+        onFailure(data.payload?.message || "Payment process could not be completed.");
       }
     } catch {
       onFailure("Failed to process payment gateway response.");
     }
   };
 
+  const handleShouldStartLoad = (request: any) => {
+    const url = request.url;
+    if (!url) return true;
+
+    if (
+      url.startsWith("upi://") ||
+      url.startsWith("phonepe://") ||
+      url.startsWith("gpay://") ||
+      url.startsWith("paytmmp://") ||
+      url.startsWith("tez://") ||
+      url.startsWith("bhim://") ||
+      url.startsWith("credpay://")
+    ) {
+      Linking.canOpenURL(url)
+        .then((supported) => {
+          if (supported) {
+            Linking.openURL(url);
+          } else {
+            Alert.alert(
+              "UPI App Not Found",
+              "Please select Card or NetBanking payment, or install a UPI app."
+            );
+          }
+        })
+        .catch(() => {});
+      return false;
+    }
+
+    return true;
+  };
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={styles.container}>
+    <View style={styles.fullScreenWrapper}>
+      <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
         {/* Header Bar */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <ShieldCheck size={18} color="#059669" />
             <Text style={styles.headerTitle}>Razorpay Secure In-App Payment</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={18} color="#64748B" />
           </TouchableOpacity>
         </View>
@@ -171,26 +125,39 @@ export function RazorpayCheckoutModal({
         <View style={styles.webviewWrapper}>
           <WebView
             originWhitelist={["*"]}
-            source={{ html: htmlContent, baseUrl: "https://api.razorpay.com" }}
+            source={{ uri: checkoutUrl }}
             onMessage={handleMessage}
+            onShouldStartLoadWithRequest={handleShouldStartLoad}
             javaScriptEnabled={true}
             domStorageEnabled={true}
+            javaScriptCanOpenWindowsAutomatically={true}
+            setSupportMultipleWindows={false}
+            allowsBackForwardNavigationGestures={true}
+            sharedCookiesEnabled={true}
+            thirdPartyCookiesEnabled={true}
+            mixedContentMode="always"
             startInLoadingState={true}
             renderLoading={() => (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={BRAND_COLORS.primaryRed} />
-                <Text style={styles.loadingText}>Connecting to Razorpay...</Text>
+                <Text style={styles.loadingText}>Connecting to Razorpay Gateway...</Text>
               </View>
             )}
             style={styles.webview}
           />
         </View>
       </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fullScreenWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#FFFFFF",
+    zIndex: 99999,
+    elevation: 99999,
+  },
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -225,7 +192,7 @@ const styles = StyleSheet.create({
   },
   webviewWrapper: {
     flex: 1,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#FFFFFF",
   },
   webview: {
     flex: 1,

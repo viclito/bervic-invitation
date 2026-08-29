@@ -193,7 +193,7 @@ function getTemplateBackground(templateId?: string, templateName?: string, cardD
   };
 }
 
-export const ASPECT_RATIOS = [
+const ASPECT_RATIOS = [
   { id: "classic", name: "Classic (5:7)", shortName: "Classic", width: 480, height: 672, ratioStr: "5:7" },
   { id: "portrait", name: "Story (9:16)", shortName: "Story", width: 420, height: 746, ratioStr: "9:16" },
   { id: "square", name: "Square (1:1)", shortName: "Square", width: 560, height: 560, ratioStr: "1:1" },
@@ -204,7 +204,7 @@ export const ASPECT_RATIOS = [
   { id: "custom", name: "Free Size", shortName: "Free Size", width: 480, height: 672, ratioStr: "Custom" },
 ];
 
-export function getLayerDimensions(
+function getLayerDimensions(
   layer: any,
   baseLayer?: any
 ): { width: number; height: number; ratioStr: string } {
@@ -737,10 +737,22 @@ export default function UserOrderDetailPage() {
                     // ignore
                   }
 
-                  const groom = parsedDetails.groom ? String(parsedDetails.groom) : null;
-                  const bride = parsedDetails.bride ? String(parsedDetails.bride) : null;
-                  const date = parsedDetails.date ? String(parsedDetails.date) : null;
+                  const groom = parsedDetails.groom || parsedDetails.groomName ? String(parsedDetails.groom || parsedDetails.groomName) : null;
+                  const bride = parsedDetails.bride || parsedDetails.brideName ? String(parsedDetails.bride || parsedDetails.brideName) : null;
+                  const groomRegional = parsedDetails.groomNameRegional ? String(parsedDetails.groomNameRegional) : null;
+                  const brideRegional = parsedDetails.brideNameRegional ? String(parsedDetails.brideNameRegional) : null;
+                  const date = parsedDetails.date || parsedDetails.eventDate ? String(parsedDetails.date || parsedDetails.eventDate) : null;
+                  const dateRegional = parsedDetails.eventDateRegional ? String(parsedDetails.eventDateRegional) : null;
+                  const time = parsedDetails.time || parsedDetails.eventTime ? String(parsedDetails.time || parsedDetails.eventTime) : null;
+                  const timeRegional = parsedDetails.eventTimeRegional ? String(parsedDetails.eventTimeRegional) : null;
                   const venue = parsedDetails.venue ? String(parsedDetails.venue) : null;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const venuesList: Array<any> = Array.isArray(parsedDetails.venues) && parsedDetails.venues.length > 0 ? parsedDetails.venues : [];
+                  const rsvpContact = parsedDetails.rsvpContact ? String(parsedDetails.rsvpContact) : null;
+                  const rsvpContactRegional = parsedDetails.rsvpContactRegional ? String(parsedDetails.rsvpContactRegional) : null;
+                  const langName = parsedDetails.languageName ? String(parsedDetails.languageName) : null;
+                  const langNative = parsedDetails.languageNativeName ? String(parsedDetails.languageNativeName) : null;
+                  const langMode = parsedDetails.languageMode ? String(parsedDetails.languageMode) : null;
 
                   return (
                     <div
@@ -754,9 +766,16 @@ export default function UserOrderDetailPage() {
                           </span>
                           <h4 className="font-serif font-bold text-base text-slate-900">{item.templateName}</h4>
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
-                          {item.copies} Copies
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {langName && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                              {langNative || langName} ({langMode === "REGIONAL_ONLY" ? "Regional Only" : "Dual Script"})
+                            </span>
+                          )}
+                          <span className="px-3 py-1 rounded-full bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
+                            {item.copies} Copies
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
@@ -773,26 +792,88 @@ export default function UserOrderDetailPage() {
 
                         {/* Details parsed */}
                         <div className="flex-1 w-full space-y-3 text-xs">
-                          <div className="space-y-1.5 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100">
+                          {/* 🇬🇧 English Section */}
+                          <div className="space-y-2 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200/80">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block border-b border-slate-200/60 pb-1">
+                              🇬🇧 English Content
+                            </span>
                             {groom && (
                               <p>
-                                <strong className="text-slate-500">Couple / Celebrant:</strong>{" "}
+                                <strong className="text-slate-500">Couple:</strong>{" "}
                                 <span className="font-bold text-slate-900">{groom} {bride ? `& ${bride}` : ""}</span>
                               </p>
                             )}
                             {date && (
                               <p>
                                 <strong className="text-slate-500">Event Date:</strong>{" "}
-                                <span className="font-medium text-slate-900">{date}</span>
+                                <span className="font-medium text-slate-900">{date} {time ? `• ${time}` : ""}</span>
                               </p>
                             )}
-                            {venue && (
-                              <p>
-                                <strong className="text-slate-500">Venue:</strong>{" "}
-                                <span className="font-medium text-slate-900">{venue}</span>
+                            {venuesList.length > 0 ? (
+                              <div className="space-y-1 pt-1 border-t border-slate-200/60">
+                                <strong className="text-slate-500 block">Venues:</strong>
+                                {venuesList.map((v: any, vIdx: number) => (
+                                  <div key={vIdx} className="text-slate-800">
+                                    <span className="font-bold text-slate-900">• {v.name}</span>
+                                    {v.address && <span className="text-slate-500 text-[11px] ml-1">- {v.address}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              venue && (
+                                <p>
+                                  <strong className="text-slate-500">Venue:</strong>{" "}
+                                  <span className="font-medium text-slate-900">{venue}</span>
+                                </p>
+                              )
+                            )}
+                            {rsvpContact && (
+                              <p className="pt-1 border-t border-slate-200/60">
+                                <strong className="text-slate-500">RSVP:</strong>{" "}
+                                <span className="font-medium text-slate-900">{rsvpContact}</span>
                               </p>
                             )}
                           </div>
+
+                          {/* 🇮🇳 Regional Script Section */}
+                          {(groomRegional || brideRegional || dateRegional || rsvpContactRegional || venuesList.some((v: any) => v.nameRegional)) && (
+                            <div className="space-y-2 bg-emerald-50/60 p-3 sm:p-3.5 rounded-xl border border-emerald-200">
+                              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block border-b border-emerald-200/60 pb-1">
+                                🇮🇳 {langNative || "Regional Language"} Content
+                              </span>
+                              {(groomRegional || brideRegional) && (
+                                <p className="text-emerald-950">
+                                  <strong className="text-emerald-700">Couple ({langNative || "Reg"}):</strong>{" "}
+                                  <span className="font-bold">{groomRegional} {brideRegional ? `& ${brideRegional}` : ""}</span>
+                                </p>
+                              )}
+                              {dateRegional && (
+                                <p className="text-emerald-950">
+                                  <strong className="text-emerald-700">Date ({langNative || "Reg"}):</strong>{" "}
+                                  <span className="font-bold">{dateRegional} {timeRegional ? `• ${timeRegional}` : ""}</span>
+                                </p>
+                              )}
+                              {venuesList.some((v: any) => v.nameRegional) && (
+                                <div className="space-y-1 pt-1 border-t border-emerald-200/60">
+                                  <strong className="text-emerald-700 block">Venues ({langNative || "Reg"}):</strong>
+                                  {venuesList.map((v: any, vIdx: number) => {
+                                    if (!v.nameRegional) return null;
+                                    return (
+                                      <div key={vIdx} className="text-emerald-950 font-bold">
+                                        • {v.nameRegional} {v.addressRegional && <span className="text-emerald-700 text-[11px] font-normal">({v.addressRegional})</span>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {rsvpContactRegional && (
+                                <p className="pt-1 border-t border-emerald-200/60">
+                                  <strong className="text-emerald-700">RSVP ({langNative || "Reg"}):</strong>{" "}
+                                  <span className="font-bold text-emerald-950">{rsvpContactRegional}</span>
+                                </p>
+                              )}
+                            </div>
+                          )}
 
                           {/* Multi-Layer Stepped Card Specifications */}
                           {Array.isArray(parsedDetails.pages) && (parsedDetails.pages as any[]).length > 1 && (

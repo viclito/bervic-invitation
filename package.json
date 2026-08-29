@@ -15,7 +15,8 @@
     "build:mobile": "npm run build --workspace=mobile",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "ignore-build-step": "bash scripts/ignore-build-step.sh"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

@@ -1,5 +1,6 @@
-import { Tabs } from "expo-router";
 import React from "react";
+import { Platform } from "react-native";
+import { Tabs } from "expo-router";
 import { Sparkles, Calendar, Users, ShoppingBag, User } from "lucide-react-native";
 import { BRAND_COLORS } from "@bervic/shared";
 
@@ -13,8 +14,8 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: BRAND_COLORS.pureWhite,
           borderTopColor: BRAND_COLORS.roseSubtle,
-          height: 64,
-          paddingBottom: 10,
+          height: Platform.OS === "ios" ? 84 : 64,
+          paddingBottom: Platform.OS === "ios" ? 24 : 10,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -54,7 +55,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Account",
+          title: "Profile",
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />

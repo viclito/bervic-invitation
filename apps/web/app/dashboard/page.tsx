@@ -711,7 +711,7 @@ function DashboardContent() {
                         <div className="flex items-center gap-2">
                           <Globe className="w-3.5 h-3.5 text-[#991B1B] shrink-0" />
                           <span className="truncate font-mono text-[11px] text-[#991B1B]">
-                            bervic.app/invitations/{inv.slug}
+                            bervic.in/invitations/{inv.slug}
                           </span>
                         </div>
                       </div>

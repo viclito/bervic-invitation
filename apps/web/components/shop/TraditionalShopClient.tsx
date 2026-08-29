@@ -36,8 +36,20 @@ import {
   CheckCircle2,
   Heart,
   Search,
+  Languages,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
 import CartDrawer from "@/components/cart/CartDrawer";
+import IndicLanguageInput from "@/components/shop/IndicLanguageInput";
+import {
+  SUPPORTED_LANGUAGES,
+  getLanguageByCode,
+  formatEnglishDate,
+  formatRegionalDate,
+  format12HourTime,
+  formatRegionalTime,
+} from "@/lib/indicTranslation";
 import { CARD_PRICING_TIERS, calculateTieredCardPrice } from "@/lib/pricing";
 
 export interface ShopProductItem {
@@ -102,6 +114,30 @@ export default function TraditionalShopClient() {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [autoFetched, setAutoFetched] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const timePickerRef = useRef<HTMLInputElement>(null);
+
+  const openDatePicker = () => {
+    if (datePickerRef.current) {
+      if (typeof datePickerRef.current.showPicker === "function") {
+        datePickerRef.current.showPicker();
+      } else {
+        datePickerRef.current.focus();
+        datePickerRef.current.click();
+      }
+    }
+  };
+
+  const openTimePicker = () => {
+    if (timePickerRef.current) {
+      if (typeof timePickerRef.current.showPicker === "function") {
+        timePickerRef.current.showPicker();
+      } else {
+        timePickerRef.current.focus();
+        timePickerRef.current.click();
+      }
+    }
+  };
 
   // Debounce search query input
   useEffect(() => {
@@ -112,25 +148,56 @@ export default function TraditionalShopClient() {
   }, [searchQuery]);
 
   const [printForm, setPrintForm] = useState({
+    cardLanguage: "en", // default English Only
+    languageMode: "DUAL" as "DUAL" | "REGIONAL_ONLY",
+
     brideName: "",
+    brideNameRegional: "",
     brideQualification: "",
+    brideQualificationRegional: "",
     brideParents: "",
+    brideParentsRegional: "",
     brideAddress: "",
+    brideAddressRegional: "",
 
     groomName: "",
+    groomNameRegional: "",
     groomQualification: "",
+    groomQualificationRegional: "",
     groomParents: "",
+    groomParentsRegional: "",
     groomAddress: "",
+    groomAddressRegional: "",
 
     eventDate: "",
+    eventDateRegional: "",
     eventTime: "",
+    eventTimeRegional: "",
 
     venues: [
-      { name: "", address: "", functionType: "Wedding & Reception", time: "" },
-    ] as Array<{ name: string; address: string; functionType?: string; time?: string }>,
+      {
+        name: "",
+        nameRegional: "",
+        address: "",
+        addressRegional: "",
+        functionType: "Wedding & Reception",
+        functionTypeRegional: "",
+        time: "",
+      },
+    ] as Array<{
+      name: string;
+      nameRegional?: string;
+      address: string;
+      addressRegional?: string;
+      functionType?: string;
+      functionTypeRegional?: string;
+      time?: string;
+    }>,
 
     rsvpContact: "",
+    rsvpContactRegional: "",
     specialInstructions: "",
+    specialInstructionsRegional: "",
 
     // Delivery & Shipping details
     deliveryName: "",
@@ -184,6 +251,7 @@ export default function TraditionalShopClient() {
             (venuesList[0]?.address ? venuesList[0].address : "");
 
           return {
+            ...prev,
             brideName: bride,
             brideQualification: prev.brideQualification || d.brideQualification || "",
             brideParents: prev.brideParents || d.brideParents || "",
@@ -515,6 +583,7 @@ export default function TraditionalShopClient() {
     setAddingCardId(product.id);
 
     const validVenues = printForm.venues.filter((v) => v.name.trim() || v.address.trim());
+    const langObj = getLanguageByCode(printForm.cardLanguage);
 
     const cardDetails = {
       paperType: product.paperType,
@@ -524,40 +593,67 @@ export default function TraditionalShopClient() {
       tierMultiplier: priceCalc.multiplier,
       tierLabel: priceCalc.tierLabel,
       totalPrice,
+
+      // Language & Script Metadata
+      cardLanguage: printForm.cardLanguage,
+      languageName: langObj.name,
+      languageNativeName: langObj.nativeName,
+      languageMode: printForm.languageMode,
+
       brideName: printForm.brideName.trim(),
+      brideNameRegional: printForm.brideNameRegional.trim(),
       brideQualification: printForm.brideQualification.trim(),
+      brideQualificationRegional: printForm.brideQualificationRegional.trim(),
       brideParents: printForm.brideParents.trim(),
+      brideParentsRegional: printForm.brideParentsRegional.trim(),
       brideAddress: printForm.brideAddress.trim(),
+      brideAddressRegional: printForm.brideAddressRegional.trim(),
+
       groomName: printForm.groomName.trim(),
+      groomNameRegional: printForm.groomNameRegional.trim(),
       groomQualification: printForm.groomQualification.trim(),
+      groomQualificationRegional: printForm.groomQualificationRegional.trim(),
       groomParents: printForm.groomParents.trim(),
+      groomParentsRegional: printForm.groomParentsRegional.trim(),
       groomAddress: printForm.groomAddress.trim(),
+      groomAddressRegional: printForm.groomAddressRegional.trim(),
+
       eventDate: printForm.eventDate.trim(),
+      eventDateRegional: printForm.eventDateRegional.trim(),
       eventTime: printForm.eventTime.trim(),
+      eventTimeRegional: printForm.eventTimeRegional.trim(),
+
       venues: validVenues,
       rsvpContact: printForm.rsvpContact.trim(),
+      rsvpContactRegional: printForm.rsvpContactRegional.trim(),
       specialInstructions: printForm.specialInstructions.trim(),
+      specialInstructionsRegional: printForm.specialInstructionsRegional.trim(),
+
       deliveryAddress: printForm.deliveryAddress.trim(),
       deliveryPhone: printForm.deliveryPhone.trim(),
     };
 
     const customNotes = [
+      `Language: ${langObj.name} (${printForm.languageMode === "REGIONAL_ONLY" ? "Regional Only" : "Dual Language"})`,
       printForm.brideName || printForm.groomName
-        ? `Couple: ${printForm.brideName}${printForm.brideQualification ? ` (${printForm.brideQualification})` : ""} & ${printForm.groomName}${printForm.groomQualification ? ` (${printForm.groomQualification})` : ""}`
+        ? `Couple (Eng): ${printForm.brideName}${printForm.brideQualification ? ` (${printForm.brideQualification})` : ""} & ${printForm.groomName}${printForm.groomQualification ? ` (${printForm.groomQualification})` : ""}`
         : "",
-      printForm.brideParents ? `Bride Parents: ${printForm.brideParents}` : "",
-      printForm.brideAddress ? `Bride House: ${printForm.brideAddress}` : "",
-      printForm.groomParents ? `Groom Parents: ${printForm.groomParents}` : "",
-      printForm.groomAddress ? `Groom House: ${printForm.groomAddress}` : "",
-      printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}` : "",
+      printForm.brideNameRegional || printForm.groomNameRegional
+        ? `Couple (${langObj.nativeName}): ${printForm.brideNameRegional} & ${printForm.groomNameRegional}`
+        : "",
+      printForm.brideParents ? `Bride Parents: ${printForm.brideParents}${printForm.brideParentsRegional ? ` / ${printForm.brideParentsRegional}` : ""}` : "",
+      printForm.brideAddress ? `Bride House: ${printForm.brideAddress}${printForm.brideAddressRegional ? ` / ${printForm.brideAddressRegional}` : ""}` : "",
+      printForm.groomParents ? `Groom Parents: ${printForm.groomParents}${printForm.groomParentsRegional ? ` / ${printForm.groomParentsRegional}` : ""}` : "",
+      printForm.groomAddress ? `Groom House: ${printForm.groomAddress}${printForm.groomAddressRegional ? ` / ${printForm.groomAddressRegional}` : ""}` : "",
+      printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}${printForm.eventDateRegional ? ` / ${printForm.eventDateRegional} ${printForm.eventTimeRegional}` : ""}` : "",
       validVenues.length > 0
         ? `Venues: ` +
           validVenues
-            .map((v) => `${v.functionType || "Venue"}: ${v.name}, ${v.address} ${v.time ? `(${v.time})` : ""}`)
+            .map((v) => `${v.functionType || "Venue"}: ${v.name}${v.nameRegional ? ` (${v.nameRegional})` : ""}, ${v.address}${v.addressRegional ? ` (${v.addressRegional})` : ""}`)
             .join(" ; ")
         : "",
-      printForm.rsvpContact ? `RSVP: ${printForm.rsvpContact}` : "",
-      printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}` : "",
+      printForm.rsvpContact ? `RSVP: ${printForm.rsvpContact}${printForm.rsvpContactRegional ? ` / ${printForm.rsvpContactRegional}` : ""}` : "",
+      printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}${printForm.specialInstructionsRegional ? ` / ${printForm.specialInstructionsRegional}` : ""}` : "",
       `Paper: ${product.paperType} | Size: ${product.dimensions}`,
     ]
       .filter(Boolean)
@@ -633,6 +729,7 @@ export default function TraditionalShopClient() {
     ).trim();
 
     const validVenues = printForm.venues.filter((v) => v.name.trim() || v.address.trim());
+    const langObj = getLanguageByCode(printForm.cardLanguage);
 
     const cardDetails = {
       paperType: product.paperType,
@@ -642,41 +739,68 @@ export default function TraditionalShopClient() {
       tierMultiplier: priceCalc.multiplier,
       tierLabel: priceCalc.tierLabel,
       totalPrice,
+
+      // Language & Script Metadata
+      cardLanguage: printForm.cardLanguage,
+      languageName: langObj.name,
+      languageNativeName: langObj.nativeName,
+      languageMode: printForm.languageMode,
+
       brideName: printForm.brideName.trim(),
+      brideNameRegional: printForm.brideNameRegional.trim(),
       brideQualification: printForm.brideQualification.trim(),
+      brideQualificationRegional: printForm.brideQualificationRegional.trim(),
       brideParents: printForm.brideParents.trim(),
+      brideParentsRegional: printForm.brideParentsRegional.trim(),
       brideAddress: printForm.brideAddress.trim(),
+      brideAddressRegional: printForm.brideAddressRegional.trim(),
+
       groomName: printForm.groomName.trim(),
+      groomNameRegional: printForm.groomNameRegional.trim(),
       groomQualification: printForm.groomQualification.trim(),
+      groomQualificationRegional: printForm.groomQualificationRegional.trim(),
       groomParents: printForm.groomParents.trim(),
+      groomParentsRegional: printForm.groomParentsRegional.trim(),
       groomAddress: printForm.groomAddress.trim(),
+      groomAddressRegional: printForm.groomAddressRegional.trim(),
+
       eventDate: printForm.eventDate.trim(),
+      eventDateRegional: printForm.eventDateRegional.trim(),
       eventTime: printForm.eventTime.trim(),
+      eventTimeRegional: printForm.eventTimeRegional.trim(),
+
       venues: validVenues,
       rsvpContact: printForm.rsvpContact.trim(),
+      rsvpContactRegional: printForm.rsvpContactRegional.trim(),
       specialInstructions: printForm.specialInstructions.trim(),
+      specialInstructionsRegional: printForm.specialInstructionsRegional.trim(),
+
       deliveryAddress: effectiveAddress,
       deliveryPhone: effectivePhone,
       deliveryName: effectiveDeliveryName,
     };
 
     const customNotes = [
+      `Language: ${langObj.name} (${printForm.languageMode === "REGIONAL_ONLY" ? "Regional Only" : "Dual Language"})`,
       printForm.brideName || printForm.groomName
-        ? `Couple: ${printForm.brideName}${printForm.brideQualification ? ` (${printForm.brideQualification})` : ""} & ${printForm.groomName}${printForm.groomQualification ? ` (${printForm.groomQualification})` : ""}`
+        ? `Couple (Eng): ${printForm.brideName}${printForm.brideQualification ? ` (${printForm.brideQualification})` : ""} & ${printForm.groomName}${printForm.groomQualification ? ` (${printForm.groomQualification})` : ""}`
         : "",
-      printForm.brideParents ? `Bride Parents: ${printForm.brideParents}` : "",
-      printForm.brideAddress ? `Bride House: ${printForm.brideAddress}` : "",
-      printForm.groomParents ? `Groom Parents: ${printForm.groomParents}` : "",
-      printForm.groomAddress ? `Groom House: ${printForm.groomAddress}` : "",
-      printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}` : "",
+      printForm.brideNameRegional || printForm.groomNameRegional
+        ? `Couple (${langObj.nativeName}): ${printForm.brideNameRegional} & ${printForm.groomNameRegional}`
+        : "",
+      printForm.brideParents ? `Bride Parents: ${printForm.brideParents}${printForm.brideParentsRegional ? ` / ${printForm.brideParentsRegional}` : ""}` : "",
+      printForm.brideAddress ? `Bride House: ${printForm.brideAddress}${printForm.brideAddressRegional ? ` / ${printForm.brideAddressRegional}` : ""}` : "",
+      printForm.groomParents ? `Groom Parents: ${printForm.groomParents}${printForm.groomParentsRegional ? ` / ${printForm.groomParentsRegional}` : ""}` : "",
+      printForm.groomAddress ? `Groom House: ${printForm.groomAddress}${printForm.groomAddressRegional ? ` / ${printForm.groomAddressRegional}` : ""}` : "",
+      printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}${printForm.eventDateRegional ? ` / ${printForm.eventDateRegional} ${printForm.eventTimeRegional}` : ""}` : "",
       validVenues.length > 0
         ? `Venues: ` +
           validVenues
-            .map((v) => `${v.functionType || "Venue"}: ${v.name}, ${v.address} ${v.time ? `(${v.time})` : ""}`)
+            .map((v) => `${v.functionType || "Venue"}: ${v.name}${v.nameRegional ? ` (${v.nameRegional})` : ""}, ${v.address}${v.addressRegional ? ` (${v.addressRegional})` : ""}`)
             .join(" ; ")
         : "",
-      printForm.rsvpContact ? `RSVP: ${printForm.rsvpContact}` : "",
-      printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}` : "",
+      printForm.rsvpContact ? `RSVP: ${printForm.rsvpContact}${printForm.rsvpContactRegional ? ` / ${printForm.rsvpContactRegional}` : ""}` : "",
+      printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}${printForm.specialInstructionsRegional ? ` / ${printForm.specialInstructionsRegional}` : ""}` : "",
       `Paper: ${product.paperType} | Size: ${product.dimensions}`,
     ]
       .filter(Boolean)
@@ -1568,6 +1692,79 @@ export default function TraditionalShopClient() {
                         </div>
                       ) : (
                         <>
+                          {/* Card Printing Language & Mode Selector */}
+                          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              {/* Language Dropdown (English on Top) */}
+                              <div className="flex-1 max-w-sm">
+                                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                                  <Languages className="w-4 h-4 text-[#991B1B]" />
+                                  <span>Card Printing Language</span>
+                                </label>
+                                <div className="relative">
+                                  <select
+                                    value={printForm.cardLanguage}
+                                    onChange={(e) =>
+                                      setPrintForm((prev) => ({
+                                        ...prev,
+                                        cardLanguage: e.target.value,
+                                      }))
+                                    }
+                                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#991B1B]/15 focus:border-[#991B1B] transition-all cursor-pointer appearance-none pr-9"
+                                  >
+                                    {SUPPORTED_LANGUAGES.map((lang) => (
+                                      <option key={lang.code} value={lang.code}>
+                                        {lang.name} {lang.code !== "en" ? `(${lang.nativeName})` : "(Default)"}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                    <ChevronDown className="w-4 h-4" />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Format Switcher (Shown only when a Regional Language is selected) */}
+                              {printForm.cardLanguage !== "en" && (
+                                <div className="space-y-1 self-start sm:self-end">
+                                  <span className="block text-[11px] font-bold text-slate-600">
+                                    Language Format
+                                  </span>
+                                  <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80">
+                                    <button
+                                      type="button"
+                                      onClick={() => setPrintForm((prev) => ({ ...prev, languageMode: "DUAL" }))}
+                                      className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                                        printForm.languageMode === "DUAL"
+                                          ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                                          : "text-slate-600 hover:text-slate-900"
+                                      }`}
+                                    >
+                                      Dual Language (Eng + {getLanguageByCode(printForm.cardLanguage).name})
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setPrintForm((prev) => ({ ...prev, languageMode: "REGIONAL_ONLY" }))}
+                                      className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                                        printForm.languageMode === "REGIONAL_ONLY"
+                                          ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
+                                          : "text-slate-600 hover:text-slate-900"
+                                      }`}
+                                    >
+                                      {getLanguageByCode(printForm.cardLanguage).name} Only
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {printForm.cardLanguage !== "en" && (
+                              <p className="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200/70 font-medium">
+                                ✨ <strong>Multi-Language Active:</strong> Type in English below and it will automatically translate into {getLanguageByCode(printForm.cardLanguage).nativeName} script. You can edit the words directly if needed.
+                              </p>
+                            )}
+                          </div>
+
                           {/* Bride Details Section */}
                           <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
                             <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
@@ -1576,73 +1773,57 @@ export default function TraditionalShopClient() {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <div className={formErrors.brideName ? "has-validation-error" : ""}>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Bride&apos;s Full Name <span className="text-[#991B1B]">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={printForm.brideName}
-                                  onChange={(e) => {
-                                    setPrintForm({ ...printForm, brideName: e.target.value });
-                                    clearFieldError("brideName");
-                                  }}
-                                  placeholder="e.g. Priya Sharma"
-                                  className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                    formErrors.brideName
-                                      ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                      : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                  }`}
-                                />
-                                {formErrors.brideName && (
-                                  <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{formErrors.brideName}</span>
-                                  </p>
-                                )}
-                              </div>
+                              <IndicLanguageInput
+                                label="Bride's Full Name"
+                                required
+                                englishValue={printForm.brideName || ""}
+                                onEnglishChange={(val) => {
+                                  setPrintForm((prev) => ({ ...prev, brideName: val }));
+                                  clearFieldError("brideName");
+                                }}
+                                regionalValue={printForm.brideNameRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideNameRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. Priya Sharma"
+                                error={formErrors.brideName}
+                              />
 
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Bride&apos;s Qualification / Degree <span className="text-[10px] text-slate-400">(Optional)</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.brideQualification}
-                                  onChange={(e) => setPrintForm({ ...printForm, brideQualification: e.target.value })}
-                                  placeholder="e.g. B.Tech, MBA"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Bride's Qualification / Degree"
+                                englishValue={printForm.brideQualification || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideQualification: val }))}
+                                regionalValue={printForm.brideQualificationRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideQualificationRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. B.Tech, MBA"
+                              />
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Bride&apos;s Parents Names
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.brideParents}
-                                  onChange={(e) => setPrintForm({ ...printForm, brideParents: e.target.value })}
-                                  placeholder="e.g. Mr. Rajesh Sharma & Mrs. Meena Sharma"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Bride's Parents Names"
+                                englishValue={printForm.brideParents || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideParents: val }))}
+                                regionalValue={printForm.brideParentsRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideParentsRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. Mr. Rajesh Sharma & Mrs. Meena Sharma"
+                              />
 
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Bride&apos;s Residence / House Address
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.brideAddress}
-                                  onChange={(e) => setPrintForm({ ...printForm, brideAddress: e.target.value })}
-                                  placeholder="e.g. 45 Green Avenue, Gandhi Nagar, Chennai"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Bride's Residence / House Address"
+                                englishValue={printForm.brideAddress || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideAddress: val }))}
+                                regionalValue={printForm.brideAddressRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideAddressRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. 45 Green Avenue, Gandhi Nagar, Chennai"
+                                mode="translate"
+                              />
                             </div>
                           </div>
 
@@ -1654,73 +1835,57 @@ export default function TraditionalShopClient() {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <div className={formErrors.groomName ? "has-validation-error" : ""}>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Groom&apos;s Full Name <span className="text-[#991B1B]">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={printForm.groomName}
-                                  onChange={(e) => {
-                                    setPrintForm({ ...printForm, groomName: e.target.value });
-                                    clearFieldError("groomName");
-                                  }}
-                                  placeholder="e.g. Rahul Verma"
-                                  className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                    formErrors.groomName
-                                      ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                      : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                  }`}
-                                />
-                                {formErrors.groomName && (
-                                  <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{formErrors.groomName}</span>
-                                  </p>
-                                )}
-                              </div>
+                              <IndicLanguageInput
+                                label="Groom's Full Name"
+                                required
+                                englishValue={printForm.groomName || ""}
+                                onEnglishChange={(val) => {
+                                  setPrintForm((prev) => ({ ...prev, groomName: val }));
+                                  clearFieldError("groomName");
+                                }}
+                                regionalValue={printForm.groomNameRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomNameRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. Rahul Verma"
+                                error={formErrors.groomName}
+                              />
 
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Groom&apos;s Qualification / Degree <span className="text-[10px] text-slate-400">(Optional)</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.groomQualification}
-                                  onChange={(e) => setPrintForm({ ...printForm, groomQualification: e.target.value })}
-                                  placeholder="e.g. M.S., Software Architect"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Groom's Qualification / Degree"
+                                englishValue={printForm.groomQualification || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomQualification: val }))}
+                                regionalValue={printForm.groomQualificationRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomQualificationRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. M.S., Software Architect"
+                              />
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Groom&apos;s Parents Names
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.groomParents}
-                                  onChange={(e) => setPrintForm({ ...printForm, groomParents: e.target.value })}
-                                  placeholder="e.g. Mr. Vijay Verma & Mrs. Sunita Verma"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Groom's Parents Names"
+                                englishValue={printForm.groomParents || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomParents: val }))}
+                                regionalValue={printForm.groomParentsRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomParentsRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. Mr. Vijay Verma & Mrs. Sunita Verma"
+                              />
 
-                              <div>
-                                <label className="font-bold text-slate-900 block mb-1">
-                                  Groom&apos;s Residence / House Address
-                                </label>
-                                <input
-                                  type="text"
-                                  value={printForm.groomAddress}
-                                  onChange={(e) => setPrintForm({ ...printForm, groomAddress: e.target.value })}
-                                  placeholder="e.g. 18 Royal Heights, Bangalore"
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                />
-                              </div>
+                              <IndicLanguageInput
+                                label="Groom's Residence / House Address"
+                                englishValue={printForm.groomAddress || ""}
+                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomAddress: val }))}
+                                regionalValue={printForm.groomAddressRegional || ""}
+                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomAddressRegional: val }))}
+                                targetLanguage={printForm.cardLanguage}
+                                languageMode={printForm.languageMode}
+                                placeholderEnglish="e.g. 18 Royal Heights, Bangalore"
+                                mode="translate"
+                              />
                             </div>
                           </div>
                         </>
@@ -1759,51 +1924,155 @@ export default function TraditionalShopClient() {
                       ════════════════════════════════════════════════════════════ */}
                   {activeStep === 3 && !isGift && (
                     <div className="space-y-4 animate-in fade-in duration-200">
-                      {/* Wedding Date & Timing */}
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                        <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
-                          <span>📅</span>
-                          <span>Wedding Date &amp; Auspicious Timing</span>
+                      {/* Wedding Date & Timing with Date Picker & Time Selector */}
+                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-4 shadow-xs">
+                        <div className="flex items-center justify-between border-b border-red-100 pb-2.5">
+                          <div className="flex items-center gap-2 text-[#991B1B] font-extrabold text-xs">
+                            <Calendar className="w-4 h-4" />
+                            <span>Wedding Date &amp; Auspicious Timing</span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 font-medium">Select or Type Details</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          <div className={formErrors.eventDate ? "has-validation-error" : ""}>
-                            <label className="font-bold text-slate-900 block mb-1">
-                              Wedding / Event Date <span className="text-[#991B1B]">*</span>
-                            </label>
-                            <input
-                              type="text"
+                        {/* Date & Time Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Date Selection Box */}
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-[#991B1B]" />
+                                <span>Wedding Date</span>
+                                <span className="text-[#991B1B]">*</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={openDatePicker}
+                                className="text-[11px] font-bold text-[#991B1B] hover:text-white hover:bg-[#991B1B] flex items-center gap-1 cursor-pointer bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition-all shadow-2xs"
+                              >
+                                <Calendar className="w-3 h-3" />
+                                <span>Choose Calendar Date</span>
+                              </button>
+                            </div>
+
+                            {/* Direct Native Date Picker Bar */}
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
+                              <span className="text-[11px] text-slate-500 font-semibold shrink-0">Calendar Picker:</span>
+                              <input
+                                ref={datePickerRef}
+                                type="date"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val) {
+                                    const eng = formatEnglishDate(val);
+                                    const reg = formatRegionalDate(val, printForm.cardLanguage);
+                                    setPrintForm((prev) => ({
+                                      ...prev,
+                                      eventDate: eng,
+                                      eventDateRegional: reg,
+                                    }));
+                                    clearFieldError("eventDate");
+                                  }
+                                }}
+                                className="w-full text-xs bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#991B1B] cursor-pointer"
+                              />
+                            </div>
+
+                            <IndicLanguageInput
+                              label="Wedding / Event Date (Wording on Card)"
                               required
-                              value={printForm.eventDate}
-                              onChange={(e) => {
-                                setPrintForm({ ...printForm, eventDate: e.target.value });
+                              englishValue={printForm.eventDate || ""}
+                              onEnglishChange={(val) => {
+                                setPrintForm((prev) => ({ ...prev, eventDate: val }));
                                 clearFieldError("eventDate");
                               }}
-                              placeholder="e.g. Sunday, 24th Nov 2026"
-                              className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                formErrors.eventDate
-                                  ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                  : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              }`}
+                              regionalValue={printForm.eventDateRegional || ""}
+                              onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, eventDateRegional: val }))}
+                              targetLanguage={printForm.cardLanguage}
+                              languageMode={printForm.languageMode}
+                              placeholderEnglish="e.g. Sunday, 24 November 2026"
+                              mode="translate"
+                              error={formErrors.eventDate}
                             />
-                            {formErrors.eventDate && (
-                              <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>{formErrors.eventDate}</span>
-                              </p>
-                            )}
                           </div>
 
-                          <div>
-                            <label className="font-bold text-slate-900 block mb-1">
-                              Muhurtham / Function Timing
-                            </label>
-                            <input
-                              type="text"
-                              value={printForm.eventTime}
-                              onChange={(e) => setPrintForm({ ...printForm, eventTime: e.target.value })}
-                              placeholder="e.g. Muhurtham: 9:00 AM | Reception: 7:00 PM"
-                              className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
+                          {/* Time Selection Box */}
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-[#991B1B]" />
+                                <span>Muhurtham / Timing</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={openTimePicker}
+                                className="text-[11px] font-bold text-[#991B1B] hover:text-white hover:bg-[#991B1B] flex items-center gap-1 cursor-pointer bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition-all shadow-2xs"
+                              >
+                                <Clock className="w-3 h-3" />
+                                <span>Set Clock Time</span>
+                              </button>
+                            </div>
+
+                            {/* Direct Native Time Picker Bar */}
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
+                              <span className="text-[11px] text-slate-500 font-semibold shrink-0">Time Picker:</span>
+                              <input
+                                ref={timePickerRef}
+                                type="time"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val) {
+                                    const eng = format12HourTime(val);
+                                    const reg = formatRegionalTime(val, printForm.cardLanguage);
+                                    setPrintForm((prev) => ({
+                                      ...prev,
+                                      eventTime: eng,
+                                      eventTimeRegional: reg,
+                                    }));
+                                  }
+                                }}
+                                className="w-full text-xs bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#991B1B] cursor-pointer"
+                              />
+                            </div>
+
+                            {/* Quick Auspicious Timing Presets */}
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-bold text-slate-500 block">Quick Auspicious Slots:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {[
+                                  { label: "🌅 Morning 9:00 AM", time: "09:00 AM" },
+                                  { label: "✨ Muhurtham 6:00 AM", time: "06:00 AM" },
+                                  { label: "🌆 Evening 7:00 PM", time: "07:00 PM onwards" },
+                                  { label: "☀️ Lunch 12:00 PM", time: "12:00 PM" },
+                                ].map((preset, pIdx) => (
+                                  <button
+                                    key={pIdx}
+                                    type="button"
+                                    onClick={() => {
+                                      const reg = formatRegionalTime(preset.time, printForm.cardLanguage);
+                                      setPrintForm((prev) => ({
+                                        ...prev,
+                                        eventTime: preset.time,
+                                        eventTimeRegional: reg,
+                                      }));
+                                    }}
+                                    className="text-[10.5px] font-semibold px-2 py-1 rounded-md bg-stone-100 hover:bg-red-50 hover:text-[#991B1B] hover:border-red-200 border border-stone-200 text-slate-700 transition-all cursor-pointer"
+                                  >
+                                    {preset.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <IndicLanguageInput
+                              label="Muhurtham / Function Timing (Wording on Card)"
+                              englishValue={printForm.eventTime || ""}
+                              onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, eventTime: val }))}
+                              regionalValue={printForm.eventTimeRegional || ""}
+                              onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, eventTimeRegional: val }))}
+                              targetLanguage={printForm.cardLanguage}
+                              languageMode={printForm.languageMode}
+                              placeholderEnglish="e.g. Muhurtham: 9:00 AM | Reception: 7:00 PM"
+                              mode="translate"
                             />
                           </div>
                         </div>
@@ -1830,7 +2099,7 @@ export default function TraditionalShopClient() {
                           {printForm.venues.map((venue, idx) => (
                             <div
                               key={idx}
-                              className="p-3.5 rounded-xl bg-red-50/30 border border-red-100 space-y-2.5 relative"
+                              className="p-3.5 rounded-xl bg-red-50/30 border border-red-100 space-y-3 relative"
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-[11px] font-extrabold text-[#991B1B]">
@@ -1848,49 +2117,46 @@ export default function TraditionalShopClient() {
                                 )}
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                <div>
-                                  <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    Function Name
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={venue.functionType || ""}
-                                    onChange={(e) => handleVenueChange(idx, "functionType", e.target.value)}
-                                    placeholder="e.g. Muhurtham / Reception"
-                                    className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                  />
-                                </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <IndicLanguageInput
+                                  label="Function Name"
+                                  englishValue={venue.functionType || ""}
+                                  onEnglishChange={(val) => handleVenueChange(idx, "functionType", val)}
+                                  regionalValue={venue.functionTypeRegional || ""}
+                                  onRegionalChange={(val) => handleVenueChange(idx, "functionTypeRegional", val)}
+                                  targetLanguage={printForm.cardLanguage}
+                                  languageMode={printForm.languageMode}
+                                  placeholderEnglish="e.g. Muhurtham / Reception"
+                                  mode="translate"
+                                />
 
-                                <div>
-                                  <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    Hall / Hotel Name <span className="text-[#991B1B]">*</span>
-                                  </label>
-                                  <input
-                                    type="text"
-                                    required
-                                    value={venue.name}
-                                    onChange={(e) => {
-                                      handleVenueChange(idx, "name", e.target.value);
-                                      clearFieldError("venue");
-                                    }}
-                                    placeholder="e.g. Grand Palace Hall"
-                                    className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 font-semibold focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                  />
-                                </div>
+                                <IndicLanguageInput
+                                  label="Hall / Hotel Name"
+                                  required
+                                  englishValue={venue.name || ""}
+                                  onEnglishChange={(val) => {
+                                    handleVenueChange(idx, "name", val);
+                                    clearFieldError("venue");
+                                  }}
+                                  regionalValue={venue.nameRegional || ""}
+                                  onRegionalChange={(val) => handleVenueChange(idx, "nameRegional", val)}
+                                  targetLanguage={printForm.cardLanguage}
+                                  languageMode={printForm.languageMode}
+                                  placeholderEnglish="e.g. Grand Palace Hall"
+                                  mode="transliterate"
+                                />
 
-                                <div>
-                                  <label className="font-bold text-slate-900 block mb-0.5 text-[10.5px]">
-                                    Address &amp; Landmark
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={venue.address}
-                                    onChange={(e) => handleVenueChange(idx, "address", e.target.value)}
-                                    placeholder="e.g. Anna Salai, Chennai"
-                                    className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                  />
-                                </div>
+                                <IndicLanguageInput
+                                  label="Address & Landmark"
+                                  englishValue={venue.address || ""}
+                                  onEnglishChange={(val) => handleVenueChange(idx, "address", val)}
+                                  regionalValue={venue.addressRegional || ""}
+                                  onRegionalChange={(val) => handleVenueChange(idx, "addressRegional", val)}
+                                  targetLanguage={printForm.cardLanguage}
+                                  languageMode={printForm.languageMode}
+                                  placeholderEnglish="e.g. Anna Salai, Chennai"
+                                  mode="translate"
+                                />
                               </div>
                             </div>
                           ))}
@@ -1940,15 +2206,16 @@ export default function TraditionalShopClient() {
                       {!isGift && (
                         /* RSVP Contact */
                         <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                          <label className="font-bold text-slate-900 block mb-1 text-xs">
-                            📞 RSVP Names &amp; Contact Phone Numbers
-                          </label>
-                          <input
-                            type="text"
-                            value={printForm.rsvpContact}
-                            onChange={(e) => setPrintForm({ ...printForm, rsvpContact: e.target.value })}
-                            placeholder="e.g. Sharma Family: +91 98765 43210"
-                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
+                          <IndicLanguageInput
+                            label="📞 RSVP Names & Contact Phone Numbers"
+                            englishValue={printForm.rsvpContact || ""}
+                            onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, rsvpContact: val }))}
+                            regionalValue={printForm.rsvpContactRegional || ""}
+                            onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, rsvpContactRegional: val }))}
+                            targetLanguage={printForm.cardLanguage}
+                            languageMode={printForm.languageMode}
+                            placeholderEnglish="e.g. Sharma Family: +91 98765 43210"
+                            mode="transliterate"
                           />
                         </div>
                       )}
@@ -2103,15 +2370,17 @@ export default function TraditionalShopClient() {
 
                       {/* Special Instructions / Religion Symbol */}
                       <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                        <label className="font-bold text-slate-900 block mb-1 text-xs">
-                          ✨ Special Notes / Religious Symbols / Custom Proof Notes <span className="text-[10px] text-slate-400">(Optional)</span>
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={printForm.specialInstructions}
-                          onChange={(e) => setPrintForm({ ...printForm, specialInstructions: e.target.value })}
-                          placeholder="e.g. Include Lord Ganesha symbol at top, Vegetarian Dinner note, Custom traditional quote..."
-                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
+                        <IndicLanguageInput
+                          label="✨ Special Notes / Religious Symbols / Custom Proof Notes (Optional)"
+                          multiline={true}
+                          mode="translate"
+                          englishValue={printForm.specialInstructions || ""}
+                          onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, specialInstructions: val }))}
+                          regionalValue={printForm.specialInstructionsRegional || ""}
+                          onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, specialInstructionsRegional: val }))}
+                          targetLanguage={printForm.cardLanguage}
+                          languageMode={printForm.languageMode}
+                          placeholderEnglish="e.g. Include Lord Ganesha symbol at top, Vegetarian Dinner note, Custom traditional quote..."
                         />
                       </div>
 

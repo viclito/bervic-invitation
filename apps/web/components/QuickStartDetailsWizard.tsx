@@ -484,33 +484,30 @@ export default function QuickStartDetailsWizard({
             const allRes = await fetch("/api/user/event-draft?all=true");
             const allData = await allRes.json();
             if (allData.success && Array.isArray(allData.profiles)) {
-              setExistingProfiles(allData.profiles);
-              if (isNewProfile || !profileId) {
-                const hasWedding = allData.profiles.some((p: { eventType?: string }) => !p.eventType || p.eventType.toUpperCase() === "WEDDING");
-                const hasBirthday = allData.profiles.some((p: { eventType?: string }) => p.eventType && p.eventType.toUpperCase() === "BIRTHDAY");
-                if (hasWedding && !hasBirthday) {
-                  setDraft((prev) => ({
-                    ...prev,
-                    eventType: "BIRTHDAY",
-                    venueName: "Birthday Celebration Venue",
-                    locations: BIRTHDAY_DEFAULT_LOCATIONS,
-                    functions: BIRTHDAY_DEFAULT_FUNCTIONS,
-                    timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
-                    dressCode: "Smart Casual / Party Chic",
-                    inviteLine: "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!",
-                  }));
-                } else if (hasBirthday && !hasWedding) {
-                  setDraft((prev) => ({
-                    ...prev,
-                    eventType: "WEDDING",
-                    venueName: "Marriage Ceremony Hall",
-                    locations: WEDDING_DEFAULT_LOCATIONS,
-                    functions: WEDDING_DEFAULT_FUNCTIONS,
-                    timelineItems: WEDDING_DEFAULT_TIMELINE,
-                    dressCode: "Traditional / Cocktail Attire",
-                    inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
-                  }));
-                }
+              if (initialEventType) {
+                const targetType = initialEventType.toUpperCase();
+                const isTargetBirthday = targetType === "BIRTHDAY";
+                setDraft((prev) => ({
+                  ...prev,
+                  eventType: targetType,
+                  ...(isTargetBirthday
+                    ? {
+                        venueName: "Birthday Celebration Venue",
+                        locations: BIRTHDAY_DEFAULT_LOCATIONS,
+                        functions: BIRTHDAY_DEFAULT_FUNCTIONS,
+                        timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
+                        dressCode: "Smart Casual / Party Chic",
+                        inviteLine: "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!",
+                      }
+                    : {
+                        venueName: "Marriage Ceremony Hall",
+                        locations: WEDDING_DEFAULT_LOCATIONS,
+                        functions: WEDDING_DEFAULT_FUNCTIONS,
+                        timelineItems: WEDDING_DEFAULT_TIMELINE,
+                        dressCode: "Traditional / Cocktail Attire",
+                        inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
+                      }),
+                }));
               }
             }
           } catch {}
@@ -862,7 +859,7 @@ export default function QuickStartDetailsWizard({
       const res = await fetch("/api/user/event-draft/extract", {
         method: "POST",
         body: formData,
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(60000),
       });
 
       const data = await res.json();
@@ -884,11 +881,23 @@ export default function QuickStartDetailsWizard({
       const extractedVenue = ext.venueName || draft.venueName;
       const extractedAddress = ext.venueAddress || draft.venueAddress;
 
-      const updatedFunctions = draft.functions.map((fn) => ({
-        ...fn,
-        date: fn.date || extractedDate || "",
-        venue: fn.venue || extractedVenue || "",
-      }));
+      let updatedFunctions = draft.functions;
+      if (Array.isArray(ext.functions) && ext.functions.length > 0) {
+        updatedFunctions = ext.functions.map((fn: { id?: string; title?: string; date?: string; time?: string; venue?: string; icon?: string }, idx: number) => ({
+          id: fn.id || `fn-auto-${idx + 1}`,
+          title: fn.title || `Event ${idx + 1}`,
+          date: fn.date || extractedDate || "",
+          time: fn.time || extractedTime || "",
+          venue: fn.venue || extractedVenue || "",
+          icon: fn.icon || (fn.title?.toLowerCase().includes("reception") ? "party" : "heart"),
+        }));
+      } else {
+        updatedFunctions = draft.functions.map((fn) => ({
+          ...fn,
+          date: fn.date || extractedDate || "",
+          venue: fn.venue || extractedVenue || "",
+        }));
+      }
 
       let parsedLocations: VenueLocationItem[] | null = null;
       if (ext.locationsJson) {
@@ -1769,27 +1778,18 @@ export default function QuickStartDetailsWizard({
                   className="space-y-4"
                 >
                   {(() => {
-                    const existingTypes = isNewProfile || !draft.id
-                      ? existingProfiles.map((p) => (p.eventType || "WEDDING").toUpperCase())
-                      : existingProfiles.filter((p) => p.id !== draft.id).map((p) => (p.eventType || "WEDDING").toUpperCase());
-
-                    const hasExistingWedding = existingTypes.includes("WEDDING");
-                    const hasExistingBirthday = existingTypes.includes("BIRTHDAY");
-
                     const items = [
                       {
                         type: "WEDDING",
                         label: "Wedding",
                         icon: Heart,
-                        disabled: (isNewProfile || !draft.id) && hasExistingWedding,
-                        badgeText: (isNewProfile || !draft.id) && hasExistingWedding ? "Created" : undefined,
+                        disabled: false,
                       },
                       {
                         type: "BIRTHDAY",
                         label: "Birthday",
                         icon: Cake,
-                        disabled: (isNewProfile || !draft.id) && hasExistingBirthday,
-                        badgeText: (isNewProfile || !draft.id) && hasExistingBirthday ? "Created" : undefined,
+                        disabled: false,
                       },
                       { type: "RELIGIOUS", label: "Religious / Home", icon: Home, disabled: true, badgeText: "Soon" },
                       { type: "ANNIVERSARY", label: "Anniversary", icon: Sparkles, disabled: true, badgeText: "Soon" },
@@ -1982,7 +1982,7 @@ export default function QuickStartDetailsWizard({
                       </label>
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400 select-none">
-                          bervic.com/invitations/
+                          bervic.in/invitations/
                         </div>
                         <input
                           type="text"
@@ -2017,7 +2017,7 @@ export default function QuickStartDetailsWizard({
                           {slugStatus === "available" && (
                             <span className="text-emerald-700 font-bold flex items-center gap-1">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" />
-                              Route available! Your shareable link will be: <code className="bg-emerald-100/80 px-1 py-0.5 rounded text-emerald-900 font-mono text-[10px]">bervic.com/invitations/{draft.customSlug}</code>
+                              Route available! Your shareable link will be: <code className="bg-emerald-100/80 px-1 py-0.5 rounded text-emerald-900 font-mono text-[10px]">bervic.in/invitations/{draft.customSlug}</code>
                             </span>
                           )}
                           {slugStatus === "taken" && (

@@ -182,7 +182,7 @@ export default function GuestRsvpModal({
 
   const publicLink = typeof window !== "undefined"
     ? `${window.location.origin}/invitations/${invitationSlug}`
-    : `https://bervic.app/invitations/${invitationSlug}`;
+    : `https://www.bervic.in/invitations/${invitationSlug}`;
 
   const fetchGuests = async () => {
     setLoading(true);

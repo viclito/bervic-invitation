@@ -176,155 +176,155 @@ export function TemplatePreviewModal({
   };
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <View style={styles.modalCard}>
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <View style={styles.badgeRow}>
-                <Text style={styles.categoryBadge}>{template.category || "LUXURY WEDDING"}</Text>
-                {template.isPremium && (
-                  <View style={styles.premiumBadge}>
-                    <Text style={styles.premiumBadgeText}>480p SCROLL</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.title} numberOfLines={1}>
-                {template.title}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <X size={16} color="#64748B" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {/* High-Resolution Template Thumbnail Preview */}
-            <View style={styles.previewImageContainer}>
-              <Image
-                source={{ uri: thumbnailUri }}
-                placeholder={{ uri: fallbackUri }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-                transition={300}
-              />
-              <View style={styles.floatingPreviewTag}>
-                <Sparkles size={11} color="#FDE047" />
-                <Text style={styles.floatingPreviewTagText}>Theme Preview</Text>
-              </View>
-            </View>
-
-            {/* Description */}
-            <Text style={styles.desc}>{template.description}</Text>
-
-            {/* Live Data Injection Teaser */}
-            <Text style={styles.sectionLabel}>Live Website Preview Data</Text>
-
-            <View style={styles.dataCard}>
-              <View style={styles.dataRow}>
-                <Heart size={13} color={BRAND_COLORS.primaryRed} />
-                <Text style={styles.coupleText}>{coupleTitle}</Text>
-              </View>
-              <View style={styles.dataRow}>
-                <Calendar size={13} color="#64748B" />
-                <Text style={styles.dateText}>{eventDate}</Text>
-              </View>
-              <View style={styles.dataRow}>
-                <MapPin size={13} color="#64748B" />
-                <Text style={styles.venueText} numberOfLines={1}>
-                  {venuePlace}
+        {showRazorpayModal && razorpayOrder ? (
+          <RazorpayCheckoutModal
+            visible={showRazorpayModal}
+            orderData={razorpayOrder}
+            onSuccess={handlePaymentSuccess}
+            onFailure={(msg) => {
+              setShowRazorpayModal(false);
+              Alert.alert("Payment Cancelled / Declined", msg);
+            }}
+            onClose={() => setShowRazorpayModal(false)}
+          />
+        ) : (
+          <View style={styles.modalCard}>
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <View style={styles.badgeRow}>
+                  <Text style={styles.categoryBadge}>{template.category || "LUXURY WEDDING"}</Text>
+                  {template.isPremium && (
+                    <View style={styles.premiumBadge}>
+                      <Text style={styles.premiumBadgeText}>480p SCROLL</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.title} numberOfLines={1}>
+                  {template.title}
                 </Text>
               </View>
-
-              <View style={styles.featuresRow}>
-                <View style={styles.miniFeaturePill}>
-                  <Clock size={12} color={BRAND_COLORS.primaryRed} />
-                  <Text style={styles.miniFeatureText}>LIVE COUNTDOWN</Text>
-                </View>
-                <View style={styles.miniFeaturePill}>
-                  <Music size={12} color={BRAND_COLORS.primaryRed} />
-                  <Text style={styles.miniFeatureText}>BG AUDIO</Text>
-                </View>
-                <View style={styles.miniFeaturePill}>
-                  <CheckCircle2 size={12} color="#059669" />
-                  <Text style={styles.miniFeatureText}>RSVP FORM</Text>
-                </View>
-              </View>
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+                <X size={16} color="#64748B" />
+              </TouchableOpacity>
             </View>
 
-            {/* Template Slot Notice */}
-            {isActiveTemplate ? (
-              <View style={styles.activeBanner}>
-                <CheckCircle2 size={22} color="#059669" />
-                <Text style={styles.activeBannerTitle}>Current Active Theme for Your Invitation</Text>
-                <Text style={styles.activeBannerSub}>
-                  Your live web invitation is actively operating in this design.
-                </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* High-Resolution Template Thumbnail Preview */}
+              <View style={styles.previewImageContainer}>
+                <Image
+                  source={{ uri: thumbnailUri }}
+                  placeholder={{ uri: fallbackUri }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                  transition={300}
+                />
+                <View style={styles.floatingPreviewTag}>
+                  <Sparkles size={11} color="#FDE047" />
+                  <Text style={styles.floatingPreviewTagText}>Theme Preview</Text>
+                </View>
               </View>
-            ) : unlockSuccess ? (
-              <View style={styles.activeBanner}>
-                <CheckCircle2 size={24} color="#059669" />
-                <Text style={styles.activeBannerTitle}>Template Slot Unlocked! 🎉</Text>
-                <Text style={styles.activeBannerSub}>
-                  A new invitation has been provisioned with the {template.title} design.
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.noticeBanner}>
+
+              {/* Description */}
+              <Text style={styles.desc}>{template.description}</Text>
+
+              {/* Live Data Injection Teaser */}
+              <Text style={styles.sectionLabel}>Live Website Preview Data</Text>
+
+              <View style={styles.dataCard}>
                 <View style={styles.dataRow}>
-                  <Lock size={13} color="#D97706" />
-                  <Text style={styles.noticeTitle}>Template Slot Purchase Policy</Text>
+                  <Heart size={13} color={BRAND_COLORS.primaryRed} />
+                  <Text style={styles.coupleText}>{coupleTitle}</Text>
                 </View>
-                <Text style={styles.noticeSub}>
-                  Each purchased invitation is permanently tied to its chosen template. To create an invitation with this design, unlock an additional template slot.
-                </Text>
-              </View>
-            )}
+                <View style={styles.dataRow}>
+                  <Calendar size={13} color="#64748B" />
+                  <Text style={styles.dateText}>{eventDate}</Text>
+                </View>
+                <View style={styles.dataRow}>
+                  <MapPin size={13} color="#64748B" />
+                  <Text style={styles.venueText} numberOfLines={1}>
+                    {venuePlace}
+                  </Text>
+                </View>
 
-            {/* Action Buttons */}
-            {isActiveTemplate ? (
-              <View style={styles.activeDesignBtn}>
-                <Text style={styles.activeDesignBtnText}>✓ Active Live Design</Text>
+                <View style={styles.featuresRow}>
+                  <View style={styles.miniFeaturePill}>
+                    <Clock size={12} color={BRAND_COLORS.primaryRed} />
+                    <Text style={styles.miniFeatureText}>LIVE COUNTDOWN</Text>
+                  </View>
+                  <View style={styles.miniFeaturePill}>
+                    <Music size={12} color={BRAND_COLORS.primaryRed} />
+                    <Text style={styles.miniFeatureText}>BG AUDIO</Text>
+                  </View>
+                  <View style={styles.miniFeaturePill}>
+                    <CheckCircle2 size={12} color="#059669" />
+                    <Text style={styles.miniFeatureText}>RSVP FORM</Text>
+                  </View>
+                </View>
               </View>
-            ) : !unlockSuccess && (
-              <GradientButton
-                onPress={handleUnlockNewSlot}
-                isLoading={isUnlocking}
-                title={
-                  hasAvailableSlot
-                    ? "Unlock New Slot with This Design"
-                    : `Unlock Template Slot • ₹${templatePrice}`
-                }
-                colors={["#EF4444", "#DC2626", "#881337"]}
-              />
-            )}
 
-            <TouchableOpacity
-              onPress={handleOpenBrowser}
-              style={styles.demoBtn}
-              activeOpacity={0.8}
-            >
-              <ExternalLink size={15} color="#FFF" />
-              <Text style={styles.demoBtnText}>Open Live Interactive Web Demo</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+              {/* Template Slot Notice */}
+              {isActiveTemplate ? (
+                <View style={styles.activeBanner}>
+                  <CheckCircle2 size={22} color="#059669" />
+                  <Text style={styles.activeBannerTitle}>Current Active Theme for Your Invitation</Text>
+                  <Text style={styles.activeBannerSub}>
+                    Your live web invitation is actively operating in this design.
+                  </Text>
+                </View>
+              ) : unlockSuccess ? (
+                <View style={styles.activeBanner}>
+                  <CheckCircle2 size={24} color="#059669" />
+                  <Text style={styles.activeBannerTitle}>Template Slot Unlocked! 🎉</Text>
+                  <Text style={styles.activeBannerSub}>
+                    A new invitation has been provisioned with the {template.title} design.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.noticeBanner}>
+                  <View style={styles.dataRow}>
+                    <Lock size={13} color="#D97706" />
+                    <Text style={styles.noticeTitle}>Template Slot Purchase Policy</Text>
+                  </View>
+                  <Text style={styles.noticeSub}>
+                    Each purchased invitation is permanently tied to its chosen template. To create an invitation with this design, unlock an additional template slot.
+                  </Text>
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              {isActiveTemplate ? (
+                <View style={styles.activeDesignBtn}>
+                  <Text style={styles.activeDesignBtnText}>✓ Active Live Design</Text>
+                </View>
+              ) : !unlockSuccess && (
+                <GradientButton
+                  onPress={handleUnlockNewSlot}
+                  isLoading={isUnlocking}
+                  title={
+                    hasAvailableSlot
+                      ? "Unlock New Slot with This Design"
+                      : `Unlock Template Slot • ₹${templatePrice}`
+                  }
+                  colors={["#EF4444", "#DC2626", "#881337"]}
+                />
+              )}
+
+              <TouchableOpacity
+                onPress={handleOpenBrowser}
+                style={styles.demoBtn}
+                activeOpacity={0.8}
+              >
+                <ExternalLink size={15} color="#FFF" />
+                <Text style={styles.demoBtnText}>Open Live Interactive Web Demo</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        )}
       </View>
     </Modal>
-
-    <RazorpayCheckoutModal
-      visible={showRazorpayModal}
-      orderData={razorpayOrder}
-      onSuccess={handlePaymentSuccess}
-      onFailure={(msg) => {
-        setShowRazorpayModal(false);
-        Alert.alert("Payment Cancelled / Declined", msg);
-      }}
-      onClose={() => setShowRazorpayModal(false)}
-    />
-  </>
   );
 }
 

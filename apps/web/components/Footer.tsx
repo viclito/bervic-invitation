@@ -60,6 +60,17 @@ export default function Footer() {
             <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Support</h4>
             <ul className="space-y-2 text-xs text-slate-300">
               <li>
+                <a
+                  href="https://wa.me/919042127115?text=Hi%20Bervic%2C%20I%20have%20an%20enquiry%20regarding%20digital%20wedding%20invitations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-400 font-medium transition-colors inline-flex items-center gap-1.5"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block"></span>
+                  WhatsApp Enquiry
+                </a>
+              </li>
+              <li>
                 <a href="mailto:support@bervic.app" className="hover:text-amber-300 transition-colors">Contact Support</a>
               </li>
               <li>
@@ -88,6 +99,17 @@ export default function Footer() {
                 <Phone className="w-3.5 h-3.5 text-amber-400" />
                 <a href="tel:+919042127115" className="hover:text-amber-300 transition-colors">
                   +91 90421 27115
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 flex items-center justify-center text-emerald-400 text-xs font-bold">WA</span>
+                <a
+                  href="https://wa.me/919042127115?text=Hi%20Bervic%2C%20I%20have%20an%20enquiry%20regarding%20digital%20wedding%20invitations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  WhatsApp: +91 90421 27115
                 </a>
               </li>
               <li className="flex items-center gap-2">
