@@ -1,0 +1,995 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+
+/* ── DESIGN TOKENS & RESET ── */
+.glowinn-root {
+  --font-body: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ink: #ffffff;
+  --ink-soft: rgba(255, 255, 255, 0.82);
+  --ink-faint: rgba(255, 255, 255, 0.58);
+
+  /* Cool mossy glass — tinted deep forest green */
+  --glass: rgba(20, 32, 24, 0.62);
+  --glass-lift: rgba(28, 44, 34, 0.78);
+  --hairline: rgba(255, 255, 255, 0.14);
+
+  --blush: #f0b4c4;
+  --blush-glow: rgba(240, 180, 196, 0.35);
+
+  --ground: #16241b;
+  --ground-deep: #050a07;
+
+  --gutter: clamp(14px, 3.4vw, 40px);
+  --shell: 1240px;
+  --nav-h: 72px;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: dark;
+
+  position: relative;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--ground-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.glowinn-root *,
+.glowinn-root *::before,
+.glowinn-root *::after {
+  box-sizing: border-box;
+}
+
+.glowinn-root .shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ── FIXED BACKGROUND VIDEO LAYER ── */
+.glowinn-fixed-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 40%, var(--ground) 0%, var(--ground-deep) 100%);
+}
+
+.glowinn-fixed-bg__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out);
+}
+
+.glowinn-fixed-bg__video.is-ready {
+  opacity: 1;
+}
+
+.glowinn-fixed-bg__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(92% 68% at 50% 50%, rgba(6, 12, 8, 0.05) 30%, rgba(5, 10, 7, 0.45) 100%),
+    linear-gradient(180deg,
+      rgba(5, 10, 7, 0.45) 0%,
+      rgba(5, 10, 7, 0.1) 25%,
+      rgba(5, 10, 7, 0.1) 75%,
+      rgba(5, 10, 7, 0.55) 100%);
+}
+
+/* ── MAIN SCROLLING CONTAINER ── */
+.glowinn-main {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(36px, 6vh, 72px);
+  padding-bottom: 30px;
+}
+
+/* ── REUSABLE GLASS CARD ── */
+.glowinn-glass-card {
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--hairline);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  transition: transform .35s var(--ease-out), border-color .35s var(--ease-out), box-shadow .35s var(--ease-out);
+}
+
+.glowinn-glass-card:hover {
+  border-color: rgba(240, 180, 196, 0.3);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45), 0 0 20px rgba(240, 180, 196, 0.08);
+}
+
+/* ── SECTION TYPOGRAPHY & HEADERS ── */
+.glowinn-section {
+  position: relative;
+  padding-top: clamp(16px, 3vh, 36px);
+  padding-bottom: clamp(16px, 3vh, 36px);
+  scroll-margin-top: calc(var(--nav-h) + 14px);
+}
+
+.glowinn-section__header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto clamp(24px, 4vh, 40px);
+}
+
+.glowinn-section__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(240, 180, 196, 0.12);
+  border: 1px solid rgba(240, 180, 196, 0.3);
+  color: var(--blush);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.glowinn-section__title {
+  font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+}
+
+.glowinn-section__subtitle {
+  margin-top: 8px;
+  font-size: clamp(13px, 1.4vw, 15px);
+  font-weight: 300;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ── BUTTONS ── */
+.glowinn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  min-height: 44px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .35s var(--ease-out), transform .35s var(--ease-out), box-shadow .35s var(--ease-out), border-color .35s var(--ease-out);
+}
+
+.glowinn-btn:hover {
+  transform: translateY(-1px);
+}
+
+.glowinn-btn:active {
+  transform: translateY(0);
+}
+
+.glowinn-btn--pearl {
+  background: linear-gradient(180deg, #ffffff 0%, #f6e9ee 100%);
+  color: #1d1418;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+  border: 0;
+}
+
+.glowinn-btn--pearl:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.44), 0 0 16px var(--blush-glow);
+}
+
+.glowinn-btn--ink {
+  background: rgba(14, 22, 17, 0.78);
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.glowinn-btn--ink:hover {
+  background: rgba(22, 34, 26, 0.88);
+  border-color: rgba(240, 180, 196, 0.45);
+}
+
+/* ── SECTION: OUR DAY (CLEAN FLOATING SQUARE PHOTOS WITH OVERLAID TEXT) ── */
+.glowinn-couple-square-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 36px);
+  max-width: 680px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.glowinn-couple-square-item {
+  position: relative;
+  width: clamp(150px, 38vw, 210px);
+  height: clamp(150px, 38vw, 210px);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  cursor: default;
+  transition: transform .4s var(--ease-out), box-shadow .4s var(--ease-out);
+}
+
+.glowinn-couple-square-item:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), 0 0 20px rgba(240, 180, 196, 0.2);
+}
+
+.glowinn-couple-square-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 16px 12px 10px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(5, 10, 7, 0.85) 60%, rgba(5, 10, 7, 0.96) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.glowinn-couple-square-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--blush);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.glowinn-couple-square-name {
+  font-size: clamp(13.5px, 2vw, 16px);
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* ── LIVE COUNTDOWN CARD ── */
+.glowinn-countdown-wrapper {
+  max-width: 640px;
+  margin: 28px auto 0;
+}
+
+.glowinn-countdown-card {
+  padding: 24px 18px;
+  text-align: center;
+}
+
+.glowinn-countdown-card__header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.glowinn-countdown-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.8vw, 16px);
+}
+
+.glowinn-countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+}
+
+.glowinn-countdown-val {
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 16px rgba(240, 180, 196, 0.3);
+}
+
+.glowinn-countdown-unit {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.glowinn-countdown-sep {
+  font-size: 20px;
+  color: var(--blush);
+  opacity: 0.6;
+  margin-bottom: 14px;
+}
+
+.glowinn-countdown-foot {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--ink-soft);
+}
+
+/* ── SECTION: EVENTS ── */
+.glowinn-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(16px, 2.5vw, 26px);
+}
+
+.glowinn-event-card {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.glowinn-event-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.glowinn-event-card__step {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--blush);
+  text-transform: uppercase;
+}
+
+.glowinn-event-card__date {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.glowinn-event-card__title {
+  font-size: 18.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.glowinn-event-card__sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--blush);
+  margin-bottom: 10px;
+}
+
+.glowinn-event-card__desc {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.glowinn-event-card__details {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.glowinn-event-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.glowinn-event-card__attire {
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── SECTION: DAY TIMELINE ── */
+.glowinn-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-left: 28px;
+}
+
+.glowinn-timeline__track {
+  position: absolute;
+  left: 9px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--blush) 0%, rgba(240, 180, 196, 0.2) 100%);
+}
+
+.glowinn-timeline__item {
+  position: relative;
+}
+
+.glowinn-timeline__node {
+  position: absolute;
+  left: -28px;
+  top: 18px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(14, 22, 17, 0.95);
+  border: 2px solid var(--blush);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glowinn-timeline__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--blush);
+}
+
+.glowinn-timeline__card {
+  padding: 16px 20px;
+}
+
+.glowinn-timeline__time-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--blush);
+  margin-bottom: 4px;
+}
+
+.glowinn-timeline__item-title {
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.glowinn-timeline__item-desc {
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+/* ── SECTION: OUR STORY ── */
+.glowinn-story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: clamp(14px, 2.5vw, 22px);
+}
+
+.glowinn-story-card {
+  padding: 22px 20px;
+}
+
+.glowinn-story-card__year {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(240, 180, 196, 0.12);
+  border: 1px solid rgba(240, 180, 196, 0.3);
+  color: var(--blush);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.glowinn-story-card__title {
+  font-size: 17.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.glowinn-story-card__desc {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ── SECTION: LOCATIONS ── */
+.glowinn-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(16px, 2.5vw, 26px);
+}
+
+.glowinn-location-card {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.glowinn-location-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.glowinn-location-card__tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--blush);
+  text-transform: uppercase;
+}
+
+.glowinn-location-card__time {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.glowinn-location-card__name {
+  font-size: 18.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.glowinn-location-card__addr {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.glowinn-location-card__contact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+}
+
+.glowinn-location-card__actions {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/* ── UNIQUE BENTO GALLERY GRID: BIG & SMALL COMBINATION ── */
+.glowinn-gallery-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 175px;
+  gap: clamp(10px, 1.8vw, 18px);
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.glowinn-bento-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.glowinn-bento-card__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.glowinn-bento--hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.glowinn-bento--tall {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.glowinn-bento--small {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.glowinn-bento--wide {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.glowinn-bento-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(8, 14, 10, 0.88) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  opacity: 0;
+  transition: opacity .3s var(--ease-out);
+}
+
+.glowinn-bento-card:hover .glowinn-bento-card__overlay {
+  opacity: 1;
+}
+
+.glowinn-bento-card__zoom-btn {
+  align-self: flex-end;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(14, 22, 17, 0.85);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glowinn-bento-card__caption {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* ── LIGHTBOX MODAL ── */
+.glowinn-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 8, 6, 0.94);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 3vw, 36px);
+  animation: glowinn-fade-in .25s ease-out;
+}
+
+@keyframes glowinn-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.glowinn-lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 110;
+  transition: all .25s var(--ease-out);
+}
+
+.glowinn-lightbox-close:hover {
+  background: rgba(240, 180, 196, 0.25);
+  border-color: var(--blush);
+  transform: scale(1.08);
+}
+
+.glowinn-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 110;
+  transition: all .25s var(--ease-out);
+}
+
+.glowinn-lightbox-nav:hover {
+  background: rgba(240, 180, 196, 0.25);
+  border-color: var(--blush);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.glowinn-lightbox-nav--prev {
+  left: 18px;
+}
+
+.glowinn-lightbox-nav--next {
+  right: 18px;
+}
+
+.glowinn-lightbox-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.glowinn-lightbox-media {
+  position: relative;
+  width: 100%;
+  height: 68vh;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(240, 180, 196, 0.15);
+}
+
+.glowinn-lightbox-info {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 8px;
+}
+
+/* ── SECTION: RSVP & BLESSINGS ── */
+.glowinn-rsvp-card {
+  padding: clamp(20px, 3.5vw, 32px);
+}
+
+.glowinn-rsvp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.glowinn-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.glowinn-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.glowinn-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  min-height: 46px;
+  border-radius: var(--radius-sm);
+  background: rgba(10, 16, 12, 0.65);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color .3s var(--ease-out), box-shadow .3s var(--ease-out);
+}
+
+.glowinn-form-input:focus {
+  border-color: var(--blush);
+  box-shadow: 0 0 14px var(--blush-glow);
+}
+
+.glowinn-rsvp-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.glowinn-rsvp-opt {
+  padding: 12px 14px;
+  min-height: 46px;
+  border-radius: var(--radius-sm);
+  background: rgba(10, 16, 12, 0.65);
+  border: 1px solid var(--hairline);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all .3s var(--ease-out);
+}
+
+.glowinn-rsvp-opt.is-selected {
+  background: rgba(240, 180, 196, 0.2);
+  border-color: var(--blush);
+  color: var(--ink);
+  box-shadow: 0 0 16px var(--blush-glow);
+}
+
+.glowinn-blessings-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.glowinn-blessing-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hairline);
+  color: var(--ink-soft);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .25s var(--ease-out);
+}
+
+.glowinn-blessing-chip:hover {
+  background: rgba(240, 180, 196, 0.15);
+  border-color: var(--blush);
+  color: var(--ink);
+}
+
+.glowinn-rsvp-success {
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.glowinn-rsvp-success__icon {
+  margin: 0 auto 16px;
+}
+
+.glowinn-rsvp-success__title {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.glowinn-rsvp-success__desc {
+  font-size: 13.5px;
+  font-weight: 300;
+  color: var(--ink-soft);
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* ── FOOTER ── */
+.glowinn-footer {
+  position: relative;
+  z-index: 10;
+  padding: 48px 0 32px;
+  margin-top: 40px;
+  border-top: 1px solid var(--hairline);
+  background: rgba(5, 10, 7, 0.85);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.glowinn-footer__monogram {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(240, 180, 196, 0.15);
+  border: 1px solid rgba(240, 180, 196, 0.4);
+  color: var(--blush);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0 auto 10px;
+}
+
+.glowinn-footer__title {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.glowinn-footer__tagline {
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  max-width: 400px;
+  margin: 0 auto 18px;
+}
+
+.glowinn-footer__divider {
+  width: 40px;
+  height: 1px;
+  background: var(--blush);
+  opacity: 0.4;
+  margin: 0 auto 18px;
+}
+
+/* ── MOBILE & TABLET RESPONSIVENESS ── */
+@media (max-width: 900px) {
+  .glowinn-gallery-bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 160px;
+  }
+  .glowinn-bento--hero {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .glowinn-bento--tall {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+  .glowinn-bento--wide {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .glowinn-couple-grid {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+  }
+  .glowinn-rsvp-options {
+    grid-template-columns: 1fr;
+  }
+  .glowinn-lightbox-nav {
+    display: none;
+  }
+  .glowinn-gallery-bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 135px;
+    gap: 10px;
+  }
+  .glowinn-bento--tall {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  .glowinn-countdown-card {
+    padding: 20px 12px;
+  }
+  .glowinn-countdown-grid {
+    gap: 4px;
+  }
+  .glowinn-countdown-item {
+    min-width: 42px;
+  }
+  .glowinn-countdown-val {
+    font-size: 22px;
+  }
+}

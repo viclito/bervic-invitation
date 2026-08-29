@@ -63,6 +63,7 @@ const FreshCitrusSummerInvitation = dynamic(() => import("./stitch/FreshCitrusSu
 const EclecticChicMasterpieceInvitation = dynamic(() => import("./stitch/EclecticChicMasterpieceInvitation"));
 const ScrollScrubberTemplate = dynamic(() => import("./scroll-scrubber/ScrollScrubberTemplate"));
 const PremiumScrollTemplate = dynamic(() => import("./premium-scroll/PremiumScrollTemplate"));
+const GlowinnTemplate = dynamic(() => import("./glowinn/GlowinnTemplate"));
 
 interface DynamicTemplateCardProps extends TemplateClassicFloralProps {
   templateSlug?: string;
@@ -246,6 +247,10 @@ export default function DynamicTemplateCard(props: DynamicTemplateCardProps) {
 
   if (currentSlug === "eclectic-chic-masterpiece") {
     return <EclecticChicMasterpieceInvitation {...props} />;
+  }
+
+  if (currentSlug === "glowinn") {
+    return <GlowinnTemplate {...props} />;
   }
 
   if (currentSlug === "premium-scroll") {
