@@ -16,6 +16,13 @@ function SectionSkeleton({ height = "h-[400px]", id }: { height?: string; id?: s
 }
 
 // Below the Fold Sections — Dynamic Imports with Skeletons
+const QuickStartDetailsWizard = dynamic(
+  () => import("@/components/QuickStartDetailsWizard"),
+  {
+    loading: () => <SectionSkeleton height="h-[650px]" id="quick-start" />,
+  }
+);
+
 const PopularTemplatesShowcase = dynamic(() => import("@/components/PopularTemplatesShowcase"), {
   loading: () => <SectionSkeleton height="h-[750px]" />,
 });
@@ -54,6 +61,9 @@ export default function Home() {
 
       {/* Hero Section */}
       <Hero />
+
+      {/* AI Wizard / Quick Start Details Section */}
+      <QuickStartDetailsWizard />
 
       {/* 3D Coverflow Popular Invitation Templates Showcase */}
       <PopularTemplatesShowcase />

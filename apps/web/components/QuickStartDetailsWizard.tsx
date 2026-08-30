@@ -1142,25 +1142,13 @@ export default function QuickStartDetailsWizard({
 
   if (isLandingPageWithProfile) {
     return (
-      <section className="py-16 md:py-24 bg-white text-slate-900 relative border-t border-b border-slate-100 overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
+      <section className="py-6 sm:py-8 bg-white text-slate-900 relative border-t border-b border-slate-100 overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-4">
           {/* Catchy Headline */}
-          <div className="space-y-3 max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-slate-900 leading-tight">
+          <div className="space-y-1.5 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-slate-900 leading-tight">
               Ready to Design Your <span className="italic text-[#991B1B]">Dream Invitation</span>?
             </h2>
-          </div>
-
-          {/* Multi-Device Luxury Showcase Image */}
-          <div className="relative max-w-4xl mx-auto py-2">
-            <NextImage
-              src="/images/multidevice-showcase.png"
-              alt="Luxury Invitation Website Multi-Device Showcase (Desktop, Laptop, Tablet, Mobile)"
-              width={1200}
-              height={800}
-              priority
-              className="w-full h-auto object-contain drop-shadow-xl"
-            />
           </div>
 
           {/* Active Saved Profile Badge Card */}
@@ -1196,11 +1184,11 @@ export default function QuickStartDetailsWizard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-lg mx-auto w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-1 max-w-lg mx-auto w-full">
             <button
               type="button"
               onClick={() => router.push("/templates")}
-              className="w-full sm:w-auto flex-1 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-red-900/25 transition-all cursor-pointer group"
+              className="w-full sm:w-auto flex-1 px-6 sm:px-8 py-3.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-red-900/20 transition-all cursor-pointer group"
             >
               <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
               <span>Choose Template &amp; Build Website →</span>
@@ -1209,7 +1197,7 @@ export default function QuickStartDetailsWizard({
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#991B1B] font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#991B1B] font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             >
               <LayoutDashboard className="w-4 h-4 text-[#991B1B]" />
               <span>Go to Dashboard</span>
@@ -1217,7 +1205,7 @@ export default function QuickStartDetailsWizard({
           </div>
 
           {/* Bottom note for creating extra profiles */}
-          <p className="text-[11px] sm:text-xs text-slate-500 pt-2 font-medium">
+          <p className="text-[11px] sm:text-xs text-slate-500 pt-1 font-medium">
             Want to add another event profile or edit current details? Visit your <button type="button" onClick={() => router.push("/dashboard")} className="font-bold text-[#991B1B] underline hover:opacity-80">Private Dashboard</button>.
           </p>
         </div>
@@ -1230,7 +1218,7 @@ export default function QuickStartDetailsWizard({
       <section
         id="details-form"
         className={`text-slate-900 relative scroll-mt-24 ${
-          onClose ? "py-2 sm:py-4 bg-transparent" : "py-12 md:py-20 bg-white border-t border-b border-slate-200"
+          onClose ? "py-2 sm:py-4 bg-transparent" : "py-8 sm:py-12 bg-white border-t border-b border-slate-200"
         }`}
       >
         <div className="max-w-[1020px] mx-auto px-4 sm:px-6">
@@ -1369,7 +1357,7 @@ export default function QuickStartDetailsWizard({
     <section
       id="details-form"
       className={`text-slate-900 relative scroll-mt-24 ${
-        onClose ? "py-2 sm:py-4 bg-transparent" : "py-16 md:py-24 bg-white border-t border-b border-slate-200"
+        onClose ? "py-2 sm:py-4 bg-transparent" : "py-8 sm:py-12 bg-white border-t border-b border-slate-200"
       }`}
     >
       {/* UNSAVED DRAFT CONFIRMATION MODAL */}
