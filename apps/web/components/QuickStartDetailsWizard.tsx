@@ -1141,66 +1141,94 @@ export default function QuickStartDetailsWizard({
   );
 
   if (isLandingPageWithProfile) {
+    const formattedEventDate = (() => {
+      if (!draft.eventDate) return "";
+      try {
+        const d = new Date(draft.eventDate.includes("T") ? draft.eventDate : `${draft.eventDate}T00:00:00`);
+        if (isNaN(d.getTime())) return draft.eventDate;
+        return d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      } catch {
+        return draft.eventDate;
+      }
+    })();
+
     return (
-      <section className="py-6 sm:py-8 bg-white text-slate-900 relative border-t border-b border-slate-100 overflow-hidden">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-4">
-          {/* Catchy Headline */}
-          <div className="space-y-1.5 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-slate-900 leading-tight">
-              Ready to Design Your <span className="italic text-[#991B1B]">Dream Invitation</span>?
+      <section className="py-8 sm:py-10 bg-gradient-to-b from-white via-rose-50/20 to-white text-slate-900 relative border-t border-b border-slate-100 overflow-hidden">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-rose-100/40 via-amber-100/30 to-rose-100/40 rounded-full blur-3xl pointer-events-none -z-0" />
+
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-5">
+          {/* Catchy Badge & Headline */}
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50/90 border border-rose-200/80 text-[#991B1B] text-[11px] font-extrabold tracking-widest uppercase shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
+              <span>EVENT PROFILE ACTIVE</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-slate-900 leading-snug tracking-tight">
+              Ready to Design Your <span className="italic bg-gradient-to-r from-[#991B1B] via-[#B91C1C] to-[#BE123C] bg-clip-text text-transparent">Dream Invitation</span>?
             </h2>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+              Your celebration details are saved and ready to preview across all premium templates.
+            </p>
           </div>
 
           {/* Active Saved Profile Badge Card */}
-          <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-slate-900 shadow-xs">
-            <div className="flex items-center gap-3 text-left w-full sm:w-auto">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#991B1B] to-[#7F1D1D] text-white flex items-center justify-center font-serif font-bold text-sm shrink-0 shadow-xs">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.04),0_1px_3px_rgb(0,0,0,0.02)] ring-1 ring-slate-900/5 max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-900 transition-all hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)]">
+            <div className="flex items-center gap-3.5 text-left w-full sm:w-auto min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#80141D] via-[#991B1B] to-[#580B12] text-amber-100 flex items-center justify-center font-serif font-bold text-base shrink-0 shadow-md shadow-rose-950/20 ring-2 ring-[#FED7AA]/40">
                 {draft.coupleInitials || "S & A"}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-[#991B1B] text-sm truncate">
+                <p className="font-bold text-slate-900 text-sm sm:text-[15px] truncate">
                   {draft.hostNameOne || "Celebration Details"} {draft.hostNameTwo ? `& ${draft.hostNameTwo}` : ""}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {draft.eventDate ? `Date: ${draft.eventDate}` : "Details saved to account"}
-                </p>
+                <div className="flex items-center gap-1.5 text-[11.5px] text-slate-500 mt-0.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5 text-[#991B1B]/70 shrink-0" />
+                  <span>{formattedEventDate || "Date saved to profile"}</span>
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-200/80 pt-2.5 sm:pt-0">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsEditingLandingProfile(true)}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-red-50 text-[#991B1B] hover:text-[#7F1D1D] font-bold text-xs border border-slate-200 hover:border-red-200 transition-all shadow-xs cursor-pointer flex-1 sm:flex-none"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-700 hover:text-[#991B1B] font-bold text-xs border border-slate-200 hover:border-rose-200 transition-all shadow-2xs cursor-pointer flex-1 sm:flex-none"
                 title="Edit Celebration Details"
               >
-                <Edit3 className="w-3.5 h-3.5" />
+                <Edit3 className="w-3.5 h-3.5 text-slate-500" />
                 <span>Edit Details</span>
               </button>
-              <span className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold uppercase shrink-0 flex items-center gap-1">
-                ✓ Profile Saved
+              <span className="px-3 py-2 rounded-xl bg-emerald-50/90 text-emerald-800 border border-emerald-200/80 text-[11px] font-bold shrink-0 flex items-center gap-1.5 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Profile Saved</span>
               </span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-1 max-w-lg mx-auto w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto w-full pt-1">
             <button
               type="button"
               onClick={() => router.push("/templates")}
-              className="w-full sm:w-auto flex-1 px-6 sm:px-8 py-3.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-red-900/20 transition-all cursor-pointer group"
+              className="w-full sm:w-auto flex-1 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#8B1420] via-[#991B1B] to-[#7B101A] hover:from-[#7B101A] hover:to-[#650B14] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20 hover:shadow-xl hover:shadow-rose-950/30 hover:-translate-y-0.5 transition-all cursor-pointer group border border-rose-900/40"
             >
-              <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
-              <span>Choose Template &amp; Build Website →</span>
+              <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform shrink-0" />
+              <span className="whitespace-nowrap">Choose Template &amp; Build Website</span>
+              <ArrowRight className="w-4 h-4 text-amber-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#991B1B] font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold text-xs sm:text-sm border border-slate-200/90 hover:border-slate-300 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs hover:shadow-sm"
             >
-              <LayoutDashboard className="w-4 h-4 text-[#991B1B]" />
-              <span>Go to Dashboard</span>
+              <LayoutDashboard className="w-4 h-4 text-slate-500" />
+              <span className="whitespace-nowrap">Go to Dashboard</span>
             </button>
           </div>
 

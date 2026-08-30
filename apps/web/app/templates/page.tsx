@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { templatesRegistry } from "@/data/templatesRegistry";
 import TemplateCardGraphic from "@/components/templates/TemplateCardGraphic";
-import { Search, ExternalLink, Sparkles, Crown, Globe, Check } from "lucide-react";
+import { Search, ExternalLink, Sparkles, Crown, Globe, Check, MessageCircle, Edit3 } from "lucide-react";
 
 import TemplateGallerySkeleton from "@/components/skeletons/TemplateGallerySkeleton";
 import MakeItYoursModal from "@/components/templates/MakeItYoursModal";
@@ -214,25 +214,73 @@ function TemplateGalleryContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              {myInvitations.length === 1 ? (
+            {myInvitations.length === 1 ? (() => {
+              const primaryInv = myInvitations[0];
+              const coupleNameStr = `${primaryInv.partnerOne || "Our Wedding"} ${primaryInv.partnerTwo ? `& ${primaryInv.partnerTwo}` : ""}`.trim();
+              const origin = typeof window !== "undefined" ? window.location.origin : "https://bervic.com";
+              const inviteUrl = `${origin}/invitations/${primaryInv.slug}`;
+              const whatsappText = encodeURIComponent(
+                `✨ You are cordially invited to celebrate with ${coupleNameStr}!\n\nView our wedding invitation suite, schedule & venue details here:\n👉 ${inviteUrl}`
+              );
+              const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappText}`;
+
+              return (
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                  {/* Edit Button */}
+                  <Link
+                    href="/dashboard"
+                    className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold text-xs border border-slate-200 shadow-2xs flex items-center justify-center gap-1.5 transition-all flex-1 sm:flex-none cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Edit</span>
+                  </Link>
+
+                  {/* Send on WhatsApp Button */}
+                  <Link
+                    href={`/dashboard/invite-whatsapp/${primaryInv.id}`}
+                    className="px-3.5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all flex-1 sm:flex-none cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                    <span>Send on WhatsApp</span>
+                  </Link>
+
+                  {/* View Live */}
+                  <Link
+                    href={`/invitations/${primaryInv.slug}`}
+                    className="px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs flex-1 sm:flex-none cursor-pointer"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-amber-200" />
+                    <span>View Live ↗</span>
+                  </Link>
+                </div>
+              );
+            })() : (
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
                 <Link
-                  href={`/invitations/${myInvitations[0].slug}`}
-                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+                  href="/dashboard"
+                  className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 shadow-2xs flex items-center justify-center gap-1.5 transition-all flex-1 sm:flex-none"
                 >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>View My Owned Product ↗</span>
+                  <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Edit</span>
                 </Link>
-              ) : (
+
+                <Link
+                  href={`/dashboard/invite-whatsapp/${myInvitations[0].id}`}
+                  className="px-3.5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all flex-1 sm:flex-none cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                  <span>Send on WhatsApp</span>
+                </Link>
+
                 <Link
                   href="/dashboard?tab=invitations"
-                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs flex-1 sm:flex-none"
                 >
                   <Crown className="w-3.5 h-3.5" />
-                  <span>View My Owned Products ({myInvitations.length}) ↗</span>
+                  <span>View All ({myInvitations.length}) ↗</span>
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
