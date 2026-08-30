@@ -16,6 +16,7 @@ export interface HeroProps {
   noteTitle?: string;
   noteDescription?: string;
   captionText?: string;
+  guestName?: string;
 }
 
 export default function Hero({
@@ -30,9 +31,11 @@ export default function Hero({
   noteTitle,
   noteDescription,
   captionText,
+  guestName,
 }: HeroProps) {
   const heroRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const guestGreetingRef = useRef<HTMLDivElement>(null);
   const footRef = useRef<HTMLDivElement>(null);
 
   const displayLead = leadText || tagline || "Together With Their Families";
@@ -54,11 +57,20 @@ export default function Hero({
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
+      if (guestGreetingRef.current) {
+        tl.fromTo(
+          guestGreetingRef.current,
+          { opacity: 0, y: -20, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 1.0, delay: 0.1 }
+        );
+      }
+
       if (titleRef.current) {
         tl.fromTo(
           titleRef.current,
           { opacity: 0, y: 40, scale: 0.98 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.2, delay: 0.2 }
+          { opacity: 1, y: 0, scale: 1, duration: 1.2, delay: guestGreetingRef.current ? "-=0.7" : 0.2 },
+          guestGreetingRef.current ? "-=0.7" : undefined
         );
       }
 
@@ -79,6 +91,14 @@ export default function Hero({
     <section ref={heroRef} className="glowinn-hero" id="top">
       {/* Centre Headline Block */}
       <div className="glowinn-hero__body shell">
+        {guestName && (
+          <div ref={guestGreetingRef} className="glowinn-hero__guest-greeting">
+            <span className="glowinn-hero__guest-badge">
+              Special Invitation For <strong>{guestName}</strong>
+            </span>
+          </div>
+        )}
+
         <h1 ref={titleRef} className="glowinn-hero__title">
           <span className="glowinn-hero__title-lead">{displayLead}</span>
           {coupleTitle}

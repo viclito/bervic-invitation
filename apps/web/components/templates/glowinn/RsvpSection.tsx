@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export interface RsvpSectionProps {
+  defaultGuestName?: string;
   onRsvpSubmit?: (data: { name: string; attending: string; guests: string; note: string }) => void;
 }
 
@@ -16,12 +17,18 @@ const QUICK_BLESSINGS = [
   "So thrilled to celebrate your special day! ❤️",
 ];
 
-export default function RsvpSection({ onRsvpSubmit }: RsvpSectionProps) {
-  const [name, setName] = useState("");
+export default function RsvpSection({ defaultGuestName, onRsvpSubmit }: RsvpSectionProps) {
+  const [name, setName] = useState(defaultGuestName || "");
   const [attending, setAttending] = useState("yes");
   const [guests, setGuests] = useState("1");
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (defaultGuestName && !name) {
+      setName(defaultGuestName);
+    }
+  }, [defaultGuestName]);
 
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);

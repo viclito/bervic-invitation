@@ -11,6 +11,7 @@ export interface BushOpeningCurtainProps {
   coupleInitials?: string;
   weddingDate?: string;
   welcomeLine?: string;
+  guestName?: string;
   onOpened?: () => void;
   autoOpenDelay?: number; // In ms, triggers after 2000ms by default
 }
@@ -20,6 +21,7 @@ export default function BushOpeningCurtain({
   coupleInitials = "A & R",
   weddingDate = "November 28, 2026",
   welcomeLine = "Welcome to the Wedding Celebration of",
+  guestName,
   onOpened,
   autoOpenDelay = 2000,
 }: BushOpeningCurtainProps) {
@@ -43,7 +45,7 @@ export default function BushOpeningCurtain({
       },
     });
 
-    // 1. Welcome Card purely fades opacity in place (ZERO movement / no going down)
+    // 1. Welcome Card purely fades opacity in place (ZERO movement)
     if (cardRef.current) {
       tl.to(cardRef.current, {
         opacity: 0,
@@ -113,7 +115,7 @@ export default function BushOpeningCurtain({
     }
   }, [autoOpenDelay, isOpen]);
 
-  // Gentle fade-in for card (no movement)
+  // Gentle fade-in for card
   useEffect(() => {
     if (!cardRef.current) return;
     gsap.fromTo(
@@ -178,11 +180,21 @@ export default function BushOpeningCurtain({
       {/* ── CENTER WELCOME CARD WITH BUSH IMAGE BACKGROUND ── */}
       {!isOpen && (
         <div ref={cardRef} className="glowinn-curtain-welcome-card">
-          <span className="glowinn-curtain-welcome-lead">
-            <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
-            <span>{welcomeLine}</span>
-            <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
-          </span>
+          {guestName ? (
+            <div className="glowinn-curtain-guest-pill">
+              <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
+              <span>
+                Special Invitation For <strong>{guestName}</strong>
+              </span>
+              <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
+            </div>
+          ) : (
+            <span className="glowinn-curtain-welcome-lead">
+              <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
+              <span>{welcomeLine}</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#f0b4c4]" />
+            </span>
+          )}
 
           <h1 className="glowinn-curtain-welcome-names">{coupleNames}</h1>
 

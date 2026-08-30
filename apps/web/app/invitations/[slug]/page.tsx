@@ -153,7 +153,7 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
   const { slug } = await params;
   const sParams = (await searchParams) || {};
   const guestCode = (sParams.code || sParams.c || sParams.g) as string | undefined;
-  let guestName = (sParams.to || sParams.guest) as string | undefined;
+  let guestName = (sParams.to || sParams.guest || sParams.name || sParams.n) as string | undefined;
 
   // Run automatic cleanup for expired invitations
   await cleanupExpiredInvitations();

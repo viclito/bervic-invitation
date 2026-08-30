@@ -20,7 +20,52 @@ export interface OurDaySectionProps {
   weddingDate?: string;
   weddingTime?: string;
   venuePlace?: string;
-  targetDate?: string; // ISO date string
+  targetDate?: string; // ISO or date string
+}
+
+function parseTargetDate(dateStr?: string, timeStr?: string): Date | null {
+  if (!dateStr || typeof dateStr !== "string" || dateStr.trim() === "") return null;
+  const raw = dateStr.trim();
+
+  // Try standard direct parsing
+  let d = new Date(raw);
+  if (!isNaN(d.getTime())) {
+    // If it's a date-only string (e.g. 2026-09-25), incorporate timeStr
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw) || /^\d{4}\/\d{2}\/\d{2}$/.test(raw)) {
+      let hours = 10;
+      let mins = 0;
+      if (timeStr) {
+        const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+        if (timeParts) {
+          hours = parseInt(timeParts[1], 10);
+          mins = parseInt(timeParts[2], 10);
+          const ampm = timeParts[3]?.toUpperCase();
+          if (ampm === "PM" && hours < 12) hours += 12;
+          if (ampm === "AM" && hours === 12) hours = 0;
+        }
+      }
+      d.setHours(hours, mins, 0, 0);
+    }
+    return d;
+  }
+
+  // Handle YYYY-MM-DD or YYYY/MM/DD manually
+  const ymd = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymd) {
+    const year = parseInt(ymd[1], 10);
+    const month = parseInt(ymd[2], 10) - 1;
+    const day = parseInt(ymd[3], 10);
+    d = new Date(year, month, day, 10, 0, 0);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  // Handle Month DD, YYYY
+  const mdy = Date.parse(raw);
+  if (!isNaN(mdy)) {
+    return new Date(mdy);
+  }
+
+  return null;
 }
 
 export default function OurDaySection({
@@ -51,10 +96,14 @@ export default function OurDaySection({
     seconds: 0,
   });
 
+  // Failsafe Live Countdown Timer
   useEffect(() => {
-    if (!targetDate) return;
+    const effectiveDateStr = targetDate || weddingDate;
+    const targetObj = parseTargetDate(effectiveDateStr, weddingTime);
+    if (!targetObj) return;
+
     const calculateTime = () => {
-      const difference = +new Date(targetDate) - +new Date();
+      const difference = targetObj.getTime() - Date.now();
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -62,13 +111,15 @@ export default function OurDaySection({
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
     calculateTime();
     const timer = setInterval(calculateTime, 1000);
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetDate, weddingDate, weddingTime]);
 
   // GSAP Viewport ScrollTrigger Animations
   useEffect(() => {
@@ -230,12 +281,12 @@ export default function OurDaySection({
                 <span className="glowinn-countdown-unit">Secs</span>
               </div>
             </div>
-            {(weddingDate || venuePlace) && (
-              <p className="glowinn-countdown-foot">
-                {weddingDate && <span>{weddingDate}</span>}
-                {weddingTime && <span> • {weddingTime}</span>}
-                {venuePlace && <span> • {venuePlace}</span>}
-              </p>
+
+            {/* Event Summary Details Footer */}
+            {(weddingDate || weddingTime || venuePlace) && (
+              <div className="glowinn-countdown-footer">
+                {[weddingDate, weddingTime, venuePlace].filter(Boolean).join(" · ")}
+              </div>
             )}
           </div>
         </div>

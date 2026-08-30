@@ -143,8 +143,8 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
     coupleInitials ||
     `${(effectivePartnerOne || "G")[0]} & ${(effectivePartnerTwo || "B")[0]}`;
 
-  const effectiveGroomImg = groomImage || coupleImage || heroImage;
-  const effectiveBrideImg = brideImage || partnerTwoImage || coverImage;
+  const effectiveGroomImg = groomImage || partnerTwoImage || heroImage;
+  const effectiveBrideImg = brideImage || coupleImage || coverImage;
 
   // Format date if ISO string
   let formattedDate = weddingDate;
@@ -175,6 +175,20 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
   }));
 
   const hasGallery = Boolean(galleryImages && galleryImages.length > 0);
+
+  const [resolvedGuestName, setResolvedGuestName] = useState<string>(
+    props.guestName || (props.guestData && props.guestData.name) || ""
+  );
+
+  useEffect(() => {
+    if (!resolvedGuestName && typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const qName = sp.get("to") || sp.get("guest") || sp.get("name");
+      if (qName) {
+        setResolvedGuestName(qName);
+      }
+    }
+  }, [resolvedGuestName]);
 
   return (
     <div className="glowinn-root">
@@ -210,6 +224,7 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
         coupleInitials={effectiveInitials}
         weddingDate={formattedDate}
         welcomeLine={leadText || "Welcome to the Wedding of"}
+        guestName={resolvedGuestName}
         autoOpenDelay={3000}
       />
 
@@ -231,6 +246,7 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
           noteTitle={noteTitle}
           noteDescription={noteDescription}
           captionText={captionText}
+          guestName={resolvedGuestName}
         />
 
         {/* Section 2: Our Day (Bride & Groom + Live Countdown) */}
@@ -248,7 +264,7 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
           weddingDate={formattedDate}
           weddingTime={weddingTime}
           venuePlace={venuePlace}
-          targetDate={targetDate || (weddingDate && weddingDate.includes("T") ? weddingDate : undefined)}
+          targetDate={targetDate || weddingDate}
         />
 
         {/* Section 3: Wedding Celebrations (Events) */}
@@ -272,7 +288,10 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
         {hasGallery && <GallerySection images={galleryImages} />}
 
         {/* Section 8: RSVP & Blessings */}
-        <RsvpSection onRsvpSubmit={onRsvpSubmit} />
+        <RsvpSection
+          defaultGuestName={resolvedGuestName}
+          onRsvpSubmit={onRsvpSubmit}
+        />
       </main>
 
       {/* ── FOOTER ── */}
