@@ -17,15 +17,62 @@ interface Props {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+async function findInvitationBySlug(rawSlugParam: string) {
+  const raw = String(rawSlugParam || "").trim();
+  if (!raw) return null;
+
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(raw).trim();
+  } catch {}
+
+  const dashed = decoded.replace(/[\s%20]+/g, "-");
+  const normalized = dashed
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  // 1. Direct and case-insensitive OR queries
+  const match = await prisma.userInvitation.findFirst({
+    where: {
+      OR: [
+        { slug: raw },
+        { slug: decoded },
+        { slug: dashed },
+        { slug: normalized },
+        { slug: { equals: raw, mode: "insensitive" } },
+        { slug: { equals: decoded, mode: "insensitive" } },
+        { slug: { equals: dashed, mode: "insensitive" } },
+        { slug: { equals: normalized, mode: "insensitive" } },
+      ],
+    },
+  });
+
+  if (match) return match;
+
+  // 2. Fallback: match by the trailing unique random suffix (e.g. -xu6fg)
+  const parts = normalized.split("-");
+  const suffix = parts[parts.length - 1];
+  if (suffix && suffix.length >= 4 && parts.length > 1) {
+    const fallback = await prisma.userInvitation.findFirst({
+      where: {
+        slug: { endsWith: suffix, mode: "insensitive" },
+      },
+    });
+    if (fallback) return fallback;
+  }
+
+  return null;
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sParams = (await searchParams) || {};
   const guestCode = (sParams.code || sParams.c || sParams.g) as string | undefined;
   let guestName = (sParams.to || sParams.guest) as string | undefined;
 
-  const invitation = await prisma.userInvitation.findUnique({
-    where: { slug },
-  });
+  const invitation = await findInvitationBySlug(slug);
 
   if (!invitation) {
     return {
@@ -155,12 +202,12 @@ export default async function PublicInvitationPage({ params, searchParams }: Pro
   const guestCode = (sParams.code || sParams.c || sParams.g) as string | undefined;
   let guestName = (sParams.to || sParams.guest || sParams.name || sParams.n) as string | undefined;
 
-  // Run automatic cleanup for expired invitations
-  await cleanupExpiredInvitations();
+  // Run automatic cleanup for expired invitations asynchronously in background
+  cleanupExpiredInvitations().catch((err) =>
+    console.warn("Background invitation cleanup note:", err)
+  );
 
-  const invitation = await prisma.userInvitation.findUnique({
-    where: { slug },
-  });
+  const invitation = await findInvitationBySlug(slug);
 
   if (!invitation) {
     return (

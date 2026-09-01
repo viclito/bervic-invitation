@@ -17,6 +17,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    const oldUrl = (formData.get("oldUrl") as string | null) || (formData.get("previousUrl") as string | null);
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -27,6 +29,13 @@ export async function POST(req: Request) {
       },
       bodyTarget
     );
+
+    // If an old Cloudinary photo was replaced, safely delete it to avoid unwanted storage usage
+    if (oldUrl && typeof oldUrl === "string" && oldUrl.includes("res.cloudinary.com")) {
+      deleteCloudinaryImage(oldUrl, bodyTarget).catch((err) => {
+        console.warn("Cloudinary: Failed to delete superseded image:", err);
+      });
+    }
 
     return NextResponse.json({
       message: "Image uploaded successfully to Cloudinary",

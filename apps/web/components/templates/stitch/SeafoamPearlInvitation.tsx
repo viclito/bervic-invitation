@@ -242,7 +242,10 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
             >
               <img
                 src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
-                alt={`${partner1} - Bride`}
+                alt={`${partner2} - Bride`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                }}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#046c4a]/90 via-transparent to-transparent" />
@@ -251,7 +254,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
                   Bride
                 </span>
                 <h3 className="text-3xl font-serif italic text-white leading-none mt-1">
-                  {partner1}
+                  {partner2}
                 </h3>
               </div>
             </motion.div>
@@ -263,7 +266,10 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
             >
               <img
                 src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
-                alt={`${partner2} - Groom`}
+                alt={`${partner1} - Groom`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                }}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#046c4a]/90 via-transparent to-transparent" />
@@ -272,7 +278,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
                   Groom
                 </span>
                 <h3 className="text-3xl font-serif italic text-white leading-none mt-1">
-                  {partner2}
+                  {partner1}
                 </h3>
               </div>
             </motion.div>

@@ -174,7 +174,8 @@ export default function TemplatePreviewBottomBar({
         setIsModalOpen(false);
         const targetSlug = activateData.slug || activateData.invitation?.slug;
         if (targetSlug) {
-          router.push(`/invitations/${targetSlug}`);
+          const cleanSlug = targetSlug.trim().replace(/[\s%20]+/g, "-");
+          router.push(`/invitations/${encodeURIComponent(cleanSlug)}`);
         } else {
           router.push("/dashboard?tab=invitations");
         }

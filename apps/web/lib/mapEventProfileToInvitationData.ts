@@ -36,6 +36,7 @@ export interface UserEventDraft {
   functionsJson?: string;
   familyMembers?: string | unknown[];
   contactPhone?: string;
+  rsvpContact?: string;
   rsvpDeadline?: string;
   showVideo?: boolean;
   showVideoSection?: boolean;
@@ -78,10 +79,6 @@ export function mapEventProfileToInvitationData(
   const weddingTime = draft.eventTime?.trim()
     ? `${draft.eventDate ? `${formatDateForDisplay(draft.eventDate)} at ` : ""}${draft.eventTime}`
     : baseData.weddingTime;
-
-  const venuePlace = draft.venueName?.trim()
-    ? `${draft.venueName}${draft.venueAddress ? `, ${draft.venueAddress}` : ""}`
-    : baseData.venuePlace;
 
   // Images: handle coverImage/coverPhoto and coupleImage/couplePhoto
   const heroImage =
@@ -140,31 +137,39 @@ export function mapEventProfileToInvitationData(
 
   const showVideoSection = isVideoEnabled;
 
-  // Gallery images
-  let galleryImages = baseData.galleryImages || [];
+  // Gallery images (filtering out deleted/broken asset IDs)
+  const isBrokenAsset = (url: string) => url.includes("vwq4boeadk1rfshnhmq");
+  let galleryImages = (baseData.galleryImages || []).filter((img) => !isBrokenAsset(img));
+
   if (draft.galleryImagesJson) {
     try {
       const parsed = JSON.parse(draft.galleryImagesJson);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const filtered = parsed.filter((img: unknown) => typeof img === "string" && img.trim() !== "");
+        const filtered = parsed.filter(
+          (img: unknown) => typeof img === "string" && img.trim() !== "" && !isBrokenAsset(img)
+        );
         if (filtered.length > 0) galleryImages = filtered;
       }
     } catch {
       // Fallback
     }
   } else if (Array.isArray(draft.galleryImages) && draft.galleryImages.length > 0) {
-    const filtered = (draft.galleryImages as string[]).filter((img) => typeof img === "string" && img.trim() !== "");
+    const filtered = (draft.galleryImages as string[]).filter(
+      (img) => typeof img === "string" && img.trim() !== "" && !isBrokenAsset(img)
+    );
     if (filtered.length > 0) galleryImages = filtered;
   } else if (typeof (draft as Record<string, unknown>).galleryImages === "string" && (draft as Record<string, unknown>).galleryImages) {
     const rawStr = (draft as Record<string, unknown>).galleryImages as string;
     try {
       const parsed = JSON.parse(rawStr);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const filtered = parsed.filter((img: unknown) => typeof img === "string" && img.trim() !== "");
+        const filtered = parsed.filter(
+          (img: unknown) => typeof img === "string" && img.trim() !== "" && !isBrokenAsset(img)
+        );
         if (filtered.length > 0) galleryImages = filtered;
       }
     } catch {
-      const splitArr = rawStr.split(",").map((s) => s.trim()).filter(Boolean);
+      const splitArr = rawStr.split(",").map((s) => s.trim()).filter((s) => Boolean(s) && !isBrokenAsset(s));
       if (splitArr.length > 0) galleryImages = splitArr;
     }
   }
@@ -229,12 +234,18 @@ export function mapEventProfileToInvitationData(
           ? userPhoto
           : defaultVenueFallback;
 
+      const contactStr =
+        typeof item.contact === "string" && item.contact.trim() && !item.contact.includes("98765 43210")
+          ? item.contact.trim()
+          : undefined;
+
       return {
         name: title,
         venueLabel: title,
         address: addr,
         mapLink,
         image: img,
+        contact: contactStr,
       };
     });
   } else if (draft.venueName || draft.venueAddress) {
@@ -242,7 +253,7 @@ export function mapEventProfileToInvitationData(
     const mainVenue: LocationVenue = {
       name: primaryTitle,
       venueLabel: primaryTitle,
-      address: draft.venueAddress?.trim() || draft.venueName?.trim() || baseData.venuePlace,
+      address: draft.venueAddress?.trim() || draft.venueName?.trim() || "",
       mapLink: draft.venueMapUrl || "https://maps.google.com",
       image: "/images/templates/venue-ceremony.jpg",
     };
@@ -252,7 +263,7 @@ export function mapEventProfileToInvitationData(
       const receptionVenue: LocationVenue = {
         name: secondaryTitle,
         venueLabel: secondaryTitle,
-        address: draft.venueTwoAddress?.trim() || draft.venueTwoName?.trim() || "Reception Address",
+        address: draft.venueTwoAddress?.trim() || draft.venueTwoName?.trim() || "",
         mapLink: draft.venueTwoMapUrl || "https://maps.google.com",
         image: "/images/templates/venue-reception.jpg",
       };
@@ -261,6 +272,40 @@ export function mapEventProfileToInvitationData(
       locations = [mainVenue];
     }
   }
+
+  // Resolve genuine primary venue display text for countdown and overview
+  const isPlaceholderVenue = (val?: string) =>
+    !val ||
+    val === "Marriage Ceremony Hall" ||
+    val === "Your Venue Name" ||
+    val.includes("000000") ||
+    val.includes("Your Full Address");
+
+  const firstLoc = Array.isArray(locations) && locations.length > 0 ? locations[0] : null;
+  const primaryVenueTitle =
+    (!isPlaceholderVenue(draft.venueName) ? draft.venueName?.trim() : "") ||
+    (!isPlaceholderVenue(firstLoc?.venueLabel) ? firstLoc?.venueLabel?.trim() : "") ||
+    (!isPlaceholderVenue(firstLoc?.name) ? firstLoc?.name?.trim() : "") ||
+    "";
+
+  const primaryVenueAddress =
+    (!isPlaceholderVenue(draft.venueAddress) ? draft.venueAddress?.trim() : "") ||
+    (!isPlaceholderVenue(firstLoc?.address) ? firstLoc?.address?.trim() : "") ||
+    "";
+
+  let venuePlace = "";
+  if (primaryVenueTitle && primaryVenueAddress && primaryVenueAddress !== primaryVenueTitle) {
+    venuePlace = `${primaryVenueTitle}, ${primaryVenueAddress}`;
+  } else if (primaryVenueTitle) {
+    venuePlace = primaryVenueTitle;
+  } else if (primaryVenueAddress) {
+    venuePlace = primaryVenueAddress;
+  } else {
+    venuePlace = "";
+  }
+
+  const rawUserPhone = draft.contactPhone?.trim() || draft.rsvpContact?.trim() || "";
+  const contactPhone = rawUserPhone && !rawUserPhone.includes("98765 43210") ? rawUserPhone : "";
 
   // Schedule / Functions
   let events: WeddingEvent[] = baseData.events;
@@ -334,12 +379,18 @@ export function mapEventProfileToInvitationData(
     ...baseData,
     partnerOne,
     partnerTwo,
+    groomName: partnerOne,
+    brideName: partnerTwo,
+    groomImage: partnerTwoImage || heroImage,
+    brideImage: coupleImage || coverImage,
     coupleInitials,
     celebrantName,
     turningAge,
+    targetDate: rawDate || baseData.weddingDate,
     weddingDate,
     weddingTime,
     venuePlace,
+    contactPhone,
     heroImage,
     coupleImage,
     coverImage: coverImage ? String(coverImage) : undefined,

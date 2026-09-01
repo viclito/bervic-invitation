@@ -908,7 +908,10 @@ export default function ScrollScrubberCanvas({
                 <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
                   <img
                     src={brideImage || coupleImage || "/images/templates/groom-bride-1.jpg"}
-                    alt={`${partnerOne} - Bride`}
+                    alt={`${partnerTwo} - Bride`}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                    }}
                     className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
@@ -917,7 +920,7 @@ export default function ScrollScrubberCanvas({
                       Bride
                     </span>
                     <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
-                      {partnerOne}
+                      {partnerTwo}
                     </h3>
                   </div>
                 </div>
@@ -926,7 +929,10 @@ export default function ScrollScrubberCanvas({
                 <div className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden border border-[#D9A441]/50 shadow-[0_12px_35px_rgba(0,0,0,0.85)] bg-[#141414]">
                   <img
                     src={groomImage || partnerTwoImage || "/images/templates/groom-bride-2.jpg"}
-                    alt={`${partnerTwo} - Groom`}
+                    alt={`${partnerOne} - Groom`}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                    }}
                     className="w-full h-full object-cover sm:group-hover:scale-105 sm:transition-transform sm:duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707]/90 via-transparent to-transparent" />
@@ -935,7 +941,7 @@ export default function ScrollScrubberCanvas({
                       Groom
                     </span>
                     <h3 className="text-xl font-accent italic text-[#FDF6F3] leading-none mt-0.5">
-                      {partnerTwo}
+                      {partnerOne}
                     </h3>
                   </div>
                 </div>

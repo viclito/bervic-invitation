@@ -171,7 +171,12 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
       l.mapLink ||
       l.mapUrl ||
       (l.address ? `https://maps.google.com/?q=${encodeURIComponent(l.address)}` : undefined),
-    contact: l.contact || contactPhone,
+    contact:
+      l.contact && !l.contact.includes("98765 43210")
+        ? l.contact.trim()
+        : contactPhone && !contactPhone.includes("98765 43210")
+        ? contactPhone.trim()
+        : undefined,
   }));
 
   const hasGallery = Boolean(galleryImages && galleryImages.length > 0);

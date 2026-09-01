@@ -208,7 +208,10 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
               <div className="aspect-[4/5] rounded-t-[125px] rounded-b-2xl overflow-hidden relative border border-[#735c00]/20">
                 <img
                   src={brideImg}
-                  alt={`${partner1} - Bride`}
+                  alt={`${partner2} - Bride`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#043927]/90 text-[#ffe088] px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.25em] backdrop-blur-md shadow-md border border-[#ffe088]/30">
@@ -217,7 +220,7 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
               </div>
               <div className="pt-6 pb-2 text-center">
                 <h3 className="font-serif text-2xl md:text-3xl font-bold text-[#043927]">
-                  {partner1}
+                  {partner2}
                 </h3>
                 <p className="text-xs text-[#735c00] font-semibold uppercase tracking-widest mt-1">
                   Bride-To-Be
@@ -238,7 +241,10 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
               <div className="aspect-[4/5] rounded-t-[125px] rounded-b-2xl overflow-hidden relative border border-[#735c00]/20">
                 <img
                   src={groomImg}
-                  alt={`${partner2} - Groom`}
+                  alt={`${partner1} - Groom`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#043927]/90 text-[#ffe088] px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.25em] backdrop-blur-md shadow-md border border-[#ffe088]/30">
@@ -247,7 +253,7 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
               </div>
               <div className="pt-6 pb-2 text-center">
                 <h3 className="font-serif text-2xl md:text-3xl font-bold text-[#043927]">
-                  {partner2}
+                  {partner1}
                 </h3>
                 <p className="text-xs text-[#735c00] font-semibold uppercase tracking-widest mt-1">
                   Groom-To-Be

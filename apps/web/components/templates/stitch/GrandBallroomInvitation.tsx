@@ -189,7 +189,10 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
               <div className="relative w-full h-96 overflow-hidden">
                 <img
                   src={brideImg}
-                  alt={`${partner1} - Bride`}
+                  alt={`${partner2} - Bride`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/90 via-transparent to-transparent" />
@@ -197,7 +200,7 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
                   <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-bold block mb-1">
                     Bride
                   </span>
-                  <h3 className="text-3xl font-serif font-bold">{partner1}</h3>
+                  <h3 className="text-3xl font-serif font-bold">{partner2}</h3>
                 </div>
               </div>
             </div>
@@ -207,7 +210,10 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
               <div className="relative w-full h-96 overflow-hidden">
                 <img
                   src={groomImg}
-                  alt={`${partner2} - Groom`}
+                  alt={`${partner1} - Groom`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/90 via-transparent to-transparent" />
@@ -215,7 +221,7 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
                   <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-bold block mb-1">
                     Groom
                   </span>
-                  <h3 className="text-3xl font-serif font-bold">{partner2}</h3>
+                  <h3 className="text-3xl font-serif font-bold">{partner1}</h3>
                 </div>
               </div>
             </div>

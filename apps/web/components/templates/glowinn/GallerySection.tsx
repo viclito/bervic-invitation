@@ -16,6 +16,54 @@ export interface GallerySectionProps {
   images?: (string | GalleryItem)[];
 }
 
+const DEFAULT_GALLERY_FALLBACKS = [
+  "/images/templates/gallery-1.jpg",
+  "/images/templates/gallery-2.jpg",
+  "/images/templates/gallery-3.jpg",
+  "/images/templates/gallery-4.jpg",
+  "/images/templates/gallery-5.jpg",
+  "/images/templates/gallery-6.jpg",
+];
+
+function SafeGalleryImage({
+  src,
+  alt,
+  className,
+  sizes,
+  fallbackIdx = 0,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  sizes?: string;
+  fallbackIdx?: number;
+}) {
+  const fallback = DEFAULT_GALLERY_FALLBACKS[fallbackIdx % DEFAULT_GALLERY_FALLBACKS.length];
+  const [currentSrc, setCurrentSrc] = useState(src || fallback);
+  const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(src || fallback);
+    setErrored(false);
+  }, [src, fallback]);
+
+  return (
+    <Image
+      src={currentSrc}
+      alt={alt}
+      fill
+      className={className}
+      sizes={sizes}
+      onError={() => {
+        if (!errored) {
+          setErrored(true);
+          setCurrentSrc(fallback);
+        }
+      }}
+    />
+  );
+}
+
 export default function GallerySection({ images }: GallerySectionProps) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -32,19 +80,29 @@ export default function GallerySection({ images }: GallerySectionProps) {
     return "glowinn-bento--wide"; // Wide landscape
   };
 
-  const normalizedImages: (GalleryItem & { bentoClass: string })[] =
+  const isBrokenAsset = (url: string) => typeof url === "string" && url.includes("vwq4boeadk1rfshnhmq");
+
+  const rawList =
     images && images.length > 0
-      ? images.map((item, i) => {
-          const base =
-            typeof item === "string"
-              ? { src: item, caption: `Moment 0${i + 1}` }
-              : { src: item.src, caption: item.caption || `Moment 0${i + 1}` };
-          return {
-            ...base,
-            bentoClass: getBentoSpanClass(i),
-          };
+      ? images.filter((item) => {
+          const s = typeof item === "string" ? item : item?.src;
+          return s && !isBrokenAsset(s);
         })
       : [];
+
+  const effectiveImages = rawList.length > 0 ? rawList : DEFAULT_GALLERY_FALLBACKS;
+
+  const normalizedImages: (GalleryItem & { bentoClass: string })[] =
+    effectiveImages.map((item, i) => {
+      const base =
+        typeof item === "string"
+          ? { src: item, caption: `Moment 0${i + 1}` }
+          : { src: item.src, caption: item.caption || `Moment 0${i + 1}` };
+      return {
+        ...base,
+        bentoClass: getBentoSpanClass(i),
+      };
+    });
 
   // GSAP Viewport ScrollTrigger Animation for Bento items
   useEffect(() => {
@@ -148,12 +206,12 @@ export default function GallerySection({ images }: GallerySectionProps) {
               onClick={() => setSelectedIdx(idx)}
             >
               <div className="glowinn-bento-card__media">
-                <Image
+                <SafeGalleryImage
                   src={img.src}
                   alt={img.caption || `Gallery moment ${idx + 1}`}
-                  fill
                   className="object-cover transition-transform duration-700 group-hover:scale-106"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 450px"
+                  fallbackIdx={idx}
                 />
                 <div className="glowinn-bento-card__overlay">
                   <div className="glowinn-bento-card__zoom-btn">
@@ -213,13 +271,12 @@ export default function GallerySection({ images }: GallerySectionProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="glowinn-lightbox-media">
-              <Image
+              <SafeGalleryImage
                 src={activeItem.src}
                 alt={activeItem.caption || "Full size photo"}
-                fill
                 className="object-contain"
                 sizes="(max-width: 1200px) 95vw, 1100px"
-                priority
+                fallbackIdx={selectedIdx}
               />
             </div>
             {activeItem.caption && (

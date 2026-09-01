@@ -91,17 +91,6 @@ export default function WhimsicalStorybookInvitation(
 
   // Live countdown timer computation
   useEffect(() => {
-    const parseTargetDate = () => {
-      if (props.weddingDate) {
-        const dateStr = props.weddingTime
-          ? `${props.weddingDate}T${props.weddingTime}`
-          : `${props.weddingDate}T16:00:00`;
-        const parsed = new Date(dateStr).getTime();
-        if (!isNaN(parsed)) return parsed;
-      }
-      return new Date("2026-10-15T16:00:00").getTime();
-    };
-
     const targetDate = getWeddingTargetDate(props.weddingDate, props.weddingTime).getTime();
 
     const updateTimer = () => {

@@ -199,28 +199,42 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
 
           {/* Right Top Slot: Bride Photo Card */}
           <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block border border-[#D4AF37]/30">
-            <img src={coupleImg1} alt={`${partner1} - Bride`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img
+              src={coupleImg1}
+              alt={`${partner2} - Bride`}
+              onError={(e) => {
+                e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+              }}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 text-left">
               <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#D4AF37] font-bold block">
                 Bride
               </span>
               <h3 className="text-xl font-serif font-bold text-white mt-0.5">
-                {partner1}
+                {partner2}
               </h3>
             </div>
           </div>
 
           {/* Right Bottom Slot: Groom Photo Card */}
           <div className="relative rounded-2xl overflow-hidden shadow-md group hidden md:block border border-[#D4AF37]/30">
-            <img src={coupleImg2} alt={`${partner2} - Groom`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img
+              src={coupleImg2}
+              alt={`${partner1} - Groom`}
+              onError={(e) => {
+                e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+              }}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#31105C]/80 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 text-left">
               <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#D4AF37] font-bold block">
                 Groom
               </span>
               <h3 className="text-xl font-serif font-bold text-white mt-0.5">
-                {partner2}
+                {partner1}
               </h3>
             </div>
           </div>

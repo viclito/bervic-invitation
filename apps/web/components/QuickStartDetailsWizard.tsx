@@ -113,18 +113,18 @@ export const WEDDING_DEFAULT_LOCATIONS: VenueLocationItem[] = [
   {
     id: "loc-1",
     mainTitle: "Marriage Ceremony Venue",
-    subLabel: "Your Ceremony Hall",
+    subLabel: "Ceremony Hall",
     venuePhoto: "/images/templates/venue-ceremony.jpg",
-    address: "Your Full Address, City, State 000000",
-    mapUrl: "https://maps.google.com",
+    address: "",
+    mapUrl: "",
   },
   {
     id: "loc-2",
     mainTitle: "Grand Reception Venue",
-    subLabel: "Grand Reception Hall",
+    subLabel: "Reception Ballroom",
     venuePhoto: "/images/templates/venue-reception.jpg",
-    address: "Your Full Address, City, State 000000",
-    mapUrl: "https://maps.google.com",
+    address: "",
+    mapUrl: "",
   },
 ];
 
@@ -134,21 +134,21 @@ export const BIRTHDAY_DEFAULT_LOCATIONS: VenueLocationItem[] = [
     mainTitle: "Birthday Celebration Venue",
     subLabel: "Celebration Hall & Lawn",
     venuePhoto: "/images/templates/venue-reception.jpg",
-    address: "Your Full Address, City, State 000000",
-    mapUrl: "https://maps.google.com",
+    address: "",
+    mapUrl: "",
   },
 ];
 
 export const WEDDING_DEFAULT_FUNCTIONS: EventSubFunction[] = [
-  { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30", venue: "Marriage Ceremony Hall" },
-  { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00", venue: "Grand Ballroom" },
+  { icon: "ring", title: "Sacred Marriage Vows", date: "", time: "10:30", venue: "" },
+  { icon: "sparkles", title: "Grand Reception", date: "", time: "19:00", venue: "" },
 ];
 
 export const BIRTHDAY_DEFAULT_FUNCTIONS: EventSubFunction[] = [
-  { icon: "cocktail", title: "Welcome Drinks & Mocktails", date: "", time: "18:00", venue: "Celebration Hall" },
-  { icon: "cake", title: "Cake Cutting & Cheers", date: "", time: "19:30", venue: "Main Party Area" },
-  { icon: "feast", title: "Grand Birthday Dinner", date: "", time: "20:30", venue: "Banquet Lawn" },
-  { icon: "music", title: "DJ & Dance Party", date: "", time: "21:30", venue: "Party Floor" },
+  { icon: "cocktail", title: "Welcome Drinks & Mocktails", date: "", time: "18:00", venue: "" },
+  { icon: "cake", title: "Cake Cutting & Cheers", date: "", time: "19:30", venue: "" },
+  { icon: "feast", title: "Grand Birthday Dinner", date: "", time: "20:30", venue: "" },
+  { icon: "music", title: "DJ & Dance Party", date: "", time: "21:30", venue: "" },
 ];
 
 export const WEDDING_DEFAULT_TIMELINE: DayTimelineItem[] = [
@@ -180,12 +180,12 @@ const initialDraft: DraftData = {
   inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
   eventDate: "",
   eventTime: "",
-  venueName: "Marriage Ceremony Hall",
-  venueAddress: "Your Full Address, City, State 000000",
-  venueMapUrl: "https://maps.google.com",
-  venueTwoName: "Grand Reception Hall",
-  venueTwoAddress: "Your Full Address, City, State 000000",
-  venueTwoMapUrl: "https://maps.google.com",
+  venueName: "",
+  venueAddress: "",
+  venueMapUrl: "",
+  venueTwoName: "",
+  venueTwoAddress: "",
+  venueTwoMapUrl: "",
   locations: WEDDING_DEFAULT_LOCATIONS,
   tagline: "",
   turningAge: "",
@@ -974,13 +974,32 @@ export default function QuickStartDetailsWizard({
     }
   };
 
+  // Helper to delete old Cloudinary image when deleted or replaced
+  const deleteCloudinaryAsset = async (imageUrl?: string) => {
+    if (!imageUrl || typeof imageUrl !== "string" || !imageUrl.includes("res.cloudinary.com")) return;
+    try {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: imageUrl }),
+      });
+    } catch (err) {
+      console.warn("Failed to delete old Cloudinary asset:", err);
+    }
+  };
+
   // Single Photo Upload Handler
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldKey: "coverImage" | "coupleImage" | "partnerTwoImage" | "venueImage") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const oldUrl = draft[fieldKey];
+
     const formData = new FormData();
     formData.append("file", file);
+    if (oldUrl && typeof oldUrl === "string" && oldUrl.includes("res.cloudinary.com")) {
+      formData.append("oldUrl", oldUrl);
+    }
 
     try {
       const res = await fetch("/api/upload", {
@@ -2273,8 +2292,12 @@ export default function QuickStartDetailsWizard({
                                   onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
+                                    const oldVenuePhoto = currentLoc.venuePhoto;
                                     const formData = new FormData();
                                     formData.append("file", file);
+                                    if (oldVenuePhoto && oldVenuePhoto.includes("res.cloudinary.com")) {
+                                      formData.append("oldUrl", oldVenuePhoto);
+                                    }
                                     try {
                                       const res = await fetch("/api/upload", { method: "POST", body: formData });
                                       const data = await res.json();
@@ -2295,10 +2318,12 @@ export default function QuickStartDetailsWizard({
                                   <img src={currentLoc.venuePhoto} alt="Venue" className="w-full h-full object-cover" />
                                   <button
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
+                                      const prevPhoto = currentLoc.venuePhoto;
                                       const newLocs = [...draft.locations];
                                       newLocs[safeIdx].venuePhoto = "";
                                       setDraft({ ...draft, locations: newLocs });
+                                      if (prevPhoto) await deleteCloudinaryAsset(prevPhoto);
                                     }}
                                     className="absolute top-0.5 right-0.5 bg-rose-600 text-white p-0.5 rounded-full"
                                   >
@@ -2770,6 +2795,9 @@ export default function QuickStartDetailsWizard({
                             src={draft.coupleImage}
                             alt={draft.eventType === "BIRTHDAY" ? "Celebrant" : "Bride"}
                             className="w-12 h-12 rounded-full object-cover border border-[#EA580C]/40 shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-rose-50 border border-dashed border-rose-200 flex items-center justify-center text-rose-500 shrink-0">
@@ -2790,7 +2818,9 @@ export default function QuickStartDetailsWizard({
                               : "Host #1 Photo"}
                           </span>
                           <p className="text-xs text-slate-500 truncate font-medium">
-                            {draft.hostNameOne || "Not specified"}
+                            {draft.eventType === "WEDDING"
+                              ? (draft.hostNameTwo || "Not specified")
+                              : (draft.hostNameOne || "Not specified")}
                           </p>
                         </div>
                       </div>
@@ -2807,7 +2837,13 @@ export default function QuickStartDetailsWizard({
                         {draft.coupleImage && (
                           <button
                             type="button"
-                            onClick={() => setDraft({ ...draft, coupleImage: "" })}
+                            onClick={async () => {
+                              const prev = draft.coupleImage;
+                              const updated = { ...draft, coupleImage: "" };
+                              setDraft(updated);
+                              if (prev) await deleteCloudinaryAsset(prev);
+                              await saveStepData(updated, draft.currentStep);
+                            }}
                             className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                             title={draft.eventType === "BIRTHDAY" ? "Delete Celebrant Photo" : "Delete Bride Photo"}
                           >
@@ -2826,6 +2862,9 @@ export default function QuickStartDetailsWizard({
                               src={draft.partnerTwoImage}
                               alt="Groom"
                               className="w-12 h-12 rounded-full object-cover border border-[#EA580C]/40 shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-amber-50 border border-dashed border-amber-200 flex items-center justify-center text-amber-500 shrink-0">
@@ -2838,7 +2877,9 @@ export default function QuickStartDetailsWizard({
                               {draft.eventType === "WEDDING" ? "Groom Photo" : "Host #2 Photo"}
                             </span>
                             <p className="text-xs text-slate-500 truncate font-medium">
-                              {draft.hostNameTwo || "Not specified"}
+                              {draft.eventType === "WEDDING"
+                                ? (draft.hostNameOne || "Not specified")
+                                : (draft.hostNameTwo || "Not specified")}
                             </p>
                           </div>
                         </div>
@@ -2855,7 +2896,13 @@ export default function QuickStartDetailsWizard({
                           {draft.partnerTwoImage && (
                             <button
                               type="button"
-                              onClick={() => setDraft({ ...draft, partnerTwoImage: "" })}
+                              onClick={async () => {
+                                const prev = draft.partnerTwoImage;
+                                const updated = { ...draft, partnerTwoImage: "" };
+                                setDraft(updated);
+                                if (prev) await deleteCloudinaryAsset(prev);
+                                await saveStepData(updated, draft.currentStep);
+                              }}
                               className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                               title="Delete Groom Photo"
                             >
@@ -2904,7 +2951,13 @@ export default function QuickStartDetailsWizard({
                       {draft.coverImage && (
                         <button
                           type="button"
-                          onClick={() => setDraft({ ...draft, coverImage: "" })}
+                          onClick={async () => {
+                            const prev = draft.coverImage;
+                            const updated = { ...draft, coverImage: "" };
+                            setDraft(updated);
+                            if (prev) await deleteCloudinaryAsset(prev);
+                            await saveStepData(updated, draft.currentStep);
+                          }}
                           className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                           title="Delete Cover Photo"
                         >
@@ -2937,9 +2990,13 @@ export default function QuickStartDetailsWizard({
                             <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
-                              onClick={() => {
-                                  const updatedGallery = draft.galleryImages.filter((_, i) => i !== idx);
-                                  setDraft({ ...draft, galleryImages: updatedGallery });
+                              onClick={async () => {
+                                const removedImg = draft.galleryImages[idx];
+                                const updatedGallery = draft.galleryImages.filter((_, i) => i !== idx);
+                                const updated = { ...draft, galleryImages: updatedGallery };
+                                setDraft(updated);
+                                if (removedImg) await deleteCloudinaryAsset(removedImg);
+                                await saveStepData(updated, draft.currentStep);
                               }}
                               className="absolute top-1 right-1 p-1 rounded-full bg-rose-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                               title="Delete Photo"

@@ -16,11 +16,60 @@ export async function ensureDbSchema() {
           ALTER TABLE "User"
             ADD COLUMN IF NOT EXISTS "phone" TEXT,
             ADD COLUMN IF NOT EXISTS "plan" TEXT DEFAULT 'NONE',
+            ADD COLUMN IF NOT EXISTS "planExpiresAt" TIMESTAMP(3),
             ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'USER',
             ADD COLUMN IF NOT EXISTS "adminPermissions" TEXT[] DEFAULT ARRAY[]::TEXT[],
             ADD COLUMN IF NOT EXISTS "allowedTemplatesCount" INTEGER DEFAULT 0,
             ADD COLUMN IF NOT EXISTS "allowedCinematicCount" INTEGER DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS "hasCinematicPass" BOOLEAN DEFAULT false,
             ADD COLUMN IF NOT EXISTS "allowedCardsCount" INTEGER DEFAULT 0;
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "UserDraftDetails" (
+            "id" TEXT PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "profileName" TEXT,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "eventType" TEXT NOT NULL DEFAULT 'WEDDING',
+            "hostNameOne" TEXT,
+            "hostNameTwo" TEXT,
+            "coupleInitials" TEXT,
+            "eventTitle" TEXT,
+            "inviteLine" TEXT,
+            "eventDate" TEXT,
+            "eventTime" TEXT,
+            "venueName" TEXT,
+            "venueAddress" TEXT,
+            "venueMapUrl" TEXT,
+            "venueTwoName" TEXT,
+            "venueTwoAddress" TEXT,
+            "venueTwoMapUrl" TEXT,
+            "locationsJson" TEXT,
+            "tagline" TEXT,
+            "turningAge" TEXT,
+            "dressCode" TEXT,
+            "rsvpContact" TEXT,
+            "loveStoryText" TEXT,
+            "loveStoryVideoUrl" TEXT,
+            "coverImage" TEXT,
+            "coupleImage" TEXT,
+            "partnerTwoImage" TEXT,
+            "venueImage" TEXT,
+            "galleryImagesJson" TEXT,
+            "functionsJson" TEXT,
+            "dayTimelineJson" TEXT,
+            "additionalNotes" TEXT,
+            "extractedFromDoc" BOOLEAN NOT NULL DEFAULT false,
+            "completedFields" TEXT,
+            "currentStep" INTEGER NOT NULL DEFAULT 0,
+            "isComplete" BOOLEAN NOT NULL DEFAULT false,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "UserDraftDetails_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "UserDraftDetails_userId_idx" ON "UserDraftDetails"("userId");
         `);
         await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "CartItem" (

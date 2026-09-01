@@ -248,7 +248,10 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
               <div className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden border-2 border-[#5f5f00]/30 shadow-md bg-white">
                 <img
                   src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
-                  alt={`${partner1} - Bride`}
+                  alt={`${partner2} - Bride`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -257,7 +260,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
                     Bride
                   </span>
                   <h3 className="text-lg font-bold text-white leading-none mt-0.5">
-                    {partner1}
+                    {partner2}
                   </h3>
                 </div>
               </div>
@@ -266,7 +269,10 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
               <div className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden border-2 border-[#5f5f00]/30 shadow-md bg-white">
                 <img
                   src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
-                  alt={`${partner2} - Groom`}
+                  alt={`${partner1} - Groom`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -275,7 +281,7 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
                     Groom
                   </span>
                   <h3 className="text-lg font-bold text-white leading-none mt-0.5">
-                    {partner2}
+                    {partner1}
                   </h3>
                 </div>
               </div>

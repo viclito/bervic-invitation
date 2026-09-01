@@ -14,20 +14,43 @@ export async function deleteCloudinaryImages(urls: string[]) {
 export async function cleanupExpiredInvitations() {
   try {
     const now = new Date();
-    // Only cleanup invitations if the owner user's subscription has expired
+    // Only cleanup invitations if the owner user's subscription has expired AND the wedding was long ago
     const allInvitations = await prisma.userInvitation.findMany({
       include: { user: true },
     });
 
     for (const inv of allInvitations) {
+      // NEVER delete invitations created within the last 60 days
+      if (inv.createdAt) {
+        const createdAgeMs = now.getTime() - new Date(inv.createdAt).getTime();
+        if (createdAgeMs < 60 * 24 * 60 * 60 * 1000) {
+          continue;
+        }
+      }
+
+      // If wedding date is in the future, NEVER delete!
+      if (inv.weddingDate) {
+        const eventDate = new Date(inv.weddingDate);
+        if (!isNaN(eventDate.getTime()) && eventDate > now) {
+          continue;
+        }
+        // If the event was less than 30 days ago, keep active for guests to see photos & video
+        if (!isNaN(eventDate.getTime()) && now.getTime() - eventDate.getTime() < 30 * 24 * 60 * 60 * 1000) {
+          continue;
+        }
+      }
+
       const userPlanExpiresAt = inv.user?.planExpiresAt;
       const isUserSubscribed = !!(userPlanExpiresAt && new Date(userPlanExpiresAt) > now);
 
       // If user has an active subscription, DO NOT DELETE! Assets remain live.
       if (isUserSubscribed) continue;
 
-      // If subscription is expired (or no subscription), check if plan expired over 7 days ago
-      if (userPlanExpiresAt && now.getTime() - new Date(userPlanExpiresAt).getTime() < 7 * 24 * 60 * 60 * 1000) {
+      // If user has no planExpiresAt set (e.g. admin or lifetime or standard user), DO NOT DELETE
+      if (!userPlanExpiresAt) continue;
+
+      // Only delete if subscription expired over 30 days ago
+      if (now.getTime() - new Date(userPlanExpiresAt).getTime() < 30 * 24 * 60 * 60 * 1000) {
         continue;
       }
 
@@ -63,7 +86,7 @@ export async function cleanupExpiredInvitations() {
         where: { id: inv.id },
       });
 
-      console.log(`Cleaned expired invitation ID: ${inv.id} (Slug: ${inv.slug}) post subscription expiry.`);
+      console.log(`Cleaned expired invitation ID: ${inv.id} (Slug: ${inv.slug}) post subscription & event expiry.`);
     }
   } catch (error) {
     console.error("Error during automatic invitation cleanup:", error);

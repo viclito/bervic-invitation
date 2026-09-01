@@ -198,7 +198,10 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
               >
                 <img
                   src={props.coupleImage || props.coverImage || "/images/templates/groom-bride-1.jpg"}
-                  alt={`${partner1} - Bride`}
+                  alt={`${partner2} - Bride`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#081425]/90 via-transparent to-transparent" />
@@ -207,7 +210,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
                     Bride
                   </span>
                   <h3 className="text-base sm:text-lg font-serif font-bold text-white leading-none mt-1">
-                    {partner1}
+                    {partner2}
                   </h3>
                 </div>
               </motion.div>
@@ -219,7 +222,10 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
               >
                 <img
                   src={props.partnerTwoImage || props.coverImage || "/images/templates/groom-bride-2.jpg"}
-                  alt={`${partner2} - Groom`}
+                  alt={`${partner1} - Groom`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#081425]/90 via-transparent to-transparent" />
@@ -228,7 +234,7 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
                     Groom
                   </span>
                   <h3 className="text-base sm:text-lg font-serif font-bold text-white leading-none mt-1">
-                    {partner2}
+                    {partner1}
                   </h3>
                 </div>
               </motion.div>

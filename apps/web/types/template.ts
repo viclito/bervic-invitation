@@ -21,6 +21,7 @@ export interface LocationVenue {
   address: string;
   mapLink: string;
   image: string;
+  contact?: string;
 }
 
 export interface SocialLinks {
@@ -34,14 +35,19 @@ export interface TemplateClassicFloralProps {
   coupleInitials: string;
   partnerOne: string;
   partnerTwo: string;
+  groomName?: string;
+  brideName?: string;
   tagline: string;
   inviteLine: string;
   weddingDate: string; // ISOString format e.g. "2026-11-28T10:30:00.000Z"
   weddingTime: string;
+  targetDate?: string;
   heroImage: string;
   coupleImage: string;
   coverImage?: string;
   partnerTwoImage?: string;
+  groomImage?: string;
+  brideImage?: string;
   venuePlace: string;
   events: WeddingEvent[];
   timelineDay: TimelineStep[];

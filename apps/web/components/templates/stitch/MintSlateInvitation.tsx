@@ -189,7 +189,10 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
               <div className="h-96 relative overflow-hidden border border-[#191c1d]">
                 <img
                   src={brideImg}
-                  alt={`${partner1} - Bride`}
+                  alt={`${partner2} - Bride`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-1.jpg";
+                  }}
                   className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#191c1d]/90 via-transparent to-transparent" />
@@ -197,7 +200,7 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
                   <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#aaf0d1] font-bold block mb-1">
                     Bride
                   </span>
-                  <h3 className="text-3xl font-extrabold uppercase tracking-tight">{partner1}</h3>
+                  <h3 className="text-3xl font-extrabold uppercase tracking-tight">{partner2}</h3>
                 </div>
               </div>
             </div>
@@ -207,7 +210,10 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
               <div className="h-96 relative overflow-hidden border border-[#191c1d]">
                 <img
                   src={groomImg}
-                  alt={`${partner2} - Groom`}
+                  alt={`${partner1} - Groom`}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/templates/groom-bride-2.jpg";
+                  }}
                   className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#191c1d]/90 via-transparent to-transparent" />
@@ -215,7 +221,7 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
                   <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#aaf0d1] font-bold block mb-1">
                     Groom
                   </span>
-                  <h3 className="text-3xl font-extrabold uppercase tracking-tight">{partner2}</h3>
+                  <h3 className="text-3xl font-extrabold uppercase tracking-tight">{partner1}</h3>
                 </div>
               </div>
             </div>

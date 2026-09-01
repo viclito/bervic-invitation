@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Sparkles, Calendar } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { getWeddingTargetDate } from "@/lib/dateUtils";
 
 export interface OurDaySectionProps {
   partnerOne?: string;
@@ -21,51 +22,6 @@ export interface OurDaySectionProps {
   weddingTime?: string;
   venuePlace?: string;
   targetDate?: string; // ISO or date string
-}
-
-function parseTargetDate(dateStr?: string, timeStr?: string): Date | null {
-  if (!dateStr || typeof dateStr !== "string" || dateStr.trim() === "") return null;
-  const raw = dateStr.trim();
-
-  // Try standard direct parsing
-  let d = new Date(raw);
-  if (!isNaN(d.getTime())) {
-    // If it's a date-only string (e.g. 2026-09-25), incorporate timeStr
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw) || /^\d{4}\/\d{2}\/\d{2}$/.test(raw)) {
-      let hours = 10;
-      let mins = 0;
-      if (timeStr) {
-        const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-        if (timeParts) {
-          hours = parseInt(timeParts[1], 10);
-          mins = parseInt(timeParts[2], 10);
-          const ampm = timeParts[3]?.toUpperCase();
-          if (ampm === "PM" && hours < 12) hours += 12;
-          if (ampm === "AM" && hours === 12) hours = 0;
-        }
-      }
-      d.setHours(hours, mins, 0, 0);
-    }
-    return d;
-  }
-
-  // Handle YYYY-MM-DD or YYYY/MM/DD manually
-  const ymd = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if (ymd) {
-    const year = parseInt(ymd[1], 10);
-    const month = parseInt(ymd[2], 10) - 1;
-    const day = parseInt(ymd[3], 10);
-    d = new Date(year, month, day, 10, 0, 0);
-    if (!isNaN(d.getTime())) return d;
-  }
-
-  // Handle Month DD, YYYY
-  const mdy = Date.parse(raw);
-  if (!isNaN(mdy)) {
-    return new Date(mdy);
-  }
-
-  return null;
 }
 
 export default function OurDaySection({
@@ -89,18 +45,28 @@ export default function OurDaySection({
   const coupleRowRef = useRef<HTMLDivElement>(null);
   const countdownRef = useRef<HTMLDivElement>(null);
 
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const effective = targetDate || weddingDate;
+    if (!effective) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    const targetObj = getWeddingTargetDate(effective, weddingTime);
+    const difference = targetObj.getTime() - Date.now();
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   });
 
   // Failsafe Live Countdown Timer
   useEffect(() => {
     const effectiveDateStr = targetDate || weddingDate;
-    const targetObj = parseTargetDate(effectiveDateStr, weddingTime);
-    if (!targetObj) return;
+    if (!effectiveDateStr) return;
+
+    const targetObj = getWeddingTargetDate(effectiveDateStr, weddingTime);
 
     const calculateTime = () => {
       const difference = targetObj.getTime() - Date.now();
@@ -285,7 +251,15 @@ export default function OurDaySection({
             {/* Event Summary Details Footer */}
             {(weddingDate || weddingTime || venuePlace) && (
               <div className="glowinn-countdown-footer">
-                {[weddingDate, weddingTime, venuePlace].filter(Boolean).join(" · ")}
+                {[weddingDate, weddingTime, venuePlace]
+                  .filter(
+                    (item) =>
+                      Boolean(item) &&
+                      !item!.includes("000000") &&
+                      !item!.includes("Your Full Address") &&
+                      !item!.includes("Your Venue Name")
+                  )
+                  .join(" · ")}
               </div>
             )}
           </div>

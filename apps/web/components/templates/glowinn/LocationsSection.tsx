@@ -128,7 +128,7 @@ export default function LocationsSection({
                 </div>
               )}
 
-              {loc.contact && (
+              {loc.contact && loc.contact.trim() !== "" && !loc.contact.includes("98765 43210") && (
                 <div className="glowinn-location-card__contact">
                   <Phone className="w-3.5 h-3.5 text-[#f0b4c4] shrink-0" />
                   <span>Concierge Assistance: {loc.contact}</span>
