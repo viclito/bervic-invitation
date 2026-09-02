@@ -13,8 +13,12 @@ Before executing any user command, chat instruction, or modifying codebase files
 2. **Pre-flight Check:** Inspect existing files, Prisma schema, and API contracts before making edits. Always enforce multi-tenant boundaries (`userId` isolation).
 3. **Performance & Low-Latency First:** Ensure no N+1 database queries, apply dynamic imports for heavy components (`framer-motion`, `lenis`), use static/ISR caching for public invitation routes (`/[slug]`), and use debounced live preview inputs.
 4. **No Dummy / Mock Data:** NEVER insert fake, mock, placeholder, or dummy data into the database, API responses, or frontend hooks/components. The application and database must strictly operate on genuine user and administrator data only.
-5. **Mandatory Post-Execution Verification:** Before marking any task complete or declaring success, execute:
+5. **Per-File Error & Runtime Verification (Zero-Error Production Guarantee):** For EVERY single file that you create, modify, or edit, you MUST actively check, trace, and test whether any error could occur in that specific file (runtime exceptions, undefined properties, API 500 responses, SQL/column/constraint mismatches, missing defaults, or unhandled promises). Never leave unverified execution paths in created or edited files that could cause production failure or outages.
+6. **Mandatory Post-Execution Verification:** Before marking any task complete or declaring success, execute:
    - `npx tsc --noEmit` (Static Typecheck)
    - `npm run lint` (ESLint audit)
    - `npm run build` (Next.js production build verification)
    - `npx prisma validate` (Prisma schema validation)
+7. **Zero 500 Error Guarantee & API Resilience (Mandatory Check in EVERY Chat):**
+   - In EVERY single chat and task, ensure all API endpoints (especially mission-critical transaction routes like `/api/orders/create`, `/api/cart`, `/api/payment/*`, and drafts) implement bulletproof data validation, schema auto-migration (`ensureDbSchema.ts`), defensive direct database fallbacks, and non-blocking background notifications.
+   - NO user or administrator submission (e.g. placing an order, uploading drafts, saving templates) is ever allowed to return an unhandled 500 Internal Server Error. Trace and verify the end-to-end flow.

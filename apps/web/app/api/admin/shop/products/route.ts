@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       dimensions = "5.5 x 8.5 inches",
       description = "",
       features = [],
+      pricingTiersJson = null,
       canvaTemplateId = null,
       rating = 5.0,
       reviewsCount = 50,
@@ -71,6 +72,12 @@ export async function POST(req: Request) {
       : typeof features === "string"
       ? features
       : "[]";
+
+    const cleanPricingTiersJson = pricingTiersJson && typeof pricingTiersJson === "object"
+      ? JSON.stringify(pricingTiersJson)
+      : typeof pricingTiersJson === "string"
+      ? pricingTiersJson
+      : null;
 
     const id = `prod_${crypto.randomBytes(12).toString("hex")}`;
     const cleanName = String(name).trim();
@@ -108,6 +115,7 @@ export async function POST(req: Request) {
             dimensions: cleanDimensions,
             description: cleanDesc,
             featuresJson,
+            pricingTiersJson: cleanPricingTiersJson,
             canvaTemplateId: cleanCanvaId,
             rating: cleanRating,
             reviewsCount: cleanReviews,
@@ -123,8 +131,8 @@ export async function POST(req: Request) {
 
     if (!product || prismaCreateFailed) {
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "canvaTemplateId", "rating", "reviewsCount", "isActive", "sortOrder", "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())`,
+        `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "isActive", "sortOrder", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())`,
         id,
         cleanName,
         cleanCategory,
@@ -137,6 +145,7 @@ export async function POST(req: Request) {
         cleanDimensions,
         cleanDesc,
         featuresJson,
+        cleanPricingTiersJson,
         cleanCanvaId,
         cleanRating,
         cleanReviews,

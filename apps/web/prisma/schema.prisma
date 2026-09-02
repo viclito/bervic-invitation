@@ -19,6 +19,7 @@ model User {
   planExpiresAt         DateTime?
   allowedTemplatesCount Int              @default(0)
   allowedCinematicCount Int              @default(0)
+  hasCinematicPass      Boolean          @default(false)
   allowedCardsCount     Int              @default(0)
   role                  String           @default("USER") // USER, SUB_ADMIN, ADMIN, SUPER_ADMIN
   adminPermissions      String[]         @default([])
@@ -32,6 +33,7 @@ model User {
   draftDetails          UserDraftDetails[]
   cartItems             CartItem[]
   orders                CardOrder[]
+  addresses             UserAddress[]
 }
 
 model Account {
@@ -256,6 +258,7 @@ model CardOrder {
   status          String          @default("PENDING") // PENDING, CONFIRMED, IN_PRODUCTION, SHIPPED, DELIVERED, CANCELLED
   totalCopies     Int             @default(1)
   totalAmount     Float           @default(0)
+  shippingFee     Float           @default(0)
   paymentStatus   String          @default("PENDING") // PENDING, PAID, COD
   notes           String?         @db.Text
   createdAt       DateTime        @default(now())
@@ -280,12 +283,32 @@ model CardOrderItem {
   cardDetailsJson String    @db.Text
   elementsJson    String?   @db.Text
   customNotes     String?   @db.Text
+  draftFileUrl    String?   @db.Text
+  draftFileName   String?
   price           Float     @default(0)
   createdAt       DateTime  @default(now())
 
   order CardOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+}
+
+model UserAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  phone     String
+  address   String   @db.Text
+  city      String
+  state     String?
+  pincode   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model OrderMessage {
@@ -313,6 +336,7 @@ model ShopProduct {
   dimensions    String   @default("5.5 x 8.5 inches")
   description   String   @db.Text
   featuresJson    String   @default("[]") @db.Text // JSON array of bullet points
+  pricingTiersJson String?  @db.Text // JSON string containing custom tier pricing or percentage configuration
   canvaTemplateId String?  // Optional linked Canva Studio Template ID
   rating          Float    @default(5.0)
   reviewsCount  Int      @default(50)
@@ -325,6 +349,19 @@ model ShopProduct {
   @@index([isActive])
   @@index([isActive, category, sortOrder, createdAt])
   @@index([isActive, sortOrder, createdAt])
+}
+
+model ShopCategory {
+  id        String   @id // unique slug, e.g. "royal", "floral", "vintage", "brass", etc.
+  name      String   // display name, e.g. "Royal & Heritage"
+  icon      String?  // emoji or icon string, e.g. "👑", "🌸", "📜"
+  type      String   @default("invitations") // "invitations" | "return_gifts"
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, isActive, sortOrder])
 }
 
 model CanvaTemplate {
@@ -352,6 +389,13 @@ model CanvaTemplate {
   @@index([isActive])
 }
 
+model ShopDimension {
+  id        String   @id @default(cuid())
+  label     String
+  type      String   @default("invitations") // "invitations" | "return_gifts" | "all"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-
-
+  @@index([type, sortOrder])
+}

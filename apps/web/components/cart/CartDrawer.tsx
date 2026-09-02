@@ -242,17 +242,29 @@ export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawer
     setSuccessMsg("");
 
     try {
-      const itemsPayload = itemsToOrder.map((it) => ({
-        itemType: it.itemType || "CANVA_CARD",
-        templateId: it.templateId,
-        templateName: it.templateName,
-        previewImage: it.previewImage,
-        copies: it.copies,
-        cardDetails: it.cardDetailsJson,
-        elements: it.elementsJson,
-        customNotes: it.customNotes,
-        price: it.price,
-      }));
+      const itemsPayload = itemsToOrder.map((it) => {
+        let printingFee = 0;
+        if (typeof it.cardDetailsJson === "string") {
+          try {
+            const parsed = JSON.parse(it.cardDetailsJson);
+            printingFee = Number(parsed.totalPrintingChangeFee) || 0;
+          } catch {}
+        }
+        const copies = Math.max(1, Number(it.copies) || 1);
+        const cardBaseTotal = Math.max(0, (Number(it.price) || 0) - printingFee);
+        const unitPrice = cardBaseTotal > 0 ? Math.round((cardBaseTotal / copies) * 100) / 100 : 0;
+        return {
+          itemType: it.itemType || "CANVA_CARD",
+          templateId: it.templateId,
+          templateName: it.templateName,
+          previewImage: it.previewImage,
+          copies: copies,
+          cardDetails: it.cardDetailsJson,
+          elements: it.elementsJson,
+          customNotes: it.customNotes,
+          price: unitPrice,
+        };
+      });
 
       const res = await fetch("/api/orders/create", {
         method: "POST",

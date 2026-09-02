@@ -43,6 +43,8 @@ import {
   Upload,
   Image as ImageIcon,
   Link2,
+  FileText,
+  Download,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -57,9 +59,11 @@ import {
   Key,
   ShieldAlert,
   BarChart3,
+  Tag,
+  Ruler,
 } from "lucide-react";
 import { optimizeImageForUpload } from "@/lib/imageOptimizer";
-import { CARD_PRICING_TIERS, calculateTieredCardPrice } from "@/lib/pricing";
+import { CARD_PRICING_TIERS, calculateTieredCardPrice, calculatePrintingChangeFee, DEFAULT_PRINTING_CHANGE_CONFIG } from "@/lib/pricing";
 
 export interface AdminStaff {
   id: string;
@@ -103,6 +107,7 @@ export interface AdminShopProduct {
   dimensions: string;
   description: string;
   featuresJson: string;
+  pricingTiersJson?: string | null;
   canvaTemplateId?: string | null;
   rating: number;
   reviewsCount: number;
@@ -110,6 +115,28 @@ export interface AdminShopProduct {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminShopCategory {
+  id: string;
+  name: string;
+  icon?: string | null;
+  type: string; // "invitations" | "return_gifts"
+  sortOrder: number;
+  isActive: boolean;
+  productCount: number;
+  label: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AdminShopDimension {
+  id: string;
+  label: string;
+  type: string; // "invitations" | "return_gifts" | "all"
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AdminOrderItem {
@@ -361,6 +388,39 @@ export default function AdminPage() {
 
   // Traditional Shop Product Management State
   const [shopProductsList, setShopProductsList] = useState<AdminShopProduct[]>([]);
+  const [shopCategories, setShopCategories] = useState<AdminShopCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
+  const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
+  const [categoryModalTab, setCategoryModalTab] = useState<"invitations" | "return_gifts">("invitations");
+  const [editingCategory, setEditingCategory] = useState<AdminShopCategory | null>(null);
+  const [showCategoryEditModal, setShowCategoryEditModal] = useState<boolean>(false);
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    slug: "",
+    icon: "",
+    type: "invitations",
+    sortOrder: 0,
+  });
+  const [categorySaving, setCategorySaving] = useState<boolean>(false);
+  const [categoryDeletingId, setCategoryDeletingId] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  // Shop Dimensions Management State
+  const [shopDimensions, setShopDimensions] = useState<AdminShopDimension[]>([]);
+  const [loadingDimensions, setLoadingDimensions] = useState<boolean>(false);
+  const [showDimensionModal, setShowDimensionModal] = useState<boolean>(false);
+  const [dimensionModalTab, setDimensionModalTab] = useState<"invitations" | "return_gifts">("invitations");
+  const [editingDimension, setEditingDimension] = useState<AdminShopDimension | null>(null);
+  const [showDimensionEditModal, setShowDimensionEditModal] = useState<boolean>(false);
+  const [dimensionForm, setDimensionForm] = useState({
+    label: "",
+    type: "invitations" as "invitations" | "return_gifts",
+    sortOrder: 0,
+  });
+  const [dimensionSaving, setDimensionSaving] = useState<boolean>(false);
+  const [dimensionDeletingId, setDeletingDimensionId] = useState<string | null>(null);
+  const [dimensionError, setDimensionError] = useState<string | null>(null);
+
   const [shopCategoryFilter, setShopCategoryFilter] = useState<string>("ALL");
   const [shopStatusFilter, setShopStatusFilter] = useState<string>("ALL");
   const [shopSearchQuery, setShopSearchQuery] = useState<string>("" );
@@ -383,14 +443,37 @@ export default function AdminPage() {
     category: "royal",
     pricePerCard: 65,
     minCopies: 50,
+    pricingMode: "PERCENTAGE" as "PERCENTAGE" | "MANUAL" | "FLAT",
+    manualTiers: {
+      t1000: 65,
+      t500: 117,
+      t300: 182,
+      t150: 228,
+      t80: 260,
+      t50: 358,
+    },
+    percentTiers: {
+      t1000: 0,
+      t500: 80,
+      t300: 180,
+      t150: 250,
+      t80: 300,
+      t50: 450,
+    },
     previewImage: "",
     galleryImages: [] as string[],
     badge: "",
     paperType: "350 GSM Textured Metallic Gold Cardstock",
     dimensions: "5.5 x 8.5 inches",
     description: "",
-    features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included",
+    features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nWhatsApp Digital Proof Included",
     canvaTemplateId: "",
+    printingChangeConfig: {
+      enabled: true,
+      chargeUpto500: 500,
+      chargeFor1000: 750,
+      chargePerNext1000: 750,
+    },
     isActive: true,
   });
 
@@ -449,16 +532,20 @@ export default function AdminPage() {
     setLoading(true);
     setErrorMsg("");
     try {
-      const [overviewRes, ordersRes, shopRes, canvaRes] = await Promise.all([
+      const [overviewRes, ordersRes, shopRes, canvaRes, shopCatRes, shopDimRes] = await Promise.all([
         fetch("/api/admin/overview"),
         fetch("/api/admin/orders"),
         fetch("/api/admin/shop/products"),
         fetch("/api/admin/canva-templates"),
+        fetch("/api/admin/shop/categories"),
+        fetch("/api/admin/shop/dimensions"),
       ]);
       const data = await overviewRes.json();
       const ordersData = await ordersRes.json();
       const shopData = await shopRes.json();
       const canvaData = await canvaRes.json();
+      const shopCatData = await shopCatRes.json();
+      const shopDimData = await shopDimRes.json();
 
       if (!overviewRes.ok) {
         throw new Error(data.error || "Failed to load admin data");
@@ -490,6 +577,12 @@ export default function AdminPage() {
       if (canvaRes.ok && Array.isArray(canvaData.templates)) {
         setCanvaTemplatesList(canvaData.templates);
       }
+      if (shopCatRes.ok && Array.isArray(shopCatData.categories)) {
+        setShopCategories(shopCatData.categories);
+      }
+      if (shopDimRes.ok && Array.isArray(shopDimData.dimensions)) {
+        setShopDimensions(shopDimData.dimensions);
+      }
 
       // If user is super admin or can manage admins, fetch staff list
       if (data.currentAdmin?.isSuperAdmin || isSuperAdmin) {
@@ -499,6 +592,229 @@ export default function AdminPage() {
       setErrorMsg(err?.message || "Error loading admin dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchShopCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const res = await fetch("/api/admin/shop/categories");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.categories)) {
+        setShopCategories(data.categories);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch shop categories:", err);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const handleOpenAddCategory = (type: "invitations" | "return_gifts" = "invitations") => {
+    setEditingCategory(null);
+    setCategoryForm({
+      name: "",
+      slug: "",
+      icon: "",
+      type,
+      sortOrder: (shopCategories.filter((c) => c.type === type).length || 0) + 1,
+    });
+    setCategoryError(null);
+    setShowCategoryEditModal(true);
+  };
+
+  const handleOpenEditCategory = (cat: AdminShopCategory) => {
+    setEditingCategory(cat);
+    setCategoryForm({
+      name: cat.name,
+      slug: cat.id,
+      icon: cat.icon || "",
+      type: cat.type || "invitations",
+      sortOrder: cat.sortOrder ?? 0,
+    });
+    setCategoryError(null);
+    setShowCategoryEditModal(true);
+  };
+
+  const handleSaveCategory = async () => {
+    if (!categoryForm.name.trim()) {
+      setCategoryError("Category name is required");
+      return;
+    }
+    setCategorySaving(true);
+    setCategoryError(null);
+    try {
+      if (editingCategory) {
+        const res = await fetch(`/api/admin/shop/categories/${editingCategory.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: categoryForm.name.trim(),
+            icon: categoryForm.icon.trim(),
+            type: categoryForm.type,
+            sortOrder: categoryForm.sortOrder,
+            newSlug: categoryForm.slug.trim() !== editingCategory.id ? categoryForm.slug.trim() : undefined,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update category");
+        setSuccessToast(`Category '${categoryForm.name}' updated!`);
+      } else {
+        const res = await fetch("/api/admin/shop/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: categoryForm.name.trim(),
+            slug: categoryForm.slug.trim() || undefined,
+            icon: categoryForm.icon.trim(),
+            type: categoryForm.type,
+            sortOrder: categoryForm.sortOrder,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create category");
+        setSuccessToast(`Category '${categoryForm.name}' created!`);
+      }
+
+      setTimeout(() => setSuccessToast(""), 3500);
+      setShowCategoryEditModal(false);
+      await fetchShopCategories();
+    } catch (err: any) {
+      setCategoryError(err?.message || "Error saving category");
+    } finally {
+      setCategorySaving(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat: AdminShopCategory) => {
+    if (!confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
+      return;
+    }
+    setCategoryDeletingId(cat.id);
+    try {
+      const res = await fetch(`/api/admin/shop/categories/${cat.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete category");
+        return;
+      }
+      setSuccessToast(`Category '${cat.name}' deleted!`);
+      setTimeout(() => setSuccessToast(""), 3500);
+      await fetchShopCategories();
+    } catch (err: any) {
+      alert(err?.message || "Error deleting category");
+    } finally {
+      setCategoryDeletingId(null);
+    }
+  };
+
+  // ── Dimension / Size Management Methods ──
+  const fetchShopDimensions = async () => {
+    try {
+      setLoadingDimensions(true);
+      const res = await fetch("/api/admin/shop/dimensions");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.dimensions)) {
+        setShopDimensions(data.dimensions);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch shop dimensions:", err);
+    } finally {
+      setLoadingDimensions(false);
+    }
+  };
+
+  const handleOpenAddDimension = (type: "invitations" | "return_gifts" = "invitations") => {
+    setEditingDimension(null);
+    setDimensionForm({
+      label: "",
+      type,
+      sortOrder: (shopDimensions.filter((d) => d.type === type).length || 0) + 1,
+    });
+    setDimensionError(null);
+    setShowDimensionEditModal(true);
+  };
+
+  const handleOpenEditDimension = (dim: AdminShopDimension) => {
+    setEditingDimension(dim);
+    setDimensionForm({
+      label: dim.label,
+      type: dim.type === "return_gifts" ? "return_gifts" : "invitations",
+      sortOrder: dim.sortOrder ?? 0,
+    });
+    setDimensionError(null);
+    setShowDimensionEditModal(true);
+  };
+
+  const handleSaveDimension = async () => {
+    if (!dimensionForm.label.trim()) {
+      setDimensionError("Dimension / size label is required");
+      return;
+    }
+    setDimensionSaving(true);
+    setDimensionError(null);
+    try {
+      if (editingDimension) {
+        const res = await fetch(`/api/admin/shop/dimensions/${editingDimension.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: dimensionForm.label.trim(),
+            type: dimensionForm.type,
+            sortOrder: dimensionForm.sortOrder,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update dimension");
+        setSuccessToast(`Dimension "${dimensionForm.label}" updated!`);
+      } else {
+        const res = await fetch("/api/admin/shop/dimensions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: dimensionForm.label.trim(),
+            type: dimensionForm.type,
+            sortOrder: dimensionForm.sortOrder,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create dimension");
+        setSuccessToast(`Dimension "${dimensionForm.label}" created!`);
+      }
+
+      setTimeout(() => setSuccessToast(""), 3500);
+      setShowDimensionEditModal(false);
+      await fetchShopDimensions();
+    } catch (err: any) {
+      setDimensionError(err?.message || "Error saving dimension");
+    } finally {
+      setDimensionSaving(false);
+    }
+  };
+
+  const handleDeleteDimension = async (dim: AdminShopDimension) => {
+    if (!confirm(`Are you sure you want to delete the dimension "${dim.label}"?`)) {
+      return;
+    }
+    setDeletingDimensionId(dim.id);
+    try {
+      const res = await fetch(`/api/admin/shop/dimensions/${dim.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete dimension");
+        return;
+      }
+      setSuccessToast(`Dimension "${dim.label}" deleted!`);
+      setTimeout(() => setSuccessToast(""), 3500);
+      await fetchShopDimensions();
+    } catch (err: any) {
+      alert(err?.message || "Error deleting dimension");
+    } finally {
+      setDeletingDimensionId(null);
     }
   };
 
@@ -542,20 +858,49 @@ export default function AdminPage() {
   };
 
   const handleOpenNewProductModal = () => {
+    fetchShopCategories();
+    fetchShopDimensions();
     setEditingProduct(null);
+    const defaultDim =
+      shopDimensions.find((d) => d.type === "invitations" || d.type === "all")?.label ||
+      "5.5 x 8.5 inches (Portrait - Standard)";
+
     setProductForm({
       name: "",
       category: "royal",
       pricePerCard: 65,
       minCopies: 50,
-      previewImage: "/images/canva/template2-thumb.webp",
+      pricingMode: "PERCENTAGE",
+      manualTiers: {
+        t1000: 65,
+        t500: Math.round(65 * 1.8),
+        t300: Math.round(65 * 2.8),
+        t150: Math.round(65 * 3.5),
+        t80: Math.round(65 * 4.0),
+        t50: Math.round(65 * 5.5),
+      },
+      percentTiers: {
+        t1000: 0,
+        t500: 80,
+        t300: 180,
+        t150: 250,
+        t80: 300,
+        t50: 450,
+      },
+      previewImage: "", // NO DEFAULT IMAGE - Prompts brand new upload!
       galleryImages: [],
       badge: "NEW",
       paperType: "350 GSM Textured Metallic Gold Cardstock",
-      dimensions: "5.5 x 8.5 inches",
+      dimensions: defaultDim,
       description: "Majestic luxury Indian wedding invitation card with real gold foil border frames.",
-      features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included",
+      features: "Real Gold Foil Stamping\nHeavy 350 GSM Textured Board\nWhatsApp Digital Proof Included",
       canvaTemplateId: "",
+      printingChangeConfig: {
+        enabled: true,
+        chargeUpto500: 500,
+        chargeFor1000: 750,
+        chargePerNext1000: 750,
+      },
       isActive: true,
     });
     setSubImageUrlInput("");
@@ -565,6 +910,8 @@ export default function AdminPage() {
   };
 
   const handleOpenEditProductModal = (product: AdminShopProduct) => {
+    fetchShopCategories();
+    fetchShopDimensions();
     setEditingProduct(product);
     let featuresStr = "";
     try {
@@ -584,11 +931,82 @@ export default function AdminPage() {
       parsedGallery = [];
     }
 
+    const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(product.category);
+    let initialMode: "PERCENTAGE" | "MANUAL" | "FLAT" = isGift ? "FLAT" : "PERCENTAGE";
+    const baseP = Number(product.pricePerCard) || 65;
+
+    const initialManual = {
+      t1000: baseP,
+      t500: Math.round(baseP * 1.8),
+      t300: Math.round(baseP * 2.8),
+      t150: Math.round(baseP * 3.5),
+      t80: Math.round(baseP * 4.0),
+      t50: Math.round(baseP * 5.5),
+    };
+
+    const initialPercent = {
+      t1000: 0,
+      t500: 80,
+      t300: 180,
+      t150: 250,
+      t80: 300,
+      t50: 450,
+    };
+
+    let initialPrintingChangeConfig = {
+      enabled: !isGift,
+      chargeUpto500: 500,
+      chargeFor1000: 750,
+      chargePerNext1000: 750,
+    };
+
+    if (product.pricingTiersJson) {
+      try {
+        const parsedConfig = JSON.parse(product.pricingTiersJson);
+        if (parsedConfig.mode) initialMode = parsedConfig.mode;
+        if (parsedConfig.printingChangeConfig) {
+          const pcc = parsedConfig.printingChangeConfig;
+          initialPrintingChangeConfig = {
+            enabled: Boolean(pcc.enabled ?? !isGift),
+            chargeUpto500: Number(pcc.chargeUpto500 ?? pcc.baseCharge ?? 500),
+            chargeFor1000: Number(pcc.chargeFor1000 ?? 750),
+            chargePerNext1000: Number(pcc.chargePerNext1000 ?? pcc.extraBatchCharge ?? 750),
+          };
+        }
+        if (Array.isArray(parsedConfig.tiers)) {
+          parsedConfig.tiers.forEach((t: any) => {
+            if (t.min === 1000) {
+              if (t.price !== undefined) initialManual.t1000 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t1000 = Number(t.markupPercent);
+            } else if (t.min === 500) {
+              if (t.price !== undefined) initialManual.t500 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t500 = Number(t.markupPercent);
+            } else if (t.min === 300) {
+              if (t.price !== undefined) initialManual.t300 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t300 = Number(t.markupPercent);
+            } else if (t.min === 150) {
+              if (t.price !== undefined) initialManual.t150 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t150 = Number(t.markupPercent);
+            } else if (t.min === 80) {
+              if (t.price !== undefined) initialManual.t80 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t80 = Number(t.markupPercent);
+            } else if (t.min === 50) {
+              if (t.price !== undefined) initialManual.t50 = Number(t.price);
+              if (t.markupPercent !== undefined) initialPercent.t50 = Number(t.markupPercent);
+            }
+          });
+        }
+      } catch {}
+    }
+
     setProductForm({
       name: product.name,
       category: product.category,
       pricePerCard: product.pricePerCard,
       minCopies: product.minCopies,
+      pricingMode: initialMode,
+      manualTiers: initialManual,
+      percentTiers: initialPercent,
       previewImage: product.previewImage,
       galleryImages: parsedGallery,
       badge: product.badge || "",
@@ -597,6 +1015,7 @@ export default function AdminPage() {
       description: product.description,
       features: featuresStr,
       canvaTemplateId: product.canvaTemplateId || "",
+      printingChangeConfig: initialPrintingChangeConfig,
       isActive: product.isActive,
     });
     setSubImageUrlInput("");
@@ -721,9 +1140,70 @@ export default function AdminPage() {
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category);
+    const effectiveMode = isGift ? "FLAT" : productForm.pricingMode;
+
+    const constructedPricingConfig = {
+      mode: effectiveMode,
+      basePrice: productForm.pricePerCard,
+      tiers: [
+        {
+          min: 1000,
+          max: null,
+          label: "1000+ Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t1000) || productForm.pricePerCard : productForm.pricePerCard,
+          markupPercent: effectiveMode === "PERCENTAGE" ? Number(productForm.percentTiers.t1000) || 0 : 0,
+        },
+        {
+          min: 500,
+          max: 999,
+          label: "500 - 999 Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t500) || Math.round(productForm.pricePerCard * 1.8) : Math.round(productForm.pricePerCard * (1 + (Number(productForm.percentTiers.t500) || 80) / 100)),
+          markupPercent: Number(productForm.percentTiers.t500) || 80,
+        },
+        {
+          min: 300,
+          max: 499,
+          label: "300 - 499 Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t300) || Math.round(productForm.pricePerCard * 2.8) : Math.round(productForm.pricePerCard * (1 + (Number(productForm.percentTiers.t300) || 180) / 100)),
+          markupPercent: Number(productForm.percentTiers.t300) || 180,
+        },
+        {
+          min: 150,
+          max: 299,
+          label: "150 - 299 Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t150) || Math.round(productForm.pricePerCard * 3.5) : Math.round(productForm.pricePerCard * (1 + (Number(productForm.percentTiers.t150) || 250) / 100)),
+          markupPercent: Number(productForm.percentTiers.t150) || 250,
+        },
+        {
+          min: 80,
+          max: 149,
+          label: "80 - 149 Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t80) || Math.round(productForm.pricePerCard * 4.0) : Math.round(productForm.pricePerCard * (1 + (Number(productForm.percentTiers.t80) || 300) / 100)),
+          markupPercent: Number(productForm.percentTiers.t80) || 300,
+        },
+        {
+          min: 50,
+          max: 79,
+          label: "50 - 79 Copies",
+          price: effectiveMode === "MANUAL" ? Number(productForm.manualTiers.t50) || Math.round(productForm.pricePerCard * 5.5) : Math.round(productForm.pricePerCard * (1 + (Number(productForm.percentTiers.t50) || 450) / 100)),
+          markupPercent: Number(productForm.percentTiers.t50) || 450,
+        },
+      ],
+      printingChangeConfig: isGift
+        ? { enabled: false, chargeUpto500: 0, chargeFor1000: 0, chargePerNext1000: 0 }
+        : {
+            enabled: Boolean(productForm.printingChangeConfig?.enabled),
+            chargeUpto500: Number(productForm.printingChangeConfig?.chargeUpto500) || 500,
+            chargeFor1000: Number(productForm.printingChangeConfig?.chargeFor1000) || 750,
+            chargePerNext1000: Number(productForm.printingChangeConfig?.chargePerNext1000) || 750,
+          },
+    };
+
     try {
       const payload = {
         ...productForm,
+        pricingTiersJson: JSON.stringify(constructedPricingConfig),
         galleryImages: JSON.stringify(productForm.galleryImages || []),
         features: featuresList,
       };
@@ -2059,6 +2539,48 @@ export default function AdminPage() {
                                     {order.items.length > 1 ? ` (+${order.items.length - 1} more)` : ""}
                                   </span>
                                 </div>
+                                {(() => {
+                                  const draftItem = order.items.find(
+                                    (it: { draftFileUrl?: string | null; cardDetailsJson?: string }) => {
+                                      if (it.draftFileUrl) return true;
+                                      try {
+                                        const d = JSON.parse(it.cardDetailsJson || "{}");
+                                        return !!(d.uploadedFileUrl || d.contentMethod === "UPLOAD");
+                                      } catch {
+                                        return false;
+                                      }
+                                    }
+                                  );
+                                  if (!draftItem) return null;
+                                  let dUrl = (draftItem as { draftFileUrl?: string | null }).draftFileUrl || "";
+                                  let dName = (draftItem as { draftFileName?: string | null }).draftFileName || "Attached Draft";
+                                  if (!dUrl) {
+                                    try {
+                                      const d = JSON.parse(draftItem.cardDetailsJson || "{}");
+                                      dUrl = d.uploadedFileUrl || "";
+                                      dName = d.uploadedFileName || "Attached Draft";
+                                    } catch {}
+                                  }
+                                  if (!dUrl) return null;
+
+                                  return (
+                                    <div className="pt-0.5">
+                                      <a
+                                        href={dUrl}
+                                        download={dName}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-0.5 rounded-md transition-colors"
+                                        title={`Download/view customer draft: ${dName}`}
+                                      >
+                                        <FileText className="w-3 h-3 text-amber-800" />
+                                        <span className="truncate max-w-[130px]">📎 {dName}</span>
+                                        <Download className="w-2.5 h-2.5 ml-0.5 text-amber-700" />
+                                      </a>
+                                    </div>
+                                  );
+                                })()}
                                 {order.notes && (
                                   <span className="text-[10px] text-slate-500 line-clamp-1 block italic">
                                     Note: {order.notes}
@@ -2280,6 +2802,20 @@ export default function AdminPage() {
               </div>
 
               <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                {/* Manage Categories Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchShopCategories();
+                    setShowCategoryModal(true);
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-1.5 border border-slate-200 shadow-2xs transition-all cursor-pointer"
+                  title="Create, edit, or delete categories like Royal, Floral, Vintage"
+                >
+                  <Layers className="w-4 h-4 text-[#991B1B]" />
+                  <span>Manage Categories</span>
+                </button>
+
                 {/* Add New Product Button */}
                 <button
                   type="button"
@@ -2333,19 +2869,22 @@ export default function AdminPage() {
                 >
                   <option value="ALL">All Categories</option>
                   <optgroup label="💌 Invitation Cards">
-                    <option value="royal">👑 Royal &amp; Heritage</option>
-                    <option value="floral">🌸 Floral &amp; Botanical</option>
-                    <option value="vintage">📜 Vintage Parchment</option>
-                    <option value="modern">✨ Modern Die-Cut Arch</option>
-                    <option value="velvet">💎 Luxury Velvet Suites</option>
+                    {shopCategories
+                      .filter((c) => c.type === "invitations")
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon ? `${c.icon} ` : ""}{c.name}
+                        </option>
+                      ))}
                   </optgroup>
                   <optgroup label="🎁 Return Gifts">
-                    <option value="return_gifts">🎁 All / General Return Gifts</option>
-                    <option value="brass">🪔 Brass Diyas &amp; Idols</option>
-                    <option value="hampers">🍬 Sweets &amp; Hampers</option>
-                    <option value="silver">🪙 Silver Pooja Coins</option>
-                    <option value="bags">🛍️ Brocade &amp; Jute Bags</option>
-                    <option value="candles">🕯️ Aromatherapy Candles</option>
+                    {shopCategories
+                      .filter((c) => c.type === "return_gifts")
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon ? `${c.icon} ` : ""}{c.name}
+                        </option>
+                      ))}
                   </optgroup>
                 </select>
 
@@ -2510,7 +3049,11 @@ export default function AdminPage() {
                   ) : (
                     paginatedShopProducts.map((product) => {
                       const isSelected = selectedProductIds.includes(product.id);
-                      const isGift = product.category === "return_gifts";
+                      const matchedCat = shopCategories.find((c) => c.id === product.category);
+                      const isGift =
+                        product.category === "return_gifts" ||
+                        matchedCat?.type === "return_gifts" ||
+                        ["brass", "hampers", "silver", "bags", "candles"].includes(product.category);
                       let featuresList: string[] = [];
                       try {
                         const parsed = JSON.parse(product.featuresJson);
@@ -2549,24 +3092,16 @@ export default function AdminPage() {
                                 <img
                                   src={product.previewImage}
                                   alt={product.name}
-                                  className="w-full h-full object-contain p-1"
+                                  className="w-full h-full object-cover"
                                 />
                               </div>
-                              <div className="space-y-0.5">
-                                <span className="font-bold text-slate-900 text-sm block leading-snug line-clamp-1">
+                              <div className="min-w-0">
+                                <span className="font-bold text-slate-900 text-xs sm:text-sm block truncate max-w-[200px]">
                                   {product.name}
                                 </span>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
-                                  <span>⭐ {product.rating || 5.0}</span>
-                                  <span>•</span>
-                                  <span>{product.reviewsCount || 0} reviews</span>
-                                </div>
-                                {product.canvaTemplateId && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 font-mono mt-0.5">
-                                    <span>🎨 Canva:</span>
-                                    <span className="truncate max-w-[100px]">{product.canvaTemplateId}</span>
-                                  </span>
-                                )}
+                                <span className="text-[10px] text-slate-400 block font-mono">
+                                  ID: {product.id}
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -2575,7 +3110,7 @@ export default function AdminPage() {
                           <td className="py-4 px-4">
                             <div className="space-y-1">
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 block w-fit">
-                                {isGift ? "🎁 Return Gift" : product.category}
+                                {matchedCat ? `${matchedCat.icon ? matchedCat.icon + " " : ""}${matchedCat.name}` : (isGift ? "🎁 Return Gift" : product.category)}
                               </span>
                               {product.badge && (
                                 <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider bg-red-50 text-[#991B1B] border border-red-200 block w-fit">
@@ -3207,173 +3742,618 @@ export default function AdminPage() {
         {/* Modal: Add or Edit Shop Product */}
         {shopModalOpen && (
           <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
-            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-2xl w-full shadow-2xl relative space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto overscroll-contain animate-scale-up">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-4xl lg:max-w-5xl w-full shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto overscroll-contain animate-scale-up">
               <button
                 type="button"
                 onClick={() => setShopModalOpen(false)}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer z-10"
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100 shrink-0">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="w-11 h-11 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-100 shrink-0">
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {editingProduct ? "Edit Traditional Card Product" : "Add New Traditional Card to /shop"}
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {editingProduct ? "Edit Product Details & Pricing" : "Add New Product to /shop Catalog"}
                   </h3>
-                  <p className="text-xs text-slate-500">Fill in card specifications, pricing, and upload card design.</p>
+                  <p className="text-xs text-slate-500">Configure catalog classification, pricing strategies, media assets, and printing specifications.</p>
                 </div>
               </div>
 
-              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
-                {/* Name & Category */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Return Gift / Item Title *"
-                        : "Card Design Title *"}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      placeholder={
-                        ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                          ? "e.g. Antique Brass Peacock Diya Pair in Velvet Box"
-                          : "e.g. Royal Heritage Gold Embossed Card"
-                      }
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                    />
-                  </div>
+              <form onSubmit={handleSaveProduct} className="space-y-6 text-xs">
+                {/* ── 1. PRODUCT CLASSIFICATION ── */}
+                {(() => {
+                  const isCurrentReturnGift =
+                    ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category) ||
+                    shopCategories.find((c) => c.id === productForm.category)?.type === "return_gifts";
+                  const currentProductType = isCurrentReturnGift ? "return_gifts" : "invitations";
+                  const activeTypeCategories = shopCategories.filter((c) => c.type === currentProductType);
 
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">Category *</label>
-                    <select
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B]"
-                    >
-                      <optgroup label="💌 Traditional Invitation Cards">
-                        <option value="royal">👑 Royal &amp; Heritage (Cards)</option>
-                        <option value="floral">🌸 Floral &amp; Botanical (Cards)</option>
-                        <option value="vintage">📜 Vintage Parchment (Cards)</option>
-                        <option value="modern">✨ Modern Die-Cut Arch (Cards)</option>
-                        <option value="velvet">💎 Luxury Velvet Suites (Cards)</option>
-                      </optgroup>
-                      <optgroup label="🎁 Return Gifts &amp; Favors">
-                        <option value="return_gifts">🎁 All / General Return Gifts</option>
-                        <option value="brass">🪔 Brass Diyas &amp; Idols (Return Gift)</option>
-                        <option value="hampers">🍬 Sweets &amp; Dry Fruits Hampers (Return Gift)</option>
-                        <option value="silver">🪙 Silver Pooja Coins (Return Gift)</option>
-                        <option value="bags">🛍️ Brocade &amp; Jute Bags (Return Gift)</option>
-                        <option value="candles">🕯️ Aromatherapy Candles (Return Gift)</option>
-                      </optgroup>
-                    </select>
-                  </div>
-                </div>
+                  return (
+                    <div className="space-y-4">
+                      {/* Section Buttons */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+                          <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+                            <span>Product Catalog Section *</span>
+                          </label>
+                          <span className="text-[11px] text-slate-500">
+                            Choose section to load its respective category list
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const firstInv = shopCategories.find((c) => c.type === "invitations");
+                              setProductForm((prev) => ({
+                                ...prev,
+                                category: firstInv ? firstInv.id : "royal",
+                                pricingMode: prev.pricingMode === "FLAT" ? "PERCENTAGE" : prev.pricingMode,
+                              }));
+                            }}
+                            className={`p-3.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                              currentProductType === "invitations"
+                                ? "border-[#991B1B] bg-white text-[#991B1B] shadow-xs ring-1 ring-[#991B1B]/40"
+                                : "border-slate-200 bg-white/60 text-slate-600 hover:bg-white hover:text-slate-900"
+                            }`}
+                          >
+                            <span className="text-base">💌</span>
+                            <span>Physical Invitation Cards</span>
+                          </button>
 
-                {/* Price, Min Copies, Badge */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Price Per Unit / Piece (₹) *"
-                        : "Base Price (1000+ prints) (₹) *"}
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min={1}
-                      value={productForm.pricePerCard}
-                      onChange={(e) => setProductForm({ ...productForm, pricePerCard: Number(e.target.value) })}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#991B1B] focus:outline-none focus:border-[#991B1B]"
-                    />
-                  </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const firstGift = shopCategories.find((c) => c.type === "return_gifts");
+                              setProductForm((prev) => ({
+                                ...prev,
+                                category: firstGift ? firstGift.id : "brass",
+                                pricingMode: "FLAT",
+                              }));
+                            }}
+                            className={`p-3.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                              currentProductType === "return_gifts"
+                                ? "border-[#991B1B] bg-white text-[#991B1B] shadow-xs ring-1 ring-[#991B1B]/40"
+                                : "border-slate-200 bg-white/60 text-slate-600 hover:bg-white hover:text-slate-900"
+                            }`}
+                          >
+                            <span className="text-base">🎁</span>
+                            <span>Return Gifts &amp; Favors</span>
+                          </button>
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Min Order Pieces"
-                        : "Min Order Copies (Min 50)"}
-                    </label>
-                    <input
-                      type="number"
-                      min={50}
-                      value={productForm.minCopies || 50}
-                      onChange={(e) => setProductForm({ ...productForm, minCopies: Math.max(50, Number(e.target.value) || 50) })}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                    />
-                  </div>
+                      {/* Title & Specific Category under Chosen Type */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1.5">
+                            {isCurrentReturnGift ? "Return Gift / Item Title *" : "Card Design Title *"}
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={productForm.name}
+                            onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                            placeholder={
+                              isCurrentReturnGift
+                                ? "e.g. Antique Brass Peacock Diya Pair in Velvet Box"
+                                : "e.g. Royal Heritage Gold Embossed Card"
+                            }
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
 
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">Badge Tag (Optional)</label>
-                    <input
-                      type="text"
-                      value={productForm.badge}
-                      onChange={(e) => setProductForm({ ...productForm, badge: e.target.value })}
-                      placeholder="e.g. BESTSELLER, NEW, ROYAL LUXE"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                    />
-                  </div>
-                </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="font-bold text-slate-800 block">
+                              {isCurrentReturnGift ? "Gift Category *" : "Invitation Category *"}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCategoryModalTab(currentProductType);
+                                fetchShopCategories();
+                                setShowCategoryModal(true);
+                              }}
+                              className="text-[11px] font-bold text-[#991B1B] hover:underline flex items-center gap-1 cursor-pointer"
+                              title="Create or manage categories"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Manage / Add Category</span>
+                            </button>
+                          </div>
 
-                {/* ── LIVE TIERED VOLUME PRICING PREVIEW MATRIX ── */}
-                {!["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category) && (
-                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-amber-950 flex items-center gap-1.5 text-xs">
-                        <Zap className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Live Tiered Volume Pricing Matrix (Base: ₹{productForm.pricePerCard || 0} for 1000+ prints)</span>
-                      </span>
-                      <span className="text-[10px] font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md">
-                        Min 50 Copies
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 font-mono">
-                      {CARD_PRICING_TIERS.map((tier) => {
-                        const sampleQty = tier.min;
-                        const res = calculateTieredCardPrice(productForm.pricePerCard || 0, sampleQty);
-                        return (
-                          <div key={tier.label} className="bg-white p-2.5 rounded-xl border border-amber-200/70 shadow-2xs text-center">
-                            <span className="text-[10px] font-bold text-slate-500 block truncate" title={tier.label}>
-                              {tier.min}{tier.max ? `-${tier.max}` : "+"} copies
+                          <select
+                            value={productForm.category}
+                            onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                          >
+                            {activeTypeCategories.length === 0 ? (
+                              <option value={productForm.category}>
+                                {productForm.category}
+                              </option>
+                            ) : (
+                              activeTypeCategories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.icon ? `${c.icon} ` : ""}{c.name}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                          <p className="text-[10.5px] text-slate-500 mt-1 flex items-center justify-between">
+                            <span>
+                              Active Category:{" "}
+                              <strong className="text-slate-800 font-bold">
+                                {shopCategories.find((c) => c.id === productForm.category)?.name || productForm.category}
+                              </strong>
                             </span>
-                            <div className="text-sm font-extrabold text-[#991B1B] my-0.5">
-                              ₹{res.unitPrice}
-                              <span className="text-[9px] font-normal text-slate-500 block">/ card</span>
-                            </div>
-                            <span className="text-[9px] font-bold text-amber-700 block">
-                              {tier.markupPercent === 0 ? "Base (0%)" : `+${tier.markupPercent}%`}
+                            <span className="font-mono text-slate-400">slug: {productForm.category}</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 2. PRICING STRATEGY & VOLUME TIERS ── */}
+                {(() => {
+                  const isCurrentReturnGift =
+                    ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category) ||
+                    shopCategories.find((c) => c.id === productForm.category)?.type === "return_gifts";
+
+                  return (
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <Tag className="w-4 h-4 text-[#991B1B]" />
+                            <span>Pricing Strategy &amp; Quantity Logic</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500">
+                            Choose how unit prices and bulk volume discounts are calculated for this product.
+                          </p>
+                        </div>
+
+                        {/* Strategy Switcher */}
+                        <div className="inline-flex p-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setProductForm({ ...productForm, pricingMode: "PERCENTAGE" })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              productForm.pricingMode === "PERCENTAGE"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            ⚡ Auto % Markup
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProductForm({ ...productForm, pricingMode: "MANUAL" })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              productForm.pricingMode === "MANUAL"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            ✏️ Manual Fixed Tiers
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProductForm({ ...productForm, pricingMode: "FLAT" })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              productForm.pricingMode === "FLAT"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            🏷️ Flat Single Price
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Main Price Inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">
+                            {productForm.pricingMode === "FLAT" || isCurrentReturnGift
+                              ? "Price Per Unit / Piece (₹) *"
+                              : "Base Price (1000+ prints) (₹) *"}
+                          </label>
+                          <input
+                            type="number"
+                            required
+                            min={1}
+                            value={productForm.pricePerCard}
+                            onChange={(e) => {
+                              const val = Math.max(1, Number(e.target.value) || 0);
+                              setProductForm((prev) => ({
+                                ...prev,
+                                pricePerCard: val,
+                                manualTiers: {
+                                  ...prev.manualTiers,
+                                  t1000: prev.manualTiers.t1000 === prev.pricePerCard ? val : prev.manualTiers.t1000,
+                                },
+                              }));
+                            }}
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#991B1B] focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">
+                            {productForm.pricingMode === "FLAT" || isCurrentReturnGift
+                              ? "Min Order Pieces"
+                              : "Min Order Copies (Min 50)"}
+                          </label>
+                          <input
+                            type="number"
+                            min={isCurrentReturnGift || productForm.pricingMode === "FLAT" ? 1 : 50}
+                            value={productForm.minCopies || 50}
+                            onChange={(e) =>
+                              setProductForm({
+                                ...productForm,
+                                minCopies: Math.max(
+                                  isCurrentReturnGift || productForm.pricingMode === "FLAT" ? 1 : 50,
+                                  Number(e.target.value) || 50
+                                ),
+                              })
+                            }
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">Badge Tag (Optional)</label>
+                          <input
+                            type="text"
+                            value={productForm.badge}
+                            onChange={(e) => setProductForm({ ...productForm, badge: e.target.value })}
+                            placeholder="e.g. BESTSELLER, NEW, ROYAL LUXE"
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mode 1: Auto Percentage Breakdown Table */}
+                      {productForm.pricingMode === "PERCENTAGE" && !isCurrentReturnGift && (
+                        <div className="space-y-3 pt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">
+                              Configurable % Markup per Quantity Bracket
+                            </span>
+                            <span className="text-[11px] text-slate-500 font-mono">
+                              Unit price = Base rate (₹{productForm.pricePerCard || 0}) × (1 + Markup %)
                             </span>
                           </div>
-                        );
-                      })}
+
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-slate-100/70 text-slate-700 font-bold border-b border-slate-200">
+                                  <th className="py-2.5 px-3">Quantity Bracket</th>
+                                  <th className="py-2.5 px-3">Markup %</th>
+                                  <th className="py-2.5 px-3">Calculated Rate</th>
+                                  <th className="py-2.5 px-3">Example Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-mono">
+                                {[
+                                  { key: "t1000", min: 1000, label: "1000+ copies (Base Rate)", sample: 1000, isBase: true },
+                                  { key: "t500", min: 500, label: "500 - 999 copies", sample: 500, isBase: false },
+                                  { key: "t300", min: 300, label: "300 - 499 copies", sample: 300, isBase: false },
+                                  { key: "t150", min: 150, label: "150 - 299 copies", sample: 150, isBase: false },
+                                  { key: "t80", min: 80, label: "80 - 149 copies", sample: 100, isBase: false },
+                                  { key: "t50", min: 50, label: "50 - 79 copies", sample: 50, isBase: false },
+                                ].map((tier) => {
+                                  const pct = Number((productForm.percentTiers as any)[tier.key] ?? 0);
+                                  const unitP = Math.round((productForm.pricePerCard || 0) * (1 + pct / 100));
+                                  const sampleTotal = unitP * tier.sample;
+
+                                  return (
+                                    <tr key={tier.key} className="hover:bg-slate-50/50">
+                                      <td className="py-2 px-3 font-sans font-bold text-slate-800">
+                                        {tier.label}
+                                      </td>
+                                      <td className="py-2 px-3">
+                                        {tier.isBase ? (
+                                          <span className="text-slate-400 font-sans text-xs">0% (Base)</span>
+                                        ) : (
+                                          <div className="flex items-center gap-1">
+                                            <span>+</span>
+                                            <input
+                                              type="number"
+                                              min={0}
+                                              value={pct}
+                                              onChange={(e) =>
+                                                setProductForm((prev) => ({
+                                                  ...prev,
+                                                  percentTiers: {
+                                                    ...prev.percentTiers,
+                                                    [tier.key]: Number(e.target.value) || 0,
+                                                  },
+                                                }))
+                                              }
+                                              className="w-20 px-2 py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 bg-white focus:outline-none focus:border-[#991B1B]"
+                                            />
+                                            <span>%</span>
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td className="py-2 px-3 font-bold text-[#991B1B]">
+                                        ₹{unitP} <span className="font-normal text-[10px] text-slate-400 font-sans">/ card</span>
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-600">
+                                        ₹{sampleTotal.toLocaleString("en-IN")}{" "}
+                                        <span className="font-normal text-[10px] text-slate-400 font-sans">
+                                          ({tier.sample} cards)
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mode 2: Manual Exact Tier Prices Table */}
+                      {productForm.pricingMode === "MANUAL" && !isCurrentReturnGift && (
+                        <div className="space-y-3 pt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">
+                              Directly Specify Exact Unit Price (₹) for Each Bracket
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Enter custom unit rate in rupees without percentage formulas
+                            </span>
+                          </div>
+
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-slate-100/70 text-slate-700 font-bold border-b border-slate-200">
+                                  <th className="py-2.5 px-3">Quantity Bracket</th>
+                                  <th className="py-2.5 px-3">Custom Unit Rate (₹)</th>
+                                  <th className="py-2.5 px-3">Effective Multiplier</th>
+                                  <th className="py-2.5 px-3">Example Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-mono">
+                                {[
+                                  { key: "t1000", min: 1000, label: "1000+ copies (Bulk Tier)", sample: 1000 },
+                                  { key: "t500", min: 500, label: "500 - 999 copies", sample: 500 },
+                                  { key: "t300", min: 300, label: "300 - 499 copies", sample: 300 },
+                                  { key: "t150", min: 150, label: "150 - 299 copies", sample: 150 },
+                                  { key: "t80", min: 80, label: "80 - 149 copies", sample: 100 },
+                                  { key: "t50", min: 50, label: "50 - 79 copies", sample: 50 },
+                                ].map((tier) => {
+                                  const manualPrice = Number((productForm.manualTiers as any)[tier.key] ?? productForm.pricePerCard);
+                                  const sampleTotal = manualPrice * tier.sample;
+                                  const effectiveMult = (productForm.pricePerCard > 0 ? manualPrice / productForm.pricePerCard : 1).toFixed(2);
+
+                                  return (
+                                    <tr key={tier.key} className="hover:bg-slate-50/50">
+                                      <td className="py-2 px-3 font-sans font-bold text-slate-800">
+                                        {tier.label}
+                                      </td>
+                                      <td className="py-2 px-3">
+                                        <div className="flex items-center gap-1">
+                                          <span>₹</span>
+                                          <input
+                                            type="number"
+                                            min={1}
+                                            value={manualPrice}
+                                            onChange={(e) => {
+                                              const val = Number(e.target.value) || 0;
+                                              setProductForm((prev) => ({
+                                                ...prev,
+                                                manualTiers: {
+                                                  ...prev.manualTiers,
+                                                  [tier.key]: val,
+                                                },
+                                              }));
+                                            }}
+                                            className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-xs font-bold text-[#991B1B] bg-white focus:outline-none focus:border-[#991B1B]"
+                                          />
+                                          <span className="text-[10px] text-slate-400 font-sans">/ card</span>
+                                        </div>
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-600">
+                                        {effectiveMult}x{" "}
+                                        <span className="text-[10px] text-slate-400">
+                                          ({manualPrice >= productForm.pricePerCard ? `+${Math.round(((manualPrice - productForm.pricePerCard) / productForm.pricePerCard) * 100)}%` : "Discounted"})
+                                        </span>
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 font-bold">
+                                        ₹{sampleTotal.toLocaleString("en-IN")}{" "}
+                                        <span className="font-normal text-[10px] text-slate-400 font-sans">
+                                          ({tier.sample} cards)
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mode 3: Flat Rate Notice */}
+                      {productForm.pricingMode === "FLAT" && (
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 text-slate-600 text-xs flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>
+                            <strong>Flat Single Price Mode:</strong> Every unit is charged at fixed <strong>₹{productForm.pricePerCard || 0}/piece</strong> regardless of the quantity ordered.
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Printing Change (Text / Version Changes) Setup */}
+                      {!isCurrentReturnGift && (
+                        <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-white space-y-3.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-8 h-8 rounded-lg bg-red-100/80 text-[#991B1B] flex items-center justify-center font-bold text-sm">
+                                📝
+                              </span>
+                              <div>
+                                <h5 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                                  <span>Printing Change (Text &amp; Version Changes) Pricing</span>
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                                    Order Add-on
+                                  </span>
+                                </h5>
+                                <p className="text-[11px] text-slate-500">
+                                  Fee calculated during ordering when customer orders multiple text versions (e.g. Groom side vs Bride side).
+                                </p>
+                              </div>
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <span className="text-xs font-bold text-slate-700">
+                                {productForm.printingChangeConfig?.enabled ? "Enabled" : "Disabled"}
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={Boolean(productForm.printingChangeConfig?.enabled)}
+                                onChange={(e) =>
+                                  setProductForm((prev) => ({
+                                    ...prev,
+                                    printingChangeConfig: {
+                                      ...prev.printingChangeConfig,
+                                      enabled: e.target.checked,
+                                    },
+                                  }))
+                                }
+                                className="w-4 h-4 text-[#991B1B] rounded cursor-pointer"
+                              />
+                            </label>
+                          </div>
+
+                          {productForm.printingChangeConfig?.enabled && (
+                            <div className="space-y-3 pt-2 border-t border-slate-100">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                    Price for Up to 500 Copies (₹)
+                                  </label>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-slate-500 font-bold">₹</span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={productForm.printingChangeConfig?.chargeUpto500 ?? 500}
+                                      onChange={(e) =>
+                                        setProductForm((prev) => ({
+                                          ...prev,
+                                          printingChangeConfig: {
+                                            ...prev.printingChangeConfig,
+                                            chargeUpto500: Number(e.target.value) || 0,
+                                          },
+                                        }))
+                                      }
+                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                    Price for 1000 Copies (₹)
+                                  </label>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-slate-500 font-bold">₹</span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={productForm.printingChangeConfig?.chargeFor1000 ?? 750}
+                                      onChange={(e) =>
+                                        setProductForm((prev) => ({
+                                          ...prev,
+                                          printingChangeConfig: {
+                                            ...prev.printingChangeConfig,
+                                            chargeFor1000: Number(e.target.value) || 0,
+                                          },
+                                        }))
+                                      }
+                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                    Increment per Next 1000 Copies (₹)
+                                  </label>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-slate-500 font-bold">+₹</span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={productForm.printingChangeConfig?.chargePerNext1000 ?? 750}
+                                      onChange={(e) =>
+                                        setProductForm((prev) => ({
+                                          ...prev,
+                                          printingChangeConfig: {
+                                            ...prev.printingChangeConfig,
+                                            chargePerNext1000: Number(e.target.value) || 0,
+                                          },
+                                        }))
+                                      }
+                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Interactive Live Calculation Preview */}
+                              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                                <span className="font-bold text-slate-700 block mb-1.5">
+                                  💡 Live Printing Change Fee Calculation Examples:
+                                </span>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-[11px]">
+                                  {[500, 1000, 2000, 3000, 4000].map((sampleQty) => {
+                                    const calc = calculatePrintingChangeFee(sampleQty, productForm.printingChangeConfig);
+                                    return (
+                                      <div key={sampleQty} className="bg-white p-2.5 rounded-lg border border-slate-200 text-center space-y-0.5">
+                                        <span className="font-bold text-slate-800 block text-xs">
+                                          {sampleQty === 500 ? "100–500" : sampleQty === 1000 ? "501–1,000" : `${sampleQty - 999}–${sampleQty}`} copies
+                                        </span>
+                                        <span className="font-mono font-black text-[#991B1B] text-sm block">₹{calc.fee}</span>
+                                        <span className="text-[10px] text-slate-500 block leading-tight">
+                                          {calc.breakdownText}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  );
+                })()}
 
-                    <p className="text-[11px] text-amber-900/90 font-sans leading-normal">
-                      💡 <strong>Tier Logic:</strong> 1000+ prints: base rate (₹{productForm.pricePerCard || 0}) • 500-999: <strong>+80%</strong> • 300-499: <strong>+180%</strong> • 150-299: <strong>+250%</strong> • 80-149: <strong>+300%</strong> • 50-79: <strong>+450%</strong> (Min 50 copies). All decimals are automatically rounded to whole numbers.
-                    </p>
-                  </div>
-                )}
-
-                {/* ── 1. MAIN COVER IMAGE UPLOAD ── */}
-                <div className="p-4 rounded-2xl border-2 border-red-200/80 bg-red-50/20 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md bg-[#991B1B] text-white text-[10px] font-extrabold uppercase tracking-wide">
-                        Main Image *
-                      </span>
-                      <label className="font-bold text-slate-900 text-xs">
-                        {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                          ? "Primary Gift Cover Photo"
-                          : "Primary Card Cover Photo"}
-                      </label>
+                {/* ── 3. PRODUCT MEDIA & GALLERY ── */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <Upload className="w-4 h-4 text-[#991B1B]" />
+                        <span>Product Images &amp; Gallery</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Upload the primary catalog cover photo and multiple detail angles.
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -3385,351 +4365,388 @@ export default function AdminPage() {
                     </button>
                   </div>
 
-                  {/* Hidden Native File Input for Main Image */}
-                  <input
-                    type="file"
-                    id="shopProductFileInput"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    className="hidden"
-                    onChange={handleUploadProductImage}
-                  />
+                  {/* Main Cover Image */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1.5">
+                      Main Cover Photo *
+                    </label>
 
-                  {!showManualUrl ? (
-                    <div className="space-y-2">
-                      {productForm.previewImage ? (
-                        <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-red-200 shadow-2xs">
-                          <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shrink-0 p-1 flex items-center justify-center relative">
+                    <input
+                      type="file"
+                      id="shopProductFileInput"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={handleUploadProductImage}
+                    />
+
+                    {!showManualUrl ? (
+                      <div>
+                        {productForm.previewImage ? (
+                          <div className="flex items-center gap-4 p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                            <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shrink-0 p-1 flex items-center justify-center relative">
+                              <img
+                                src={productForm.previewImage}
+                                alt="Main Product Preview"
+                                className="w-full h-full object-contain"
+                              />
+                              <span className="absolute bottom-1 right-1 bg-slate-900 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                                MAIN
+                              </span>
+                            </div>
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <div className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Main Cover Photo Ready</span>
+                              </div>
+                              <p className="text-[10px] font-mono text-slate-500 truncate max-w-sm">
+                                {productForm.previewImage}
+                              </p>
+                              <label
+                                htmlFor="shopProductFileInput"
+                                className={`px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer ${
+                                  uploadingProductImage ? "opacity-50 pointer-events-none" : ""
+                                }`}
+                              >
+                                {uploadingProductImage ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#991B1B]" />
+                                ) : (
+                                  <Upload className="w-3.5 h-3.5 text-[#991B1B]" />
+                                )}
+                                <span>{uploadingProductImage ? "Uploading Main..." : "Change Main Cover Image"}</span>
+                              </label>
+                            </div>
+                          </div>
+                        ) : (
+                          <label
+                            htmlFor="shopProductFileInput"
+                            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-[#991B1B] rounded-2xl bg-white hover:bg-slate-50/50 transition-colors cursor-pointer text-center group"
+                          >
+                            {uploadingProductImage ? (
+                              <div className="flex flex-col items-center gap-2 text-[#991B1B]">
+                                <Loader2 className="w-8 h-8 animate-spin" />
+                                <span className="font-bold text-xs">Uploading main image from your computer...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                  <Upload className="w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-xs text-slate-800">
+                                  Click to Browse &amp; Upload Main Cover Image
+                                </span>
+                                <span className="text-[11px] text-slate-500 mt-0.5">
+                                  Select PNG, JPG, or WEBP (Cover image displayed in catalog)
+                                </span>
+                              </>
+                            )}
+                          </label>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          required
+                          value={productForm.previewImage}
+                          onChange={(e) => setProductForm({ ...productForm, previewImage: e.target.value })}
+                          placeholder="https://res.cloudinary.com/... or /images/templates/..."
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                        />
+                        {productForm.previewImage && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500">Main Preview:</span>
                             <img
                               src={productForm.previewImage}
-                              alt="Main Product Preview"
-                              className="w-full h-full object-contain"
+                              alt="Main Preview"
+                              className="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-slate-50 p-0.5"
                             />
-                            <span className="absolute bottom-1 right-1 bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.2 rounded shadow-xs">
-                              MAIN
-                            </span>
                           </div>
-                          <div className="space-y-1.5 flex-1 min-w-0">
-                            <div className="flex items-center gap-1 text-emerald-700 font-bold text-xs">
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>Main Cover Photo Ready</span>
-                            </div>
-                            <p className="text-[10px] font-mono text-slate-500 truncate max-w-xs">
-                              {productForm.previewImage}
-                            </p>
-                            <label
-                              htmlFor="shopProductFileInput"
-                              className={`px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer ${
-                                uploadingProductImage ? "opacity-50 pointer-events-none" : ""
-                              }`}
-                            >
-                              {uploadingProductImage ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#991B1B]" />
-                              ) : (
-                                <Upload className="w-3.5 h-3.5 text-[#991B1B]" />
-                              )}
-                              <span>{uploadingProductImage ? "Uploading Main..." : "Change Main Cover Image"}</span>
-                            </label>
-                          </div>
-                        </div>
-                      ) : (
-                        <label
-                          htmlFor="shopProductFileInput"
-                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-red-300 hover:border-[#991B1B] rounded-2xl bg-white hover:bg-red-50/50 transition-colors cursor-pointer text-center group"
-                        >
-                          {uploadingProductImage ? (
-                            <div className="flex flex-col items-center gap-2 text-[#991B1B]">
-                              <Loader2 className="w-8 h-8 animate-spin" />
-                              <span className="font-bold text-xs">Uploading main image from your computer...</span>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                <Upload className="w-6 h-6" />
-                              </div>
-                              <span className="font-bold text-xs text-slate-800">
-                                Click to Browse &amp; Upload Main Cover Image
-                              </span>
-                              <span className="text-[11px] text-slate-500 mt-0.5">
-                                Select PNG, JPG, or WEBP (Cover image displayed in catalog)
-                              </span>
-                            </>
-                          )}
-                        </label>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        required
-                        value={productForm.previewImage}
-                        onChange={(e) => setProductForm({ ...productForm, previewImage: e.target.value })}
-                        placeholder="https://res.cloudinary.com/... or /images/templates/..."
-                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                      />
-                      {productForm.previewImage && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-500">Main Preview:</span>
-                          <img
-                            src={productForm.previewImage}
-                            alt="Main Preview"
-                            className="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-slate-50 p-0.5"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                {/* ── 2. SUB / GALLERY IMAGES MULTI-UPLOAD ── */}
-                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-700 text-white text-[10px] font-extrabold uppercase tracking-wide">
-                        Sub Images
-                      </span>
-                      <label className="font-bold text-slate-900 text-xs">
+                  {/* Sub / Gallery Images */}
+                  <div className="pt-2 border-t border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-slate-800 text-xs">
                         Additional Angles, Envelopes &amp; Detail Shots
                       </label>
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-500">
-                      {productForm.galleryImages?.length || 0} Sub {(productForm.galleryImages?.length === 1 ? "Image" : "Images")} Uploaded
-                    </span>
-                  </div>
-
-                  {/* Hidden Multi-File Input for Sub Images */}
-                  <input
-                    type="file"
-                    id="shopProductSubFilesInput"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    multiple
-                    className="hidden"
-                    onChange={handleUploadProductSubImages}
-                  />
-
-                  {/* Multi-Upload Actions */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <label
-                      htmlFor="shopProductSubFilesInput"
-                      className={`flex-1 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all ${
-                        uploadingSubImages ? "opacity-50 pointer-events-none" : ""
-                      }`}
-                    >
-                      {uploadingSubImages ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-[#991B1B]" />
-                      ) : (
-                        <Plus className="w-4 h-4 text-[#991B1B]" />
-                      )}
-                      <span>
-                        {uploadingSubImages ? "Uploading Sub Images..." : "Upload Multiple Sub Images (Select 1 or more)"}
+                      <span className="text-[11px] font-bold text-slate-500">
+                        {productForm.galleryImages?.length || 0} Sub {(productForm.galleryImages?.length === 1 ? "Image" : "Images")}
                       </span>
-                    </label>
+                    </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <input
+                      type="file"
+                      id="shopProductSubFilesInput"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      multiple
+                      className="hidden"
+                      onChange={handleUploadProductSubImages}
+                    />
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <label
+                        htmlFor="shopProductSubFilesInput"
+                        className={`flex-1 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all ${
+                          uploadingSubImages ? "opacity-50 pointer-events-none" : ""
+                        }`}
+                      >
+                        {uploadingSubImages ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-[#991B1B]" />
+                        ) : (
+                          <Plus className="w-4 h-4 text-[#991B1B]" />
+                        )}
+                        <span>
+                          {uploadingSubImages ? "Uploading Sub Images..." : "Upload Multiple Sub Images (Select 1 or more)"}
+                        </span>
+                      </label>
+
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={subImageUrlInput}
+                          onChange={(e) => setSubImageUrlInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddSubImageUrl();
+                            }
+                          }}
+                          placeholder="Or paste sub-image URL..."
+                          className="p-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-[#991B1B] w-48 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSubImageUrl}
+                          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Gallery Thumbnails Grid */}
+                    {productForm.galleryImages && productForm.galleryImages.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-1">
+                        {productForm.galleryImages.map((subImg, idx) => (
+                          <div
+                            key={idx}
+                            className="group relative bg-white border border-slate-200 rounded-xl p-1.5 shadow-2xs flex flex-col items-center justify-between overflow-hidden"
+                          >
+                            <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center">
+                              <img
+                                src={subImg}
+                                alt={`Sub Image ${idx + 1}`}
+                                className="w-full h-full object-contain p-0.5"
+                              />
+                              <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                                #{idx + 1}
+                              </span>
+                            </div>
+
+                            <div className="w-full flex items-center justify-between gap-1 pt-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSetAsMainImage(subImg, idx)}
+                                title="Promote this sub image to Main Cover"
+                                className="flex-1 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[9px] transition-colors flex items-center justify-center gap-0.5 cursor-pointer"
+                              >
+                                <Sparkles className="w-2.5 h-2.5 text-[#991B1B]" />
+                                <span>Make Main</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSubImage(idx)}
+                                title="Delete this sub image"
+                                className="p-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[9px] transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <p className="text-rose-600 font-bold text-[11px]">{uploadError}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── 4. PRODUCT SPECIFICATIONS & DESCRIPTION ── */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 border-b border-slate-200/80 pb-3">
+                    <FileText className="w-4 h-4 text-[#991B1B]" />
+                    <span>Product Specifications &amp; Content</span>
+                  </h4>
+
+                  {/* Material & Dimensions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1">
+                        {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                          ? "Material & Packaging"
+                          : "Paper Type & Quality"}
+                      </label>
                       <input
                         type="text"
-                        value={subImageUrlInput}
-                        onChange={(e) => setSubImageUrlInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddSubImageUrl();
-                          }
-                        }}
-                        placeholder="Or paste sub-image URL..."
-                        className="p-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:border-[#991B1B] w-48 font-mono"
+                        value={productForm.paperType}
+                        onChange={(e) => setProductForm({ ...productForm, paperType: e.target.value })}
+                        placeholder={
+                          ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                            ? "e.g. Handcrafted Solid Brass & Royal Velvet Box"
+                            : "e.g. 350 GSM Italian Textured Metallic Gold Cardstock"
+                        }
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                       />
-                      <button
-                        type="button"
-                        onClick={handleAddSubImageUrl}
-                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 cursor-pointer shadow-2xs"
-                      >
-                        + Add
-                      </button>
                     </div>
-                  </div>
 
-                  {/* Sub Images Gallery Grid */}
-                  {productForm.galleryImages && productForm.galleryImages.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-2">
-                      {productForm.galleryImages.map((subImg, idx) => (
-                        <div
-                          key={idx}
-                          className="group relative bg-white border border-slate-200 rounded-xl p-1 shadow-2xs flex flex-col items-center justify-between overflow-hidden"
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-800 block">
+                          {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
+                            ? "Dimensions / Weight / Set Size *"
+                            : "Dimensions / Size *"}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category);
+                            setDimensionModalTab(isGift ? "return_gifts" : "invitations");
+                            fetchShopDimensions();
+                            setShowDimensionModal(true);
+                          }}
+                          className="text-[11px] font-bold text-[#991B1B] hover:underline flex items-center gap-1 cursor-pointer"
+                          title="Manage standard dimension and size options"
                         >
-                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center">
-                            <img
-                              src={subImg}
-                              alt={`Sub Image ${idx + 1}`}
-                              className="w-full h-full object-contain p-0.5"
-                            />
-                            <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] font-bold px-1.5 py-0.2 rounded">
-                              #{idx + 1}
-                            </span>
-                          </div>
+                          <Ruler className="w-3 h-3" />
+                          <span>Manage Sizes</span>
+                        </button>
+                      </div>
 
-                          {/* Action Overlay */}
-                          <div className="w-full flex items-center justify-between gap-1 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => handleSetAsMainImage(subImg, idx)}
-                              title="Promote this sub image to Main Cover"
-                              className="flex-1 py-1 rounded bg-amber-50 hover:bg-amber-400 text-amber-800 hover:text-slate-950 font-black text-[9px] border border-amber-200 transition-colors flex items-center justify-center gap-0.5 cursor-pointer"
-                            >
-                              <Sparkles className="w-2.5 h-2.5 text-amber-600 group-hover:text-slate-950" />
-                              <span>Make Main</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveSubImage(idx)}
-                              title="Delete this sub image"
-                              className="p-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold text-[9px] border border-rose-200 transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-2.5 h-2.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                      {(() => {
+                        const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category);
+                        const currentSectionType = isGift ? "return_gifts" : "invitations";
+                        const filteredDims = shopDimensions.filter((d) => d.type === currentSectionType || d.type === "all");
+                        const hasCurrentValueInList = filteredDims.some((d) => d.label === productForm.dimensions);
+
+                        return (
+                          <select
+                            value={productForm.dimensions}
+                            onChange={(e) => setProductForm({ ...productForm, dimensions: e.target.value })}
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                          >
+                            {!hasCurrentValueInList && productForm.dimensions && (
+                              <option value={productForm.dimensions}>{productForm.dimensions} (Custom / Existing)</option>
+                            )}
+                            {filteredDims.length === 0 ? (
+                              <option value={productForm.dimensions || "5.5 x 8.5 inches (Portrait - Standard)"}>
+                                {productForm.dimensions || "5.5 x 8.5 inches (Portrait - Standard)"}
+                              </option>
+                            ) : (
+                              filteredDims.map((dim) => (
+                                <option key={dim.id} value={dim.label}>
+                                  {dim.label}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                        );
+                      })()}
                     </div>
-                  )}
+                  </div>
 
-                  <p className="text-[10px] text-slate-500 italic">
-                    💡 Tip: The <strong>Main Image</strong> is displayed on catalog cards. <strong>Sub Images</strong> are displayed as interactive thumbnails when customers view product details. You can click <em>&ldquo;Make Main&rdquo;</em> on any sub-image to swap it.
-                  </p>
-
-                  {uploadError && (
-                    <p className="text-rose-600 font-bold text-[11px]">{uploadError}</p>
-                  )}
-                </div>
-
-                {/* Paper Type / Material & Dimensions */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Material & Packaging"
-                        : "Paper Type & Quality"}
+                  {/* Linked Canva Studio Design (Optional) */}
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-1.5">
+                    <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>🎨 Link to Canva Card Studio Template (Optional)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={productForm.paperType}
-                      onChange={(e) => setProductForm({ ...productForm, paperType: e.target.value })}
+                    <select
+                      value={productForm.canvaTemplateId}
+                      onChange={(e) => setProductForm({ ...productForm, canvaTemplateId: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    >
+                      <option value="">None (Standard Printed Card / Return Gift - No Canva Edit)</option>
+                      <optgroup label="✨ Modern Watercolor &amp; Arch Suites">
+                        <option value="modern-watercolor-floral">🌸 Modern Watercolor Floral &amp; Rings (Purple / Multi-color)</option>
+                        <option value="modern-watercolor-gold-splatter">✨ Modern Watercolor &amp; Gold Foil Splatter</option>
+                        <option value="modern-silver-botanical-foliage">💎 Midnight Silver Foliage Suite (Navy / Obsidian)</option>
+                      </optgroup>
+                      <optgroup label="👑 Vintage &amp; Heritage Suites">
+                        <option value="vintage-botanical-romance">🌿 Vintage Botanical Romance (Deckled Parchment)</option>
+                        <option value="royal-parchment-filigree">👑 Royal Parchment &amp; Filigree (Parchment Gold)</option>
+                        <option value="vintage-baroque-gold">📜 Vintage Baroque Gold Scroll (Royal Frame)</option>
+                        <option value="antique-parchment-victorian">⚜️ Antique Parchment &amp; Victorian Swirl (Victorian Arch)</option>
+                      </optgroup>
+                    </select>
+                    <p className="text-[11px] text-slate-500 leading-relaxed m-0">
+                      💡 If linked, a prominent <strong className="text-[#991B1B]">"🎨 Customize in Canva Card Studio"</strong> button will appear on the shop card modal, opening this design directly in Canva Card Studio.
+                    </p>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">Product Description</label>
+                    <textarea
+                      rows={3}
+                      value={productForm.description}
+                      onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                       placeholder={
                         ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                          ? "e.g. Handcrafted Solid Brass & Royal Velvet Box"
-                          : "e.g. 350 GSM Italian Textured Metallic Gold Cardstock"
+                          ? "Provide details on return gift craftsmanship, occasion suitability, packaging, and custom tags."
+                          : "Provide a luxury summary of the card design, printing techniques, and aesthetic appeal."
                       }
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B]"
                     />
                   </div>
 
+                  {/* Features (One per line) */}
                   <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      {["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Dimensions / Weight / Set Size"
-                        : "Dimensions / Size"}
-                    </label>
-                    <input
-                      type="text"
-                      value={productForm.dimensions}
-                      onChange={(e) => setProductForm({ ...productForm, dimensions: e.target.value })}
+                    <label className="font-bold text-slate-800 block mb-1">Bullet Features (One per line)</label>
+                    <textarea
+                      rows={3}
+                      value={productForm.features}
+                      onChange={(e) => setProductForm({ ...productForm, features: e.target.value })}
                       placeholder={
                         ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                          ? "e.g. 4.5 x 3.5 inches / Set of 2 (250g)"
-                          : "e.g. 5.5 x 8.5 inches (Portrait)"
+                          ? "Solid Heavy Brass with Antique Finish\nRoyal Red Velvet Hard Box Included\nPersonalized Couple Tag Attached"
+                          : "Real Gold Foil Stamping on Titles\nHeavy 350 GSM Textured Board\nWhatsApp Digital Proof Included"
                       }
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-mono focus:outline-none focus:border-[#991B1B]"
                     />
+                  </div>
+
+                  {/* Active Checkbox */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="productIsActive"
+                      checked={productForm.isActive}
+                      onChange={(e) => setProductForm({ ...productForm, isActive: e.target.checked })}
+                      className="w-4 h-4 text-[#991B1B] accent-[#991B1B] rounded cursor-pointer"
+                    />
+                    <label htmlFor="productIsActive" className="text-xs font-bold text-slate-800 cursor-pointer">
+                      Publish &amp; Show on Public /shop Catalog
+                    </label>
                   </div>
                 </div>
 
-                {/* Linked Canva Studio Design (Optional) */}
-                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-1.5">
-                  <label className="font-bold text-amber-950 flex items-center gap-1.5">
-                    <span>🎨 Link to Canva Card Studio Template (Optional)</span>
-                  </label>
-                  <select
-                    value={productForm.canvaTemplateId}
-                    onChange={(e) => setProductForm({ ...productForm, canvaTemplateId: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                  >
-                    <option value="">None (Standard Printed Card / Return Gift - No Canva Edit)</option>
-                    <optgroup label="✨ Modern Watercolor &amp; Arch Suites">
-                      <option value="modern-watercolor-floral">🌸 Modern Watercolor Floral &amp; Rings (Purple / Multi-color)</option>
-                      <option value="modern-watercolor-gold-splatter">✨ Modern Watercolor &amp; Gold Foil Splatter</option>
-                      <option value="modern-silver-botanical-foliage">💎 Midnight Silver Foliage Suite (Navy / Obsidian)</option>
-                    </optgroup>
-                    <optgroup label="👑 Vintage &amp; Heritage Suites">
-                      <option value="vintage-botanical-romance">🌿 Vintage Botanical Romance (Deckled Parchment)</option>
-                      <option value="royal-parchment-filigree">👑 Royal Parchment &amp; Filigree (Parchment Gold)</option>
-                      <option value="vintage-baroque-gold">📜 Vintage Baroque Gold Scroll (Royal Frame)</option>
-                      <option value="antique-parchment-victorian">⚜️ Antique Parchment &amp; Victorian Swirl (Victorian Arch)</option>
-                    </optgroup>
-                  </select>
-                  <p className="text-[10.5px] text-amber-900/80 leading-relaxed m-0">
-                    💡 If linked, a prominent <strong className="text-[#991B1B]">"🎨 Customize in Canva Card Studio"</strong> button will automatically appear on the shop card modal, navigating guests directly into Canva Card Studio with this design pre-loaded.
-                  </p>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">Description</label>
-                  <textarea
-                    rows={3}
-                    value={productForm.description}
-                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                    placeholder={
-                      ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Provide details on return gift craftsmanship, occasion suitability, packaging, and custom tags."
-                        : "Provide a luxury summary of the card design, printing techniques, and aesthetic appeal."
-                    }
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B]"
-                  />
-                </div>
-
-                {/* Features (One per line) */}
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">Bullet Features (One per line)</label>
-                  <textarea
-                    rows={3}
-                    value={productForm.features}
-                    onChange={(e) => setProductForm({ ...productForm, features: e.target.value })}
-                    placeholder={
-                      ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(productForm.category)
-                        ? "Solid Heavy Brass with Antique Finish\nRoyal Red Velvet Hard Box Included\nPersonalized Couple Tag Attached"
-                        : "Real Gold Foil Stamping on Titles\nHeavy 350 GSM Textured Board\nMatching Luxury Envelopes Included"
-                    }
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 font-mono focus:outline-none focus:border-[#991B1B]"
-                  />
-                </div>
-
-                {/* Active Checkbox */}
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="productIsActive"
-                    checked={productForm.isActive}
-                    onChange={(e) => setProductForm({ ...productForm, isActive: e.target.checked })}
-                    className="w-4 h-4 text-[#991B1B] accent-[#991B1B] rounded"
-                  />
-                  <label htmlFor="productIsActive" className="text-xs font-bold text-slate-800 cursor-pointer">
-                    Publish &amp; Show on Public /shop Catalog
-                  </label>
-                </div>
-
-                {/* Submit & Cancel Buttons */}
+                {/* ── 5. SUBMIT & CANCEL BUTTONS ── */}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setShopModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={savingProduct}
-                    className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center gap-2 shadow-md hover:scale-105 transition-transform cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center gap-2 shadow-md hover:scale-102 transition-transform cursor-pointer disabled:opacity-50"
                   >
                     {savingProduct ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -3740,6 +4757,485 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Category Management */}
+        {showCategoryModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden animate-scale-up">
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-red-100/80 text-[#991B1B] flex items-center justify-center border border-red-200">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Manage Shop Categories</h3>
+                    <p className="text-xs text-slate-500">Create, edit, reorder or delete product headings on /shop</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sub Tabs: Invitations vs Return Gifts */}
+              <div className="px-6 pt-4 pb-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-100">
+                <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setCategoryModalTab("invitations")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      categoryModalTab === "invitations"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    💌 Invitation Categories ({shopCategories.filter((c) => c.type === "invitations").length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryModalTab("return_gifts")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      categoryModalTab === "return_gifts"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    🎁 Return Gifts ({shopCategories.filter((c) => c.type === "return_gifts").length})
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddCategory(categoryModalTab)}
+                  className="px-3.5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Category</span>
+                </button>
+              </div>
+
+              {/* Categories List */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-2.5">
+                {loadingCategories ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#991B1B]" />
+                    <span className="text-xs font-medium">Loading categories...</span>
+                  </div>
+                ) : shopCategories.filter((c) => c.type === categoryModalTab).length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs">
+                    No categories found in this section. Click &quot;Add Category&quot; above to create one.
+                  </div>
+                ) : (
+                  shopCategories
+                    .filter((c) => c.type === categoryModalTab)
+                    .map((cat) => (
+                      <div
+                        key={cat.id}
+                        className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white transition-all shadow-2xs group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-2xl w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 shrink-0">
+                            {cat.icon || "🏷️"}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-slate-900">{cat.name}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono text-[10px]">
+                                slug: {cat.id}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
+                              <span>Sort Order: {cat.sortOrder}</span>
+                              <span>•</span>
+                              <span className={cat.productCount > 0 ? "font-bold text-[#991B1B]" : "text-slate-400"}>
+                                {cat.productCount} product{cat.productCount === 1 ? "" : "s"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditCategory(cat)}
+                            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Edit Category"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat)}
+                            disabled={categoryDeletingId === cat.id}
+                            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            title={cat.productCount > 0 ? `Cannot delete (${cat.productCount} products assigned)` : "Delete Category"}
+                          >
+                            {categoryDeletingId === cat.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add or Edit Category */}
+        {showCategoryEditModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-base font-bold text-slate-900">
+                  {editingCategory ? "Edit Category" : "Add New Category"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryEditModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {categoryError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                  {categoryError}
+                </div>
+              )}
+
+              <div className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">Category Heading / Name *</label>
+                  <input
+                    type="text"
+                    value={categoryForm.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCategoryForm((prev) => ({
+                        ...prev,
+                        name: val,
+                        slug: !editingCategory
+                          ? val
+                              .toLowerCase()
+                              .replace(/[^a-z0-9_]+/g, "-")
+                              .replace(/(^-|-$)/g, "")
+                          : prev.slug,
+                      }));
+                    }}
+                    placeholder="e.g. Royal Palace & Heritage"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Slug / Identifier *</label>
+                    <input
+                      type="text"
+                      value={categoryForm.slug}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                      placeholder="e.g. royal"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Emoji / Icon</label>
+                    <input
+                      type="text"
+                      value={categoryForm.icon}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+                      placeholder="e.g. 👑, 🌸, 📜"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Category Section *</label>
+                    <select
+                      value={categoryForm.type}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, type: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                    >
+                      <option value="invitations">💌 Invitation Cards</option>
+                      <option value="return_gifts">🎁 Return Gifts</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Sort Order</label>
+                    <input
+                      type="number"
+                      value={categoryForm.sortOrder}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, sortOrder: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryEditModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCategory}
+                  disabled={categorySaving}
+                  className="px-5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {categorySaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingCategory ? "Update Category" : "Create Category"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Dimension & Size Management */}
+        {showDimensionModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden animate-scale-up">
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-red-100/80 text-[#991B1B] flex items-center justify-center border border-red-200">
+                    <Ruler className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Manage Dimensions &amp; Sizes</h3>
+                    <p className="text-xs text-slate-500">Add, edit, or delete standard card &amp; gift dimensions available in dropdowns</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDimensionModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sub Tabs: Invitations vs Return Gifts */}
+              <div className="px-6 pt-4 pb-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-100">
+                <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setDimensionModalTab("invitations")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      dimensionModalTab === "invitations"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    💌 Invitation Sizes ({shopDimensions.filter((d) => d.type === "invitations" || d.type === "all").length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDimensionModalTab("return_gifts")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      dimensionModalTab === "return_gifts"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    🎁 Return Gift Sizes ({shopDimensions.filter((d) => d.type === "return_gifts" || d.type === "all").length})
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddDimension(dimensionModalTab)}
+                  className="px-3.5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Size / Dimension</span>
+                </button>
+              </div>
+
+              {/* Dimensions List */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-2.5">
+                {loadingDimensions ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#991B1B]" />
+                    <span className="text-xs font-medium">Loading dimensions...</span>
+                  </div>
+                ) : shopDimensions.filter((d) => d.type === dimensionModalTab || d.type === "all").length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs">
+                    No dimensions found in this section. Click &quot;Add Size / Dimension&quot; above to create one.
+                  </div>
+                ) : (
+                  shopDimensions
+                    .filter((d) => d.type === dimensionModalTab || d.type === "all")
+                    .map((dim) => (
+                      <div
+                        key={dim.id}
+                        className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white transition-all shadow-2xs group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-xl w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 shrink-0 text-slate-700">
+                            📏
+                          </span>
+                          <div className="min-w-0">
+                            <span className="font-bold text-sm text-slate-900 block truncate">{dim.label}</span>
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
+                              <span>Sort Order: {dim.sortOrder}</span>
+                              <span>•</span>
+                              <span className="capitalize">{dim.type === "all" ? "All Sections" : dim.type.replace("_", " ")}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditDimension(dim)}
+                            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Edit Dimension"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDimension(dim)}
+                            disabled={dimensionDeletingId === dim.id}
+                            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            title="Delete Dimension"
+                          >
+                            {dimensionDeletingId === dim.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDimensionModal(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add or Edit Dimension */}
+        {showDimensionEditModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-base font-bold text-slate-900">
+                  {editingDimension ? "Edit Dimension / Size" : "Add New Dimension / Size"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowDimensionEditModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {dimensionError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                  {dimensionError}
+                </div>
+              )}
+
+              <div className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">Dimension / Size Text *</label>
+                  <input
+                    type="text"
+                    value={dimensionForm.label}
+                    onChange={(e) => setDimensionForm({ ...dimensionForm, label: e.target.value })}
+                    placeholder="e.g. 5.5 x 8.5 inches (Portrait - Standard)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Section Type *</label>
+                    <select
+                      value={dimensionForm.type}
+                      onChange={(e) => setDimensionForm({ ...dimensionForm, type: e.target.value as any })}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                    >
+                      <option value="invitations">💌 Invitations</option>
+                      <option value="return_gifts">🎁 Return Gifts</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Sort Order</label>
+                    <input
+                      type="number"
+                      value={dimensionForm.sortOrder}
+                      onChange={(e) => setDimensionForm({ ...dimensionForm, sortOrder: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowDimensionEditModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDimension}
+                  disabled={dimensionSaving}
+                  className="px-5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {dimensionSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingDimension ? "Update Dimension" : "Create Dimension"}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

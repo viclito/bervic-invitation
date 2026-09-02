@@ -55,6 +55,10 @@ Every AI agent or developer making changes to this codebase **MUST** strictly ex
 3. **Multi-Tenant Boundary Check:** Ensure every database query involving user data strictly filters by `userId` to prevent data leakage across different accounts.
 4. **No Breaking API Contracts:** When altering API routes or Prisma models, locate all invocation sites and update them synchronously.
 5. **No Dummy / Mock Data:** NEVER insert fake, mock, placeholder, or dummy records into the database or hardcode mock fallback data into hooks/components. The database and client components must only contain and display genuine user and administrator data.
+6. **Per-File Error & Runtime Verification (Zero-Error Production Guarantee):** For EVERY single file that you create, modify, or edit, you MUST actively verify whether any error could occur in that specific file (runtime exceptions, undefined properties, API 500 responses, SQL/column/constraint mismatches, missing defaults, or unhandled promises). Test and trace the execution path of the created/edited file so that broken code is never left behind to cause production failure.
+7. **Zero 500 Error Guarantee & Dual-Tier Fallback Protocol (Mandatory Check in EVERY Chat):**
+   - Every API endpoint that receives user inputs (especially `/api/orders/create`, `/api/cart`, `/api/payment/*`, and draft saving routes) MUST implement resilient dual-tier database execution (primary typed model queries + direct dynamic/SQL fallback), full schema synchronization (`ensureDbSchema.ts`), and non-blocking background notification handlers.
+   - Under no circumstances should any user or admin submission return an unhandled 500 Internal Server Error.
 
 ### 1.2 Post-Execution Verification Commands
 Before marking any chat request or command as complete, run the following verification steps:

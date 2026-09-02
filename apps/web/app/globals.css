@@ -174,3 +174,15 @@ html.lenis, html.lenis body {
   scrollbar-width: thin;
   scrollbar-color: rgba(153, 27, 27, 0.3) rgba(241, 245, 249, 0.7);
 }
+
+/* No Scrollbar Utility across all browsers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

@@ -186,7 +186,7 @@ export default function IndicLanguageInput({
 
   // Case 3: Dual Language Mode (English + Auto-Translated Regional Below)
   return (
-    <div className="p-3 rounded-2xl bg-stone-50/80 border border-stone-200/80 hover:border-slate-300 transition-all space-y-2.5">
+    <div className="space-y-2 bg-white">
       {/* English Primary Input */}
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">

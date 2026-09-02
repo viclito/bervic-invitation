@@ -23,6 +23,18 @@ export async function GET(req: Request) {
     const limit = isAll ? 1000 : Math.min(Math.max(parseInt(limitParam || "24", 10) || 24, 1), 100);
     const skip = (page - 1) * limit;
 
+    let returnGiftCategories = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"];
+    try {
+      const giftCats: any[] = await prisma.$queryRawUnsafe(
+        `SELECT "id" FROM "ShopCategory" WHERE "type" = 'return_gifts'`
+      );
+      if (giftCats && giftCats.length > 0) {
+        returnGiftCategories = Array.from(new Set([...giftCats.map((g) => g.id), "return_gifts"]));
+      }
+    } catch {
+      // Use fallback
+    }
+
     // Construct Prisma where query conditions
     const where: any = {
       isActive: true,
@@ -30,7 +42,7 @@ export async function GET(req: Request) {
 
     if (mainTab === "invitations") {
       where.category = {
-        notIn: RETURN_GIFT_CATEGORIES,
+        notIn: returnGiftCategories,
       };
       if (category && category !== "all") {
         where.category = category;
@@ -40,7 +52,7 @@ export async function GET(req: Request) {
         where.category = category;
       } else {
         where.category = {
-          in: RETURN_GIFT_CATEGORIES,
+          in: returnGiftCategories,
         };
       }
     } else if (category && category !== "all") {

@@ -26,6 +26,9 @@ import {
   Layers,
   Ruler,
   Maximize2,
+  Download,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 interface CanvasElementData {
@@ -61,6 +64,8 @@ interface OrderItemData {
   cardDetailsJson: string;
   elementsJson: string | null;
   customNotes: string | null;
+  draftFileUrl?: string | null;
+  draftFileName?: string | null;
   price: number;
   createdAt: string;
 }
@@ -753,6 +758,8 @@ export default function UserOrderDetailPage() {
                   const langName = parsedDetails.languageName ? String(parsedDetails.languageName) : null;
                   const langNative = parsedDetails.languageNativeName ? String(parsedDetails.languageNativeName) : null;
                   const langMode = parsedDetails.languageMode ? String(parsedDetails.languageMode) : null;
+                  const uploadedFileUrl = String(parsedDetails.uploadedFileUrl || item.draftFileUrl || "").trim();
+                  const uploadedFileName = String(parsedDetails.uploadedFileName || item.draftFileName || "").trim();
 
                   return (
                     <div
@@ -792,6 +799,59 @@ export default function UserOrderDetailPage() {
 
                         {/* Details parsed */}
                         <div className="flex-1 w-full space-y-3 text-xs">
+                          {/* 📄 Attached Customer Draft Document / Form */}
+                          {uploadedFileUrl && (
+                            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                              <div className="flex items-center justify-between border-b border-amber-200/60 pb-1.5">
+                                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                                  <FileText className="w-4 h-4 text-amber-800" />
+                                  <span>Attached Invitation Draft / Form</span>
+                                </div>
+                                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+                                  Received for Typesetting
+                                </span>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-2.5 rounded-lg border border-amber-200/80">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 font-mono font-black text-[11px]">
+                                    {uploadedFileName.split(".").pop()?.toUpperCase() || "DOC"}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-900 truncate" title={uploadedFileName}>
+                                      {uploadedFileName || "Uploaded_Draft_Document"}
+                                    </p>
+                                    <span className="text-[10px] text-slate-500">
+                                      Your uploaded wording document for card layout
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <a
+                                    href={uploadedFileUrl}
+                                    download={uploadedFileName || "invitation_draft"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1.5 rounded-lg bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Download</span>
+                                  </a>
+                                  <a
+                                    href={uploadedFileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>View</span>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* 🇬🇧 English Section */}
                           <div className="space-y-2 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200/80">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block border-b border-slate-200/60 pb-1">

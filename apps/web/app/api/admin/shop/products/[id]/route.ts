@@ -36,6 +36,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (body.canvaTemplateId !== undefined) {
       updateData.canvaTemplateId = body.canvaTemplateId ? String(body.canvaTemplateId).trim() : null;
     }
+    if (body.pricingTiersJson !== undefined) {
+      updateData.pricingTiersJson = body.pricingTiersJson && typeof body.pricingTiersJson === "object"
+        ? JSON.stringify(body.pricingTiersJson)
+        : typeof body.pricingTiersJson === "string"
+        ? body.pricingTiersJson
+        : null;
+    }
     if (body.features !== undefined) {
       updateData.featuresJson = Array.isArray(body.features)
         ? JSON.stringify(body.features)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -18,7 +18,7 @@ import {
   Trash2,
   Zap,
 } from "lucide-react";
-import { calculateTieredCardPrice } from "@/lib/pricing";
+import { calculateTieredCardPrice, calculatePrintingChangeFee, extractPrintingChangeConfig } from "@/lib/pricing";
 
 export interface OrderModalProps {
   isOpen: boolean;
@@ -174,8 +174,27 @@ export default function OrderOrCartModal({
     minCopies: number;
     paperType: string;
     badge?: string | null;
+    pricingTiersJson?: string | null;
   } | null>(null);
   const [checkingShopProduct, setCheckingShopProduct] = useState(false);
+
+  // Printing Change (Multiple Text / Language Versions) State
+  const [enablePrintingChange, setEnablePrintingChange] = useState<boolean>(false);
+  const [printingChanges, setPrintingChanges] = useState<
+    Array<{
+      id: string;
+      title: string;
+      copies: number;
+      details: string;
+    }>
+  >([
+    {
+      id: "change_1",
+      title: "Version 2 (e.g. Bride Side / Reception / Tamil Text)",
+      copies: 50,
+      details: "",
+    },
+  ]);
 
   const autoFetchEventDetails = useCallback(async () => {
     try {
@@ -323,6 +342,7 @@ export default function OrderOrCartModal({
                 minCopies: Number(found.minCopies) || 50,
                 paperType: found.paperType || PAPER_OPTIONS[0],
                 badge: found.badge || null,
+                pricingTiersJson: found.pricingTiersJson || null,
               };
             }
           }
@@ -353,16 +373,28 @@ export default function OrderOrCartModal({
     };
   }, [isOpen, templateId, templateName, basePrice]);
 
-  if (!isOpen) return null;
-
   const currentCopies = customCopiesInput ? parseInt(customCopiesInput, 10) : copies;
   const isLinked = !!linkedShopProduct;
   const basePricePerCard = linkedShopProduct?.pricePerCard || 0;
   const priceCalc = isLinked
-    ? calculateTieredCardPrice(basePricePerCard, currentCopies, false)
+    ? calculateTieredCardPrice(basePricePerCard, currentCopies, false, linkedShopProduct?.pricingTiersJson)
     : null;
   const unitPrice = priceCalc ? priceCalc.unitPrice : 0;
   const totalPrice = priceCalc ? priceCalc.totalPrice : 0;
+
+  const printingChangeConfig = useMemo(() => {
+    return extractPrintingChangeConfig(linkedShopProduct?.pricingTiersJson);
+  }, [linkedShopProduct]);
+
+  const totalPrintingChangeFee = useMemo(() => {
+    if (!enablePrintingChange || !printingChangeConfig.enabled) return 0;
+    return printingChanges.reduce((sum, chg) => {
+      const feeResult = calculatePrintingChangeFee(chg.copies, printingChangeConfig);
+      return sum + feeResult.fee;
+    }, 0);
+  }, [enablePrintingChange, printingChangeConfig, printingChanges]);
+
+  if (!isOpen) return null;
 
   const effectivePreviewImage =
     previewImage && previewImage.trim().length > 5
@@ -524,6 +556,10 @@ export default function OrderOrCartModal({
       primaryVenue: validVenues[0]?.name || form.venues[0]?.name || "",
       rsvpContact: form.rsvpContact.trim(),
       specialInstructions: form.specialInstructions.trim(),
+      enablePrintingChange,
+      printingChangesCount: enablePrintingChange ? printingChanges.length : 0,
+      totalPrintingChangeFee,
+      printingChanges: enablePrintingChange ? printingChanges : [],
       deliveryName: (form.deliveryName || session?.user?.name || form.brideName || form.groomName || "Valued Customer").trim(),
       deliveryPhone: (form.deliveryPhone || form.rsvpContact || "").trim(),
       deliveryAddress: (form.deliveryAddress || form.brideAddress || form.groomAddress || (form.venues[0]?.address || "")).trim(),
@@ -533,9 +569,12 @@ export default function OrderOrCartModal({
 
     const lines: string[] = [];
     if (isLinked) {
-      lines.push(`Catalog Pricing: ₹${unitPrice}/card (${priceCalc?.tierLabel}) • Total: ₹${totalPrice}`);
+      lines.push(`Catalog Pricing: ₹${unitPrice}/card (${priceCalc?.tierLabel}) • Base Total: ₹${totalPrice}`);
     } else {
       lines.push(`Pricing: Custom Studio Design (Pending Admin Quote)`);
+    }
+    if (enablePrintingChange && totalPrintingChangeFee > 0) {
+      lines.push(`Printing Changes: ${printingChanges.length} additional text version(s) • Fee: +₹${totalPrintingChangeFee}`);
     }
     if (form.paperType) lines.push(`Paper Finish: ${form.paperType}`);
     if (form.specialInstructions.trim()) lines.push(`Notes: ${form.specialInstructions.trim()}`);
@@ -577,7 +616,7 @@ export default function OrderOrCartModal({
     const { compiledCardDetails, compiledCustomNotes } = buildDetailsPayload();
 
     try {
-      const res = await fetch("/api/cart/add", {
+      const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -589,7 +628,7 @@ export default function OrderOrCartModal({
           cardDetails: compiledCardDetails,
           elements,
           customNotes: compiledCustomNotes,
-          price: unitPrice,
+          price: totalPrice + totalPrintingChangeFee,
         }),
       });
 
@@ -995,6 +1034,163 @@ export default function OrderOrCartModal({
                   ))}
                 </div>
               </div>
+
+              {/* Printing Change (Multiple Text / Language Versions) Option */}
+              {printingChangeConfig.enabled && (
+                <div className="p-4 rounded-3xl border border-slate-200 bg-slate-50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-md bg-red-100/80 text-[#991B1B] flex items-center justify-center font-bold text-xs shrink-0">
+                        📝
+                      </span>
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block">
+                          Need separate text / language versions? (Printing Change)
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          e.g. Groom side &amp; Bride side details, or English &amp; Regional language copies.
+                        </span>
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={enablePrintingChange}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setEnablePrintingChange(checked);
+                          if (checked && printingChanges.length === 0) {
+                            setPrintingChanges([
+                              {
+                                id: `change_${Date.now()}`,
+                                title: "Version 2 (e.g. Bride Side / Reception / Tamil Text)",
+                                copies: Math.min(100, Math.max(25, Math.floor(currentCopies / 2))),
+                                details: "",
+                              },
+                            ]);
+                          }
+                        }}
+                        className="w-4 h-4 text-[#991B1B] rounded cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-slate-800">
+                        {enablePrintingChange ? "Added" : "Add"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {enablePrintingChange && (
+                    <div className="space-y-2.5 pt-2.5 border-t border-slate-200">
+                      {/* Versions Breakdown List */}
+                      <div className="space-y-2">
+                        {/* Version 1 summary */}
+                        <div className="p-2.5 rounded-2xl bg-white border border-slate-200 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-bold text-slate-800 block">Version 1 (Main Print Version)</span>
+                            <span className="text-[10px] text-slate-500">Primary invitation wording</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-slate-900">
+                              {Math.max(0, currentCopies - printingChanges.reduce((sum, c) => sum + c.copies, 0))} cards
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">(Included in base)</span>
+                          </div>
+                        </div>
+
+                        {/* Extra Printing Changes */}
+                        {printingChanges.map((chg, idx) => {
+                          const feeCalc = calculatePrintingChangeFee(chg.copies, printingChangeConfig);
+                          return (
+                            <div
+                              key={chg.id}
+                              className="p-2.5 rounded-2xl bg-white border border-slate-200 space-y-2 text-xs relative"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <input
+                                  type="text"
+                                  value={chg.title}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPrintingChanges((prev) =>
+                                      prev.map((item, i) => (i === idx ? { ...item, title: val } : item))
+                                    );
+                                  }}
+                                  placeholder={`Version ${idx + 2} Label (e.g. Bride Side Details)`}
+                                  className="font-bold text-slate-900 text-xs bg-transparent border-b border-dashed border-slate-300 focus:border-[#991B1B] focus:outline-none flex-1 py-0.5"
+                                />
+                                {printingChanges.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPrintingChanges((prev) => prev.filter((_, i) => i !== idx))
+                                    }
+                                    className="text-slate-400 hover:text-red-600 text-xs font-bold cursor-pointer"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[11px] text-slate-500">Print Quantity:</label>
+                                  <input
+                                    type="number"
+                                    min={10}
+                                    max={currentCopies - 10}
+                                    value={chg.copies}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10) || 10;
+                                      setPrintingChanges((prev) =>
+                                        prev.map((item, i) => (i === idx ? { ...item, copies: val } : item))
+                                      );
+                                    }}
+                                    className="w-16 px-2 py-0.5 rounded border border-slate-300 font-bold text-xs text-slate-800 focus:outline-none focus:border-[#991B1B]"
+                                  />
+                                  <span className="text-[11px] text-slate-500">cards</span>
+                                </div>
+
+                                <div className="text-right font-mono font-bold text-xs text-[#991B1B]">
+                                  +₹{feeCalc.fee}
+                                </div>
+                              </div>
+
+                              <div className="text-[10px] text-slate-500 font-sans">
+                                {feeCalc.breakdownText}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Add another change button */}
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPrintingChanges((prev) => [
+                              ...prev,
+                              {
+                                id: `change_${Date.now()}`,
+                                title: `Version ${prev.length + 2} (e.g. Reception / Regional)`,
+                                copies: 50,
+                                details: "",
+                              },
+                            ]);
+                          }}
+                          className="text-[11px] font-bold text-[#991B1B] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          + Add Another Text Version (Version {printingChanges.length + 2})
+                        </button>
+
+                        <div className="text-xs font-bold text-slate-900">
+                          Total Change Fee: <span className="text-[#991B1B] font-mono">+₹{totalPrintingChangeFee}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1529,7 +1725,9 @@ export default function OrderOrCartModal({
                   <div>
                     <span className="text-slate-500 block text-[10px]">Estimated Total:</span>
                     <strong className="text-[#991B1B] text-xs font-extrabold block truncate">
-                      {isLinked ? `₹${totalPrice} (₹${unitPrice}/card)` : "Price on Admin Review"}
+                      {isLinked
+                        ? `₹${totalPrice + totalPrintingChangeFee} ${totalPrintingChangeFee > 0 ? `(Card: ₹${totalPrice} + Change: ₹${totalPrintingChangeFee})` : `(₹${unitPrice}/card)`}`
+                        : "Price on Admin Review"}
                     </strong>
                   </div>
                   <div>

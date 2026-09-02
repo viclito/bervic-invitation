@@ -17,6 +17,7 @@ import {
   Calendar,
   Layers,
   ShoppingBag,
+  FileText,
 } from "lucide-react";
 
 interface CanvasElementData {
@@ -553,6 +554,21 @@ export default function UserOrdersPage() {
                               <Layers className="w-3.5 h-3.5 text-slate-500" />
                               {order.items.length} {order.items.length === 1 ? "Design Item" : "Design Items"}
                             </span>
+
+                            {order.items.some((it: { draftFileUrl?: string | null; cardDetailsJson?: string }) => {
+                              if (it.draftFileUrl) return true;
+                              try {
+                                const d = JSON.parse(it.cardDetailsJson || "{}");
+                                return !!(d.uploadedFileUrl || d.contentMethod === "UPLOAD");
+                              } catch {
+                                return false;
+                              }
+                            }) && (
+                              <span className="flex items-center gap-1.5 bg-amber-50 text-amber-900 px-2.5 py-1 rounded-xl border border-amber-300 font-bold">
+                                <FileText className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Draft Form Attached</span>
+                              </span>
+                            )}
                           </div>
 
                           <p className="text-xs text-slate-500 line-clamp-1">

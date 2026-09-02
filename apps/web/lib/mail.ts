@@ -23,6 +23,8 @@ export interface OrderEmailPayload {
   city?: string | null;
   pincode?: string | null;
   totalCopies: number;
+  totalAmount?: number | null;
+  shippingFee?: number | null;
   status: string;
   notes?: string | null;
 }
@@ -156,7 +158,7 @@ export async function sendAdminNewOrderNotification(order: OrderEmailPayload, it
 
 export async function sendUserOrderConfirmation(order: OrderEmailPayload, items: OrderItemEmailPayload[] = []) {
   const itemsHtml = items.map((item, idx) => `
-    <div style="background-color: #ffffff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+    <div style="background-color: #ffffff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <strong style="color: #7A1F2B; font-size: 14px;">#${idx + 1} ${item.templateName || "Custom Card"}</strong>
         <span style="background-color: #FAF3E0; color: #8C6B1B; font-weight: bold; padding: 3px 10px; border-radius: 20px; font-size: 11px;">
@@ -164,51 +166,97 @@ export async function sendUserOrderConfirmation(order: OrderEmailPayload, items:
         </span>
       </div>
       ${item.customNotes ? `
-        <p style="font-size: 11px; color: #64748B; margin: 6px 0 0 0;">
-          <em>Custom Instructions: ${item.customNotes}</em>
+        <p style="font-size: 11.5px; color: #64748B; margin: 6px 0 0 0; line-height: 1.4;">
+          <em>Instructions: ${item.customNotes}</em>
         </p>
       ` : ""}
     </div>
   `).join("");
 
   const htmlContent = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #F8F3EA; padding: 30px 15px; color: #1E293B;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 2px solid #D9A441; border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+    <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; background-color: #F8F3EA; padding: 30px 15px; color: #1E293B;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 2px solid #D9A441; border-radius: 18px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
         
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div style="width: 46px; height: 46px; background-color: #7A1F2B; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-            <span style="color: #D9A441; font-size: 22px; font-weight: bold;">✦</span>
+        <!-- Brand Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7A1F2B 0%, #54141D 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(122,31,43,0.25);">
+            <span style="color: #D9A441; font-size: 24px; font-weight: bold;">✦</span>
           </div>
-          <h2 style="color: #221C17; margin: 5px 0; font-size: 22px;">Thank You for Your Order!</h2>
-          <p style="color: #7A1F2B; font-size: 13px; font-weight: bold; margin: 0;">Order #${order.orderNumber}</p>
+          <h1 style="color: #221C17; margin: 0 0 6px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Order Placed Successfully!</h1>
+          <p style="color: #7A1F2B; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 0.5px;">Order Reference: #${order.orderNumber}</p>
         </div>
 
-        <p style="font-size: 13px; color: #475569; line-height: 1.6;">
-          Hi <strong>${order.customerName}</strong>, we have received your invitation card order! Our design and production team is reviewing your card details and custom instructions.
+        <!-- Greeting -->
+        <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-top: 0;">
+          Dear <strong>${order.customerName}</strong>,
+        </p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+          Thank you for choosing <strong>Bervic Invitations</strong>! We have received your order details and custom event wording.
         </p>
 
-        <div style="background-color: #FAF9FC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; margin: 15px 0;">
-          <h4 style="margin: 0 0 8px 0; color: #0F172A; font-size: 12px; text-transform: uppercase;">Order Summary</h4>
-          <p style="margin: 3px 0; font-size: 12px;"><strong>Status:</strong> <span style="color: #D97706; font-weight: bold;">${order.status}</span></p>
-          <p style="margin: 3px 0; font-size: 12px;"><strong>Total Copies:</strong> ${order.totalCopies}</p>
-          ${order.deliveryAddress ? `
-            <p style="margin: 3px 0; font-size: 12px;"><strong>Delivery To:</strong> ${order.deliveryAddress}${order.city ? `, ${order.city}` : ""} ${order.pincode || ""}</p>
-          ` : ""}
+        <!-- Design Proof & Approval Highlight Box -->
+        <div style="background: linear-gradient(135deg, #FFFDF7 0%, #FAF3E0 100%); border: 1.5px solid #D9A441; border-radius: 14px; padding: 20px; margin: 22px 0; box-shadow: 0 4px 15px rgba(217,164,65,0.08);">
+          <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 20px; margin-right: 8px;">🎨</span>
+            <strong style="color: #7A1F2B; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Next Step: Design Proof & Approval</strong>
+          </div>
+          <p style="font-size: 13.5px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+            Our dedicated design team is currently reviewing your event details, wording, and typography. <strong>We will contact you shortly on WhatsApp (${order.customerPhone || "your contact number"}) and email to share the draft preview for your review and approval.</strong>
+          </p>
+          <div style="background-color: #ffffff; border-left: 4px solid #10B981; padding: 10px 14px; border-radius: 6px; margin-top: 8px;">
+            <p style="font-size: 12.5px; color: #065F46; font-weight: 600; margin: 0; line-height: 1.5;">
+              ✓ <strong>Zero-Worry Guarantee:</strong> Physical printing will commence only after you have thoroughly reviewed and approved the digital design proof!
+            </p>
+          </div>
         </div>
 
-        <div style="margin: 15px 0;">
-          <h4 style="margin: 0 0 8px 0; color: #0F172A; font-size: 12px; text-transform: uppercase;">Items in this order</h4>
+        <!-- Order Summary -->
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin: 18px 0;">
+          <h4 style="margin: 0 0 10px 0; color: #0F172A; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Order Summary</h4>
+          <table style="width: 100%; font-size: 13px; color: #475569; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 4px 0;"><strong>Status:</strong></td>
+              <td style="padding: 4px 0; text-align: right;"><span style="color: #D97706; font-weight: bold; background-color: #FEF3C7; padding: 2px 8px; border-radius: 6px;">${order.status}</span></td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0;"><strong>Total Quantity:</strong></td>
+              <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #0F172A;">${order.totalCopies} Copies</td>
+            </tr>
+            ${order.totalAmount ? `
+            <tr>
+              <td style="padding: 4px 0;"><strong>Total Amount:</strong></td>
+              <td style="padding: 4px 0; text-align: right; font-weight: 700; color: #7A1F2B;">₹${order.totalAmount}</td>
+            </tr>
+            ` : ""}
+            ${order.deliveryAddress ? `
+            <tr>
+              <td style="padding: 4px 0; vertical-align: top;"><strong>Delivery Address:</strong></td>
+              <td style="padding: 4px 0; text-align: right; color: #334155;">${order.deliveryAddress}${order.city ? `, ${order.city}` : ""} ${order.pincode || ""}</td>
+            </tr>
+            ` : ""}
+          </table>
+        </div>
+
+        <!-- Itemized Cards -->
+        <div style="margin: 20px 0;">
+          <h4 style="margin: 0 0 10px 0; color: #0F172A; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Ordered Items</h4>
           ${itemsHtml}
         </div>
 
-        <div style="background-color: #FEF3C7; border-radius: 10px; padding: 12px; margin-top: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 12px; color: #92400E; font-weight: 600;">
-            ✨ We will notify you via email as soon as your design proof is ready or when the status changes!
+        <!-- WhatsApp Direct Contact Banner -->
+        <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 14px; margin-top: 20px; text-align: center;">
+          <p style="margin: 0 0 4px 0; font-size: 13px; color: #166534; font-weight: 600;">
+            💬 Need to make a change or add additional instructions?
+          </p>
+          <p style="margin: 0; font-size: 12px; color: #15803D;">
+            Reply directly to this email or message us on WhatsApp with your Order #${order.orderNumber}.
           </p>
         </div>
 
-        <div style="margin-top: 25px; font-size: 11px; color: #94A3B8; text-align: center; border-top: 1px solid #E2E8F0; padding-top: 15px;">
-          If you have any questions, simply reply to this email. © ${new Date().getFullYear()} Bervic Invitations.
+        <!-- Footer -->
+        <div style="margin-top: 25px; font-size: 11px; color: #94A3B8; text-align: center; border-top: 1px solid #E2E8F0; padding-top: 16px; line-height: 1.5;">
+          © ${new Date().getFullYear()} Bervic Invitations. Handcrafted with elegance & care.<br />
+          Kanyakumari, Tamil Nadu, India.
         </div>
 
       </div>
@@ -219,7 +267,7 @@ export async function sendUserOrderConfirmation(order: OrderEmailPayload, items:
     return await transporter.sendMail({
       from: process.env.SMTP_FROM || `"Bervic Invitations" <${process.env.SMTP_USER}>`,
       to: order.customerEmail,
-      subject: `✨ Order Confirmed: #${order.orderNumber} - Bervic Invitations`,
+      subject: `✨ Order Confirmed: #${order.orderNumber} - Design Proof in Progress (Bervic Invitations)`,
       html: htmlContent,
     });
   } catch (err: unknown) {

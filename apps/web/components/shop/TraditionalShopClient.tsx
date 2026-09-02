@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -71,22 +72,29 @@ export interface ShopProductItem {
   isActive: boolean;
 }
 
-const INVITATION_CATEGORIES = [
-  { id: "all", label: "All Invitation Cards" },
-  { id: "royal", label: "👑 Royal & Heritage" },
-  { id: "floral", label: "🌸 Floral & Botanical" },
-  { id: "vintage", label: "📜 Vintage Parchment" },
-  { id: "modern", label: "✨ Modern Die-Cut Arch" },
-  { id: "velvet", label: "💎 Luxury Velvet Suites" },
+export interface DynamicShopCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  type: string;
+  sortOrder: number;
+  label: string;
+}
+
+const FALLBACK_INVITATION_CATEGORIES = [
+  { id: "royal", label: "👑 Royal & Heritage", name: "Royal & Heritage", type: "invitations", sortOrder: 1 },
+  { id: "floral", label: "🌸 Floral & Botanical", name: "Floral & Botanical", type: "invitations", sortOrder: 2 },
+  { id: "vintage", label: "📜 Vintage Parchment", name: "Vintage Parchment", type: "invitations", sortOrder: 3 },
+  { id: "modern", label: "✨ Modern Die-Cut Arch", name: "Modern Die-Cut Arch", type: "invitations", sortOrder: 4 },
+  { id: "velvet", label: "💎 Luxury Velvet Suites", name: "Luxury Velvet Suites", type: "invitations", sortOrder: 5 },
 ];
 
-const RETURN_GIFT_CATEGORIES = [
-  { id: "all", label: "All Return Gifts" },
-  { id: "brass", label: "🪔 Brass Diyas & Idols" },
-  { id: "hampers", label: "🍬 Sweets & Dry Fruits" },
-  { id: "silver", label: "🪙 Silver Pooja Coins" },
-  { id: "bags", label: "🛍️ Brocade & Jute Bags" },
-  { id: "candles", label: "🕯️ Aromatherapy Candles" },
+const FALLBACK_RETURN_GIFT_CATEGORIES = [
+  { id: "brass", label: "🪔 Brass Diyas & Idols", name: "Brass Diyas & Idols", type: "return_gifts", sortOrder: 1 },
+  { id: "hampers", label: "🍬 Sweets & Dry Fruits", name: "Sweets & Dry Fruits", type: "return_gifts", sortOrder: 2 },
+  { id: "silver", label: "🪙 Silver Pooja Coins", name: "Silver Pooja Coins", type: "return_gifts", sortOrder: 3 },
+  { id: "bags", label: "🛍️ Brocade & Jute Bags", name: "Brocade & Jute Bags", type: "return_gifts", sortOrder: 4 },
+  { id: "candles", label: "🕯️ Aromatherapy Candles", name: "Aromatherapy Candles", type: "return_gifts", sortOrder: 5 },
 ];
 
 export default function TraditionalShopClient() {
@@ -94,6 +102,7 @@ export default function TraditionalShopClient() {
   const router = useRouter();
 
   const [mainTab, setMainTab] = useState<"invitations" | "return_gifts">("invitations");
+  const [dbCategories, setDbCategories] = useState<DynamicShopCategory[]>([]);
   const [products, setProducts] = useState<ShopProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -146,6 +155,17 @@ export default function TraditionalShopClient() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Redirect if someone arrived at /shop?product=prod_...
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const prodId = params.get("product");
+      if (prodId) {
+        router.replace(`/shop/${prodId}`);
+      }
+    }
+  }, [router]);
 
   const [printForm, setPrintForm] = useState({
     cardLanguage: "en", // default English Only
@@ -393,7 +413,33 @@ export default function TraditionalShopClient() {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loading, handleLoadMore]);
 
-  const activeCategories = mainTab === "invitations" ? INVITATION_CATEGORIES : RETURN_GIFT_CATEGORIES;
+  // Fetch dynamic categories from database
+  useEffect(() => {
+    async function loadShopCategories() {
+      try {
+        const res = await fetch("/api/shop/categories");
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.categories) && data.categories.length > 0) {
+          setDbCategories(data.categories);
+        }
+      } catch (err) {
+        console.warn("Error fetching dynamic categories:", err);
+      }
+    }
+    loadShopCategories();
+  }, []);
+
+  const currentTypeCategories = dbCategories.length > 0
+    ? dbCategories.filter((c) => c.type === mainTab)
+    : (mainTab === "invitations" ? FALLBACK_INVITATION_CATEGORIES : FALLBACK_RETURN_GIFT_CATEGORIES);
+
+  const activeCategories = [
+    {
+      id: "all",
+      label: mainTab === "invitations" ? "All Invitation Cards" : "All Return Gifts",
+    },
+    ...currentTypeCategories,
+  ];
 
   const getQuantity = (cardId: string, minCopies = 50) => {
     return selectedQuantities[cardId] || Math.max(minCopies, 100);
@@ -576,7 +622,7 @@ export default function TraditionalShopClient() {
 
     const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(product.category);
     const copies = customCopies || getQuantity(product.id, isGift ? product.minCopies || 25 : product.minCopies || 50);
-    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift);
+    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift, (product as any).pricingTiersJson);
     const effectiveUnitPrice = priceCalc.unitPrice;
     const totalPrice = priceCalc.totalPrice;
 
@@ -705,7 +751,7 @@ export default function TraditionalShopClient() {
     setFormErrors({});
     const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(product.category);
     const copies = customCopies || getQuantity(product.id, isGift ? product.minCopies || 25 : product.minCopies || 50);
-    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift);
+    const priceCalc = calculateTieredCardPrice(product.pricePerCard, copies, isGift, (product as any).pricingTiersJson);
     const effectiveUnitPrice = priceCalc.unitPrice;
     const totalPrice = priceCalc.totalPrice;
 
@@ -1036,10 +1082,10 @@ export default function TraditionalShopClient() {
                 {products.map((product) => {
                   const isGift = product.category === "return_gifts" || ["brass", "hampers", "silver", "bags", "candles"].includes(product.category);
                   return (
-                    <div
+                    <Link
                       key={product.id}
+                      href={`/shop/${product.id}`}
                       className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 hover:border-[#991B1B] shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
-                      onClick={() => setPreviewProduct(product)}
                     >
                       {/* Crispy Card Image Frame */}
                       <div className="relative aspect-[3/4] bg-slate-50 overflow-hidden border-b border-slate-100">
@@ -1079,7 +1125,7 @@ export default function TraditionalShopClient() {
                         <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
                           <span className="bg-white text-[#991B1B] text-[10px] sm:text-xs font-extrabold px-3 py-1.5 rounded-full shadow-xl flex items-center gap-1 transform translate-y-2 group-hover:translate-y-0 transition-transform">
                             <Eye className="w-3 h-3 text-amber-500" />
-                            <span>View Specs</span>
+                            <span>Customize &amp; Order</span>
                           </span>
                         </div>
                       </div>
@@ -1104,23 +1150,12 @@ export default function TraditionalShopClient() {
                         </div>
 
                         {/* Place Order Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!session) {
-                              router.push(`/auth/login?callbackUrl=${encodeURIComponent("/shop")}`);
-                              return;
-                            }
-                            setPreviewProduct(product);
-                          }}
-                          className="w-full py-1.5 sm:py-2 px-2 rounded-lg sm:rounded-xl bg-red-50 hover:bg-[#991B1B] text-[#991B1B] hover:text-white border border-red-200 text-[10px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all shadow-2xs group-hover:bg-[#991B1B] group-hover:text-white cursor-pointer"
-                        >
+                        <div className="w-full py-1.5 sm:py-2 px-2 rounded-lg sm:rounded-xl bg-red-50 hover:bg-[#991B1B] text-[#991B1B] hover:text-white border border-red-200 text-[10px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all shadow-2xs group-hover:bg-[#991B1B] group-hover:text-white">
                           <ShoppingBag className="w-3 h-3 text-amber-500 group-hover:text-amber-300" />
-                          <span>Place Order</span>
-                        </button>
+                          <span>Customize &amp; Order</span>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -1206,1266 +1241,6 @@ export default function TraditionalShopClient() {
           </div>
         </section>
       </div>
-
-      {/* Product Detail & Customization Stepper Modal */}
-      {previewProduct && (() => {
-        const isGift =
-          previewProduct.category === "return_gifts" ||
-          ["brass", "hampers", "silver", "bags", "candles"].includes(previewProduct.category);
-
-        const steps = isGift
-          ? [
-              { number: 1, title: "Quantity & Pieces", icon: "🎁" },
-              { number: 2, title: "Gift Tag Details", icon: "🏷️" },
-              { number: 3, title: "Delivery & Order", icon: "🚚" },
-            ]
-          : [
-              { number: 1, title: "Copies & Pricing", icon: "📦" },
-              { number: 2, title: "Couple & Parents", icon: "👰" },
-              { number: 3, title: "Event & Venues", icon: "📅" },
-              { number: 4, title: "RSVP & Delivery", icon: "🚚" },
-            ];
-        const maxSteps = steps.length;
-
-        const copies = getQuantity(previewProduct.id, isGift ? previewProduct.minCopies || 25 : previewProduct.minCopies || 50);
-        const priceCalc = calculateTieredCardPrice(previewProduct.pricePerCard, copies, isGift);
-        const effectiveUnitPrice = priceCalc.unitPrice;
-        const totalPrice = priceCalc.totalPrice;
-        const isOrdering = placingOrderId === previewProduct.id;
-        const isAdding = addingCardId === previewProduct.id;
-
-        let galleryList: string[] = [];
-        try {
-          if (previewProduct.galleryImages) {
-            const parsed = typeof previewProduct.galleryImages === "string" ? JSON.parse(previewProduct.galleryImages) : previewProduct.galleryImages;
-            if (Array.isArray(parsed)) galleryList = parsed.filter(Boolean);
-          }
-        } catch {
-          galleryList = [];
-        }
-        const allDisplayImages = Array.from(new Set([previewProduct.previewImage, ...galleryList].filter(Boolean)));
-        const currentDisplayedImage = activeModalImage || previewProduct.previewImage;
-
-        return (
-          <div
-            data-lenis-prevent
-            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto overscroll-contain animate-in fade-in duration-150"
-          >
-            <div
-              data-lenis-prevent
-              className="bg-white rounded-3xl border-2 border-red-100 shadow-2xl max-w-6xl w-full p-5 sm:p-7 relative max-h-[92vh] overflow-y-auto overscroll-contain animate-in zoom-in-95 duration-200 space-y-6"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => {
-                  setPreviewProduct(null);
-                  setActiveStep(1);
-                  setFormErrors({});
-                }}
-                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-red-50 text-[#991B1B] flex items-center justify-center hover:bg-[#991B1B] hover:text-white transition-colors cursor-pointer z-10 border border-red-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-                {/* Left Column: Product Snapshot, Gallery Thumbnails, Title & Specs */}
-                <div className="lg:col-span-4 space-y-3.5">
-                  <div className="relative aspect-[3/4] bg-red-50/40 rounded-2xl overflow-hidden border-2 border-red-100 p-4 flex items-center justify-center shadow-inner">
-                    <img
-                      src={currentDisplayedImage}
-                      alt={previewProduct.name}
-                      className="w-full h-full object-contain p-2 transition-all duration-300"
-                    />
-                    {previewProduct.badge && (
-                      <span className="absolute top-3.5 left-3.5 bg-[#991B1B] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md border border-red-300 uppercase tracking-wider">
-                        {previewProduct.badge}
-                      </span>
-                    )}
-                    <div className="absolute bottom-3.5 right-3.5 bg-slate-900/90 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-md border border-slate-700 backdrop-blur-xs">
-                      ₹{effectiveUnitPrice} {isGift ? "/ pc" : "/ card"}
-                    </div>
-                  </div>
-
-                  {/* Sub-Images / Gallery Thumbnails Selector */}
-                  {allDisplayImages.length > 1 && (
-                    <div className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 no-scrollbar">
-                      {allDisplayImages.map((imgUrl, imgIdx) => {
-                        const isSelected = imgUrl === currentDisplayedImage;
-                        return (
-                          <button
-                            key={imgIdx}
-                            type="button"
-                            onClick={() => setActiveModalImage(imgUrl)}
-                            className={`w-14 h-16 rounded-xl overflow-hidden bg-white border-2 p-0.5 shrink-0 transition-all cursor-pointer relative ${
-                              isSelected
-                                ? "border-[#991B1B] ring-2 ring-red-300 shadow-md scale-105"
-                                : "border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-400"
-                            }`}
-                          >
-                            <img
-                              src={imgUrl}
-                              alt={`Angle ${imgIdx + 1}`}
-                              className="w-full h-full object-contain"
-                            />
-                            {imgIdx === 0 && (
-                              <span className="absolute bottom-0.5 right-0.5 bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded">
-                                MAIN
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-current" /> {previewProduct.rating || 5.0}
-                      </span>
-                      <span className="text-[11px] text-slate-500">({previewProduct.reviewsCount || 50} reviews)</span>
-                      <span className="text-[10px] text-[#991B1B] font-extrabold uppercase bg-red-50 px-2 py-0.5 rounded-full border border-red-200 ml-auto">
-                        {isGift ? "Return Gift" : previewProduct.category}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-bold font-serif text-slate-900 leading-snug">{previewProduct.name}</h3>
-                    <div className="flex items-baseline gap-2 pt-0.5">
-                      <span className="text-2xl font-black text-[#991B1B]">₹{effectiveUnitPrice}</span>
-                      <span className="text-xs font-medium text-slate-500">
-                        {isGift ? "per gift piece" : "/ card"}
-                      </span>
-                      {!isGift && priceCalc.markupPercent > 0 && (
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
-                          +{priceCalc.markupPercent}% Tier
-                        </span>
-                      )}
-                      {!isGift && priceCalc.markupPercent === 0 && (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                          Base Rate
-                        </span>
-                      )}
-                    </div>
-                    {!isGift && (
-                      <p className="text-[10.5px] text-slate-500 font-medium">
-                        Base rate: ₹{previewProduct.pricePerCard}/card for 1000+ prints
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Canva Studio Direct Customization Button (Only shown if linked to Canva template) */}
-                  {previewProduct.canvaTemplateId && (
-                    <a
-                      href={`/canva?template=${encodeURIComponent(previewProduct.canvaTemplateId)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-[#991B1B] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer no-underline text-center group border border-amber-300"
-                    >
-                      <Sparkles className="w-4 h-4 text-amber-200 animate-pulse" />
-                      <span>Customize Design in Studio</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  )}
-
-                  {/* Paper / Material Specifications */}
-                  <div className="bg-red-50/40 p-3 rounded-2xl border border-red-100 space-y-1 text-xs shadow-2xs">
-                    <p className="font-bold text-slate-800 flex items-center gap-1.5">
-                      <span>{isGift ? "🎁" : "📄"}</span>
-                      <span>{previewProduct.paperType}</span>
-                    </p>
-                    <p className="text-slate-600 flex items-center gap-1.5">
-                      <span>📏</span>
-                      <span>Dimensions: {previewProduct.dimensions}</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right Column: Multi-Step Customization Form (8 cols on desktop) */}
-                <div className="lg:col-span-8 space-y-5">
-                  {/* Stepper Navigation Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-[#991B1B] uppercase tracking-wider">
-                          Step {activeStep} of {maxSteps}
-                        </span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-sm font-bold text-slate-800 font-serif">
-                          {steps[activeStep - 1]?.title}
-                        </span>
-                      </div>
-                      {autoFetched && (
-                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                          <Sparkles className="w-3 h-3 text-amber-500" />
-                          <span>Event Profile Auto-filled</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Stepper Pill Tabs */}
-                    <div className="flex items-center gap-2 p-1 bg-red-50/70 border border-red-100 rounded-2xl">
-                      {steps.map((step) => {
-                        const isCurrent = activeStep === step.number;
-                        const isCompleted = activeStep > step.number;
-                        return (
-                          <button
-                            key={step.number}
-                            type="button"
-                            onClick={() => {
-                              if (step.number < activeStep) {
-                                setActiveStep(step.number);
-                              } else if (step.number > activeStep) {
-                                if (validateStep(activeStep)) {
-                                  setActiveStep(step.number);
-                                }
-                              }
-                            }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                              isCurrent
-                                ? "bg-[#991B1B] text-white shadow-md ring-2 ring-red-200"
-                                : isCompleted
-                                ? "bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50"
-                                : "bg-transparent text-slate-500 hover:text-slate-900"
-                            }`}
-                          >
-                            <span
-                              className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 ${
-                                isCurrent
-                                  ? "bg-white text-[#991B1B]"
-                                  : isCompleted
-                                  ? "bg-emerald-600 text-white"
-                                  : "bg-slate-200 text-slate-600"
-                              }`}
-                            >
-                              {isCompleted ? "✓" : step.number}
-                            </span>
-                            <span className="truncate hidden sm:inline">{step.title}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Top Validation Error Banner */}
-                  {Object.keys(formErrors).length > 0 && (
-                    <div className="p-3 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-start gap-2.5 text-rose-800 text-xs shadow-xs animate-in fade-in duration-200">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <p className="font-extrabold text-rose-900">Please complete the required fields:</p>
-                        <ul className="list-disc list-inside text-[11px] text-rose-700 font-semibold space-y-0.5">
-                          {Object.values(formErrors).map((msg, i) => (
-                            <li key={i}>{msg}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ════════════════════════════════════════════════════════════
-                      STEP 1: COPIES & TIERED PRICING (Moved to Stepper)
-                      ════════════════════════════════════════════════════════════ */}
-                  {activeStep === 1 && (
-                    <div className="space-y-4 animate-in fade-in duration-200">
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-4 shadow-2xs">
-                        <div className="flex items-center justify-between border-b border-red-100 pb-2.5">
-                          <div className="flex items-center gap-2 text-[#991B1B] font-extrabold text-xs">
-                            <Package className="w-4 h-4 text-[#991B1B]" />
-                            <span>{isGift ? "Select Gift Pieces Required" : "Select Physical Print Run (Min 50 Copies)"}</span>
-                          </div>
-                          <span className="px-3 py-1 rounded-xl bg-red-50 text-[#991B1B] text-xs font-extrabold border border-red-200">
-                            {copies} {isGift ? "Pieces" : "Cards Selected"}
-                          </span>
-                        </div>
-
-                        {/* Preset Quantity Buttons */}
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-slate-700 block">
-                            Choose Quantity Preset:
-                          </label>
-                          {!isGift ? (
-                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                              {[50, 80, 100, 150, 200, 300, 500, 1000].map((preset) => {
-                                const isSelected = copies === preset;
-                                const calc = calculateTieredCardPrice(previewProduct.pricePerCard, preset, false);
-                                return (
-                                  <button
-                                    key={preset}
-                                    type="button"
-                                    onClick={() => {
-                                      setQuantity(previewProduct.id, preset);
-                                      clearFieldError("copies");
-                                    }}
-                                    className={`py-2.5 px-1 rounded-2xl font-bold text-center transition-all border cursor-pointer flex flex-col items-center justify-center ${
-                                      isSelected
-                                        ? "bg-[#991B1B] text-white border-[#991B1B] shadow-md scale-102 ring-2 ring-red-200"
-                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#991B1B]"
-                                    }`}
-                                  >
-                                    <span className="text-sm font-black">{preset}</span>
-                                    <span className={`text-[10px] ${isSelected ? "text-red-100" : "text-[#991B1B] font-extrabold"}`}>
-                                      ₹{calc.unitPrice}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                              {[20, 25, 50, 100, 150, 200, 300, 500].map((preset) => {
-                                const isSelected = copies === preset;
-                                return (
-                                  <button
-                                    key={preset}
-                                    type="button"
-                                    onClick={() => {
-                                      setQuantity(previewProduct.id, preset);
-                                      clearFieldError("copies");
-                                    }}
-                                    className={`py-2.5 px-1 rounded-2xl font-bold text-center transition-all border cursor-pointer flex flex-col items-center justify-center ${
-                                      isSelected
-                                        ? "bg-[#991B1B] text-white border-[#991B1B] shadow-md scale-102"
-                                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#991B1B]"
-                                    }`}
-                                  >
-                                    <span className="text-sm font-black">{preset}</span>
-                                    <span className={`text-[10px] ${isSelected ? "text-red-100" : "text-[#991B1B] font-extrabold"}`}>
-                                      ₹{previewProduct.pricePerCard}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Live Active Tier & Calculation Card */}
-                        {!isGift ? (
-                          <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-200 space-y-2.5">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5">
-                              <span className="font-extrabold text-amber-950 text-xs flex items-center gap-1.5">
-                                <Zap className="w-4 h-4 text-amber-600" />
-                                <span>Volume Tier Rate: {priceCalc.tierLabel}</span>
-                              </span>
-                              <span className="text-[11px] font-mono font-bold text-amber-900 bg-white px-2.5 py-0.5 rounded-lg border border-amber-300">
-                                Base: ₹{previewProduct.pricePerCard}/card (1000+)
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                              <div className="bg-white p-3 rounded-xl border border-amber-200/80">
-                                <span className="text-[10px] font-bold text-slate-500 block uppercase">Price Per Card</span>
-                                <div className="flex items-baseline gap-2 mt-0.5">
-                                  <span className="text-2xl font-extrabold text-[#991B1B]">₹{effectiveUnitPrice}</span>
-                                  <span className="text-xs text-slate-500 font-normal">/ card</span>
-                                  {priceCalc.markupPercent > 0 ? (
-                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-                                      +{priceCalc.markupPercent}% Tier
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                                      Base Rate
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="bg-white p-3 rounded-xl border border-amber-200/80 flex flex-col justify-between">
-                                <span className="text-[10px] font-bold text-slate-500 block uppercase">
-                                  Estimated Total ({copies} Cards)
-                                </span>
-                                <span className="text-2xl font-black text-slate-900 mt-0.5">₹{totalPrice}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-200 flex items-center justify-between font-bold text-amber-950">
-                            <div>
-                              <span className="text-[10px] text-slate-500 block uppercase">Estimated Subtotal ({copies} Pieces)</span>
-                              <span className="text-2xl font-black text-[#991B1B]">₹{totalPrice}</span>
-                            </div>
-                            <span className="text-xs bg-white px-3 py-1.5 rounded-xl border border-amber-300 font-extrabold text-slate-800">
-                              ₹{previewProduct.pricePerCard} / piece
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Paper & Specs Info */}
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                          <div className="space-y-0.5">
-                            <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                              <span>{isGift ? "🎁" : "📄"}</span>
-                              <span>{previewProduct.paperType}</span>
-                            </span>
-                            <span className="text-[11px] text-slate-500 block">Dimensions: {previewProduct.dimensions}</span>
-                          </div>
-                          <span className="text-[10.5px] font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                            Premium Board
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 1 Continue Button */}
-                      <div className="flex justify-end pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (validateStep(1)) {
-                              setFormErrors({});
-                              setActiveStep(2);
-                            }
-                          }}
-                          className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-102"
-                        >
-                          <span>{isGift ? "Continue to Gift Tag Details" : "Continue to Couple & Parents"}</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ════════════════════════════════════════════════════════════
-                      STEP 2: COUPLE & PARENTS (Cards) / GIFT TAG DETAILS (Gifts)
-                      ════════════════════════════════════════════════════════════ */}
-                  {activeStep === 2 && (
-                    <div className="space-y-4 animate-in fade-in duration-200">
-                      {isGift ? (
-                        /* Return Gifts Personalized Tag Box */
-                        <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                          <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
-                            <span>🏷️</span>
-                            <span>Custom Gift Tag Details</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                            <div className={formErrors.couple ? "has-validation-error" : ""}>
-                              <label className="font-bold text-slate-900 block mb-1">
-                                Couple / Celebrant / Family Name <span className="text-[#991B1B]">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                required
-                                value={printForm.brideName || printForm.groomName}
-                                onChange={(e) => {
-                                  setPrintForm({ ...printForm, brideName: e.target.value, groomName: "" });
-                                  clearFieldError("couple");
-                                }}
-                                placeholder="e.g. Rahul & Priya / The Sharma Family"
-                                className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                  formErrors.couple
-                                    ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                    : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                                }`}
-                              />
-                              {formErrors.couple && (
-                                <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                  <span>{formErrors.couple}</span>
-                                </p>
-                              )}
-                            </div>
-
-                            <div>
-                              <label className="font-bold text-slate-900 block mb-1">
-                                Event Occasion &amp; Date
-                              </label>
-                              <input
-                                type="text"
-                                value={printForm.eventDate}
-                                onChange={(e) => setPrintForm({ ...printForm, eventDate: e.target.value })}
-                                placeholder="e.g. Wedding Celebration • 24th Nov 2026"
-                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="font-bold text-slate-900 block mb-1">
-                              Thank You Message on Gift Tag <span className="text-[10px] text-slate-400">(Optional)</span>
-                            </label>
-                            <textarea
-                              rows={2}
-                              value={printForm.specialInstructions}
-                              onChange={(e) => setPrintForm({ ...printForm, specialInstructions: e.target.value })}
-                              placeholder="e.g. With Best Compliments from the Family. Thank you for blessing us!"
-                              className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {/* Card Printing Language & Mode Selector */}
-                          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              {/* Language Dropdown (English on Top) */}
-                              <div className="flex-1 max-w-sm">
-                                <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                                  <Languages className="w-4 h-4 text-[#991B1B]" />
-                                  <span>Card Printing Language</span>
-                                </label>
-                                <div className="relative">
-                                  <select
-                                    value={printForm.cardLanguage}
-                                    onChange={(e) =>
-                                      setPrintForm((prev) => ({
-                                        ...prev,
-                                        cardLanguage: e.target.value,
-                                      }))
-                                    }
-                                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#991B1B]/15 focus:border-[#991B1B] transition-all cursor-pointer appearance-none pr-9"
-                                  >
-                                    {SUPPORTED_LANGUAGES.map((lang) => (
-                                      <option key={lang.code} value={lang.code}>
-                                        {lang.name} {lang.code !== "en" ? `(${lang.nativeName})` : "(Default)"}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                                    <ChevronDown className="w-4 h-4" />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Format Switcher (Shown only when a Regional Language is selected) */}
-                              {printForm.cardLanguage !== "en" && (
-                                <div className="space-y-1 self-start sm:self-end">
-                                  <span className="block text-[11px] font-bold text-slate-600">
-                                    Language Format
-                                  </span>
-                                  <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80">
-                                    <button
-                                      type="button"
-                                      onClick={() => setPrintForm((prev) => ({ ...prev, languageMode: "DUAL" }))}
-                                      className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                                        printForm.languageMode === "DUAL"
-                                          ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
-                                          : "text-slate-600 hover:text-slate-900"
-                                      }`}
-                                    >
-                                      Dual Language (Eng + {getLanguageByCode(printForm.cardLanguage).name})
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setPrintForm((prev) => ({ ...prev, languageMode: "REGIONAL_ONLY" }))}
-                                      className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                                        printForm.languageMode === "REGIONAL_ONLY"
-                                          ? "bg-[#991B1B] text-white shadow-xs font-extrabold"
-                                          : "text-slate-600 hover:text-slate-900"
-                                      }`}
-                                    >
-                                      {getLanguageByCode(printForm.cardLanguage).name} Only
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {printForm.cardLanguage !== "en" && (
-                              <p className="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200/70 font-medium">
-                                ✨ <strong>Multi-Language Active:</strong> Type in English below and it will automatically translate into {getLanguageByCode(printForm.cardLanguage).nativeName} script. You can edit the words directly if needed.
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Bride Details Section */}
-                          <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                            <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
-                              <span>👰</span>
-                              <span>Bride&apos;s Information</span>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <IndicLanguageInput
-                                label="Bride's Full Name"
-                                required
-                                englishValue={printForm.brideName || ""}
-                                onEnglishChange={(val) => {
-                                  setPrintForm((prev) => ({ ...prev, brideName: val }));
-                                  clearFieldError("brideName");
-                                }}
-                                regionalValue={printForm.brideNameRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideNameRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. Priya Sharma"
-                                error={formErrors.brideName}
-                              />
-
-                              <IndicLanguageInput
-                                label="Bride's Qualification / Degree"
-                                englishValue={printForm.brideQualification || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideQualification: val }))}
-                                regionalValue={printForm.brideQualificationRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideQualificationRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. B.Tech, MBA"
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <IndicLanguageInput
-                                label="Bride's Parents Names"
-                                englishValue={printForm.brideParents || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideParents: val }))}
-                                regionalValue={printForm.brideParentsRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideParentsRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. Mr. Rajesh Sharma & Mrs. Meena Sharma"
-                              />
-
-                              <IndicLanguageInput
-                                label="Bride's Residence / House Address"
-                                englishValue={printForm.brideAddress || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, brideAddress: val }))}
-                                regionalValue={printForm.brideAddressRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, brideAddressRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. 45 Green Avenue, Gandhi Nagar, Chennai"
-                                mode="translate"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Groom Details Section */}
-                          <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                            <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
-                              <span>🤵</span>
-                              <span>Groom&apos;s Information</span>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <IndicLanguageInput
-                                label="Groom's Full Name"
-                                required
-                                englishValue={printForm.groomName || ""}
-                                onEnglishChange={(val) => {
-                                  setPrintForm((prev) => ({ ...prev, groomName: val }));
-                                  clearFieldError("groomName");
-                                }}
-                                regionalValue={printForm.groomNameRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomNameRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. Rahul Verma"
-                                error={formErrors.groomName}
-                              />
-
-                              <IndicLanguageInput
-                                label="Groom's Qualification / Degree"
-                                englishValue={printForm.groomQualification || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomQualification: val }))}
-                                regionalValue={printForm.groomQualificationRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomQualificationRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. M.S., Software Architect"
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                              <IndicLanguageInput
-                                label="Groom's Parents Names"
-                                englishValue={printForm.groomParents || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomParents: val }))}
-                                regionalValue={printForm.groomParentsRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomParentsRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. Mr. Vijay Verma & Mrs. Sunita Verma"
-                              />
-
-                              <IndicLanguageInput
-                                label="Groom's Residence / House Address"
-                                englishValue={printForm.groomAddress || ""}
-                                onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, groomAddress: val }))}
-                                regionalValue={printForm.groomAddressRegional || ""}
-                                onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, groomAddressRegional: val }))}
-                                targetLanguage={printForm.cardLanguage}
-                                languageMode={printForm.languageMode}
-                                placeholderEnglish="e.g. 18 Royal Heights, Bangalore"
-                                mode="translate"
-                              />
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {/* Step 2 Navigation Buttons */}
-                      <div className="flex items-center justify-between pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveStep(1)}
-                          className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          <span>Back to Copies &amp; Pricing</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (validateStep(2)) {
-                              setFormErrors({});
-                              setActiveStep(3);
-                            }
-                          }}
-                          className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer"
-                        >
-                          <span>{isGift ? "Continue to Delivery & Order" : "Continue to Event & Venues"}</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ════════════════════════════════════════════════════════════
-                      STEP 3: EVENT & VENUES (Cards) / DELIVERY & ORDER (Gifts)
-                      ════════════════════════════════════════════════════════════ */}
-                  {activeStep === 3 && !isGift && (
-                    <div className="space-y-4 animate-in fade-in duration-200">
-                      {/* Wedding Date & Timing with Date Picker & Time Selector */}
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-4 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-red-100 pb-2.5">
-                          <div className="flex items-center gap-2 text-[#991B1B] font-extrabold text-xs">
-                            <Calendar className="w-4 h-4" />
-                            <span>Wedding Date &amp; Auspicious Timing</span>
-                          </div>
-                          <span className="text-[11px] text-slate-400 font-medium">Select or Type Details</span>
-                        </div>
-
-                        {/* Date & Time Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Date Selection Box */}
-                          <div className="space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-[#991B1B]" />
-                                <span>Wedding Date</span>
-                                <span className="text-[#991B1B]">*</span>
-                              </label>
-                              <button
-                                type="button"
-                                onClick={openDatePicker}
-                                className="text-[11px] font-bold text-[#991B1B] hover:text-white hover:bg-[#991B1B] flex items-center gap-1 cursor-pointer bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition-all shadow-2xs"
-                              >
-                                <Calendar className="w-3 h-3" />
-                                <span>Choose Calendar Date</span>
-                              </button>
-                            </div>
-
-                            {/* Direct Native Date Picker Bar */}
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
-                              <span className="text-[11px] text-slate-500 font-semibold shrink-0">Calendar Picker:</span>
-                              <input
-                                ref={datePickerRef}
-                                type="date"
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (val) {
-                                    const eng = formatEnglishDate(val);
-                                    const reg = formatRegionalDate(val, printForm.cardLanguage);
-                                    setPrintForm((prev) => ({
-                                      ...prev,
-                                      eventDate: eng,
-                                      eventDateRegional: reg,
-                                    }));
-                                    clearFieldError("eventDate");
-                                  }
-                                }}
-                                className="w-full text-xs bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#991B1B] cursor-pointer"
-                              />
-                            </div>
-
-                            <IndicLanguageInput
-                              label="Wedding / Event Date (Wording on Card)"
-                              required
-                              englishValue={printForm.eventDate || ""}
-                              onEnglishChange={(val) => {
-                                setPrintForm((prev) => ({ ...prev, eventDate: val }));
-                                clearFieldError("eventDate");
-                              }}
-                              regionalValue={printForm.eventDateRegional || ""}
-                              onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, eventDateRegional: val }))}
-                              targetLanguage={printForm.cardLanguage}
-                              languageMode={printForm.languageMode}
-                              placeholderEnglish="e.g. Sunday, 24 November 2026"
-                              mode="translate"
-                              error={formErrors.eventDate}
-                            />
-                          </div>
-
-                          {/* Time Selection Box */}
-                          <div className="space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-[#991B1B]" />
-                                <span>Muhurtham / Timing</span>
-                              </label>
-                              <button
-                                type="button"
-                                onClick={openTimePicker}
-                                className="text-[11px] font-bold text-[#991B1B] hover:text-white hover:bg-[#991B1B] flex items-center gap-1 cursor-pointer bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition-all shadow-2xs"
-                              >
-                                <Clock className="w-3 h-3" />
-                                <span>Set Clock Time</span>
-                              </button>
-                            </div>
-
-                            {/* Direct Native Time Picker Bar */}
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-stone-50 border border-stone-200">
-                              <span className="text-[11px] text-slate-500 font-semibold shrink-0">Time Picker:</span>
-                              <input
-                                ref={timePickerRef}
-                                type="time"
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (val) {
-                                    const eng = format12HourTime(val);
-                                    const reg = formatRegionalTime(val, printForm.cardLanguage);
-                                    setPrintForm((prev) => ({
-                                      ...prev,
-                                      eventTime: eng,
-                                      eventTimeRegional: reg,
-                                    }));
-                                  }
-                                }}
-                                className="w-full text-xs bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#991B1B] cursor-pointer"
-                              />
-                            </div>
-
-                            {/* Quick Auspicious Timing Presets */}
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-bold text-slate-500 block">Quick Auspicious Slots:</span>
-                              <div className="flex flex-wrap gap-1">
-                                {[
-                                  { label: "🌅 Morning 9:00 AM", time: "09:00 AM" },
-                                  { label: "✨ Muhurtham 6:00 AM", time: "06:00 AM" },
-                                  { label: "🌆 Evening 7:00 PM", time: "07:00 PM onwards" },
-                                  { label: "☀️ Lunch 12:00 PM", time: "12:00 PM" },
-                                ].map((preset, pIdx) => (
-                                  <button
-                                    key={pIdx}
-                                    type="button"
-                                    onClick={() => {
-                                      const reg = formatRegionalTime(preset.time, printForm.cardLanguage);
-                                      setPrintForm((prev) => ({
-                                        ...prev,
-                                        eventTime: preset.time,
-                                        eventTimeRegional: reg,
-                                      }));
-                                    }}
-                                    className="text-[10.5px] font-semibold px-2 py-1 rounded-md bg-stone-100 hover:bg-red-50 hover:text-[#991B1B] hover:border-red-200 border border-stone-200 text-slate-700 transition-all cursor-pointer"
-                                  >
-                                    {preset.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            <IndicLanguageInput
-                              label="Muhurtham / Function Timing (Wording on Card)"
-                              englishValue={printForm.eventTime || ""}
-                              onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, eventTime: val }))}
-                              regionalValue={printForm.eventTimeRegional || ""}
-                              onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, eventTimeRegional: val }))}
-                              targetLanguage={printForm.cardLanguage}
-                              languageMode={printForm.languageMode}
-                              placeholderEnglish="e.g. Muhurtham: 9:00 AM | Reception: 7:00 PM"
-                              mode="translate"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Multiple Venue Locations */}
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-red-100 pb-2">
-                          <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs">
-                            <span>🏛️</span>
-                            <span>Venue &amp; Function Locations</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleAddVenue}
-                            className="text-[11px] text-[#991B1B] hover:text-white font-bold flex items-center gap-1 bg-red-50 px-3 py-1 rounded-lg border border-red-200 cursor-pointer shadow-2xs hover:bg-[#991B1B] transition-colors"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Add Another Venue</span>
-                          </button>
-                        </div>
-
-                        <div className="space-y-3">
-                          {printForm.venues.map((venue, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3.5 rounded-xl bg-red-50/30 border border-red-100 space-y-3 relative"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-extrabold text-[#991B1B]">
-                                  Location #{idx + 1}
-                                </span>
-                                {printForm.venues.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveVenue(idx)}
-                                    className="text-rose-600 hover:text-rose-800 p-1 rounded-md hover:bg-rose-100 transition-colors cursor-pointer"
-                                    title="Remove this venue"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <IndicLanguageInput
-                                  label="Function Name"
-                                  englishValue={venue.functionType || ""}
-                                  onEnglishChange={(val) => handleVenueChange(idx, "functionType", val)}
-                                  regionalValue={venue.functionTypeRegional || ""}
-                                  onRegionalChange={(val) => handleVenueChange(idx, "functionTypeRegional", val)}
-                                  targetLanguage={printForm.cardLanguage}
-                                  languageMode={printForm.languageMode}
-                                  placeholderEnglish="e.g. Muhurtham / Reception"
-                                  mode="translate"
-                                />
-
-                                <IndicLanguageInput
-                                  label="Hall / Hotel Name"
-                                  required
-                                  englishValue={venue.name || ""}
-                                  onEnglishChange={(val) => {
-                                    handleVenueChange(idx, "name", val);
-                                    clearFieldError("venue");
-                                  }}
-                                  regionalValue={venue.nameRegional || ""}
-                                  onRegionalChange={(val) => handleVenueChange(idx, "nameRegional", val)}
-                                  targetLanguage={printForm.cardLanguage}
-                                  languageMode={printForm.languageMode}
-                                  placeholderEnglish="e.g. Grand Palace Hall"
-                                  mode="transliterate"
-                                />
-
-                                <IndicLanguageInput
-                                  label="Address & Landmark"
-                                  englishValue={venue.address || ""}
-                                  onEnglishChange={(val) => handleVenueChange(idx, "address", val)}
-                                  regionalValue={venue.addressRegional || ""}
-                                  onRegionalChange={(val) => handleVenueChange(idx, "addressRegional", val)}
-                                  targetLanguage={printForm.cardLanguage}
-                                  languageMode={printForm.languageMode}
-                                  placeholderEnglish="e.g. Anna Salai, Chennai"
-                                  mode="translate"
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {formErrors.venue && (
-                          <p className="text-rose-600 text-[10.5px] font-bold flex items-center gap-1 mt-1">
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                            <span>{formErrors.venue}</span>
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Step 3 Navigation Buttons */}
-                      <div className="flex items-center justify-between pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveStep(2)}
-                          className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          <span>Back to Couple Info</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (validateStep(3)) {
-                              setFormErrors({});
-                              setActiveStep(4);
-                            }
-                          }}
-                          className="py-3 px-6 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md transition-all cursor-pointer"
-                        >
-                          <span>Continue to Delivery &amp; Order</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ════════════════════════════════════════════════════════════
-                      STEP 4: DELIVERY ADDRESS, RSVP & ORDER (Step 4 for Cards, Step 3 for Gifts)
-                      ════════════════════════════════════════════════════════════ */}
-                  {((!isGift && activeStep === 4) || (isGift && activeStep === 3)) && (
-                    <div className="space-y-4 animate-in fade-in duration-200">
-                      {!isGift && (
-                        /* RSVP Contact */
-                        <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                          <IndicLanguageInput
-                            label="📞 RSVP Names & Contact Phone Numbers"
-                            englishValue={printForm.rsvpContact || ""}
-                            onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, rsvpContact: val }))}
-                            regionalValue={printForm.rsvpContactRegional || ""}
-                            onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, rsvpContactRegional: val }))}
-                            targetLanguage={printForm.cardLanguage}
-                            languageMode={printForm.languageMode}
-                            placeholderEnglish="e.g. Sharma Family: +91 98765 43210"
-                            mode="transliterate"
-                          />
-                        </div>
-                      )}
-
-                      {/* Delivery & Shipping Address */}
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-3.5 shadow-xs">
-                        <div className="flex items-center gap-1.5 text-[#991B1B] font-extrabold text-xs border-b border-red-100 pb-2">
-                          <span>📦</span>
-                          <span>Delivery &amp; Shipping Address</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          <div className={formErrors.deliveryName ? "has-validation-error" : ""}>
-                            <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                              Recipient / Contact Name <span className="text-[#991B1B]">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={printForm.deliveryName}
-                              onChange={(e) => {
-                                setPrintForm({ ...printForm, deliveryName: e.target.value });
-                                clearFieldError("deliveryName");
-                              }}
-                              placeholder="e.g. Priya Sharma"
-                              className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                formErrors.deliveryName
-                                  ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                  : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              }`}
-                            />
-                            {formErrors.deliveryName && (
-                              <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>{formErrors.deliveryName}</span>
-                              </p>
-                            )}
-                          </div>
-
-                          <div className={formErrors.deliveryPhone ? "has-validation-error" : ""}>
-                            <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                              WhatsApp Contact Phone <span className="text-[#991B1B]">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              required
-                              value={printForm.deliveryPhone}
-                              onChange={(e) => {
-                                setPrintForm({ ...printForm, deliveryPhone: e.target.value });
-                                clearFieldError("deliveryPhone");
-                              }}
-                              placeholder="e.g. +91 98765 43210"
-                              className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                formErrors.deliveryPhone
-                                  ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                  : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              }`}
-                            />
-                            {formErrors.deliveryPhone && (
-                              <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>{formErrors.deliveryPhone}</span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className={formErrors.deliveryAddress ? "has-validation-error" : ""}>
-                          <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                            Complete Shipping Address <span className="text-[#991B1B]">*</span>
-                          </label>
-                          <textarea
-                            rows={2}
-                            required
-                            value={printForm.deliveryAddress}
-                            onChange={(e) => {
-                              setPrintForm({ ...printForm, deliveryAddress: e.target.value });
-                              clearFieldError("deliveryAddress");
-                            }}
-                            placeholder="e.g. Flat 402, Royal Palms, Indiranagar"
-                            className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 focus:outline-none transition-colors ${
-                              formErrors.deliveryAddress
-                                ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                            }`}
-                          />
-                          {formErrors.deliveryAddress && (
-                            <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                              <span>{formErrors.deliveryAddress}</span>
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          <div className={formErrors.deliveryCity ? "has-validation-error" : ""}>
-                            <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                              City / District / State <span className="text-[#991B1B]">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={printForm.deliveryCity}
-                              onChange={(e) => {
-                                setPrintForm({ ...printForm, deliveryCity: e.target.value });
-                                clearFieldError("deliveryCity");
-                              }}
-                              placeholder="e.g. Bangalore, Karnataka"
-                              className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                formErrors.deliveryCity
-                                  ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                  : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              }`}
-                            />
-                            {formErrors.deliveryCity && (
-                              <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>{formErrors.deliveryCity}</span>
-                              </p>
-                            )}
-                          </div>
-
-                          <div className={formErrors.deliveryPincode ? "has-validation-error" : ""}>
-                            <label className="font-bold text-slate-900 block mb-1 text-[11px]">
-                              Pincode / Postal Code <span className="text-[#991B1B]">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              maxLength={6}
-                              required
-                              value={printForm.deliveryPincode}
-                              onChange={(e) => {
-                                setPrintForm({ ...printForm, deliveryPincode: e.target.value });
-                                clearFieldError("deliveryPincode");
-                              }}
-                              placeholder="e.g. 560038"
-                              className={`w-full p-2.5 rounded-xl border text-xs text-slate-900 font-semibold focus:outline-none transition-colors ${
-                                formErrors.deliveryPincode
-                                  ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-200 text-rose-900"
-                                  : "border-slate-200 bg-white focus:border-[#991B1B] focus:ring-1 focus:ring-[#991B1B]"
-                              }`}
-                            />
-                            {formErrors.deliveryPincode && (
-                              <p className="text-rose-600 text-[10.5px] font-bold mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>{formErrors.deliveryPincode}</span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Special Instructions / Religion Symbol */}
-                      <div className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-red-100 space-y-2 shadow-xs">
-                        <IndicLanguageInput
-                          label="✨ Special Notes / Religious Symbols / Custom Proof Notes (Optional)"
-                          multiline={true}
-                          mode="translate"
-                          englishValue={printForm.specialInstructions || ""}
-                          onEnglishChange={(val) => setPrintForm((prev) => ({ ...prev, specialInstructions: val }))}
-                          regionalValue={printForm.specialInstructionsRegional || ""}
-                          onRegionalChange={(val) => setPrintForm((prev) => ({ ...prev, specialInstructionsRegional: val }))}
-                          targetLanguage={printForm.cardLanguage}
-                          languageMode={printForm.languageMode}
-                          placeholderEnglish="e.g. Include Lord Ganesha symbol at top, Vegetarian Dinner note, Custom traditional quote..."
-                        />
-                      </div>
-
-                      {/* Order Summary Box */}
-                      <div className="bg-red-50/70 border border-red-200 rounded-2xl p-4 space-y-2">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#991B1B] block">
-                          Order Summary Review
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                          <div>
-                            <span className="text-slate-500 block text-[10px]">Print Run:</span>
-                            <strong className="text-slate-900">{copies} {isGift ? "Pieces" : "Cards"}</strong>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-[10px]">Estimated Subtotal:</span>
-                            <strong className="text-[#991B1B] font-extrabold text-sm block">
-                              ₹{totalPrice}
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-[10px]">Paper Finish:</span>
-                            <strong className="text-slate-900 truncate block">{previewProduct.paperType}</strong>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-[10px]">{isGift ? "Couple/Family:" : "Celebrants:"}</span>
-                            <strong className="text-slate-900 truncate block">
-                              {printForm.brideName || printForm.groomName ? `${printForm.brideName} & ${printForm.groomName}` : "Not specified"}
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Final Stepper Action Buttons */}
-                      <div className="pt-3 border-t border-red-100 space-y-3">
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setActiveStep(isGift ? 2 : 3)}
-                            className="py-3 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                            <span>Back</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDirectOrder(previewProduct, copies)}
-                            disabled={isOrdering || isAdding}
-                            className="flex-1 py-3.5 px-5 rounded-xl bg-[#991B1B] text-white hover:bg-[#7F1D1D] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer disabled:opacity-70"
-                          >
-                            {isOrdering ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Zap className="w-4 h-4 text-amber-300" />
-                            )}
-                            <span>Direct Order &amp; Pay (₹{totalPrice})</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleAddToCart(previewProduct, copies)}
-                            disabled={isOrdering || isAdding}
-                            className="flex-1 py-3.5 px-5 rounded-xl bg-white hover:bg-red-50 text-[#991B1B] border-2 border-[#991B1B] text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-70"
-                          >
-                            {isAdding ? (
-                              <Loader2 className="w-4 h-4 animate-spin text-[#991B1B]" />
-                            ) : (
-                              <ShoppingBag className="w-4 h-4 text-[#991B1B]" />
-                            )}
-                            <span>Add to Cart</span>
-                          </button>
-                        </div>
-
-                        <p className="text-[11px] text-center text-slate-500 font-medium">
-                          ⚡ Our designers will prepare a digital print proof and share on WhatsApp before production
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Cart Drawer */}
       <CartDrawer
