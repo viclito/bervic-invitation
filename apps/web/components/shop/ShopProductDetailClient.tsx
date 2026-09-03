@@ -83,9 +83,26 @@ export default function ShopProductDetailClient({
 
   const [activeImage, setActiveImage] = useState<string>(product.previewImage);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [selectedCopies, setSelectedCopies] = useState<number>(
-    isGift ? product.minCopies || 25 : product.minCopies || 100
+  const minOrderCopies = Math.max(isGift ? 1 : 50, Number(product.minCopies) || (isGift ? 25 : 50));
+  const [selectedCopies, setSelectedCopies] = useState<number>(() =>
+    Math.max(minOrderCopies, isGift ? product.minCopies || 25 : product.minCopies || 100)
   );
+
+  const availablePresets = useMemo(() => {
+    const base = isGift
+      ? [25, 50, 75, 100, 150, 200, 250, 300, 500, 750, 1000]
+      : [50, 80, 100, 150, 200, 250, 300, 400, 500, 600, 750, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
+    const filtered = base.filter((q) => q >= minOrderCopies);
+    if (!filtered.includes(minOrderCopies)) {
+      filtered.unshift(minOrderCopies);
+      filtered.sort((a, b) => a - b);
+    }
+    return filtered;
+  }, [isGift, minOrderCopies]);
+
+  const quickButtonPresets = useMemo(() => {
+    return availablePresets.slice(0, 8);
+  }, [availablePresets]);
   const [activeStep, setActiveStep] = useState<number>(1);
   const [cartOpen, setCartOpen] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -190,13 +207,14 @@ export default function ShopProductDetailClient({
     },
   ]);
 
-  const totalPrintingChangeFee = useMemo(() => {
-    if (isGift || !enablePrintingChange || !printingChangeConfig.enabled) return 0;
-    return printingChanges.reduce((sum, chg) => {
-      const feeResult = calculatePrintingChangeFee(chg.copies, printingChangeConfig);
-      return sum + feeResult.fee;
-    }, 0);
-  }, [isGift, enablePrintingChange, printingChangeConfig, printingChanges]);
+  const printingChargeResult = useMemo(() => {
+    if (isGift || !printingChangeConfig.enabled) {
+      return { fee: 0, breakdownText: "" };
+    }
+    return calculatePrintingChangeFee(selectedCopies, printingChangeConfig);
+  }, [isGift, printingChangeConfig, selectedCopies]);
+
+  const totalPrintingChangeFee = printingChargeResult.fee;
 
   // Customization Form State
   const [printForm, setPrintForm] = useState({
@@ -667,6 +685,13 @@ export default function ShopProductDetailClient({
       return;
     }
 
+    if (selectedCopies < minOrderCopies) {
+      setSelectedCopies(minOrderCopies);
+      setToastMessage(`Minimum order quantity for this product is ${minOrderCopies} copies.`);
+      setTimeout(() => setToastMessage(null), 4000);
+      return;
+    }
+
     if (!validateAllSteps(false)) return;
     setFormErrors({});
 
@@ -710,10 +735,10 @@ export default function ShopProductDetailClient({
       rsvpContact: printForm.rsvpContact.trim(),
       specialInstructions: printForm.specialInstructions.trim(),
 
-      enablePrintingChange,
-      printingChangesCount: enablePrintingChange ? printingChanges.length : 0,
+      enablePrintingChange: totalPrintingChangeFee > 0,
       totalPrintingChangeFee,
-      printingChanges: enablePrintingChange ? printingChanges : [],
+      printingChargeFee: totalPrintingChangeFee,
+      printingChargeBreakdown: printingChargeResult.breakdownText,
 
       contentMethod,
       uploadedFileUrl,
@@ -730,8 +755,8 @@ export default function ShopProductDetailClient({
         ? `Couple: ${printForm.brideName} & ${printForm.groomName}`
         : "",
       printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}` : "",
-      enablePrintingChange && totalPrintingChangeFee > 0
-        ? `Printing Changes: ${printingChanges.length} version(s) (+₹${totalPrintingChangeFee})`
+      totalPrintingChangeFee > 0
+        ? `Printing Charge: +₹${totalPrintingChangeFee} (${printingChargeResult.breakdownText})`
         : "",
       printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}` : "",
       `Paper: ${product.paperType} | Size: ${product.dimensions}`,
@@ -777,6 +802,13 @@ export default function ShopProductDetailClient({
   const handleDirectOrder = async () => {
     if (!session) {
       router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/shop/${product.id}`)}`);
+      return;
+    }
+
+    if (selectedCopies < minOrderCopies) {
+      setSelectedCopies(minOrderCopies);
+      setToastMessage(`Minimum order quantity for this product is ${minOrderCopies} copies.`);
+      setTimeout(() => setToastMessage(null), 4000);
       return;
     }
 
@@ -840,10 +872,10 @@ export default function ShopProductDetailClient({
       rsvpContact: printForm.rsvpContact.trim(),
       specialInstructions: printForm.specialInstructions.trim(),
 
-      enablePrintingChange,
-      printingChangesCount: enablePrintingChange ? printingChanges.length : 0,
+      enablePrintingChange: totalPrintingChangeFee > 0,
       totalPrintingChangeFee,
-      printingChanges: enablePrintingChange ? printingChanges : [],
+      printingChargeFee: totalPrintingChangeFee,
+      printingChargeBreakdown: printingChargeResult.breakdownText,
 
       contentMethod,
       uploadedFileUrl,
@@ -861,8 +893,8 @@ export default function ShopProductDetailClient({
         ? `Couple: ${printForm.brideName} & ${printForm.groomName}`
         : "",
       printForm.eventDate ? `Date: ${printForm.eventDate} ${printForm.eventTime}` : "",
-      enablePrintingChange && totalPrintingChangeFee > 0
-        ? `Printing Changes: ${printingChanges.length} version(s) (+₹${totalPrintingChangeFee})`
+      totalPrintingChangeFee > 0
+        ? `Printing Charge: +₹${totalPrintingChangeFee} (${printingChargeResult.breakdownText})`
         : "",
       printForm.specialInstructions ? `Notes: ${printForm.specialInstructions}` : "",
       `Paper: ${product.paperType} | Size: ${product.dimensions}`,
@@ -1390,17 +1422,36 @@ export default function ShopProductDetailClient({
 
             <hr className="border-slate-200" />
 
-            {/* 2. Amazon Price Block (Exact from screenshot) */}
+            {/* 2. Amazon Price Block with Small & Minimal Copies Dropdown */}
             <div className="space-y-1">
-              <div className="flex items-baseline gap-2.5">
-                <span className="text-2xl sm:text-3xl font-light text-[#CC0C39]">-38%</span>
-                <span className="text-2xl sm:text-3xl font-bold text-slate-900">
-                  ₹{effectiveUnitPrice}
-                </span>
-                <span className="text-xs text-slate-600 font-medium">
-                  {isGift ? "per gift piece" : "/ card"}
-                </span>
-                <span className="text-[11px] text-[#007185] bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded font-semibold cursor-pointer ml-1">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-light text-[#CC0C39]">-38%</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-slate-900">
+                    ₹{effectiveUnitPrice}
+                  </span>
+                  <span className="text-xs text-slate-600 font-medium">
+                    {isGift ? "per gift piece" : "/ card"}
+                  </span>
+                </div>
+
+                {/* Small & Minimal Copies Dropdown right near amount */}
+                <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1 transition-colors shadow-2xs">
+                  <span className="text-[11px] font-bold text-slate-600">Copies:</span>
+                  <select
+                    value={selectedCopies}
+                    onChange={(e) => setSelectedCopies(Math.max(minOrderCopies, Number(e.target.value)))}
+                    className="bg-transparent text-xs font-black text-slate-900 focus:outline-none cursor-pointer"
+                  >
+                    {availablePresets.map((num) => (
+                      <option key={num} value={num}>
+                        {num} {isGift ? "pcs" : "cards"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <span className="text-[11px] text-[#007185] bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded font-semibold cursor-pointer">
                   Volume rate
                 </span>
               </div>
@@ -1610,9 +1661,9 @@ export default function ShopProductDetailClient({
                 } space-y-4`}
               >
                 {/* ── STEP 1: QUANTITY SELECTION ── */}
-                <div className="py-2.5 bg-white space-y-2 border-b border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <div className="py-2.5 bg-white space-y-3 border-b border-slate-100">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="text-xs font-black text-slate-900 flex items-center gap-1.5 flex-wrap">
                       <span className="w-5 h-5 rounded-full bg-[#991B1B] text-white text-[10px] flex items-center justify-center font-black">
                         1
                       </span>
@@ -1620,218 +1671,131 @@ export default function ShopProductDetailClient({
                       <span className="text-[#991B1B] font-black">
                         {selectedCopies} {isGift ? "pieces" : "cards"}
                       </span>
-                    </label>
-                    <div className="text-xs">
-                      <span className="text-slate-500">Total: </span>
-                      <span className="text-sm font-black text-slate-900">₹{totalPrice}</span>
-                      <span className="text-[10px] text-emerald-700 font-bold ml-1">
-                        (₹{effectiveUnitPrice}/card)
+                      <span className="text-[10px] font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300">
+                        Min. Order: {minOrderCopies} {isGift ? "pcs" : "cards"}
                       </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-0.5">
-                    {(isGift
-                      ? [25, 50, 75, 100, 150, 200, 300, 500]
-                      : [50, 80, 100, 150, 200, 300, 500, 1000]
-                    ).map((preset) => {
-                      const isSelected = selectedCopies === preset;
-                      const calc = calculateTieredCardPrice(product.pricePerCard, preset, isGift, (product as any).pricingTiersJson);
-                      return (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => setSelectedCopies(preset)}
-                          className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer flex flex-col items-center justify-center ${
-                            isSelected
-                              ? "bg-red-50/70 border-[#991B1B] text-[#991B1B] font-black ring-1 ring-[#991B1B] shadow-2xs"
-                              : "bg-white border-slate-200 hover:border-slate-400 text-slate-800"
-                          }`}
-                        >
-                          <span className="text-xs font-extrabold leading-tight">{preset}</span>
-                          <span className="text-[8.5px] text-slate-500">₹{calc.unitPrice}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <label className="text-[11px] text-slate-500 font-semibold">
-                      Or custom count:
                     </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={isGift ? 1 : 50}
-                        max={10000}
-                        step={isGift ? 5 : 25}
-                        value={selectedCopies}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val)) setSelectedCopies(val);
-                        }}
-                        className="w-20 px-2.5 py-1 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 text-center focus:outline-none focus:border-[#991B1B] bg-white"
-                      />
-                      <span className="text-xs text-slate-500">{isGift ? "pcs" : "cards"}</span>
-                    </div>
-                  </div>
-
-                  {/* Printing Change (Multiple Text / Language Versions) Option */}
-                  {!isGift && printingChangeConfig.enabled && (
-                    <div className="mt-3 p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/70 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-md bg-red-100/80 text-[#991B1B] flex items-center justify-center font-bold text-xs shrink-0">
-                            📝
-                          </span>
-                          <div>
-                            <span className="text-xs font-bold text-slate-900 block">
-                              Need separate text / language versions? (Printing Change)
-                            </span>
-                            <span className="text-[10px] text-slate-500">
-                              e.g. Groom side &amp; Bride side details, or English &amp; Regional language copies.
-                            </span>
-                          </div>
-                        </div>
-
-                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={enablePrintingChange}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setEnablePrintingChange(checked);
-                              if (checked && printingChanges.length === 0) {
-                                setPrintingChanges([
-                                  {
-                                    id: `change_${Date.now()}`,
-                                    title: "Version 2 (e.g. Bride Side / Reception / Tamil Text)",
-                                    copies: Math.min(100, Math.max(25, Math.floor(selectedCopies / 2))),
-                                    details: "",
-                                  },
-                                ]);
-                              }
-                            }}
-                            className="w-4 h-4 text-[#991B1B] rounded cursor-pointer"
-                          />
-                          <span className="text-xs font-bold text-slate-800">
-                            {enablePrintingChange ? "Added" : "Add"}
-                          </span>
-                        </label>
+                    <div className="text-xs text-right">
+                      <div>
+                        <span className="text-slate-500">Cards: </span>
+                        <span className="text-sm font-black text-slate-900">₹{totalPrice}</span>
+                        <span className="text-[10px] text-emerald-700 font-bold ml-1">
+                          (₹{effectiveUnitPrice}/card)
+                        </span>
                       </div>
-
-                      {enablePrintingChange && (
-                        <div className="space-y-2.5 pt-2.5 border-t border-slate-200/80">
-                          {/* Versions Breakdown List */}
-                          <div className="space-y-2">
-                            {/* Version 1 summary */}
-                            <div className="p-2.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between text-xs">
-                              <div>
-                                <span className="font-bold text-slate-800 block">Version 1 (Main Print Version)</span>
-                                <span className="text-[10px] text-slate-500">Groom side or primary wording</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="font-bold text-slate-900">
-                                  {Math.max(0, selectedCopies - printingChanges.reduce((sum, c) => sum + c.copies, 0))} cards
-                                </span>
-                                <span className="text-[10px] text-slate-400 block">(Included in base)</span>
-                              </div>
-                            </div>
-
-                            {/* Extra Printing Changes */}
-                            {printingChanges.map((chg, idx) => {
-                              const feeCalc = calculatePrintingChangeFee(chg.copies, printingChangeConfig);
-                              return (
-                                <div
-                                  key={chg.id}
-                                  className="p-2.5 rounded-lg bg-white border border-slate-200 space-y-2 text-xs relative"
-                                >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <input
-                                      type="text"
-                                      value={chg.title}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        setPrintingChanges((prev) =>
-                                          prev.map((item, i) => (i === idx ? { ...item, title: val } : item))
-                                        );
-                                      }}
-                                      placeholder={`Version ${idx + 2} Label (e.g. Bride Side Details)`}
-                                      className="font-bold text-slate-900 text-xs bg-transparent border-b border-dashed border-slate-300 focus:border-[#991B1B] focus:outline-none flex-1 py-0.5"
-                                    />
-                                    {printingChanges.length > 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setPrintingChanges((prev) => prev.filter((_, i) => i !== idx))
-                                        }
-                                        className="text-slate-400 hover:text-red-600 text-xs font-bold cursor-pointer"
-                                      >
-                                        Remove
-                                      </button>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <label className="text-[11px] text-slate-500">Print Quantity:</label>
-                                      <input
-                                        type="number"
-                                        min={10}
-                                        max={selectedCopies - 10}
-                                        value={chg.copies}
-                                        onChange={(e) => {
-                                          const val = parseInt(e.target.value, 10) || 10;
-                                          setPrintingChanges((prev) =>
-                                            prev.map((item, i) => (i === idx ? { ...item, copies: val } : item))
-                                          );
-                                        }}
-                                        className="w-16 px-2 py-0.5 rounded border border-slate-300 font-bold text-xs text-slate-800 focus:outline-none focus:border-[#991B1B]"
-                                      />
-                                      <span className="text-[11px] text-slate-500">cards</span>
-                                    </div>
-
-                                    <div className="text-right font-mono font-bold text-xs text-[#991B1B]">
-                                      +₹{feeCalc.fee}
-                                    </div>
-                                  </div>
-
-                                  <div className="text-[10px] text-slate-500 font-sans">
-                                    {feeCalc.breakdownText}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Add another change button */}
-                          <div className="flex items-center justify-between pt-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPrintingChanges((prev) => [
-                                  ...prev,
-                                  {
-                                    id: `change_${Date.now()}`,
-                                    title: `Version ${prev.length + 2} (e.g. Reception / Regional)`,
-                                    copies: 50,
-                                    details: "",
-                                  },
-                                ]);
-                              }}
-                              className="text-[11px] font-bold text-[#991B1B] hover:underline flex items-center gap-1 cursor-pointer"
-                            >
-                              + Add Another Text Version (Version {printingChanges.length + 2})
-                            </button>
-
-                            <div className="text-xs font-bold text-slate-900">
-                              Total Change Fee: <span className="text-[#991B1B] font-mono">+₹{totalPrintingChangeFee}</span>
-                            </div>
-                          </div>
+                      {totalPrintingChangeFee > 0 && (
+                        <div className="text-[11px] text-[#991B1B] font-bold">
+                          + ₹{totalPrintingChangeFee} printing charge
                         </div>
                       )}
                     </div>
-                  )}
+                  </div>
+
+                  {/* Quick Select Preset Buttons (Only >= minOrderCopies) */}
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-500 block">
+                      Quick Popular Quantities:
+                    </span>
+                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-0.5">
+                      {quickButtonPresets.map((preset) => {
+                        const isSelected = selectedCopies === preset;
+                        const calc = calculateTieredCardPrice(product.pricePerCard, preset, isGift, (product as any).pricingTiersJson);
+                        return (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setSelectedCopies(preset)}
+                            className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer flex flex-col items-center justify-center ${
+                              isSelected
+                                ? "bg-red-50/70 border-[#991B1B] text-[#991B1B] font-black ring-1 ring-[#991B1B] shadow-2xs"
+                                : "bg-white border-slate-200 hover:border-slate-400 text-slate-800"
+                            }`}
+                          >
+                            <span className="text-xs font-extrabold leading-tight">{preset}</span>
+                            <span className="text-[8.5px] text-slate-500">₹{calc.unitPrice}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Prominent Custom Quantity Input Box */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-rose-50/40 to-white border-2 border-amber-300 shadow-2xs space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-[#991B1B] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+                        ✍️
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-black text-slate-900 block">
+                          Type Exact Custom Copies (e.g. 750, 1200, 2500)
+                        </span>
+                        <span className="text-[11px] text-slate-600">
+                          Need any other count? You can type your exact number of copies directly in this box:
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <div className="relative flex-1 min-w-[160px] max-w-[240px]">
+                        <input
+                          type="number"
+                          min={minOrderCopies}
+                          max={10000}
+                          step={isGift ? 5 : 25}
+                          value={selectedCopies}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              setSelectedCopies(val);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (selectedCopies < minOrderCopies) {
+                              setSelectedCopies(minOrderCopies);
+                              setToastMessage(`Minimum order for this product is ${minOrderCopies} copies.`);
+                              setTimeout(() => setToastMessage(null), 3500);
+                            }
+                          }}
+                          placeholder={`Min ${minOrderCopies}`}
+                          className={`w-full pl-3 pr-14 py-2 text-sm font-black text-slate-900 bg-white border-2 rounded-xl focus:outline-none shadow-xs text-left ${
+                            selectedCopies < minOrderCopies
+                              ? "border-rose-500 ring-2 ring-rose-200"
+                              : "border-[#991B1B] focus:ring-2 focus:ring-[#991B1B]/20"
+                          }`}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 pointer-events-none">
+                          {isGift ? "pcs" : "cards"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedCopies < minOrderCopies) {
+                            setSelectedCopies(minOrderCopies);
+                            setToastMessage(`Quantity set to minimum requirement of ${minOrderCopies} copies.`);
+                          } else {
+                            setToastMessage(`✓ Custom quantity applied: ${selectedCopies} copies!`);
+                          }
+                          setTimeout(() => setToastMessage(null), 3000);
+                        }}
+                        className="py-2 px-4 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-black shadow-xs hover:shadow-md transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+                      >
+                        <span>Apply</span>
+                        <span>✓</span>
+                      </button>
+
+                      <span className="text-[11px] font-bold text-slate-500">
+                        (Min: {minOrderCopies} {isGift ? "pcs" : "cards"})
+                      </span>
+                    </div>
+
+                    {selectedCopies < minOrderCopies && (
+                      <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1 pt-0.5">
+                        <span>⚠️ Quantity cannot be less than minimum order of {minOrderCopies} copies.</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* ── STEP 2: INVITATION WORDINGS / STEPPER FORM ── */}
@@ -2596,32 +2560,61 @@ export default function ShopProductDetailClient({
               ════════════════════════════════════════════════════════════ */}
           <div className="hidden lg:block lg:col-span-3 lg:sticky lg:top-24">
             <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3">
-              {/* Total Price Block */}
+              {/* Total Price Block with Small & Minimal Dropdown */}
               <div>
-                <span className="text-2xl font-bold text-slate-900">₹{orderFinalTotal}</span>
-                <span className="text-xs text-slate-500 block">
-                  ₹{effectiveUnitPrice} per card ({selectedCopies} copies)
-                </span>
-                {(shippingFee > 0 || totalPrintingChangeFee > 0) && (
-                  <div className="text-[11px] text-slate-600 space-y-0.5 mt-1 pt-1 border-t border-slate-100">
-                    <div className="flex justify-between">
-                      <span>Card Printing:</span>
-                      <span className="font-semibold">₹{totalPrice}</span>
-                    </div>
-                    {totalPrintingChangeFee > 0 && (
-                      <div className="flex justify-between text-[#991B1B]">
-                        <span>Printing Changes ({printingChanges.length}):</span>
-                        <span className="font-semibold">+₹{totalPrintingChangeFee}</span>
-                      </div>
-                    )}
-                    {shippingFee > 0 && (
-                      <div className="flex justify-between">
-                        <span>Courier Delivery:</span>
-                        <span className="font-semibold">+₹{shippingFee}</span>
-                      </div>
-                    )}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-2xl sm:text-3xl font-bold text-slate-900">₹{orderFinalTotal}</span>
+                    <span className="text-xs text-slate-500 block">
+                      ₹{effectiveUnitPrice} per card ({selectedCopies} copies)
+                    </span>
                   </div>
-                )}
+
+                  {/* Small & Minimal Copies Dropdown right near amount */}
+                  <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 shrink-0 shadow-2xs">
+                    <span className="text-[11px] font-bold text-slate-600">Qty:</span>
+                    <select
+                      value={selectedCopies}
+                      onChange={(e) => setSelectedCopies(Math.max(minOrderCopies, Number(e.target.value)))}
+                      className="bg-transparent text-xs font-black text-slate-900 focus:outline-none cursor-pointer"
+                    >
+                      {availablePresets.map((num) => (
+                        <option key={num} value={num}>
+                          {num} {isGift ? "pcs" : "cards"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Final Added Amount Breakdown */}
+                <div className="text-[11px] text-slate-600 space-y-1 mt-2 pt-2 border-t border-slate-100">
+                  <div className="flex justify-between">
+                    <span>Card Base ({selectedCopies} × ₹{effectiveUnitPrice}):</span>
+                    <span className="font-semibold text-slate-900">₹{totalPrice}</span>
+                  </div>
+                  {totalPrintingChangeFee > 0 && (
+                    <div className="flex justify-between text-[#991B1B]">
+                      <span>Printing Charge ({selectedCopies} copies):</span>
+                      <span className="font-bold">+₹{totalPrintingChangeFee}</span>
+                    </div>
+                  )}
+                  {shippingFee > 0 ? (
+                    <div className="flex justify-between text-slate-700">
+                      <span>Courier Delivery:</span>
+                      <span className="font-semibold">+₹{shippingFee}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-emerald-700 font-semibold">
+                      <span>Doorstep Delivery:</span>
+                      <span>FREE</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-xs font-black text-slate-900 pt-1.5 border-t border-slate-200">
+                    <span>Final Added Amount:</span>
+                    <span className="text-[#991B1B] text-sm">₹{orderFinalTotal}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Delivery info */}
@@ -2693,24 +2686,6 @@ export default function ShopProductDetailClient({
               {/* In Stock */}
               <div className="text-sm font-bold text-[#007600]">
                 In stock (Ready to Print)
-              </div>
-
-              {/* Quantity selector sync */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-700 block">
-                  Quantity ({selectedCopies} cards):
-                </label>
-                <select
-                  value={selectedCopies}
-                  onChange={(e) => setSelectedCopies(Number(e.target.value))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B]"
-                >
-                  {[50, 80, 100, 150, 200, 300, 500, 1000].map((num) => (
-                    <option key={num} value={num}>
-                      Quantity: {num} cards (₹{calculateTieredCardPrice(product.pricePerCard, num, isGift, (product as any).pricingTiersJson).totalPrice})
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Amazon Style Action Buttons */}

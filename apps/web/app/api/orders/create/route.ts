@@ -124,10 +124,10 @@ export async function POST(req: Request) {
       if (typeof it.cardDetails === "string") {
         try {
           const parsed = JSON.parse(it.cardDetails);
-          printingFee = Number(parsed.totalPrintingChangeFee) || 0;
+          printingFee = Number(parsed.totalPrintingChangeFee ?? parsed.printingChargeFee) || 0;
         } catch {}
       } else if (it.cardDetails && typeof it.cardDetails === "object") {
-        printingFee = Number((it.cardDetails as any).totalPrintingChangeFee) || 0;
+        printingFee = Number((it.cardDetails as any).totalPrintingChangeFee ?? (it.cardDetails as any).printingChargeFee) || 0;
       }
       return acc + (Number(it.price) || 0) * (Number(it.copies) || 1) + printingFee;
     }, 0);
