@@ -61,6 +61,7 @@ import {
   BarChart3,
   Tag,
   Ruler,
+  Calendar,
 } from "lucide-react";
 import { optimizeImageForUpload } from "@/lib/imageOptimizer";
 import { CARD_PRICING_TIERS, calculateTieredCardPrice, calculatePrintingChangeFee, DEFAULT_PRINTING_CHANGE_CONFIG } from "@/lib/pricing";
@@ -111,6 +112,7 @@ export interface AdminShopProduct {
   canvaTemplateId?: string | null;
   rating: number;
   reviewsCount: number;
+  occasion?: string;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -135,6 +137,16 @@ export interface AdminShopDimension {
   label: string;
   type: string; // "invitations" | "return_gifts" | "all"
   sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminShopOccasion {
+  id: string;
+  name: string;
+  icon?: string | null;
+  sortOrder: number;
+  isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -421,6 +433,22 @@ export default function AdminPage() {
   const [dimensionDeletingId, setDeletingDimensionId] = useState<string | null>(null);
   const [dimensionError, setDimensionError] = useState<string | null>(null);
 
+  // Shop Occasions Management State (Wedding, House Warming, Puberty, Holy Communion, etc.)
+  const [shopOccasions, setShopOccasions] = useState<AdminShopOccasion[]>([]);
+  const [loadingOccasions, setLoadingOccasions] = useState<boolean>(false);
+  const [showOccasionModal, setShowOccasionModal] = useState<boolean>(false);
+  const [editingOccasion, setEditingOccasion] = useState<AdminShopOccasion | null>(null);
+  const [showOccasionEditModal, setShowOccasionEditModal] = useState<boolean>(false);
+  const [occasionForm, setOccasionForm] = useState({
+    id: "",
+    name: "",
+    icon: "💍",
+    sortOrder: 0,
+  });
+  const [occasionSaving, setOccasionSaving] = useState<boolean>(false);
+  const [occasionDeletingId, setDeletingOccasionId] = useState<string | null>(null);
+  const [occasionError, setOccasionError] = useState<string | null>(null);
+
   const [shopCategoryFilter, setShopCategoryFilter] = useState<string>("ALL");
   const [shopStatusFilter, setShopStatusFilter] = useState<string>("ALL");
   const [shopSearchQuery, setShopSearchQuery] = useState<string>("" );
@@ -441,6 +469,7 @@ export default function AdminPage() {
   const [productForm, setProductForm] = useState({
     name: "",
     category: "royal",
+    occasion: "wedding",
     pricePerCard: 65,
     minCopies: 50,
     pricingMode: "PERCENTAGE" as "PERCENTAGE" | "MANUAL" | "FLAT",
@@ -474,6 +503,8 @@ export default function AdminPage() {
       chargeFor1000: 750,
       chargePerNext1000: 750,
     },
+    rating: 5.0,
+    reviewsCount: 50,
     isActive: true,
   });
 
@@ -485,12 +516,14 @@ export default function AdminPage() {
     description: string;
     previewUrl: string;
     category: string;
+    occasion?: string;
     pricePerCard: number;
     minCopies: number;
   }
 
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkCategory, setBulkCategory] = useState("royal");
+  const [bulkOccasion, setBulkOccasion] = useState("wedding");
   const [bulkPricePerCard, setBulkPricePerCard] = useState(4);
   const [bulkMinCopies, setBulkMinCopies] = useState(200);
   const [bulkPaperType, setBulkPaperType] = useState("300 GSM Textured Board");
@@ -869,6 +902,122 @@ export default function AdminPage() {
     }
   };
 
+  // ── Event Occasion Management Methods (Wedding, House Warming, Puberty, Holy Communion, etc.) ──
+  const fetchShopOccasions = async () => {
+    try {
+      setLoadingOccasions(true);
+      const res = await fetch("/api/admin/shop/occasions");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.occasions)) {
+        setShopOccasions(data.occasions);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch shop occasions:", err);
+    } finally {
+      setLoadingOccasions(false);
+    }
+  };
+
+  const handleOpenAddOccasion = () => {
+    setEditingOccasion(null);
+    setOccasionForm({
+      id: "",
+      name: "",
+      icon: "💍",
+      sortOrder: (shopOccasions.length || 0) + 1,
+    });
+    setOccasionError(null);
+    setShowOccasionEditModal(true);
+  };
+
+  const handleOpenEditOccasion = (occ: AdminShopOccasion) => {
+    setEditingOccasion(occ);
+    setOccasionForm({
+      id: occ.id,
+      name: occ.name,
+      icon: occ.icon || "💍",
+      sortOrder: occ.sortOrder ?? 0,
+    });
+    setOccasionError(null);
+    setShowOccasionEditModal(true);
+  };
+
+  const handleSaveOccasion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!occasionForm.name.trim()) {
+      setOccasionError("Occasion name is required");
+      return;
+    }
+    const slug = (editingOccasion ? editingOccasion.id : occasionForm.id || occasionForm.name)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "_");
+
+    if (!slug) {
+      setOccasionError("Valid slug is required");
+      return;
+    }
+
+    setOccasionSaving(true);
+    setOccasionError(null);
+    try {
+      const url = editingOccasion
+        ? `/api/admin/shop/occasions/${editingOccasion.id}`
+        : "/api/admin/shop/occasions";
+      const method = editingOccasion ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: slug,
+          name: occasionForm.name.trim(),
+          icon: occasionForm.icon.trim() || null,
+          sortOrder: Number(occasionForm.sortOrder) || 0,
+          isActive: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save occasion");
+      }
+
+      setSuccessToast(editingOccasion ? `Occasion updated!` : `Occasion created!`);
+      setTimeout(() => setSuccessToast(""), 3500);
+      setShowOccasionEditModal(false);
+      await fetchShopOccasions();
+    } catch (err: any) {
+      setOccasionError(err?.message || "Error saving occasion");
+    } finally {
+      setOccasionSaving(false);
+    }
+  };
+
+  const handleDeleteOccasion = async (occ: AdminShopOccasion) => {
+    if (!confirm(`Are you sure you want to permanently delete the event occasion "${occ.name}"?`)) {
+      return;
+    }
+    setDeletingOccasionId(occ.id);
+    try {
+      const res = await fetch(`/api/admin/shop/occasions/${occ.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete occasion");
+        return;
+      }
+      setSuccessToast(`Occasion "${occ.name}" permanently deleted!`);
+      setTimeout(() => setSuccessToast(""), 3500);
+      await fetchShopOccasions();
+    } catch (err: any) {
+      alert(err?.message || "Error deleting occasion");
+    } finally {
+      setDeletingOccasionId(null);
+    }
+  };
+
   const handleToggleCanvaStatus = async (templateId: string, currentStatus: boolean) => {
     setTogglingCanvaId(templateId);
     try {
@@ -911,6 +1060,7 @@ export default function AdminPage() {
   const handleOpenNewProductModal = () => {
     fetchShopCategories();
     fetchShopDimensions();
+    fetchShopOccasions();
     setEditingProduct(null);
     const defaultDim =
       shopDimensions.find((d) => d.type === "invitations" || d.type === "all")?.label ||
@@ -919,6 +1069,7 @@ export default function AdminPage() {
     setProductForm({
       name: "",
       category: "royal",
+      occasion: "wedding",
       pricePerCard: 65,
       minCopies: 50,
       pricingMode: "PERCENTAGE",
@@ -952,6 +1103,8 @@ export default function AdminPage() {
         chargeFor1000: 750,
         chargePerNext1000: 750,
       },
+      rating: 5.0,
+      reviewsCount: 50,
       isActive: true,
     });
     setSubImageUrlInput("");
@@ -963,6 +1116,7 @@ export default function AdminPage() {
   const handleOpenEditProductModal = (product: AdminShopProduct) => {
     fetchShopCategories();
     fetchShopDimensions();
+    fetchShopOccasions();
     setEditingProduct(product);
     let featuresStr = "";
     try {
@@ -1053,6 +1207,7 @@ export default function AdminPage() {
     setProductForm({
       name: product.name,
       category: product.category,
+      occasion: product.occasion || "wedding",
       pricePerCard: product.pricePerCard,
       minCopies: product.minCopies,
       pricingMode: initialMode,
@@ -1067,6 +1222,8 @@ export default function AdminPage() {
       features: featuresStr,
       canvaTemplateId: product.canvaTemplateId || "",
       printingChangeConfig: initialPrintingChangeConfig,
+      rating: Number(product.rating) || 5.0,
+      reviewsCount: Number(product.reviewsCount) || 50,
       isActive: product.isActive,
     });
     setSubImageUrlInput("");
@@ -1195,12 +1352,14 @@ export default function AdminPage() {
   const handleOpenBulkProductModal = () => {
     fetchShopCategories();
     fetchShopDimensions();
+    fetchShopOccasions();
     const defaultDim =
       shopDimensions.find((d) => d.type === "invitations" || d.type === "all")?.label ||
       "5.5 x 8.5 inches (Portrait - Standard)";
 
     const firstCat = shopCategories.find((c) => c.type === "invitations")?.id || "royal";
     setBulkCategory(firstCat);
+    setBulkOccasion("wedding");
     setBulkPricePerCard(4);
     setBulkMinCopies(200);
     setBulkDimensions(defaultDim);
@@ -1370,6 +1529,7 @@ export default function AdminPage() {
           description: (item.description || bulkDescription || "").trim(),
           features: ["WhatsApp Digital Proof Included", `Paper: ${bulkPaperType}`, `Size: ${bulkDimensions}`],
           pricingTiersJson: constructedPricingConfig,
+          occasion: item.occasion || bulkOccasion || "wedding",
           isActive: true,
         });
       }
@@ -4140,8 +4300,8 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Title & Specific Category under Chosen Type */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Title, Category & Event Occasion */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="font-bold text-slate-800 block mb-1.5">
                             {isCurrentReturnGift ? "Return Gift / Item Title *" : "Card Design Title *"}
@@ -4176,7 +4336,7 @@ export default function AdminPage() {
                               title="Create or manage categories"
                             >
                               <Plus className="w-3 h-3" />
-                              <span>Manage / Add Category</span>
+                              <span>Manage Categories</span>
                             </button>
                           </div>
 
@@ -4199,12 +4359,65 @@ export default function AdminPage() {
                           </select>
                           <p className="text-[10.5px] text-slate-500 mt-1 flex items-center justify-between">
                             <span>
-                              Active Category:{" "}
+                              Active:{" "}
                               <strong className="text-slate-800 font-bold">
                                 {shopCategories.find((c) => c.id === productForm.category)?.name || productForm.category}
                               </strong>
                             </span>
                             <span className="font-mono text-slate-400">slug: {productForm.category}</span>
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="font-bold text-slate-800 block">
+                              Event Occasion
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                fetchShopOccasions();
+                                setShowOccasionModal(true);
+                              }}
+                              className="text-[11px] font-bold text-[#991B1B] hover:underline flex items-center gap-1 cursor-pointer"
+                              title="Create or manage occasions"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Manage Occasions</span>
+                            </button>
+                          </div>
+
+                          <select
+                            value={productForm.occasion || "wedding"}
+                            onChange={(e) => setProductForm({ ...productForm, occasion: e.target.value })}
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                          >
+                            {shopOccasions.length === 0 ? (
+                              <>
+                                <option value="common">🌟 Common (All Occasions)</option>
+                                <option value="wedding">💍 Wedding &amp; Reception</option>
+                                <option value="house_warming">🏡 House Warming (Griha Pravesh)</option>
+                                <option value="puberty">🌸 Puberty / Manjal Neerattu Vizha</option>
+                                <option value="holy_communion">✝️ Holy Communion &amp; Confirmation</option>
+                                <option value="birthday">🎂 Birthday Celebration</option>
+                                <option value="thread_ceremony">📜 Upanayanam / Thread Ceremony</option>
+                              </>
+                            ) : (
+                              shopOccasions.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.icon ? `${o.icon} ` : ""}{o.name}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                          <p className="text-[10.5px] text-slate-500 mt-1 flex items-center justify-between">
+                            <span>
+                              Active:{" "}
+                              <strong className="text-slate-800 font-bold">
+                                {shopOccasions.find((o) => o.id === productForm.occasion)?.name || productForm.occasion || "Wedding"}
+                              </strong>
+                            </span>
+                            <span className="font-mono text-slate-400">slug: {productForm.occasion || "wedding"}</span>
                           </p>
                         </div>
                       </div>
@@ -4270,7 +4483,7 @@ export default function AdminPage() {
                       </div>
 
                       {/* Main Price Inputs */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                         <div>
                           <label className="font-bold text-slate-800 block mb-1">
                             {productForm.pricingMode === "FLAT" || isCurrentReturnGift
@@ -4327,6 +4540,41 @@ export default function AdminPage() {
                             value={productForm.badge}
                             onChange={(e) => setProductForm({ ...productForm, badge: e.target.value })}
                             placeholder="e.g. BESTSELLER, NEW, ROYAL LUXE"
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">⭐ Dynamic Rating</label>
+                          <input
+                            type="number"
+                            min="1.0"
+                            max="5.0"
+                            step="0.1"
+                            value={productForm.rating}
+                            onChange={(e) =>
+                              setProductForm({
+                                ...productForm,
+                                rating: Math.min(5.0, Math.max(1.0, parseFloat(e.target.value) || 5.0)),
+                              })
+                            }
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-amber-700 focus:outline-none focus:border-[#991B1B]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">💬 Reviews Count</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={productForm.reviewsCount}
+                            onChange={(e) =>
+                              setProductForm({
+                                ...productForm,
+                                reviewsCount: Math.max(0, parseInt(e.target.value, 10) || 0),
+                              })
+                            }
                             className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
                           />
                         </div>
@@ -5134,7 +5382,7 @@ export default function AdminPage() {
 
                 {showBulkCommonSettings && (
                   <div className="space-y-4 pt-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       {/* Category */}
                       <div>
                         <label className="text-[11px] font-bold text-slate-700 block mb-1">
@@ -5155,6 +5403,51 @@ export default function AdminPage() {
                                 {cat.name}
                               </option>
                             ))}
+                        </select>
+                      </div>
+
+                      {/* Event Occasion */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700">
+                            Event Occasion *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              fetchShopOccasions();
+                              setShowOccasionModal(true);
+                            }}
+                            className="text-[10px] font-bold text-[#991B1B] hover:underline"
+                          >
+                            + Manage
+                          </button>
+                        </div>
+                        <select
+                          value={bulkOccasion}
+                          onChange={(e) => {
+                            setBulkOccasion(e.target.value);
+                            setBulkItems((prev) => prev.map((it) => ({ ...it, occasion: e.target.value })));
+                          }}
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        >
+                          {shopOccasions.length === 0 ? (
+                            <>
+                              <option value="common">🌟 Common (All Occasions)</option>
+                              <option value="wedding">💍 Wedding &amp; Reception</option>
+                              <option value="house_warming">🏡 House Warming (Griha Pravesh)</option>
+                              <option value="puberty">🌸 Puberty / Manjal Neerattu Vizha</option>
+                              <option value="holy_communion">✝️ Holy Communion &amp; Confirmation</option>
+                              <option value="birthday">🎂 Birthday Celebration</option>
+                              <option value="thread_ceremony">📜 Upanayanam / Thread Ceremony</option>
+                            </>
+                          ) : (
+                            shopOccasions.map((occ) => (
+                              <option key={occ.id} value={occ.id}>
+                                {occ.icon ? `${occ.icon} ` : ""}{occ.name}
+                              </option>
+                            ))
+                          )}
                         </select>
                       </div>
 
@@ -6310,6 +6603,212 @@ export default function AdminPage() {
                 >
                   {dimensionSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{editingDimension ? "Update Dimension" : "Create Dimension"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Event Occasion Management */}
+        {showOccasionModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden animate-scale-up">
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-800 flex items-center justify-center border border-amber-200">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Manage Event Occasions</h3>
+                    <p className="text-xs text-slate-500">Add, edit, or delete event types (Wedding, House Warming, Puberty, Holy Communion, etc.)</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowOccasionModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Action Bar */}
+              <div className="px-6 py-3 flex items-center justify-between border-b border-slate-100 bg-white">
+                <span className="text-xs font-bold text-slate-600">
+                  Total Occasions: <strong className="text-slate-900">{shopOccasions.length}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleOpenAddOccasion}
+                  className="px-3.5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Event Occasion</span>
+                </button>
+              </div>
+
+              {/* Occasions List */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-2.5">
+                {loadingOccasions ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#991B1B]" />
+                    <span className="text-xs font-medium">Loading event occasions...</span>
+                  </div>
+                ) : shopOccasions.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs">
+                    No event occasions configured yet. Click &quot;Add Event Occasion&quot; above to create one.
+                  </div>
+                ) : (
+                  shopOccasions.map((occ) => (
+                    <div
+                      key={occ.id}
+                      className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white transition-all shadow-2xs group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-2xl w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100 shrink-0">
+                          {occ.icon || "💍"}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-bold text-sm text-slate-900 block truncate">{occ.name}</span>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
+                            <span className="font-mono text-slate-400">slug: {occ.id}</span>
+                            <span>•</span>
+                            <span>Order: {occ.sortOrder}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditOccasion(occ)}
+                          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                          title="Edit Occasion"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOccasion(occ)}
+                          disabled={occasionDeletingId === occ.id}
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                          title="Delete Occasion"
+                        >
+                          {occasionDeletingId === occ.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add/Edit Occasion */}
+        {showOccasionEditModal && (
+          <div data-lenis-prevent className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain animate-fade-in">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-base font-bold text-slate-900">
+                  {editingOccasion ? "Edit Event Occasion" : "Add New Event Occasion"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowOccasionEditModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {occasionError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                  {occasionError}
+                </div>
+              )}
+
+              <div className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">Occasion Display Name *</label>
+                  <input
+                    type="text"
+                    value={occasionForm.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setOccasionForm((prev) => ({
+                        ...prev,
+                        name: val,
+                        id: !editingOccasion
+                          ? val
+                              .toLowerCase()
+                              .replace(/[^a-z0-9_]+/g, "_")
+                              .replace(/(^_|_$)/g, "")
+                          : prev.id,
+                      }));
+                    }}
+                    placeholder="e.g. House Warming (Griha Pravesh)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Slug / Identifier *</label>
+                    <input
+                      type="text"
+                      disabled={!!editingOccasion}
+                      value={occasionForm.id}
+                      onChange={(e) => setOccasionForm({ ...occasionForm, id: e.target.value })}
+                      placeholder="e.g. house_warming"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-[#991B1B] disabled:bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">Emoji Icon</label>
+                    <input
+                      type="text"
+                      value={occasionForm.icon}
+                      onChange={(e) => setOccasionForm({ ...occasionForm, icon: e.target.value })}
+                      placeholder="e.g. 🏡, 💍, 🌸, ✝️"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">Sort Order</label>
+                  <input
+                    type="number"
+                    value={occasionForm.sortOrder}
+                    onChange={(e) => setOccasionForm({ ...occasionForm, sortOrder: parseInt(e.target.value, 10) || 0 })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowOccasionEditModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveOccasion}
+                  disabled={occasionSaving}
+                  className="px-5 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {occasionSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingOccasion ? "Update Occasion" : "Create Occasion"}</span>
                 </button>
               </div>
             </div>

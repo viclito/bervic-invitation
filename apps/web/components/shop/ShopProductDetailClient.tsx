@@ -55,12 +55,44 @@ interface ShopProductDetailClientProps {
   relatedProducts?: ShopProductItem[];
 }
 
+function getProductDynamicMetrics(product: ShopProductItem) {
+  const hasCustomRating = typeof product.rating === "number" && product.rating > 0 && product.rating !== 5.0;
+  const hasCustomReviews = typeof product.reviewsCount === "number" && product.reviewsCount > 0 && product.reviewsCount !== 50;
+
+  let hash = 0;
+  const seed = (product.id || "") + (product.name || "");
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+
+  const ratingVariations = [4.8, 4.9, 5.0, 4.7, 4.9, 4.8, 5.0, 4.9];
+  const dynamicRating = hasCustomRating ? Number(product.rating) : ratingVariations[absHash % ratingVariations.length];
+
+  const reviewBases = [84, 128, 245, 390, 560, 720, 940, 1280, 1650, 2340, 72, 315, 480, 890];
+  const dynamicReviews = hasCustomReviews
+    ? Number(product.reviewsCount)
+    : reviewBases[absHash % reviewBases.length] + (absHash % 39);
+
+  const boughtMultiplier = [1.8, 2.2, 2.5, 3.1, 1.9, 2.8][absHash % 6];
+  const dynamicBought = Math.max(100, Math.round(dynamicReviews * boughtMultiplier));
+
+  return {
+    rating: dynamicRating,
+    reviewsCount: dynamicReviews,
+    boughtCount: dynamicBought,
+  };
+}
+
 export default function ShopProductDetailClient({
   product,
   relatedProducts = [],
 }: ShopProductDetailClientProps) {
   const { data: session } = useSession();
   const router = useRouter();
+
+  const { rating: dynamicRating, reviewsCount: dynamicReviews, boughtCount: dynamicBought } = getProductDynamicMetrics(product);
 
   const isGift =
     product.category === "return_gifts" ||
@@ -1410,13 +1442,15 @@ export default function ShopProductDetailClient({
               <div className="flex flex-wrap items-center gap-2 text-xs pt-0.5">
                 <span className="font-bold text-amber-700 flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
-                  <span>{product.rating || 4.9}</span>
+                  <span>{dynamicRating.toFixed(1)}</span>
                 </span>
                 <span className="text-[#007185] hover:underline cursor-pointer">
-                  ({product.reviewsCount || 85} ratings)
+                  ({dynamicReviews.toLocaleString("en-IN")} ratings)
                 </span>
                 <span className="text-slate-300">|</span>
-                <span className="text-slate-600 font-medium">400+ printed in past month</span>
+                <span className="text-slate-600 font-medium">
+                  {dynamicBought >= 1000 ? `${(dynamicBought / 1000).toFixed(0)}K+` : `${dynamicBought}+`} printed in past month
+                </span>
               </div>
             </div>
 

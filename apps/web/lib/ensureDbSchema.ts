@@ -266,6 +266,46 @@ export async function ensureDbSchema() {
         await prisma.$executeRawUnsafe(`
           CREATE INDEX IF NOT EXISTS "ShopDimension_type_sortOrder_idx" ON "ShopDimension"("type", "sortOrder");
         `);
+        await prisma.$executeRawUnsafe(`
+          ALTER TABLE "ShopProduct"
+            ADD COLUMN IF NOT EXISTS "occasion" VARCHAR(100) DEFAULT 'wedding';
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "ShopProduct_occasion_idx" ON "ShopProduct"("occasion");
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "ShopOccasion" (
+            "id" TEXT PRIMARY KEY,
+            "name" TEXT NOT NULL,
+            "icon" TEXT,
+            "sortOrder" INTEGER NOT NULL DEFAULT 0,
+            "isActive" BOOLEAN NOT NULL DEFAULT true,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "ShopOccasion_isActive_sortOrder_idx" ON "ShopOccasion"("isActive", "sortOrder");
+        `);
+
+        // Safely insert initial default occasions ONLY if newly created and completely empty
+        try {
+          const occCount: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*)::int as count FROM "ShopOccasion"`);
+          if (occCount && occCount[0] && Number(occCount[0].count) === 0) {
+            await prisma.$executeRawUnsafe(`
+              INSERT INTO "ShopOccasion" ("id", "name", "icon", "sortOrder", "isActive", "createdAt", "updatedAt")
+              VALUES
+                ('wedding', 'Wedding & Reception', '💍', 1, true, NOW(), NOW()),
+                ('house_warming', 'House Warming (Griha Pravesh)', '🏡', 2, true, NOW(), NOW()),
+                ('puberty', 'Puberty / Manjal Neerattu Vizha', '🌸', 3, true, NOW(), NOW()),
+                ('holy_communion', 'Holy Communion & Confirmation', '✝️', 4, true, NOW(), NOW()),
+                ('birthday', 'Birthday Celebration', '🎂', 5, true, NOW(), NOW()),
+                ('thread_ceremony', 'Upanayanam / Thread Ceremony', '📜', 6, true, NOW(), NOW())
+            `);
+          }
+        } catch {
+          // Table ready
+        }
       } catch (err: unknown) {
         console.warn("Db Schema Auto-Migration warning:", (err as Error)?.message);
       }

@@ -31,6 +31,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (body.description !== undefined) updateData.description = String(body.description).trim();
     if (body.rating !== undefined) updateData.rating = Number(body.rating) || 5.0;
     if (body.reviewsCount !== undefined) updateData.reviewsCount = Number(body.reviewsCount) || 50;
+    if (body.occasion !== undefined) updateData.occasion = String(body.occasion).trim() || "wedding";
     if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
     if (body.sortOrder !== undefined) updateData.sortOrder = Number(body.sortOrder) || 0;
     if (body.canvaTemplateId !== undefined) {

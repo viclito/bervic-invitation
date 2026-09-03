@@ -340,12 +340,14 @@ model ShopProduct {
   canvaTemplateId String?  // Optional linked Canva Studio Template ID
   rating          Float    @default(5.0)
   reviewsCount  Int      @default(50)
+  occasion        String   @default("wedding")
   isActive      Boolean  @default(true)
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([category])
+  @@index([occasion])
   @@index([isActive])
   @@index([isActive, category, sortOrder, createdAt])
   @@index([isActive, sortOrder, createdAt])
@@ -398,4 +400,16 @@ model ShopDimension {
   updatedAt DateTime @updatedAt
 
   @@index([type, sortOrder])
+}
+
+model ShopOccasion {
+  id        String   @id // e.g. "wedding", "house_warming", "puberty", "holy_communion"
+  name      String   // display name, e.g. "Wedding & Reception"
+  icon      String?  // emoji, e.g. "💍", "🏡", "🌸", "✝️"
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }

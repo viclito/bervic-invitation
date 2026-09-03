@@ -77,6 +77,7 @@ export async function POST(req: Request) {
         const cleanCanvaId = item.canvaTemplateId ? String(item.canvaTemplateId).trim() : null;
         const cleanRating = Number(item.rating) || 5.0;
         const cleanReviews = Number(item.reviewsCount) || 50;
+        const cleanOccasion = String(item.occasion || "wedding").trim();
         const cleanIsActive = item.isActive !== undefined ? Boolean(item.isActive) : true;
         const cleanSortOrder = Number(item.sortOrder) || 0;
 
@@ -103,6 +104,7 @@ export async function POST(req: Request) {
                 canvaTemplateId: cleanCanvaId,
                 rating: cleanRating,
                 reviewsCount: cleanReviews,
+                occasion: cleanOccasion,
                 isActive: cleanIsActive,
                 sortOrder: cleanSortOrder,
               },
@@ -114,8 +116,8 @@ export async function POST(req: Request) {
 
         if (!prod || prismaFailed) {
           await prisma.$executeRawUnsafe(
-            `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "isActive", "sortOrder", "createdAt", "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())`,
+            `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "occasion", "isActive", "sortOrder", "createdAt", "updatedAt")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())`,
             id,
             cleanName,
             cleanCategory,
@@ -132,6 +134,7 @@ export async function POST(req: Request) {
             cleanCanvaId,
             cleanRating,
             cleanReviews,
+            cleanOccasion,
             cleanIsActive,
             cleanSortOrder
           );
@@ -190,6 +193,7 @@ export async function POST(req: Request) {
       canvaTemplateId = null,
       rating = 5.0,
       reviewsCount = 50,
+      occasion = "wedding",
       isActive = true,
       sortOrder = 0,
     } = body;
@@ -224,6 +228,7 @@ export async function POST(req: Request) {
     const cleanCanvaId = canvaTemplateId ? String(canvaTemplateId).trim() : null;
     const cleanRating = Number(rating) || 5.0;
     const cleanReviews = Number(reviewsCount) || 50;
+    const cleanOccasion = String(occasion || "wedding").trim();
     const cleanIsActive = Boolean(isActive);
     const cleanSortOrder = Number(sortOrder) || 0;
 
@@ -250,6 +255,7 @@ export async function POST(req: Request) {
             canvaTemplateId: cleanCanvaId,
             rating: cleanRating,
             reviewsCount: cleanReviews,
+            occasion: cleanOccasion,
             isActive: cleanIsActive,
             sortOrder: cleanSortOrder,
           },
@@ -262,8 +268,8 @@ export async function POST(req: Request) {
 
     if (!product || prismaCreateFailed) {
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "isActive", "sortOrder", "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())`,
+        `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "occasion", "isActive", "sortOrder", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())`,
         id,
         cleanName,
         cleanCategory,
@@ -280,6 +286,7 @@ export async function POST(req: Request) {
         cleanCanvaId,
         cleanRating,
         cleanReviews,
+        cleanOccasion,
         cleanIsActive,
         cleanSortOrder
       );

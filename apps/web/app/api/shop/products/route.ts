@@ -12,9 +12,13 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
+    const occasion = searchParams.get("occasion");
+    const priceRange = searchParams.get("priceRange");
+    const minPriceParam = searchParams.get("minPrice");
+    const maxPriceParam = searchParams.get("maxPrice");
     const mainTab = searchParams.get("mainTab"); // "invitations" | "return_gifts"
     const search = searchParams.get("search")?.trim().toLowerCase() || "";
-    const sortBy = searchParams.get("sortBy") || "default"; // "default", "price_low", "price_high", "newest"
+    const sortBy = searchParams.get("sortBy") || "default"; // "default", "price_low", "price_high", "rating", "newest"
     const limitParam = searchParams.get("limit");
     const pageParam = parseInt(searchParams.get("page") || "1", 10);
     const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
@@ -59,6 +63,41 @@ export async function GET(req: Request) {
       where.category = category;
     }
 
+    if (occasion && occasion !== "all") {
+      if (occasion === "common") {
+        where.occasion = "common";
+      } else {
+        where.occasion = {
+          in: [occasion, "common"],
+        };
+      }
+    }
+
+    let minPrice = minPriceParam ? parseFloat(minPriceParam) : undefined;
+    let maxPrice = maxPriceParam ? parseFloat(maxPriceParam) : undefined;
+
+    if (priceRange) {
+      if (priceRange === "under_10") {
+        minPrice = 0;
+        maxPrice = 10;
+      } else if (priceRange === "10_25") {
+        minPrice = 10;
+        maxPrice = 25;
+      } else if (priceRange === "25_50") {
+        minPrice = 25;
+        maxPrice = 50;
+      } else if (priceRange === "50_plus") {
+        minPrice = 50;
+        maxPrice = undefined;
+      }
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.pricePerCard = {};
+      if (minPrice !== undefined) where.pricePerCard.gte = minPrice;
+      if (maxPrice !== undefined) where.pricePerCard.lte = maxPrice;
+    }
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
@@ -74,6 +113,8 @@ export async function GET(req: Request) {
       orderBy = [{ pricePerCard: "asc" }, { createdAt: "desc" }];
     } else if (sortBy === "price_high") {
       orderBy = [{ pricePerCard: "desc" }, { createdAt: "desc" }];
+    } else if (sortBy === "rating") {
+      orderBy = [{ rating: "desc" }, { reviewsCount: "desc" }];
     } else if (sortBy === "newest") {
       orderBy = [{ createdAt: "desc" }];
     }
@@ -96,17 +137,92 @@ export async function GET(req: Request) {
         total = count;
       }
     } catch (err1: any) {
-      console.warn("Prisma findMany/count failed, attempting SQL fallback:", err1?.message);
+      console.warn("Prisma findMany/count failed, attempting parameterized SQL fallback:", err1?.message);
       try {
+        const sqlConditions: string[] = ['"isActive" = true'];
+        const sqlParams: any[] = [];
+
+        // Category filter
+        if (mainTab === "invitations") {
+          if (category && category !== "all") {
+            sqlParams.push(category);
+            sqlConditions.push(`"category" = $${sqlParams.length}`);
+          } else if (returnGiftCategories.length > 0) {
+            const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
+            sqlConditions.push(`"category" NOT IN (${catList})`);
+          }
+        } else if (mainTab === "return_gifts") {
+          if (category && category !== "all") {
+            sqlParams.push(category);
+            sqlConditions.push(`"category" = $${sqlParams.length}`);
+          } else if (returnGiftCategories.length > 0) {
+            const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
+            sqlConditions.push(`"category" IN (${catList})`);
+          }
+        } else if (category && category !== "all") {
+          sqlParams.push(category);
+          sqlConditions.push(`"category" = $${sqlParams.length}`);
+        }
+
+        // Occasion filter: target occasion OR common
+        if (occasion && occasion !== "all") {
+          if (occasion === "common") {
+            sqlConditions.push(`"occasion" = 'common'`);
+          } else {
+            sqlParams.push(occasion);
+            sqlConditions.push(`("occasion" = $${sqlParams.length} OR "occasion" = 'common')`);
+          }
+        }
+
+        // Price filter
+        if (minPrice !== undefined) {
+          sqlParams.push(minPrice);
+          sqlConditions.push(`"pricePerCard" >= $${sqlParams.length}`);
+        }
+        if (maxPrice !== undefined) {
+          sqlParams.push(maxPrice);
+          sqlConditions.push(`"pricePerCard" <= $${sqlParams.length}`);
+        }
+
+        // Search query
+        if (search) {
+          sqlParams.push(`%${search}%`);
+          const sIdx = sqlParams.length;
+          sqlConditions.push(`("name" ILIKE $${sIdx} OR "description" ILIKE $${sIdx} OR "paperType" ILIKE $${sIdx} OR "dimensions" ILIKE $${sIdx})`);
+        }
+
+        const whereSql = sqlConditions.join(" AND ");
+
+        // Determine sort SQL
+        let sortSql = `"sortOrder" ASC, "createdAt" DESC`;
+        if (sortBy === "price_low") {
+          sortSql = `"pricePerCard" ASC, "createdAt" DESC`;
+        } else if (sortBy === "price_high") {
+          sortSql = `"pricePerCard" DESC, "createdAt" DESC`;
+        } else if (sortBy === "rating") {
+          sortSql = `"rating" DESC, "reviewsCount" DESC`;
+        } else if (sortBy === "newest") {
+          sortSql = `"createdAt" DESC`;
+        }
+
+        const countRows: any[] = await prisma.$queryRawUnsafe(
+          `SELECT COUNT(*)::int as count FROM "ShopProduct" WHERE ${whereSql}`,
+          ...sqlParams
+        );
+        total = Number(countRows[0]?.count) || 0;
+
+        sqlParams.push(limit);
+        const limitParamIdx = sqlParams.length;
+        sqlParams.push(skip);
+        const skipParamIdx = sqlParams.length;
+
         const rows: any[] = await prisma.$queryRawUnsafe(
-          `SELECT * FROM "ShopProduct" WHERE "isActive" = true ORDER BY "sortOrder" ASC, "createdAt" DESC LIMIT $1 OFFSET $2`,
-          limit,
-          skip
+          `SELECT * FROM "ShopProduct" WHERE ${whereSql} ORDER BY ${sortSql} LIMIT $${limitParamIdx} OFFSET $${skipParamIdx}`,
+          ...sqlParams
         );
         products = rows || [];
-        total = products.length;
       } catch (err2: any) {
-        console.error("SQL query error:", err2?.message);
+        console.error("SQL query fallback error:", err2?.message);
       }
     }
 
