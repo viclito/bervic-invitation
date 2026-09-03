@@ -123,94 +123,85 @@ export async function GET(req: Request) {
     let total = 0;
 
     try {
-      if ((prisma as any).shopProduct) {
-        const [items, count] = await Promise.all([
-          (prisma as any).shopProduct.findMany({
-            where,
-            orderBy,
-            skip: isAll ? undefined : skip,
-            take: isAll ? undefined : limit,
-          }),
-          (prisma as any).shopProduct.count({ where }),
-        ]);
-        products = items;
-        total = count;
-      }
-    } catch (err1: any) {
-      console.warn("Prisma findMany/count failed, attempting parameterized SQL fallback:", err1?.message);
-      try {
-        const sqlConditions: string[] = ['"isActive" = true'];
-        const sqlParams: any[] = [];
+      const sqlConditions: string[] = ['"isActive" = true'];
+      const sqlParams: any[] = [];
 
-        // Category filter
-        if (mainTab === "invitations") {
-          if (category && category !== "all") {
-            sqlParams.push(category);
-            sqlConditions.push(`"category" = $${sqlParams.length}`);
-          } else if (returnGiftCategories.length > 0) {
-            const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
-            sqlConditions.push(`"category" NOT IN (${catList})`);
-          }
-        } else if (mainTab === "return_gifts") {
-          if (category && category !== "all") {
-            sqlParams.push(category);
-            sqlConditions.push(`"category" = $${sqlParams.length}`);
-          } else if (returnGiftCategories.length > 0) {
-            const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
-            sqlConditions.push(`"category" IN (${catList})`);
-          }
-        } else if (category && category !== "all") {
+      // Category filter
+      if (mainTab === "invitations") {
+        if (category && category !== "all") {
           sqlParams.push(category);
           sqlConditions.push(`"category" = $${sqlParams.length}`);
+        } else if (returnGiftCategories.length > 0) {
+          const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
+          sqlConditions.push(`"category" NOT IN (${catList})`);
         }
-
-        // Occasion filter: target occasion OR common
-        if (occasion && occasion !== "all") {
-          if (occasion === "common") {
-            sqlConditions.push(`"occasion" = 'common'`);
-          } else {
-            sqlParams.push(occasion);
-            sqlConditions.push(`("occasion" = $${sqlParams.length} OR "occasion" = 'common')`);
-          }
+      } else if (mainTab === "return_gifts") {
+        if (category && category !== "all") {
+          sqlParams.push(category);
+          sqlConditions.push(`"category" = $${sqlParams.length}`);
+        } else if (returnGiftCategories.length > 0) {
+          const catList = returnGiftCategories.map((c) => `'${c.replace(/'/g, "''")}'`).join(", ");
+          sqlConditions.push(`"category" IN (${catList})`);
         }
+      } else if (category && category !== "all") {
+        sqlParams.push(category);
+        sqlConditions.push(`"category" = $${sqlParams.length}`);
+      }
 
-        // Price filter
-        if (minPrice !== undefined) {
-          sqlParams.push(minPrice);
-          sqlConditions.push(`"pricePerCard" >= $${sqlParams.length}`);
+      // Occasion filter: target occasion OR common
+      if (occasion && occasion !== "all") {
+        if (occasion === "common") {
+          sqlConditions.push(`"occasion" = 'common'`);
+        } else {
+          sqlParams.push(occasion);
+          sqlConditions.push(`("occasion" = $${sqlParams.length} OR "occasion" = 'common')`);
         }
-        if (maxPrice !== undefined) {
-          sqlParams.push(maxPrice);
-          sqlConditions.push(`"pricePerCard" <= $${sqlParams.length}`);
-        }
+      }
 
-        // Search query
-        if (search) {
-          sqlParams.push(`%${search}%`);
-          const sIdx = sqlParams.length;
-          sqlConditions.push(`("name" ILIKE $${sIdx} OR "description" ILIKE $${sIdx} OR "paperType" ILIKE $${sIdx} OR "dimensions" ILIKE $${sIdx})`);
-        }
+      // Price filter
+      if (minPrice !== undefined) {
+        sqlParams.push(minPrice);
+        sqlConditions.push(`"pricePerCard" >= $${sqlParams.length}`);
+      }
+      if (maxPrice !== undefined) {
+        sqlParams.push(maxPrice);
+        sqlConditions.push(`"pricePerCard" <= $${sqlParams.length}`);
+      }
 
-        const whereSql = sqlConditions.join(" AND ");
+      // Search query
+      if (search) {
+        sqlParams.push(`%${search}%`);
+        const sIdx = sqlParams.length;
+        sqlConditions.push(`("name" ILIKE $${sIdx} OR "description" ILIKE $${sIdx} OR "paperType" ILIKE $${sIdx} OR "dimensions" ILIKE $${sIdx})`);
+      }
 
-        // Determine sort SQL
-        let sortSql = `"sortOrder" ASC, "createdAt" DESC`;
-        if (sortBy === "price_low") {
-          sortSql = `"pricePerCard" ASC, "createdAt" DESC`;
-        } else if (sortBy === "price_high") {
-          sortSql = `"pricePerCard" DESC, "createdAt" DESC`;
-        } else if (sortBy === "rating") {
-          sortSql = `"rating" DESC, "reviewsCount" DESC`;
-        } else if (sortBy === "newest") {
-          sortSql = `"createdAt" DESC`;
-        }
+      const whereSql = sqlConditions.join(" AND ");
 
-        const countRows: any[] = await prisma.$queryRawUnsafe(
-          `SELECT COUNT(*)::int as count FROM "ShopProduct" WHERE ${whereSql}`,
+      // Determine sort SQL: By default, Common occasion has HIGHER priority and displays first!
+      let sortSql = `(CASE WHEN "occasion" = 'common' THEN 0 ELSE 1 END) ASC, "sortOrder" ASC, "createdAt" DESC`;
+      if (sortBy === "price_low") {
+        sortSql = `"pricePerCard" ASC, "createdAt" DESC`;
+      } else if (sortBy === "price_high") {
+        sortSql = `"pricePerCard" DESC, "createdAt" DESC`;
+      } else if (sortBy === "rating") {
+        sortSql = `"rating" DESC, "reviewsCount" DESC`;
+      } else if (sortBy === "newest") {
+        sortSql = `"createdAt" DESC`;
+      }
+
+      const countRows: any[] = await prisma.$queryRawUnsafe(
+        `SELECT COUNT(*)::int as count FROM "ShopProduct" WHERE ${whereSql}`,
+        ...sqlParams
+      );
+      total = Number(countRows[0]?.count) || 0;
+
+      if (isAll) {
+        const rows: any[] = await prisma.$queryRawUnsafe(
+          `SELECT * FROM "ShopProduct" WHERE ${whereSql} ORDER BY ${sortSql}`,
           ...sqlParams
         );
-        total = Number(countRows[0]?.count) || 0;
-
+        products = rows || [];
+      } else {
         sqlParams.push(limit);
         const limitParamIdx = sqlParams.length;
         sqlParams.push(skip);
@@ -221,8 +212,25 @@ export async function GET(req: Request) {
           ...sqlParams
         );
         products = rows || [];
-      } catch (err2: any) {
-        console.error("SQL query fallback error:", err2?.message);
+      }
+    } catch (sqlErr: any) {
+      console.warn("Direct SQL query error, falling back to Prisma:", sqlErr?.message);
+      try {
+        if ((prisma as any).shopProduct) {
+          const [items, count] = await Promise.all([
+            (prisma as any).shopProduct.findMany({
+              where,
+              orderBy,
+              skip: isAll ? undefined : skip,
+              take: isAll ? undefined : limit,
+            }),
+            (prisma as any).shopProduct.count({ where }),
+          ]);
+          products = items;
+          total = count;
+        }
+      } catch (prismaErr: any) {
+        console.error("Prisma fallback error:", prismaErr?.message);
       }
     }
 
@@ -240,7 +248,7 @@ export async function GET(req: Request) {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
+          "Cache-Control": "no-cache, must-revalidate",
         },
       }
     );

@@ -450,8 +450,9 @@ export default function AdminPage() {
   const [occasionError, setOccasionError] = useState<string | null>(null);
 
   const [shopCategoryFilter, setShopCategoryFilter] = useState<string>("ALL");
+  const [shopOccasionFilter, setShopOccasionFilter] = useState<string>("ALL");
   const [shopStatusFilter, setShopStatusFilter] = useState<string>("ALL");
-  const [shopSearchQuery, setShopSearchQuery] = useState<string>("" );
+  const [shopSearchQuery, setShopSearchQuery] = useState<string>("");
   const [shopSortBy, setShopSortBy] = useState<string>("DEFAULT");
   const [shopCurrentPage, setShopCurrentPage] = useState<number>(1);
   const [shopPageSize, setShopPageSize] = useState<number>(15);
@@ -506,6 +507,7 @@ export default function AdminPage() {
     rating: 5.0,
     reviewsCount: 50,
     isActive: true,
+    sortOrder: 0,
   });
 
   // ── BULK / BATCH ADD CARDS STATE ──
@@ -519,11 +521,13 @@ export default function AdminPage() {
     occasion?: string;
     pricePerCard: number;
     minCopies: number;
+    sortOrder?: number;
   }
 
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkCategory, setBulkCategory] = useState("royal");
   const [bulkOccasion, setBulkOccasion] = useState("wedding");
+  const [bulkSortOrder, setBulkSortOrder] = useState(0);
   const [bulkPricePerCard, setBulkPricePerCard] = useState(4);
   const [bulkMinCopies, setBulkMinCopies] = useState(200);
   const [bulkPaperType, setBulkPaperType] = useState("300 GSM Textured Board");
@@ -1106,6 +1110,7 @@ export default function AdminPage() {
       rating: 5.0,
       reviewsCount: 50,
       isActive: true,
+      sortOrder: 0,
     });
     setSubImageUrlInput("");
     setUploadError("");
@@ -1225,6 +1230,7 @@ export default function AdminPage() {
       rating: Number(product.rating) || 5.0,
       reviewsCount: Number(product.reviewsCount) || 50,
       isActive: product.isActive,
+      sortOrder: Number(product.sortOrder) || 0,
     });
     setSubImageUrlInput("");
     setUploadError("");
@@ -1400,6 +1406,8 @@ export default function AdminPage() {
         description: bulkDescription,
         previewUrl: objectUrl,
         category: bulkCategory,
+        occasion: bulkOccasion || "wedding",
+        sortOrder: bulkSortOrder || 0,
         pricePerCard: bulkPricePerCard,
         minCopies: bulkMinCopies,
       });
@@ -1530,6 +1538,7 @@ export default function AdminPage() {
           features: ["WhatsApp Digital Proof Included", `Paper: ${bulkPaperType}`, `Size: ${bulkDimensions}`],
           pricingTiersJson: constructedPricingConfig,
           occasion: item.occasion || bulkOccasion || "wedding",
+          sortOrder: Number(item.sortOrder) || 0,
           isActive: true,
         });
       }
@@ -1717,6 +1726,48 @@ export default function AdminPage() {
       setTimeout(() => setSuccessToast(""), 4000);
     } catch (err: any) {
       alert(err.message || "Error toggling product status");
+    }
+  };
+
+  const handleQuickUpdateSortOrder = async (productId: string, newSortOrder: number) => {
+    try {
+      const res = await fetch(`/api/admin/shop/products/${productId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sortOrder: newSortOrder }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update priority");
+      }
+      setShopProductsList((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, sortOrder: newSortOrder } : p))
+      );
+      setSuccessToast("Priority updated successfully!");
+      setTimeout(() => setSuccessToast(""), 3000);
+    } catch (err: any) {
+      alert(err.message || "Failed to update priority");
+    }
+  };
+
+  const handleQuickUpdateOccasion = async (productId: string, newOccasion: string) => {
+    try {
+      const res = await fetch(`/api/admin/shop/products/${productId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ occasion: newOccasion }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update occasion");
+      }
+      setShopProductsList((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, occasion: newOccasion } : p))
+      );
+      setSuccessToast("Occasion updated successfully!");
+      setTimeout(() => setSuccessToast(""), 3000);
+    } catch (err: any) {
+      alert(err.message || "Failed to update occasion");
     }
   };
 
@@ -2247,13 +2298,17 @@ export default function AdminPage() {
       if (shopCategoryFilter !== "ALL" && product.category !== shopCategoryFilter) {
         return false;
       }
-      // 2. Status filter
+      // 2. Occasion filter
+      if (shopOccasionFilter !== "ALL" && (product.occasion || "wedding") !== shopOccasionFilter) {
+        return false;
+      }
+      // 3. Status filter
       if (shopStatusFilter === "ACTIVE" && !product.isActive) return false;
       if (shopStatusFilter === "HIDDEN" && product.isActive) return false;
-      // 3. Search query
+      // 4. Search query
       if (shopSearchQuery.trim()) {
         const q = shopSearchQuery.toLowerCase().trim();
-        const text = `${product.name} ${product.description} ${product.paperType} ${product.dimensions} ${product.badge || ""}`.toLowerCase();
+        const text = `${product.name} ${product.description} ${product.paperType} ${product.dimensions} ${product.badge || ""} ${product.occasion || ""}`.toLowerCase();
         if (!text.includes(q)) return false;
       }
       return true;
@@ -2262,7 +2317,14 @@ export default function AdminPage() {
       if (shopSortBy === "PRICE_LOW") return a.pricePerCard - b.pricePerCard;
       if (shopSortBy === "PRICE_HIGH") return b.pricePerCard - a.pricePerCard;
       if (shopSortBy === "NAME_ASC") return a.name.localeCompare(b.name);
-      return 0; // Default/Newest
+      if (shopSortBy === "PRIORITY") return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      // Default: Common occasion first (0 vs 1), then Priority (sortOrder ASC), then newest
+      const aIsCommon = a.occasion === "common" ? 0 : 1;
+      const bIsCommon = b.occasion === "common" ? 0 : 1;
+      if (aIsCommon !== bIsCommon) return aIsCommon - bIsCommon;
+      const sortDiff = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      if (sortDiff !== 0) return sortDiff;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
 
   const totalShopItems = filteredShopProducts.length;
@@ -3335,6 +3397,24 @@ export default function AdminPage() {
                   </optgroup>
                 </select>
 
+                {/* Occasion Filter */}
+                <select
+                  value={shopOccasionFilter}
+                  onChange={(e) => {
+                    setShopOccasionFilter(e.target.value);
+                    setShopCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
+                >
+                  <option value="ALL">All Occasions</option>
+                  <option value="common">🌟 Common (All Occasions)</option>
+                  {shopOccasions.map((occ) => (
+                    <option key={occ.id} value={occ.id}>
+                      {occ.icon ? `${occ.icon} ` : ""}{occ.name}
+                    </option>
+                  ))}
+                </select>
+
                 {/* Status Filter */}
                 <select
                   value={shopStatusFilter}
@@ -3355,7 +3435,8 @@ export default function AdminPage() {
                   onChange={(e) => setShopSortBy(e.target.value)}
                   className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#991B1B] cursor-pointer"
                 >
-                  <option value="DEFAULT">Sort: Default (Newest)</option>
+                  <option value="DEFAULT">Sort: Default (Common &amp; Priority)</option>
+                  <option value="PRIORITY">Sort: Priority Only (0, 1, 2...)</option>
                   <option value="PRICE_LOW">Price: Low to High</option>
                   <option value="PRICE_HIGH">Price: High to Low</option>
                   <option value="NAME_ASC">Name: A to Z</option>
@@ -3476,7 +3557,8 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="py-3.5 px-4 min-w-[220px]">Card Design</th>
+                    <th className="py-3.5 px-4 min-w-[200px]">Card Design</th>
+                    <th className="py-3.5 px-4 min-w-[150px]">Occasion &amp; Priority</th>
                     <th className="py-3.5 px-4 min-w-[140px]">Category &amp; Badge</th>
                     <th className="py-3.5 px-4 min-w-[100px]">Price / Unit</th>
                     <th className="py-3.5 px-4 min-w-[160px]">Paper &amp; Specs</th>
@@ -3487,7 +3569,7 @@ export default function AdminPage() {
                 <tbody className="divide-y divide-slate-100 text-xs">
                   {paginatedShopProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-500">
+                      <td colSpan={8} className="py-12 text-center text-slate-500">
                         <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                         <p className="font-bold text-sm text-slate-700">No products match your filters</p>
                         <p className="text-xs text-slate-400 mt-0.5">Try clearing your search query or selecting another category.</p>
@@ -3549,6 +3631,66 @@ export default function AdminPage() {
                                 <span className="text-[10px] text-slate-400 block font-mono">
                                   ID: {product.id}
                                 </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 1.5 Occasion & Priority */}
+                          <td className="py-4 px-4">
+                            <div className="space-y-1.5">
+                              <select
+                                value={product.occasion || "wedding"}
+                                onChange={(e) => handleQuickUpdateOccasion(product.id, e.target.value)}
+                                className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider block border cursor-pointer ${
+                                  product.occasion === "common"
+                                    ? "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+                                    : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"
+                                }`}
+                                title="Click to change occasion directly"
+                              >
+                                <option value="common">🌟 Common</option>
+                                {shopOccasions.length === 0 ? (
+                                  <>
+                                    <option value="wedding">💍 Wedding</option>
+                                    <option value="house_warming">🏡 House Warming</option>
+                                    <option value="puberty">🌸 Puberty</option>
+                                    <option value="holy_communion">✝️ Communion</option>
+                                    <option value="birthday">🎂 Birthday</option>
+                                    <option value="thread_ceremony">📜 Thread</option>
+                                  </>
+                                ) : (
+                                  shopOccasions.map((o) => (
+                                    <option key={o.id} value={o.id}>
+                                      {o.icon ? `${o.icon} ` : ""}{o.name}
+                                    </option>
+                                  ))
+                                )}
+                              </select>
+
+                              <div className="flex items-center gap-1.5 text-[11px]">
+                                <span className="font-bold text-slate-500 text-[10px]">Priority:</span>
+                                <input
+                                  type="number"
+                                  defaultValue={product.sortOrder ?? 0}
+                                  onBlur={(e) => {
+                                    const val = parseInt(e.target.value, 10) || 0;
+                                    if (val !== (product.sortOrder ?? 0)) {
+                                      handleQuickUpdateSortOrder(product.id, val);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      const target = e.currentTarget;
+                                      const val = parseInt(target.value, 10) || 0;
+                                      if (val !== (product.sortOrder ?? 0)) {
+                                        handleQuickUpdateSortOrder(product.id, val);
+                                        target.blur();
+                                      }
+                                    }
+                                  }}
+                                  className="w-12 px-1 py-0.5 rounded border border-slate-300 text-xs font-bold text-slate-800 text-center bg-white hover:border-slate-400 focus:outline-none focus:border-[#991B1B]"
+                                  title="Display priority (0, 1, 2... Lower displays first). Press Enter or click away to save."
+                                />
                               </div>
                             </div>
                           </td>
@@ -4300,8 +4442,8 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Title, Category & Event Occasion */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Title, Category, Event Occasion & Priority */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
                         <div>
                           <label className="font-bold text-slate-800 block mb-1.5">
                             {isCurrentReturnGift ? "Return Gift / Item Title *" : "Card Design Title *"}
@@ -4418,6 +4560,22 @@ export default function AdminPage() {
                               </strong>
                             </span>
                             <span className="font-mono text-slate-400">slug: {productForm.occasion || "wedding"}</span>
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1.5">
+                            Display Priority / Order
+                          </label>
+                          <input
+                            type="number"
+                            value={productForm.sortOrder ?? 0}
+                            onChange={(e) => setProductForm({ ...productForm, sortOrder: parseInt(e.target.value, 10) || 0 })}
+                            placeholder="0"
+                            className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                          />
+                          <p className="text-[10.5px] text-slate-500 mt-1">
+                            Sequence (0, 1, 2...). Lower displays first. Common cards display first by default.
                           </p>
                         </div>
                       </div>
@@ -5382,7 +5540,7 @@ export default function AdminPage() {
 
                 {showBulkCommonSettings && (
                   <div className="space-y-4 pt-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                       {/* Category */}
                       <div>
                         <label className="text-[11px] font-bold text-slate-700 block mb-1">
@@ -5449,6 +5607,24 @@ export default function AdminPage() {
                             ))
                           )}
                         </select>
+                      </div>
+
+                      {/* Default Priority */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Default Priority
+                        </label>
+                        <input
+                          type="number"
+                          value={bulkSortOrder}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10) || 0;
+                            setBulkSortOrder(val);
+                            setBulkItems((prev) => prev.map((it) => ({ ...it, sortOrder: val })));
+                          }}
+                          placeholder="0"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        />
                       </div>
 
                       {/* Base Price */}
@@ -6001,6 +6177,39 @@ export default function AdminPage() {
                             </div>
                             <div>
                               <label className="text-[10px] font-bold text-slate-500 block">
+                                Event Occasion
+                              </label>
+                              <select
+                                value={item.occasion || bulkOccasion || "wedding"}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBulkItems((prev) =>
+                                    prev.map((it, i) => (i === idx ? { ...it, occasion: val } : it))
+                                  );
+                                }}
+                                className="w-full px-2.5 py-1 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] bg-white cursor-pointer"
+                              >
+                                <option value="common">🌟 Common (All Occasions)</option>
+                                {shopOccasions.length === 0 ? (
+                                  <>
+                                    <option value="wedding">💍 Wedding &amp; Reception</option>
+                                    <option value="house_warming">🏡 House Warming (Griha Pravesh)</option>
+                                    <option value="puberty">🌸 Puberty / Manjal Neerattu Vizha</option>
+                                    <option value="holy_communion">✝️ Holy Communion &amp; Confirmation</option>
+                                    <option value="birthday">🎂 Birthday Celebration</option>
+                                    <option value="thread_ceremony">📜 Upanayanam / Thread Ceremony</option>
+                                  </>
+                                ) : (
+                                  shopOccasions.map((occ) => (
+                                    <option key={occ.id} value={occ.id}>
+                                      {occ.icon ? `${occ.icon} ` : ""}{occ.name}
+                                    </option>
+                                  ))
+                                )}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 block">
                                 Card Description
                               </label>
                               <input
@@ -6020,6 +6229,22 @@ export default function AdminPage() {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block">Priority</label>
+                            <input
+                              type="number"
+                              value={item.sortOrder ?? 0}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10) || 0;
+                                setBulkItems((prev) =>
+                                  prev.map((it, i) => (i === idx ? { ...it, sortOrder: val } : it))
+                                );
+                              }}
+                              title="Display Priority (0, 1, 2...). Lower displays first on shop."
+                              className="w-14 px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                            />
+                          </div>
+
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 block">Price (₹)</label>
                             <input
