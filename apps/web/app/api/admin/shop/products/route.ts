@@ -43,6 +43,137 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+
+    // ── BATCH / BULK PRODUCTS CREATION ──
+    const rawItems = Array.isArray(body.items) ? body.items : Array.isArray(body) ? body : null;
+    if (rawItems && rawItems.length > 0) {
+      const createdProducts: any[] = [];
+      for (const item of rawItems) {
+        if (!item.name || !item.previewImage) continue;
+
+        const featuresJson = Array.isArray(item.features)
+          ? JSON.stringify(item.features)
+          : typeof item.features === "string"
+          ? item.features
+          : "[]";
+
+        const cleanPricingTiersJson = item.pricingTiersJson && typeof item.pricingTiersJson === "object"
+          ? JSON.stringify(item.pricingTiersJson)
+          : typeof item.pricingTiersJson === "string"
+          ? item.pricingTiersJson
+          : null;
+
+        const id = `prod_${crypto.randomBytes(12).toString("hex")}`;
+        const cleanName = String(item.name).trim();
+        const cleanCategory = String(item.category || "royal").toLowerCase();
+        const cleanPrice = Number(item.pricePerCard) || 65;
+        const cleanCopies = Number(item.minCopies) || 50;
+        const cleanPreview = String(item.previewImage).trim();
+        const cleanGallery = typeof item.galleryImages === "string" ? item.galleryImages : JSON.stringify(item.galleryImages || []);
+        const cleanBadge = item.badge ? String(item.badge).trim() : null;
+        const cleanPaper = String(item.paperType || "350 GSM Textured Board").trim();
+        const cleanDimensions = String(item.dimensions || "5.5 x 8.5 inches").trim();
+        const cleanDesc = String(item.description || "").trim();
+        const cleanCanvaId = item.canvaTemplateId ? String(item.canvaTemplateId).trim() : null;
+        const cleanRating = Number(item.rating) || 5.0;
+        const cleanReviews = Number(item.reviewsCount) || 50;
+        const cleanIsActive = item.isActive !== undefined ? Boolean(item.isActive) : true;
+        const cleanSortOrder = Number(item.sortOrder) || 0;
+
+        let prod: any = null;
+        let prismaFailed = false;
+
+        if ((prisma as any).shopProduct) {
+          try {
+            prod = await (prisma as any).shopProduct.create({
+              data: {
+                id,
+                name: cleanName,
+                category: cleanCategory,
+                pricePerCard: cleanPrice,
+                minCopies: cleanCopies,
+                previewImage: cleanPreview,
+                galleryImages: cleanGallery,
+                badge: cleanBadge,
+                paperType: cleanPaper,
+                dimensions: cleanDimensions,
+                description: cleanDesc,
+                featuresJson,
+                pricingTiersJson: cleanPricingTiersJson,
+                canvaTemplateId: cleanCanvaId,
+                rating: cleanRating,
+                reviewsCount: cleanReviews,
+                isActive: cleanIsActive,
+                sortOrder: cleanSortOrder,
+              },
+            });
+          } catch {
+            prismaFailed = true;
+          }
+        }
+
+        if (!prod || prismaFailed) {
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "ShopProduct" ("id", "name", "category", "pricePerCard", "minCopies", "previewImage", "galleryImages", "badge", "paperType", "dimensions", "description", "featuresJson", "pricingTiersJson", "canvaTemplateId", "rating", "reviewsCount", "isActive", "sortOrder", "createdAt", "updatedAt")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())`,
+            id,
+            cleanName,
+            cleanCategory,
+            cleanPrice,
+            cleanCopies,
+            cleanPreview,
+            cleanGallery,
+            cleanBadge,
+            cleanPaper,
+            cleanDimensions,
+            cleanDesc,
+            featuresJson,
+            cleanPricingTiersJson,
+            cleanCanvaId,
+            cleanRating,
+            cleanReviews,
+            cleanIsActive,
+            cleanSortOrder
+          );
+
+          const rows: any[] = await prisma.$queryRawUnsafe(
+            `SELECT * FROM "ShopProduct" WHERE "id" = $1 LIMIT 1`,
+            id
+          );
+          prod = rows[0] || {
+            id,
+            name: cleanName,
+            category: cleanCategory,
+            pricePerCard: cleanPrice,
+            minCopies: cleanCopies,
+            previewImage: cleanPreview,
+            galleryImages: cleanGallery,
+            badge: cleanBadge,
+            paperType: cleanPaper,
+            dimensions: cleanDimensions,
+            description: cleanDesc,
+            featuresJson,
+            pricingTiersJson: cleanPricingTiersJson,
+            canvaTemplateId: cleanCanvaId,
+            rating: cleanRating,
+            reviewsCount: cleanReviews,
+            isActive: cleanIsActive,
+            sortOrder: cleanSortOrder,
+          };
+        }
+
+        if (prod) {
+          createdProducts.push(prod);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        count: createdProducts.length,
+        products: createdProducts,
+      });
+    }
+
     const {
       name,
       category = "royal",

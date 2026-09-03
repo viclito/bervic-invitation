@@ -59,6 +59,9 @@ Every AI agent or developer making changes to this codebase **MUST** strictly ex
 7. **Zero 500 Error Guarantee & Dual-Tier Fallback Protocol (Mandatory Check in EVERY Chat):**
    - Every API endpoint that receives user inputs (especially `/api/orders/create`, `/api/cart`, `/api/payment/*`, and draft saving routes) MUST implement resilient dual-tier database execution (primary typed model queries + direct dynamic/SQL fallback), full schema synchronization (`ensureDbSchema.ts`), and non-blocking background notification handlers.
    - Under no circumstances should any user or admin submission return an unhandled 500 Internal Server Error.
+8. **Permanent Deletion & Zero Record Resurrection (Mandatory Check in EVERY Chat):**
+   - NEVER auto-generate, re-seed, or re-insert default records (such as `ShopCategory`, `ShopDimension`, `ShopProduct`, or templates) in database initialization or auto-migration files (`ensureDbSchema.ts`).
+   - When an administrator or user deletes an entity, it MUST permanently stay deleted. NEVER use `INSERT ... ON CONFLICT DO NOTHING` or hardcoded fallback lists that resurrect deleted records upon server requests or page reloads.
 
 ### 1.2 Post-Execution Verification Commands
 Before marking any chat request or command as complete, run the following verification steps:

@@ -22,3 +22,6 @@ Before executing any user command, chat instruction, or modifying codebase files
 7. **Zero 500 Error Guarantee & API Resilience (Mandatory Check in EVERY Chat):**
    - In EVERY single chat and task, ensure all API endpoints (especially mission-critical transaction routes like `/api/orders/create`, `/api/cart`, `/api/payment/*`, and drafts) implement bulletproof data validation, schema auto-migration (`ensureDbSchema.ts`), defensive direct database fallbacks, and non-blocking background notifications.
    - NO user or administrator submission (e.g. placing an order, uploading drafts, saving templates) is ever allowed to return an unhandled 500 Internal Server Error. Trace and verify the end-to-end flow.
+8. **Permanent Deletion & No Auto-Generation / Re-Seeding (Zero Category or Record Resurrection - Mandatory Check in EVERY Chat):**
+   - NEVER auto-generate, re-seed, or re-insert default records (such as `ShopCategory`, `ShopDimension`, `ShopProduct`, or templates) in database initialization or auto-migration files (`ensureDbSchema.ts`).
+   - When an administrator or user deletes a record (e.g., categories, templates, dimensions), that entity MUST stay deleted permanently. NEVER use `INSERT ... ON CONFLICT DO NOTHING` or hardcoded fallback arrays that resurrect deleted records upon server requests or page reloads.

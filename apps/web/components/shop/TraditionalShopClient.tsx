@@ -81,21 +81,7 @@ export interface DynamicShopCategory {
   label: string;
 }
 
-const FALLBACK_INVITATION_CATEGORIES = [
-  { id: "royal", label: "👑 Royal & Heritage", name: "Royal & Heritage", type: "invitations", sortOrder: 1 },
-  { id: "floral", label: "🌸 Floral & Botanical", name: "Floral & Botanical", type: "invitations", sortOrder: 2 },
-  { id: "vintage", label: "📜 Vintage Parchment", name: "Vintage Parchment", type: "invitations", sortOrder: 3 },
-  { id: "modern", label: "✨ Modern Die-Cut Arch", name: "Modern Die-Cut Arch", type: "invitations", sortOrder: 4 },
-  { id: "velvet", label: "💎 Luxury Velvet Suites", name: "Luxury Velvet Suites", type: "invitations", sortOrder: 5 },
-];
 
-const FALLBACK_RETURN_GIFT_CATEGORIES = [
-  { id: "brass", label: "🪔 Brass Diyas & Idols", name: "Brass Diyas & Idols", type: "return_gifts", sortOrder: 1 },
-  { id: "hampers", label: "🍬 Sweets & Dry Fruits", name: "Sweets & Dry Fruits", type: "return_gifts", sortOrder: 2 },
-  { id: "silver", label: "🪙 Silver Pooja Coins", name: "Silver Pooja Coins", type: "return_gifts", sortOrder: 3 },
-  { id: "bags", label: "🛍️ Brocade & Jute Bags", name: "Brocade & Jute Bags", type: "return_gifts", sortOrder: 4 },
-  { id: "candles", label: "🕯️ Aromatherapy Candles", name: "Aromatherapy Candles", type: "return_gifts", sortOrder: 5 },
-];
 
 export default function TraditionalShopClient() {
   const { data: session } = useSession();
@@ -419,7 +405,7 @@ export default function TraditionalShopClient() {
       try {
         const res = await fetch("/api/shop/categories");
         const data = await res.json();
-        if (res.ok && Array.isArray(data.categories) && data.categories.length > 0) {
+        if (res.ok && Array.isArray(data.categories)) {
           setDbCategories(data.categories);
         }
       } catch (err) {
@@ -429,9 +415,7 @@ export default function TraditionalShopClient() {
     loadShopCategories();
   }, []);
 
-  const currentTypeCategories = dbCategories.length > 0
-    ? dbCategories.filter((c) => c.type === mainTab)
-    : (mainTab === "invitations" ? FALLBACK_INVITATION_CATEGORIES : FALLBACK_RETURN_GIFT_CATEGORIES);
+  const currentTypeCategories = dbCategories.filter((c) => c.type === mainTab);
 
   const activeCategories = [
     {

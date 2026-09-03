@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -476,6 +476,57 @@ export default function AdminPage() {
     },
     isActive: true,
   });
+
+  // ── BULK / BATCH ADD CARDS STATE ──
+  interface BulkCardItem {
+    id: string;
+    file: File;
+    name: string;
+    description: string;
+    previewUrl: string;
+    category: string;
+    pricePerCard: number;
+    minCopies: number;
+  }
+
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkCategory, setBulkCategory] = useState("royal");
+  const [bulkPricePerCard, setBulkPricePerCard] = useState(4);
+  const [bulkMinCopies, setBulkMinCopies] = useState(200);
+  const [bulkPaperType, setBulkPaperType] = useState("300 GSM Textured Board");
+  const [bulkDimensions, setBulkDimensions] = useState("9.44 x 8.26");
+  const [bulkBadge, setBulkBadge] = useState("NEW");
+  const [bulkDescription, setBulkDescription] = useState(
+    "Majestic luxury Indian wedding invitation card with real gold foil border frames."
+  );
+  const [bulkPricingMode, setBulkPricingMode] = useState<"MANUAL" | "PERCENTAGE" | "FLAT">("MANUAL");
+  const [bulkManualTiers, setBulkManualTiers] = useState({
+    t1000: 4,
+    t500: 5,
+    t300: 6,
+    t150: 6,
+    t80: 6,
+    t50: 6,
+  });
+  const [bulkPercentTiers, setBulkPercentTiers] = useState({
+    t1000: 0,
+    t500: 80,
+    t300: 180,
+    t150: 250,
+    t80: 300,
+    t50: 450,
+  });
+  const [bulkPrintingChangeConfig, setBulkPrintingChangeConfig] = useState({
+    enabled: true,
+    chargeUpto500: 500,
+    chargeFor1000: 750,
+    chargePerNext1000: 750,
+  });
+  const [bulkItems, setBulkItems] = useState<BulkCardItem[]>([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkSaveProgress, setBulkSaveProgress] = useState({ current: 0, total: 0, statusText: "" });
+  const [showBulkCommonSettings, setShowBulkCommonSettings] = useState(true);
+  const bulkFileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal State for Granting Extra Quota
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -1125,6 +1176,231 @@ export default function AdminPage() {
       galleryImages: [...(prev.galleryImages || []), subImageUrlInput.trim()],
     }));
     setSubImageUrlInput("");
+  };
+
+  // ── BULK / BATCH PRODUCT HANDLERS ──
+  const formatFilenameToTitle = (filename: string): string => {
+    const withoutExt = filename.replace(/\.[^/.]+$/, "");
+    const cleaned = withoutExt
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!cleaned) return "Invitation Card";
+    return cleaned
+      .split(" ")
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : ""))
+      .join(" ");
+  };
+
+  const handleOpenBulkProductModal = () => {
+    fetchShopCategories();
+    fetchShopDimensions();
+    const defaultDim =
+      shopDimensions.find((d) => d.type === "invitations" || d.type === "all")?.label ||
+      "5.5 x 8.5 inches (Portrait - Standard)";
+
+    const firstCat = shopCategories.find((c) => c.type === "invitations")?.id || "royal";
+    setBulkCategory(firstCat);
+    setBulkPricePerCard(4);
+    setBulkMinCopies(200);
+    setBulkDimensions(defaultDim);
+    setBulkBadge("NEW");
+    setBulkDescription("Majestic luxury Indian wedding invitation card with real gold foil border frames.");
+    setBulkPricingMode("MANUAL");
+    setBulkManualTiers({
+      t1000: 4,
+      t500: 5,
+      t300: 6,
+      t150: 6,
+      t80: 6,
+      t50: 6,
+    });
+    setBulkPrintingChangeConfig({
+      enabled: true,
+      chargeUpto500: 500,
+      chargeFor1000: 750,
+      chargePerNext1000: 750,
+    });
+    setBulkItems([]);
+    setBulkSaveProgress({ current: 0, total: 0, statusText: "" });
+    setShowBulkCommonSettings(true);
+    setBulkModalOpen(true);
+  };
+
+  const handleBulkFilesSelect = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newItems: BulkCardItem[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      const objectUrl = URL.createObjectURL(file);
+      newItems.push({
+        id: `bulk_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+        file,
+        name: formatFilenameToTitle(file.name),
+        description: bulkDescription,
+        previewUrl: objectUrl,
+        category: bulkCategory,
+        pricePerCard: bulkPricePerCard,
+        minCopies: bulkMinCopies,
+      });
+    }
+    setBulkItems((prev) => [...prev, ...newItems]);
+    if (bulkFileInputRef.current) bulkFileInputRef.current.value = "";
+  };
+
+  const handleSaveAllBulkCards = async () => {
+    if (bulkItems.length === 0) {
+      alert("Please upload at least one card image first.");
+      return;
+    }
+
+    const missingNames = bulkItems.filter((it) => !it.name.trim());
+    if (missingNames.length > 0) {
+      alert("Please ensure all cards in the batch have a title.");
+      return;
+    }
+
+    setBulkSaving(true);
+    setBulkSaveProgress({ current: 0, total: bulkItems.length, statusText: "Preparing image optimization..." });
+
+    try {
+      const preparedPayloads: any[] = [];
+
+      for (let i = 0; i < bulkItems.length; i++) {
+        const item = bulkItems[i];
+        setBulkSaveProgress({
+          current: i + 1,
+          total: bulkItems.length,
+          statusText: `Optimizing & uploading image for "${item.name}" (${i + 1}/${bulkItems.length})...`,
+        });
+
+        let uploadedImageUrl = item.previewUrl;
+        if (item.file) {
+          const optimizedFile = await optimizeImageForUpload(item.file, {
+            maxDimension: 2560,
+            quality: 0.92,
+          });
+
+          const formData = new FormData();
+          formData.append("file", optimizedFile);
+          formData.append("target", "shop");
+
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+          const uploadData = await uploadRes.json();
+          if (!uploadRes.ok || !uploadData.url) {
+            throw new Error(`Failed to upload image for "${item.name}".`);
+          }
+          uploadedImageUrl = uploadData.url;
+        }
+
+        const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(item.category);
+        const effectiveMode = isGift ? "FLAT" : bulkPricingMode;
+
+        const constructedPricingConfig = {
+          mode: effectiveMode,
+          basePrice: item.pricePerCard,
+          tiers: [
+            {
+              min: 1000,
+              max: null,
+              label: "1000+ Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t1000) || item.pricePerCard : item.pricePerCard,
+              markupPercent: effectiveMode === "PERCENTAGE" ? Number(bulkPercentTiers.t1000) || 0 : 0,
+            },
+            {
+              min: 500,
+              max: 999,
+              label: "500 - 999 Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t500) || Math.round(item.pricePerCard * 1.8) : Math.round(item.pricePerCard * (1 + (Number(bulkPercentTiers.t500) || 80) / 100)),
+              markupPercent: Number(bulkPercentTiers.t500) || 80,
+            },
+            {
+              min: 300,
+              max: 499,
+              label: "300 - 499 Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t300) || Math.round(item.pricePerCard * 2.8) : Math.round(item.pricePerCard * (1 + (Number(bulkPercentTiers.t300) || 180) / 100)),
+              markupPercent: Number(bulkPercentTiers.t300) || 180,
+            },
+            {
+              min: 150,
+              max: 299,
+              label: "150 - 299 Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t150) || Math.round(item.pricePerCard * 3.5) : Math.round(item.pricePerCard * (1 + (Number(bulkPercentTiers.t150) || 250) / 100)),
+              markupPercent: Number(bulkPercentTiers.t150) || 250,
+            },
+            {
+              min: 80,
+              max: 149,
+              label: "80 - 149 Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t80) || Math.round(item.pricePerCard * 4.0) : Math.round(item.pricePerCard * (1 + (Number(bulkPercentTiers.t80) || 300) / 100)),
+              markupPercent: Number(bulkPercentTiers.t80) || 300,
+            },
+            {
+              min: 50,
+              max: 79,
+              label: "50 - 79 Copies",
+              price: effectiveMode === "MANUAL" ? Number(bulkManualTiers.t50) || Math.round(item.pricePerCard * 5.5) : Math.round(item.pricePerCard * (1 + (Number(bulkPercentTiers.t50) || 450) / 100)),
+              markupPercent: Number(bulkPercentTiers.t50) || 450,
+            },
+          ],
+          printingChangeConfig: isGift
+            ? { enabled: false, chargeUpto500: 0, chargeFor1000: 0, chargePerNext1000: 0 }
+            : {
+                enabled: Boolean(bulkPrintingChangeConfig.enabled),
+                chargeUpto500: Number(bulkPrintingChangeConfig.chargeUpto500) || 500,
+                chargeFor1000: Number(bulkPrintingChangeConfig.chargeFor1000) || 750,
+                chargePerNext1000: Number(bulkPrintingChangeConfig.chargePerNext1000) || 750,
+              },
+        };
+
+        preparedPayloads.push({
+          name: item.name.trim(),
+          category: item.category,
+          pricePerCard: item.pricePerCard,
+          minCopies: item.minCopies,
+          previewImage: uploadedImageUrl,
+          galleryImages: "[]",
+          badge: bulkBadge.trim() || null,
+          paperType: bulkPaperType,
+          dimensions: bulkDimensions,
+          description: (item.description || bulkDescription || "").trim(),
+          features: ["WhatsApp Digital Proof Included", `Paper: ${bulkPaperType}`, `Size: ${bulkDimensions}`],
+          pricingTiersJson: constructedPricingConfig,
+          isActive: true,
+        });
+      }
+
+      setBulkSaveProgress({
+        current: bulkItems.length,
+        total: bulkItems.length,
+        statusText: `Saving all ${preparedPayloads.length} cards to shop catalog...`,
+      });
+
+      const res = await fetch("/api/admin/shop/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: preparedPayloads }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create products");
+
+      const createdList = Array.isArray(data.products) ? data.products : [];
+      setShopProductsList((prev) => [...createdList, ...prev]);
+      setSuccessToast(`🎉 Successfully created and saved ${createdList.length} cards to /shop catalog!`);
+      setTimeout(() => setSuccessToast(""), 5000);
+      setBulkModalOpen(false);
+      setBulkItems([]);
+    } catch (err: any) {
+      alert(err.message || "Failed to save batch cards");
+    } finally {
+      setBulkSaving(false);
+      setBulkSaveProgress({ current: 0, total: 0, statusText: "" });
+    }
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -2816,14 +3092,25 @@ export default function AdminPage() {
                   <span>Manage Categories</span>
                 </button>
 
+                {/* Bulk Add Products Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenBulkProductModal}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-black flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  title="Upload and save multiple cards at once"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>⚡ Bulk Add Cards</span>
+                </button>
+
                 {/* Add New Product Button */}
                 <button
                   type="button"
                   onClick={handleOpenNewProductModal}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Product</span>
+                  <span>+ Add Product</span>
                 </button>
               </div>
             </div>
@@ -3762,6 +4049,31 @@ export default function AdminPage() {
                   <p className="text-xs text-slate-500">Configure catalog classification, pricing strategies, media assets, and printing specifications.</p>
                 </div>
               </div>
+
+              {!editingProduct && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-gradient-to-r from-amber-50 to-orange-50/40 border border-amber-200 rounded-2xl">
+                  <div className="text-xs text-amber-950 flex items-center gap-2">
+                    <span className="text-base">⚡</span>
+                    <div>
+                      <span className="font-extrabold block">Need to add multiple cards at once?</span>
+                      <span className="text-[11px] text-amber-800">
+                        Upload 10+ photos together and save all cards simultaneously with shared specs.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShopModalOpen(false);
+                      handleOpenBulkProductModal();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black flex items-center justify-center gap-1.5 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-102"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Switch to Bulk Add</span>
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSaveProduct} className="space-y-6 text-xs">
                 {/* ── 1. PRODUCT CLASSIFICATION ── */}
@@ -4757,6 +5069,770 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Bulk Add Multiple Cards at Once */}
+        {bulkModalOpen && (
+          <div data-lenis-prevent className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+            <div data-lenis-prevent className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-4xl lg:max-w-5xl w-full shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto overscroll-contain animate-scale-up">
+              <button
+                type="button"
+                disabled={bulkSaving}
+                onClick={() => setBulkModalOpen(false)}
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer z-10 disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200 shrink-0 shadow-2xs">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xl font-bold text-slate-900">
+                        Bulk Add Multiple Cards at Once
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[10px]">
+                        Batch Creator
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Upload multiple card photos simultaneously. Set shared catalog specs once and save all cards in 1 click.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                    Cards in Queue: <strong className="text-[#991B1B] text-sm">{bulkItems.length}</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* ── 1. SHARED BATCH SETTINGS ── */}
+              <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#991B1B]" />
+                    <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                      1. Shared Batch Settings (Applied to all uploaded cards)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkCommonSettings(!showBulkCommonSettings)}
+                    className="text-xs text-[#007185] hover:underline font-bold cursor-pointer"
+                  >
+                    {showBulkCommonSettings ? "Hide Settings" : "Customize Settings"}
+                  </button>
+                </div>
+
+                {showBulkCommonSettings && (
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Category */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Default Category *
+                        </label>
+                        <select
+                          value={bulkCategory}
+                          onChange={(e) => {
+                            setBulkCategory(e.target.value);
+                            setBulkItems((prev) => prev.map((it) => ({ ...it, category: e.target.value })));
+                          }}
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        >
+                          {shopCategories
+                            .filter((c) => c.type === "invitations" || !c.type)
+                            .map((cat) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      {/* Base Price */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Base Price (1000+ prints) *
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={bulkPricePerCard}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setBulkPricePerCard(val);
+                              setBulkItems((prev) => prev.map((it) => ({ ...it, pricePerCard: val })));
+                            }}
+                            className="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Min Copies */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Min Order Copies *
+                        </label>
+                        <input
+                          type="number"
+                          min={50}
+                          value={bulkMinCopies}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setBulkMinCopies(val);
+                            setBulkItems((prev) => prev.map((it) => ({ ...it, minCopies: val })));
+                          }}
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                      {/* Paper Type */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Paper Stock
+                        </label>
+                        <input
+                          type="text"
+                          value={bulkPaperType}
+                          onChange={(e) => setBulkPaperType(e.target.value)}
+                          placeholder="e.g. 300 GSM Textured Board"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Dimensions Dropdown */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Card Dimensions *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDimensionModalTab("invitations");
+                              setShowDimensionModal(true);
+                            }}
+                            className="text-[10px] text-[#991B1B] font-bold hover:underline cursor-pointer"
+                          >
+                            + Manage Sizes
+                          </button>
+                        </div>
+                        {(() => {
+                          const isGift = ["return_gifts", "brass", "hampers", "silver", "bags", "candles"].includes(bulkCategory);
+                          const currentSectionType = isGift ? "return_gifts" : "invitations";
+                          const filteredDims = shopDimensions.filter((d) => d.type === currentSectionType || d.type === "all");
+                          const hasCurrentValueInList = filteredDims.some((d) => d.label === bulkDimensions);
+
+                          return (
+                            <select
+                              value={bulkDimensions}
+                              onChange={(e) => setBulkDimensions(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:border-[#991B1B] focus:outline-none cursor-pointer"
+                            >
+                              {!hasCurrentValueInList && bulkDimensions && (
+                                <option value={bulkDimensions}>{bulkDimensions} (Custom / Existing)</option>
+                              )}
+                              {filteredDims.length === 0 ? (
+                                <option value={bulkDimensions || "5.5 x 8.5 inches (Portrait - Standard)"}>
+                                  {bulkDimensions || "5.5 x 8.5 inches (Portrait - Standard)"}
+                                </option>
+                              ) : (
+                                filteredDims.map((dim) => (
+                                  <option key={dim.id} value={dim.label}>
+                                    {dim.label}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Badge Tag */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Badge Tag
+                        </label>
+                        <input
+                          type="text"
+                          value={bulkBadge}
+                          onChange={(e) => setBulkBadge(e.target.value)}
+                          placeholder="e.g. NEW / BESTSELLER"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Shared Default Card Description */}
+                    <div className="pt-1">
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        Default Card Description
+                      </label>
+                      <input
+                        type="text"
+                        value={bulkDescription}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setBulkDescription(val);
+                          setBulkItems((prev) => prev.map((it) => ({ ...it, description: val })));
+                        }}
+                        placeholder="e.g. Majestic luxury Indian wedding invitation card with real gold foil border frames."
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:border-[#991B1B] focus:outline-none"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Initial description for all cards in this batch. You can also edit each card's description individually below.
+                      </p>
+                    </div>
+
+                    {/* Pricing Strategy & Volume Tiers */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <Tag className="w-4 h-4 text-[#991B1B]" />
+                            <span>Pricing Strategy &amp; Quantity Logic</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500">
+                            Choose how unit prices and bulk volume discounts are calculated for this batch.
+                          </p>
+                        </div>
+
+                        {/* Strategy Switcher */}
+                        <div className="inline-flex p-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setBulkPricingMode("PERCENTAGE")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              bulkPricingMode === "PERCENTAGE"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            ⚡ Auto % Markup
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setBulkPricingMode("MANUAL")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              bulkPricingMode === "MANUAL"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            ✏️ Manual Fixed Tiers
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setBulkPricingMode("FLAT")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              bulkPricingMode === "FLAT"
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            🏷️ Flat Single Price
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Mode 1: Auto % Markup Table */}
+                      {bulkPricingMode === "PERCENTAGE" && (
+                        <div className="space-y-2 pt-1">
+                          <span className="text-[11px] font-bold text-slate-700 block">
+                            Markup Percentages Above Base Price:
+                          </span>
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                                <tr>
+                                  <th className="py-2 px-3">Quantity Bracket</th>
+                                  <th className="py-2 px-3">Markup %</th>
+                                  <th className="py-2 px-3">Calculated Rate</th>
+                                  <th className="py-2 px-3">Sample Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                                {[
+                                  { key: "t1000", label: "1000+ copies (Bulk Tier)", sample: 1000 },
+                                  { key: "t500", label: "500 - 999 copies", sample: 500 },
+                                  { key: "t300", label: "300 - 499 copies", sample: 300 },
+                                  { key: "t150", label: "150 - 299 copies", sample: 150 },
+                                  { key: "t80", label: "80 - 149 copies", sample: 100 },
+                                  { key: "t50", label: "50 - 79 copies", sample: 50 },
+                                ].map((tier) => {
+                                  const markup = Number(bulkPercentTiers[tier.key as keyof typeof bulkPercentTiers]) || 0;
+                                  const calcPrice = Math.round(bulkPricePerCard * (1 + markup / 100));
+                                  const sampleTotal = calcPrice * tier.sample;
+                                  return (
+                                    <tr key={tier.key} className="hover:bg-slate-50/60">
+                                      <td className="py-2 px-3 font-bold text-slate-900">{tier.label}</td>
+                                      <td className="py-2 px-3">
+                                        <div className="flex items-center gap-1">
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            value={markup}
+                                            onChange={(e) => {
+                                              const val = Math.max(0, Number(e.target.value) || 0);
+                                              setBulkPercentTiers((prev) => ({ ...prev, [tier.key]: val }));
+                                            }}
+                                            className="w-16 px-2 py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 bg-white focus:outline-none focus:border-[#991B1B]"
+                                          />
+                                          <span className="text-xs text-slate-500 font-bold">%</span>
+                                        </div>
+                                      </td>
+                                      <td className="py-2 px-3 font-bold text-[#991B1B]">
+                                        ₹{calcPrice} / card
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 font-bold">
+                                        ₹{sampleTotal.toLocaleString("en-IN")}{" "}
+                                        <span className="font-normal text-[10px] text-slate-400">({tier.sample} cards)</span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mode 2: Manual Fixed Tiers Table */}
+                      {bulkPricingMode === "MANUAL" && (
+                        <div className="space-y-2 pt-1">
+                          <span className="text-[11px] font-bold text-slate-700 block">
+                            Directly Specify Exact Unit Price (₹) for Each Bracket:
+                          </span>
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                                <tr>
+                                  <th className="py-2 px-3">Quantity Bracket</th>
+                                  <th className="py-2 px-3">Custom Unit Rate (₹)</th>
+                                  <th className="py-2 px-3">Effective Multiplier</th>
+                                  <th className="py-2 px-3">Example Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                                {[
+                                  { key: "t1000", label: "1000+ copies (Bulk Tier)", sample: 1000 },
+                                  { key: "t500", label: "500 - 999 copies", sample: 500 },
+                                  { key: "t300", label: "300 - 499 copies", sample: 300 },
+                                  { key: "t150", label: "150 - 299 copies", sample: 150 },
+                                  { key: "t80", label: "80 - 149 copies", sample: 100 },
+                                  { key: "t50", label: "50 - 79 copies", sample: 50 },
+                                ].map((tier) => {
+                                  const manualPrice = Number(bulkManualTiers[tier.key as keyof typeof bulkManualTiers]) || bulkPricePerCard;
+                                  const effectiveMult = (manualPrice / (bulkPricePerCard || 1)).toFixed(2);
+                                  const sampleTotal = manualPrice * tier.sample;
+                                  return (
+                                    <tr key={tier.key} className="hover:bg-slate-50/60">
+                                      <td className="py-2 px-3 font-bold text-slate-900">{tier.label}</td>
+                                      <td className="py-2 px-3">
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-slate-400 font-bold text-xs">₹</span>
+                                          <input
+                                            type="number"
+                                            min={1}
+                                            value={manualPrice}
+                                            onChange={(e) => {
+                                              const val = Math.max(1, Number(e.target.value) || 0);
+                                              setBulkManualTiers((prev) => ({ ...prev, [tier.key]: val }));
+                                            }}
+                                            className="w-20 px-2 py-1 border border-slate-300 rounded-lg text-xs font-bold text-[#991B1B] bg-white focus:outline-none focus:border-[#991B1B]"
+                                          />
+                                          <span className="text-[10px] text-slate-400">/ card</span>
+                                        </div>
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-600">
+                                        {effectiveMult}x{" "}
+                                        <span className="text-[10px] text-slate-400">
+                                          ({manualPrice >= bulkPricePerCard ? `+${Math.round(((manualPrice - bulkPricePerCard) / (bulkPricePerCard || 1)) * 100)}%` : "Base"})
+                                        </span>
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 font-bold">
+                                        ₹{sampleTotal.toLocaleString("en-IN")}{" "}
+                                        <span className="font-normal text-[10px] text-slate-400">({tier.sample} cards)</span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mode 3: Flat Rate Notice */}
+                      {bulkPricingMode === "FLAT" && (
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 text-slate-600 text-xs flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>
+                            <strong>Flat Single Price Mode:</strong> Every card in this batch is charged at fixed <strong>₹{bulkPricePerCard}/card</strong> regardless of the quantity ordered.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Printing Change (Text / Version Changes) Setup */}
+                    <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-8 h-8 rounded-lg bg-red-100/80 text-[#991B1B] flex items-center justify-center font-bold text-sm">
+                            📝
+                          </span>
+                          <div>
+                            <h5 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <span>Printing Change (Text &amp; Version Changes) Pricing</span>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                                Order Add-on
+                              </span>
+                            </h5>
+                            <p className="text-[11px] text-slate-500">
+                              Fee automatically calculated during ordering when customer orders multiple text versions (e.g. Groom side vs Bride side).
+                            </p>
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <span className="text-xs font-bold text-slate-700">
+                            {bulkPrintingChangeConfig.enabled ? "Enabled" : "Disabled"}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={bulkPrintingChangeConfig.enabled}
+                            onChange={(e) =>
+                              setBulkPrintingChangeConfig((prev) => ({
+                                ...prev,
+                                enabled: e.target.checked,
+                              }))
+                            }
+                            className="w-4 h-4 text-[#991B1B] rounded cursor-pointer"
+                          />
+                        </label>
+                      </div>
+
+                      {bulkPrintingChangeConfig.enabled && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                Price for Up to 500 Copies (₹)
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-slate-500 font-bold">₹</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={bulkPrintingChangeConfig.chargeUpto500}
+                                  onChange={(e) =>
+                                    setBulkPrintingChangeConfig((prev) => ({
+                                      ...prev,
+                                      chargeUpto500: Number(e.target.value) || 0,
+                                    }))
+                                  }
+                                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                Price for 1000 Copies (₹)
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-slate-500 font-bold">₹</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={bulkPrintingChangeConfig.chargeFor1000}
+                                  onChange={(e) =>
+                                    setBulkPrintingChangeConfig((prev) => ({
+                                      ...prev,
+                                      chargeFor1000: Number(e.target.value) || 0,
+                                    }))
+                                  }
+                                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                Price for Each Next 1000 Copies (₹)
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-slate-500 font-bold">₹</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={bulkPrintingChangeConfig.chargePerNext1000}
+                                  onChange={(e) =>
+                                    setBulkPrintingChangeConfig((prev) => ({
+                                      ...prev,
+                                      chargePerNext1000: Number(e.target.value) || 0,
+                                    }))
+                                  }
+                                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── 2. MULTI-IMAGE UPLOAD ZONE ── */}
+              <div className="space-y-2">
+                <input
+                  ref={bulkFileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleBulkFilesSelect(e.target.files)}
+                />
+
+                <div
+                  onClick={() => bulkFileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleBulkFilesSelect(e.dataTransfer.files);
+                  }}
+                  className="border-2 border-dashed border-[#991B1B]/40 hover:border-[#991B1B] rounded-3xl p-6 sm:p-8 bg-red-50/20 hover:bg-red-50/40 transition-colors text-center cursor-pointer space-y-2 group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-red-200 text-[#991B1B] flex items-center justify-center mx-auto shadow-xs group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-900">
+                      Click to Select Multiple Card Photos, or Drag &amp; Drop Here
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Select 5, 10, or 20+ images at once (JPG, PNG, WebP). Each photo will automatically become a card product!
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-2xs">
+                    <span>📁 Browse Photos From Computer</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── 3. CARDS IN BATCH QUEUE ── */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                    Cards to Create ({bulkItems.length}):
+                  </span>
+                  {bulkItems.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => bulkFileInputRef.current?.click()}
+                        className="text-xs font-bold text-[#991B1B] hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add More Photos</span>
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setBulkItems([])}
+                        className="text-xs font-bold text-slate-400 hover:text-red-600 cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {bulkItems.length === 0 ? (
+                  <div className="p-8 text-center rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 text-xs space-y-1">
+                    <p className="font-bold text-slate-700">No card images uploaded yet</p>
+                    <p>Select multiple images above to automatically build your card queue.</p>
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+                    {bulkItems.map((item, idx) => (
+                      <div
+                        key={item.id}
+                        className="p-3 bg-white border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-slate-300"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div className="w-12 h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={item.previewUrl}
+                              alt="Card Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 block">
+                                Card Title *
+                              </label>
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBulkItems((prev) =>
+                                    prev.map((it, i) => (i === idx ? { ...it, name: val } : it))
+                                  );
+                                }}
+                                placeholder="e.g. Floral Elegance"
+                                className="w-full px-2.5 py-1 rounded-lg border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 block">
+                                Card Description
+                              </label>
+                              <input
+                                type="text"
+                                value={item.description}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBulkItems((prev) =>
+                                    prev.map((it, i) => (i === idx ? { ...it, description: val } : it))
+                                  );
+                                }}
+                                placeholder="Card description..."
+                                className="w-full px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 focus:outline-none focus:border-[#991B1B] bg-slate-50/50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block">Price (₹)</label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.pricePerCard}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setBulkItems((prev) =>
+                                  prev.map((it, i) => (i === idx ? { ...it, pricePerCard: val } : it))
+                                );
+                              }}
+                              className="w-16 px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 block">Min Qty</label>
+                            <input
+                              type="number"
+                              min={50}
+                              value={item.minCopies}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setBulkItems((prev) =>
+                                  prev.map((it, i) => (i === idx ? { ...it, minCopies: val } : it))
+                                );
+                              }}
+                              className="w-16 px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center text-slate-900 focus:outline-none focus:border-[#991B1B]"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setBulkItems((prev) => prev.filter((_, i) => i !== idx))}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer mt-3 sm:mt-0"
+                            title="Remove card from batch"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Live Saving Progress Bar */}
+              {bulkSaving && (
+                <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs font-bold text-amber-900">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-[#991B1B]" />
+                      <span>{bulkSaveProgress.statusText}</span>
+                    </div>
+                    <span>
+                      {bulkSaveProgress.current} / {bulkSaveProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-amber-200/70 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-[#991B1B] h-full transition-all duration-300 rounded-full"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          bulkSaveProgress.total > 0
+                            ? (bulkSaveProgress.current / bulkSaveProgress.total) * 100
+                            : 0
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Footer Buttons */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={bulkSaving}
+                  onClick={() => setBulkModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={bulkSaving || bulkItems.length === 0}
+                  onClick={handleSaveAllBulkCards}
+                  className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center gap-2 shadow-md hover:scale-102 transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {bulkSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span>
+                    {bulkSaving
+                      ? "Saving Cards..."
+                      : bulkItems.length > 0
+                      ? `Save All ${bulkItems.length} Cards at Once`
+                      : "Add Photos to Save"}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         )}
