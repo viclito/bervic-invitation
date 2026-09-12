@@ -370,8 +370,10 @@ export default function OrderedCardStatusPopup() {
   // Do not display if dismissed or unmounted
   if (!mounted || isDismissed) return null;
 
-  // Non-disturbance check: Do not show on admin panels, builder studio, checkout, or auth pages
+  // Non-disturbance check: Do not show on shop pages, admin panels, builder studio, checkout, or auth pages
   const isHiddenRoute =
+    pathname === "/shop" ||
+    pathname?.startsWith("/shop") ||
     pathname?.startsWith("/admin") ||
     pathname?.startsWith("/auth") ||
     pathname?.includes("/canva-templates/builder") ||

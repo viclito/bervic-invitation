@@ -141,6 +141,7 @@ export default function TraditionalShopClient() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortBy, setSortBy] = useState("default");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [addingCardId, setAddingCardId] = useState<string | null>(null);
@@ -979,7 +980,42 @@ export default function TraditionalShopClient() {
       <div className="flex-1 pt-20 sm:pt-24 pb-20">
         {/* Minimal, Space-Efficient E-Commerce Toolbar */}
         <section className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mb-6">
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-3 sm:p-4 shadow-2xs space-y-3">
+          {/* Mobile Filter Toggle Header (Visible only on mobile screens) */}
+          <div className="flex sm:hidden items-center justify-between gap-2 mb-2.5 p-2.5 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-bold text-slate-900 truncate">
+                {mainTab === "invitations" ? "💌 Invitation Cards" : "🎁 Return Gifts"}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                • {totalCount} designs
+              </span>
+              {(selectedCategory !== "all" || selectedOccasion !== "all" || priceRange !== "all" || searchQuery) && (
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-[#991B1B] text-white shrink-0">
+                  Filtered
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen((prev) => !prev)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 transition-colors shrink-0 cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#991B1B]" />
+              <span>{mobileFiltersOpen ? "Hide Filters" : "Filter & Search"}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${
+                  mobileFiltersOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          <div
+            className={`bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-3 sm:p-4 shadow-2xs space-y-3 ${
+              mobileFiltersOpen ? "block" : "hidden sm:block"
+            }`}
+          >
             {/* Top Toolbar Row: Catalog Switcher + Dynamic Filters */}
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
               {/* Compact Switcher: Invitations vs Return Gifts */}
