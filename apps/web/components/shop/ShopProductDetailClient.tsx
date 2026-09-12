@@ -155,6 +155,7 @@ export default function ShopProductDetailClient({
   // Genuine Product Reviews & Customer Feedback
   const [productReviews, setProductReviews] = useState<any[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState<boolean>(true);
+  const [showAllReviews, setShowAllReviews] = useState<boolean>(false);
 
   const fetchReviews = useCallback(async () => {
     if (!product?.id) return;
@@ -2933,59 +2934,98 @@ export default function ShopProductDetailClient({
                   Verified customer experiences on card quality, paper finish, and printing.
                 </p>
               </div>
+
+              {productReviews.length > 4 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReviews((prev) => !prev)}
+                  className="text-xs font-bold text-[#7A1F2B] hover:text-[#991B1B] hover:underline flex items-center gap-1 transition-colors cursor-pointer self-start sm:self-center"
+                >
+                  <span>{showAllReviews ? "Show Fewer Reviews" : `View All (${productReviews.length})`}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      showAllReviews ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              )}
             </div>
 
             {isLoadingReviews ? (
               <div className="py-6 text-center text-xs text-slate-400">Loading reviews...</div>
             ) : productReviews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {productReviews.map((rev) => (
-                  <div
-                    key={rev.id}
-                    className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-2 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                          {rev.userName ? rev.userName.charAt(0).toUpperCase() : "V"}
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {(showAllReviews ? productReviews : productReviews.slice(0, 4)).map((rev) => (
+                    <div
+                      key={rev.id}
+                      className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-2 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            {rev.userName ? rev.userName.charAt(0).toUpperCase() : "V"}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 text-xs block truncate">
+                              {rev.userName || "Verified Customer"}
+                            </span>
+                            <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
+                              <CheckCircle2 className="w-2.5 h-2.5" /> Verified Order
+                            </span>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <span className="font-bold text-slate-900 text-xs block truncate">
-                            {rev.userName || "Verified Customer"}
-                          </span>
-                          <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
-                            <CheckCircle2 className="w-2.5 h-2.5" /> Verified Order
-                          </span>
+
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`w-3.5 h-3.5 ${
+                                s <= rev.rating
+                                  ? "fill-amber-400 text-amber-500"
+                                  : "text-slate-200"
+                              }`}
+                            />
+                          ))}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`w-3.5 h-3.5 ${
-                              s <= rev.rating
-                                ? "fill-amber-400 text-amber-500"
-                                : "text-slate-200"
-                            }`}
-                          />
-                        ))}
+                      <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                        "{rev.reviewText}"
+                      </p>
+
+                      <div className="text-[10px] text-slate-400">
+                        {new Date(rev.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </div>
                     </div>
+                  ))}
+                </div>
 
-                    <p className="text-xs text-slate-700 leading-relaxed font-normal">
-                      "{rev.reviewText}"
-                    </p>
-
-                    <div className="text-[10px] text-slate-400">
-                      {new Date(rev.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </div>
+                {/* View All / Show Fewer Button when more than 4 reviews exist */}
+                {productReviews.length > 4 && (
+                  <div className="flex items-center justify-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllReviews((prev) => !prev)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 hover:border-[#7A1F2B] bg-white text-xs font-bold text-slate-800 hover:text-[#7A1F2B] shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                    >
+                      <span>
+                        {showAllReviews
+                          ? "Show Fewer Reviews"
+                          : `View All ${productReviews.length} Customer Reviews`}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-400 group-hover:text-[#7A1F2B] transition-transform duration-200 ${
+                          showAllReviews ? "rotate-180" : "group-hover:translate-y-0.5"
+                        }`}
+                      />
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             ) : (
               <div className="p-4 rounded-xl bg-amber-50/40 border border-amber-100 flex items-center justify-between gap-3">
