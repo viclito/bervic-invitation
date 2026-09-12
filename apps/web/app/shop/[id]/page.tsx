@@ -102,8 +102,59 @@ export default async function ShopProductPage({ params }: Props) {
     orderBy: { sortOrder: "asc" },
   });
 
+  const isGift =
+    product.category === "return_gifts" ||
+    ["brass", "hampers", "silver", "bags", "candles"].includes(product.category);
+
+  const productImageUrl = product.previewImage.startsWith("http")
+    ? product.previewImage
+    : `${baseUrl}${product.previewImage.startsWith("/") ? "" : "/"}${product.previewImage}`;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: [productImageUrl],
+    description:
+      product.description ||
+      `Order ${product.name} printed on luxury ${product.paperType} with gold foil stamping and doorstep delivery across India.`,
+    sku: `BERVIC-${product.id}`,
+    mpn: product.id,
+    brand: {
+      "@type": "Brand",
+      name: "Bervic Invitations",
+    },
+    category: isGift ? "Return Gifts & Favours" : "Wedding & Event Invitation Cards",
+    offers: {
+      "@type": "Offer",
+      url: `${baseUrl}/shop/${product.id}`,
+      priceCurrency: "INR",
+      price: product.pricePerCard,
+      priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+        .toISOString()
+        .split("T")[0],
+      itemCondition: "https://schema.org/NewCondition",
+      availability: product.isActive ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: "Bervic Invitations",
+      },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating.toString(),
+      reviewCount: product.reviewsCount.toString(),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <Navbar />
       <main>
         <ShopProductDetailClient product={product} relatedProducts={relatedProducts} />

@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   description:
     "Create stunning digital invitations for Indian weddings, birthdays, religious functions, and all celebrations in minutes. Premium interactive designs crafted with elegance.",
   keywords: [
+    "invitation",
+    "invitations",
+    "invitation cards",
+    "wedding invitations",
+    "traditional wedding cards",
+    "buy invitation cards online",
     "digital invite",
     "digital studio",
     "custom invitation studio",

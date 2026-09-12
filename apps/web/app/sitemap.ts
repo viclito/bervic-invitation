@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/shop`,
       lastModified: now,
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/templates`,
@@ -80,5 +80,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Failed to fetch dynamic invitations for sitemap:", error);
   }
 
-  return [...staticRoutes, ...templateRoutes, ...invitationRoutes];
+  // Shop Products (Physical Invitation Cards & Return Gifts)
+  let shopProductRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const products = await prisma.shopProduct.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        updatedAt: true,
+      },
+    });
+
+    shopProductRoutes = products.map((prod) => ({
+      url: `${baseUrl}/shop/${prod.id}`,
+      lastModified: prod.updatedAt || now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch shop products for sitemap:", error);
+  }
+
+  return [...staticRoutes, ...templateRoutes, ...invitationRoutes, ...shopProductRoutes];
 }
