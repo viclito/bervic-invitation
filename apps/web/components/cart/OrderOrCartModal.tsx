@@ -721,6 +721,18 @@ export default function OrderOrCartModal({
       if (!res.ok) throw new Error(data.error || "Failed to place order");
 
       setSuccessMsg(`🎉 Order #${data.orderNumber} placed successfully! An email notification has been sent.`);
+      try {
+        localStorage.setItem("bervic_last_card_order", JSON.stringify({
+          id: data.orderId,
+          orderNumber: data.orderNumber,
+          templateName: templateName || "Traditional Invitation Card",
+          previewImage: effectivePreviewImage || null,
+          copies: currentCopies,
+          status: "PENDING",
+          createdAt: new Date().toISOString(),
+        }));
+        window.dispatchEvent(new Event("bervic_order_updated"));
+      } catch {}
       if (onOrderSuccess) onOrderSuccess(data.orderNumber);
       setTimeout(() => {
         onClose();

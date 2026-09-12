@@ -22,7 +22,6 @@ import {
   ShoppingBag,
   Package,
   Palette,
-  Smartphone,
 } from "lucide-react";
 import CartDrawer from "@/components/cart/CartDrawer";
 
@@ -175,8 +174,8 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/cards"
-            className={`${navLinkClass} ${pathname === "/cards" ? "text-[#991B1B]" : ""}`}
+            href="/shop"
+            className={`${navLinkClass} ${pathname === "/shop" ? "text-[#991B1B]" : ""}`}
           >
             Cards
           </Link>
@@ -486,24 +485,24 @@ export default function Navbar() {
                 </div>
               </Link>
 
-              {/* Cards (Instagram Cards) */}
+              {/* Cards (Shop) */}
               <Link
-                href="/cards"
+                href="/shop"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-red-50 text-[#991B1B] flex items-center justify-center group-hover:bg-[#991B1B] group-hover:text-white transition-colors">
-                    <Smartphone className="w-4 h-4" />
+                    <ShoppingBag className="w-4 h-4" />
                   </div>
                   <div>
                     <span className="text-sm font-bold text-slate-900 block">Cards</span>
-                    <span className="text-[10px] text-slate-500 block">Social announcement cards</span>
+                    <span className="text-[10px] text-slate-500 block">Traditional invitation cards &amp; print store</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-extrabold text-[#991B1B] bg-red-50 px-2 py-0.5 rounded-full uppercase border border-red-200">
-                    1080px
+                    Shop
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#991B1B]" />
                 </div>

@@ -286,6 +286,21 @@ export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawer
       if (!res.ok) throw new Error(data.error || "Failed to place order");
 
       setSuccessMsg(`🎉 Order #${data.orderNumber} placed successfully! An email notification has been dispatched.`);
+      try {
+        const firstCartItem = selectedItemForCheckout || cartItems[0];
+        if (firstCartItem) {
+          localStorage.setItem("bervic_last_card_order", JSON.stringify({
+            id: data.orderId,
+            orderNumber: data.orderNumber,
+            templateName: firstCartItem.templateName || "Traditional Invitation Card",
+            previewImage: firstCartItem.previewImage || null,
+            copies: selectedItemForCheckout ? (selectedItemForCheckout.copies || 1) : totalCopiesCount,
+            status: "PENDING",
+            createdAt: new Date().toISOString(),
+          }));
+          window.dispatchEvent(new Event("bervic_order_updated"));
+        }
+      } catch {}
 
       if (selectedItemForCheckout) {
         try {

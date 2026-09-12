@@ -4,6 +4,7 @@ import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import WhatsAppEnquiryButton from "@/components/WhatsAppEnquiryButton";
+import OrderedCardStatusPopup from "@/components/OrderedCardStatusPopup";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-83TR44K9KN";
@@ -237,6 +238,7 @@ export default function RootLayout({
         <SessionProviderWrapper>
           <LenisProvider>{children}</LenisProvider>
           <WhatsAppEnquiryButton />
+          <OrderedCardStatusPopup />
         </SessionProviderWrapper>
 
         {/* Razorpay Official Checkout SDK */}

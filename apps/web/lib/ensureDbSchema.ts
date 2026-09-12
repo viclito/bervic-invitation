@@ -287,6 +287,28 @@ export async function ensureDbSchema() {
         await prisma.$executeRawUnsafe(`
           CREATE INDEX IF NOT EXISTS "ShopOccasion_isActive_sortOrder_idx" ON "ShopOccasion"("isActive", "sortOrder");
         `);
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "ProductReview" (
+            "id" TEXT PRIMARY KEY,
+            "productId" TEXT NOT NULL,
+            "userId" TEXT,
+            "orderId" TEXT,
+            "userName" TEXT NOT NULL DEFAULT 'Valued Customer',
+            "rating" INTEGER NOT NULL DEFAULT 5,
+            "reviewText" TEXT NOT NULL,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "ProductReview_productId_idx" ON "ProductReview"("productId");
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "ProductReview_userId_idx" ON "ProductReview"("userId");
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "ProductReview_orderId_idx" ON "ProductReview"("orderId");
+        `);
 
         // Safely insert initial default occasions ONLY if newly created and completely empty
         try {

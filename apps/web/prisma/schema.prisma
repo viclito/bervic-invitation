@@ -413,3 +413,20 @@ model ShopOccasion {
 
   @@index([isActive, sortOrder])
 }
+
+model ProductReview {
+  id         String   @id @default(cuid())
+  productId  String   // links to ShopProduct.id or CanvaTemplate.id
+  userId     String?  // links to User.id if authenticated
+  orderId    String?  // links to CardOrder.id
+  userName   String   @default("Valued Customer")
+  rating     Int      @default(5) // 1 to 5 stars
+  reviewText String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([orderId])
+}
+

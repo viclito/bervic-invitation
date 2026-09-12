@@ -35,6 +35,7 @@ import {
   Lock,
   LogIn,
   Edit3,
+  MessageSquare,
 } from "lucide-react";
 import CartDrawer from "@/components/cart/CartDrawer";
 import IndicLanguageInput from "@/components/shop/IndicLanguageInput";
@@ -150,6 +151,34 @@ export default function ShopProductDetailClient({
   const [showMobileMore, setShowMobileMore] = useState(false);
   const [onlineFormStep, setOnlineFormStep] = useState<1 | 2 | 3>(1);
   const stepFormRef = useRef<HTMLDivElement>(null);
+
+  // Genuine Product Reviews & Customer Feedback
+  const [productReviews, setProductReviews] = useState<any[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState<boolean>(true);
+
+  const fetchReviews = useCallback(async () => {
+    if (!product?.id) return;
+    try {
+      const res = await fetch(`/api/shop/reviews?productId=${encodeURIComponent(product.id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProductReviews(data?.reviews || []);
+      }
+    } catch {
+      // quiet fallback
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  }, [product?.id]);
+
+  useEffect(() => {
+    fetchReviews();
+    const handleReviewEvent = () => fetchReviews();
+    window.addEventListener("bervic_review_submitted", handleReviewEvent);
+    return () => {
+      window.removeEventListener("bervic_review_submitted", handleReviewEvent);
+    };
+  }, [fetchReviews]);
 
   const handleFormFileUpload = async (file: File) => {
     if (!file) return;
@@ -966,6 +995,18 @@ export default function ShopProductDetailClient({
 
       const data = await res.json();
       if (res.ok && data.success) {
+        try {
+          localStorage.setItem("bervic_last_card_order", JSON.stringify({
+            id: data.orderId,
+            orderNumber: data.orderNumber,
+            templateName: product.name,
+            previewImage: product.previewImage,
+            copies: selectedCopies,
+            status: "PENDING",
+            createdAt: new Date().toISOString(),
+          }));
+          window.dispatchEvent(new Event("bervic_order_updated"));
+        } catch {}
         router.push(`/dashboard/orders?success=${data.orderNumber}`);
       } else {
         setToastMessage(data.error || "Failed to place order. Please check required fields.");
@@ -2876,6 +2917,91 @@ export default function ShopProductDetailClient({
                 <p className="font-bold text-slate-800 text-xs mt-0.5">3-5 Business Days</p>
               </div>
             </div>
+          </div>
+
+          {/* Customer Reviews & Feedback Section */}
+          <div className="space-y-4 pt-6 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base sm:text-lg font-serif font-bold text-slate-900 flex items-center gap-2">
+                  <span>Customer Reviews & Feedback</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                    ⭐ {dynamicRating.toFixed(1)} / 5.0
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Verified customer experiences on card quality, paper finish, and printing.
+                </p>
+              </div>
+            </div>
+
+            {isLoadingReviews ? (
+              <div className="py-6 text-center text-xs text-slate-400">Loading reviews...</div>
+            ) : productReviews.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {productReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-2 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#7A1F2B] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                          {rev.userName ? rev.userName.charAt(0).toUpperCase() : "V"}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-900 text-xs block truncate">
+                            {rev.userName || "Verified Customer"}
+                          </span>
+                          <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Verified Order
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`w-3.5 h-3.5 ${
+                              s <= rev.rating
+                                ? "fill-amber-400 text-amber-500"
+                                : "text-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                      "{rev.reviewText}"
+                    </p>
+
+                    <div className="text-[10px] text-slate-400">
+                      {new Date(rev.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-amber-50/40 border border-amber-100 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">No verified reviews submitted yet</p>
+                    <p className="text-[11px] text-slate-500">
+                      Order this card to receive custom digital proofs & share your review!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Related Products Carousel/Grid */}

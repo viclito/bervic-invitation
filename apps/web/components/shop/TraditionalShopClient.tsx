@@ -930,6 +930,18 @@ export default function TraditionalShopClient() {
       const data = await res.json();
       if (res.ok && data.success) {
         if (previewProduct) setPreviewProduct(null);
+        try {
+          localStorage.setItem("bervic_last_card_order", JSON.stringify({
+            id: data.orderId,
+            orderNumber: data.orderNumber,
+            templateName: product.name,
+            previewImage: product.previewImage,
+            copies,
+            status: "PENDING",
+            createdAt: new Date().toISOString(),
+          }));
+          window.dispatchEvent(new Event("bervic_order_updated"));
+        } catch {}
         router.push(`/dashboard/orders?success=${data.orderNumber}`);
       } else {
         setToastMessage(data.error || "Failed to place order. Please check required fields.");
