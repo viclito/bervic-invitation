@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 
 const TOTAL_SCENE3_FRAMES = 288;
 const TOTAL_FRAMES = TOTAL_SCENE3_FRAMES;
@@ -61,6 +62,7 @@ export interface PremiumScrollCanvasProps {
   galleryImages?: string[];
   guestName?: string;
   contactPhone?: string;
+  venuePlace?: string;
   contactAddress?: string;
   onExploreClick?: () => void;
   onSelectBlessing?: (blessing: string) => void;
@@ -80,45 +82,12 @@ export default function PremiumScrollCanvas({
   partnerTwoImage,
   guestName = "Honored Guest",
   contactPhone,
+  venuePlace,
   contactAddress,
   onExploreClick,
   onSelectBlessing,
-  events = [
-    {
-      time: "03:30 PM",
-      title: "Royal Guest Welcome & Refreshments",
-      location: "Grand Heritage Courtyard",
-      description: "Welcome elixirs & traditional live instrumental ensemble",
-    },
-    {
-      time: "05:00 PM",
-      title: "Holy Wedding Ceremony",
-      location: "Royal Heritage Pavilion",
-      description: "Exchange of vows and ceremonial blessings",
-    },
-    {
-      time: "07:30 PM",
-      title: "Grand Royal Feast & Reception",
-      location: "The Imperial Ballroom",
-      description: "Gala banquet, champagne toast, and celebratory dancing",
-    },
-  ],
-  locations = [
-    {
-      title: "Wedding Ceremony",
-      name: "Royal Heritage Pavilion",
-      address: "Palace Road, Heritage Enclave",
-      time: "05:00 PM",
-      mapUrl: "https://maps.google.com",
-    },
-    {
-      title: "Grand Gala Reception",
-      name: "The Imperial Ballroom",
-      address: "77 Crown Boulevard, Heritage Estate",
-      time: "07:30 PM",
-      mapUrl: "https://maps.google.com",
-    },
-  ],
+  events,
+  locations,
   galleryImages = [
     "/images/templates/gallery-1.jpg",
     "/images/templates/gallery-2.jpg",
@@ -128,6 +97,43 @@ export default function PremiumScrollCanvas({
   bgAudioUrl,
   ...restProps
 }: PremiumScrollCanvasProps & { coverImage?: string; heroImage?: string }) {
+  const finalLocations = locations && locations.length > 0 ? locations : [
+    {
+      title: "Wedding Ceremony",
+      name: venuePlace || "Ceremony Venue",
+      address: contactAddress || venuePlace || "Ceremony Venue Address",
+      time: weddingTime || "05:00 PM",
+      mapUrl: "https://maps.google.com",
+    },
+    {
+      title: "Grand Gala Reception",
+      name: contactAddress ? (venuePlace ? `${venuePlace} Reception` : "Grand Imperial Ballroom") : "Reception Venue",
+      address: contactAddress || venuePlace || "Reception Venue Address",
+      time: "07:30 PM",
+      mapUrl: "https://maps.google.com",
+    },
+  ];
+
+  const finalEvents = events && events.length > 0 ? events : [
+    {
+      time: "03:30 PM",
+      title: "Royal Guest Welcome & Refreshments",
+      location: venuePlace ? `${venuePlace} Courtyard` : "Grand Heritage Courtyard",
+      description: "Welcome elixirs & traditional live instrumental ensemble",
+    },
+    {
+      time: weddingTime || "05:00 PM",
+      title: "Holy Wedding Ceremony",
+      location: venuePlace || "Ceremony Venue",
+      description: "Exchange of vows and ceremonial blessings",
+    },
+    {
+      time: "07:30 PM",
+      title: "Grand Royal Feast & Reception",
+      location: contactAddress ? (venuePlace ? `${venuePlace} Reception` : "Grand Imperial Ballroom") : (venuePlace || "Reception Venue"),
+      description: "Gala banquet, champagne toast, and celebratory dancing",
+    },
+  ];
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -835,7 +841,7 @@ export default function PremiumScrollCanvas({
               <span>ORDER OF CELEBRATION</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 text-center w-full">
-              {events.map((ev, idx) => (
+              {finalEvents.map((ev, idx) => (
                 <div
                   key={idx}
                   className="bg-[#000000]/40 backdrop-blur-md border border-[#D9A441]/40 p-6 rounded-2xl flex flex-col justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]"
@@ -881,11 +887,8 @@ export default function PremiumScrollCanvas({
               <span>ROYAL VENUE LOCATIONS</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-center w-full pointer-events-auto">
-              {locations.map((loc, idx) => {
-                const mapLink =
-                  loc.mapUrl && loc.mapUrl !== "https://maps.google.com" && loc.mapUrl.startsWith("http")
-                    ? loc.mapUrl
-                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.name || ""} ${loc.address || ""}`.trim() || "Wedding Venue")}`;
+              {finalLocations.map((loc, idx) => {
+                const mapLink = resolveDirectMapUrl(loc, venuePlace);
                 return (
                   <a
                     key={idx}

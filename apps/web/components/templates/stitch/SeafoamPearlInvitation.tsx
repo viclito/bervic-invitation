@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Heart,
   Menu,
@@ -16,8 +17,7 @@ import {
   MapPin,
   Calendar,
   Clock,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, ExternalLink } from "lucide-react";
 
 export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -58,6 +58,35 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Marriage Ceremony",
+            venueLabel: "Marriage Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "10:00 AM - 12:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "7:00 PM Onwards",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const coupleImg =
     props.coverImage ||
@@ -212,7 +241,7 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
             <p className="text-2xl font-bold text-[#046c4a]">{props.weddingDate || "13th May 2026"}</p>
             <span className="w-12 h-0.5 bg-[#93e9be]" />
             <p className="text-sm text-[#5a5f62] font-semibold">{props.weddingTime || "10:00 AM Onwards"}</p>
-            <p className="text-xs text-[#5a5f62]">{props.venuePlace || "St. Mary's Church & Grand Pearl Hotel"}</p>
+            <p className="text-xs text-[#5a5f62]">{props.venuePlace || props.contactAddress || "Wedding Ceremony & Reception"}</p>
           </div>
 
           <a
@@ -324,51 +353,68 @@ export default function SeafoamPearlInvitation(props: TemplateClassicFloralProps
           <h2 className="text-4xl md:text-5xl font-bold text-[#046c4a] mb-16 text-center">Wedding Events</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {/* Marriage Ceremony */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              whileHover={{ y: -6 }}
-              className="bg-white/80 backdrop-blur-md p-10 rounded-2xl text-center flex flex-col items-center relative overflow-hidden border border-white/90 shadow-[0_8px_32px_rgba(147,233,190,0.15)] group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#93e9be]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <Church className="w-10 h-10 text-[#046c4a] mb-4" />
-              <h3 className="font-serif italic text-3xl text-[#046c4a] mb-3">Marriage Ceremony</h3>
-              <p className="text-lg font-bold text-[#1a1c1a] mb-1">{props.weddingDate || "13th May 2026"}</p>
-              <p className="text-sm text-[#5a5f62] mb-6">10:00 AM - 12:00 PM</p>
-              <p className="text-sm text-[#1a1c1a] font-semibold mb-8">St. Mary&apos;s Church, Seafoam Avenue</p>
-              <a
-                href="#"
-                className="bg-gradient-to-r from-[#93e9be] to-[#ffffff] text-[#046c4a] font-bold text-xs uppercase tracking-widest px-8 py-3 rounded-full inline-flex items-center gap-2 mt-auto border border-[#93e9be] shadow-sm group-hover:shadow-md transition-all"
+            {locationList.slice(0, 2).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-white/80 backdrop-blur-md p-8 sm:p-10 rounded-2xl text-center flex flex-col items-center justify-between relative overflow-hidden border border-white/90 shadow-[0_8px_32px_rgba(147,233,190,0.15)] group"
               >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#93e9be]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="w-full flex flex-col items-center">
+                  {idx === 0 ? (
+                    <Church className="w-10 h-10 text-[#046c4a] mb-4" />
+                  ) : (
+                    <PartyPopper className="w-10 h-10 text-[#046c4a] mb-4" />
+                  )}
+                  <h3 className="font-serif italic text-3xl text-[#046c4a] mb-2">
+                    {loc.name || loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Reception")}
+                  </h3>
+                  <p className="text-lg font-bold text-[#1a1c1a] mb-1">
+                    {props.weddingDate || "Wedding Day"}
+                  </p>
+                  <p className="text-sm text-[#5a5f62] mb-3">
+                    {loc.time || (idx === 0 ? (props.weddingTime || "10:00 AM - 12:00 PM") : "7:00 PM Onwards")}
+                  </p>
+                  <p className="text-sm text-[#1a1c1a] font-semibold mb-6 max-w-sm">
+                    {loc.address || props.contactAddress || "Venue address details"}
+                  </p>
+                </div>
 
-            {/* Reception */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              whileHover={{ y: -6 }}
-              className="bg-white/80 backdrop-blur-md p-10 rounded-2xl text-center flex flex-col items-center relative overflow-hidden border border-white/90 shadow-[0_8px_32px_rgba(147,233,190,0.15)] group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#93e9be]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <PartyPopper className="w-10 h-10 text-[#046c4a] mb-4" />
-              <h3 className="font-serif italic text-3xl text-[#046c4a] mb-3">Reception</h3>
-              <p className="text-lg font-bold text-[#1a1c1a] mb-1">{props.weddingDate || "13th May 2026"}</p>
-              <p className="text-sm text-[#5a5f62] mb-6">7:00 PM Onwards</p>
-              <p className="text-sm text-[#1a1c1a] font-semibold mb-8">Grand Pearl Hotel, Ocean Drive</p>
-              <a
-                href="#"
-                className="bg-gradient-to-r from-[#93e9be] to-[#ffffff] text-[#046c4a] font-bold text-xs uppercase tracking-widest px-8 py-3 rounded-full inline-flex items-center gap-2 mt-auto border border-[#93e9be] shadow-sm group-hover:shadow-md transition-all"
-              >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="relative w-full h-52 rounded-xl overflow-hidden mb-6 border border-[#93e9be]/40 bg-[#e8f5e9]">
+                  <iframe
+                    title={`${loc.venueLabel || "Venue"} Map`}
+                    src={getEmbedMapUrl(loc)}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                  />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <a
+                  href={getDirectMapUrl(loc)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-[#93e9be] to-[#ffffff] text-[#046c4a] font-bold text-xs uppercase tracking-widest px-8 py-3 rounded-full inline-flex items-center gap-2 mt-auto border border-[#93e9be] shadow-sm group-hover:shadow-md transition-all"
+                >
+                  <MapPin className="w-4 h-4" /> View on Map
+                </a>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

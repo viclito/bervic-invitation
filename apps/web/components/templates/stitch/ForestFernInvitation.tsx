@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   Camera,
   Utensils,
   PartyPopper,
@@ -16,8 +17,7 @@ import {
   X,
   Play,
   Sparkles,
-  Flower2,
-} from "lucide-react";
+  Flower2, ExternalLink } from "lucide-react";
 
 export default function ForestFernInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,6 +39,35 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "Holy Matrimony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "10:00 AM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "The Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "06:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const fernHeroImg =
     props.heroImage ||
@@ -235,47 +264,60 @@ export default function ForestFernInvitation(props: TemplateClassicFloralProps) 
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Matrimony */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-[#1f201b] p-8 sm:p-10 rounded-lg border border-[#434843]/30 flex flex-col items-center text-center group hover:bg-[#2a2a25] transition-all"
-            >
-              <Church className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="font-serif text-2xl font-bold text-[#d0e9d4] mb-2">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • {props.weddingTime || "10:00 AM"}</p>
-              <p className="text-xs text-[#c3c8c1] mb-8 leading-relaxed">
-                St. Antony Church<br />Kaval Kinaru, Tirunelveli District
-              </p>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-[#ffdcbd] hover:text-[#f0bd8b] font-bold text-xs uppercase tracking-widest border-b border-[#ffdcbd]/30 pb-1"
+            {locationList.slice(0, 2).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -4 }}
+                className="bg-[#1f201b] p-8 sm:p-10 rounded-lg border border-[#434843]/30 flex flex-col justify-between items-center text-center group hover:bg-[#2a2a25] transition-all"
               >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="w-full flex flex-col items-center">
+                  {idx === 0 ? (
+                    <Church className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
+                  ) : (
+                    <PartyPopper className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
+                  )}
+                  <h3 className="font-serif text-2xl font-bold text-[#d0e9d4] mb-2">
+                    {loc.name || (idx === 0 ? "Holy Matrimony" : "The Reception")}
+                  </h3>
+                  <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-3">
+                    {props.weddingDate || "Wedding Day"} • {loc.time || (idx === 0 ? (props.weddingTime || "10:00 AM") : "06:00 PM")}
+                  </p>
+                  <p className="text-xs text-[#c3c8c1] mb-6 leading-relaxed max-w-sm">
+                    {loc.address || props.contactAddress || props.venuePlace || "Venue address details"}
+                  </p>
+                </div>
 
-            {/* Reception */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              className="bg-[#1f201b] p-8 sm:p-10 rounded-lg border border-[#434843]/30 flex flex-col items-center text-center group hover:bg-[#2a2a25] transition-all"
-            >
-              <PartyPopper className="w-10 h-10 text-[#b4cdb8] mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="font-serif text-2xl font-bold text-[#d0e9d4] mb-2">The Reception</h3>
-              <p className="text-xs font-bold text-[#c3c8c1] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • 06:00 PM</p>
-              <p className="text-xs text-[#c3c8c1] mb-8 leading-relaxed">
-                Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
-              </p>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-[#ffdcbd] hover:text-[#f0bd8b] font-bold text-xs uppercase tracking-widest border-b border-[#ffdcbd]/30 pb-1"
-              >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="relative w-full h-44 rounded-lg overflow-hidden border border-[#434843]/40 mb-6 bg-[#13140f]">
+                  <iframe
+                    title={`${loc.venueLabel || "Venue"} Map`}
+                    src={getEmbedMapUrl(loc)}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
+                    loading="lazy"
+                  />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <a
+                  href={getDirectMapUrl(loc)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-[#ffdcbd] hover:text-[#f0bd8b] font-bold text-xs uppercase tracking-widest border-b border-[#ffdcbd]/30 pb-1 transition-colors"
+                >
+                  <MapPin className="w-4 h-4" /> Open in Google Maps
+                </a>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

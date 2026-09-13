@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Utensils,
   Menu,
@@ -16,8 +16,7 @@ import {
   MapPin,
   Clock,
   Play,
-  Heart,
-} from "lucide-react";
+  Heart, ExternalLink } from "lucide-react";
 
 export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -64,9 +63,9 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuBW1He3ci0RjaaHTO-Ksp_k1fh-anr0Gooh3wDiufDZBYJ5Wt-yx4i4n6y8hUJoIU6XI4jFOOgpH1DR0ZPV9H-IwxrTOn3A9CJOIzosmxnWTKt5R9LN1u42X66xSHYaJJTPc8SBh56566LeZtlNPbZkFmXRTQFcWT45NnScEBgrXAzYYB5gtfsLazi8GwDus4nraWnAg7HRYGmbyLIWcUsb0dh7nhok5Od391a_4CJm1FPhBYxgzA4-";
 
   const defaultTimeline = [
-    { time: "10:00 AM", title: "Wedding Ceremony", desc: "St. Antony Church, Kaval Kinaru", icon: <Church className="w-4 h-4 text-white" /> },
+    { time: "10:00 AM", title: "Wedding Ceremony", desc: props.venuePlace || "Ceremony Venue", icon: <Church className="w-4 h-4 text-white" /> },
     { time: "12:00 PM", title: "Wedding Feast", desc: "A celebratory lunch with family and friends.", icon: <Utensils className="w-4 h-4 text-white" /> },
-    { time: "07:00 PM", title: "Evening Reception", desc: "Ubahara Matha Mahal", icon: <PartyPopper className="w-4 h-4 text-white" /> },
+    { time: "07:00 PM", title: "Evening Reception", desc: props.contactAddress || props.venuePlace || "Reception Venue", icon: <PartyPopper className="w-4 h-4 text-white" /> },
   ];
 
   const timelineList =
@@ -337,87 +336,97 @@ export default function JadeInkInvitation(props: TemplateClassicFloralProps) {
             <div className="w-12 h-0.5 bg-[#006d43]" />
             <p className="text-sm text-[#5d5e61]">Join us as we step into a lifetime of love and togetherness</p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {(props.locations && props.locations.length > 0
               ? props.locations
               : [
                   {
-                    name: "Marriage Ceremony",
-                    venueLabel: "St. Antony Church",
-                    address: props.contactAddress || "Kaval Kinaru, Tirunelveli District",
+                    name: props.venuePlace || "Marriage Ceremony",
+                    venueLabel: "Marriage Ceremony",
+                    address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
                     image: "/images/templates/venue-ceremony.jpg",
                     mapLink: "https://maps.google.com",
                   },
                   {
-                    name: "Grand Reception",
-                    venueLabel: "Ubahara Matha Mahal",
-                    address: props.venuePlace || "Kaval Kinaru, Tirunelveli District",
+                    name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Grand Reception",
+                    venueLabel: "Grand Reception",
+                    address: props.contactAddress || props.venuePlace || "Reception Venue Address",
                     image: "/images/templates/venue-reception.jpg",
                     mapLink: "https://maps.google.com",
                   },
                 ]
-            ).map((loc, idx) => (
-              <div
-                key={idx}
-                id={`venue-card-${idx}`}
-                className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#006d43] transition-colors relative scroll-mt-28"
-              >
-                <div className="h-48 rounded-xl overflow-hidden mb-6 border border-[#bccabe]/30">
-                  <img
-                    src={
-                      loc.image ||
-                      (idx === 0
-                        ? "/images/templates/venue-ceremony.jpg"
-                        : "/images/templates/venue-reception.jpg")
-                    }
-                    alt={loc.name || "Venue"}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            ).map((loc, idx) => {
+              const embedUrl = resolveEmbedMapUrl(loc, props.venuePlace);
+              const directMapUrl = resolveDirectMapUrl(loc, props.venuePlace);
 
-                <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#006d43] block">
-                    {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
-                  </span>
-                  <h3 className="font-serif text-2xl font-bold text-[#191c1d]">
-                    {loc.name || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
-                  </h3>
-                  <p className="text-xs text-[#5d5e61]">
-                    {loc.address || "Kaval Kinaru, Tirunelveli District"}
-                  </p>
-                </div>
-
-                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#bccabe]/30 mb-6 bg-gray-100">
-                  <iframe
-                    title={`Venue Map ${idx + 1}`}
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                  />
-                </div>
-
-                <a
-                  href={
-                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
-                      ? loc.mapLink
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                        )}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006d43] hover:text-[#191c1d] uppercase tracking-wider"
+              return (
+                <div
+                  key={idx}
+                  id={`venue-card-${idx}`}
+                  className="bg-[#f8f9fa] border border-[#bccabe]/40 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#006d43] transition-colors relative scroll-mt-28"
                 >
-                  <MapPin className="w-4 h-4" />
-                  <span>Get Directions</span>
-                </a>
-              </div>
-            ))}
+                  <div>
+                    <div className="h-48 rounded-xl overflow-hidden mb-6 border border-[#bccabe]/30">
+                      <img
+                        src={
+                          loc.image ||
+                          (idx === 0
+                            ? "/images/templates/venue-ceremony.jpg"
+                            : "/images/templates/venue-reception.jpg")
+                        }
+                        alt={loc.name || "Venue"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="space-y-2 mb-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#006d43] block">
+                        {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                      </span>
+                      <h3 className="font-serif text-2xl font-bold text-[#191c1d]">
+                        {loc.name || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                      </h3>
+                      <p className="text-xs text-[#5d5e61]">
+                        {loc.address || props.contactAddress || "Venue address details"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="relative h-44 w-full rounded-xl overflow-hidden border border-[#bccabe]/30 mb-6 bg-gray-100">
+                      <iframe
+                        title={`Venue Map ${idx + 1}`}
+                        src={embedUrl}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                      />
+                      <a
+                        href={directMapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>Open in Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    <a
+                      href={directMapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 border border-[#006d43] text-[#006d43] hover:bg-[#006d43] hover:text-white px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all w-full"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      <span>Get Directions</span>
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

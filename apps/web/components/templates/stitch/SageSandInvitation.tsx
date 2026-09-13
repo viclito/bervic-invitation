@@ -1,21 +1,21 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Heart,
+import { Heart,
   Play,
   MapPin,
   Menu,
   X,
   Clock,
   Sparkles,
-  Calendar,
-} from "lucide-react";
+  Calendar, ExternalLink } from "lucide-react";
 
 export default function SageSandInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,6 +57,33 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Marriage Ceremony",
+            venueLabel: "Marriage Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Grand Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const heroBgImg =
     props.heroImage ||
@@ -288,48 +315,46 @@ export default function SageSandInvitation(props: TemplateClassicFloralProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {(props.locations && props.locations.length > 0
-              ? props.locations
-              : [
-                  {
-                    name: "Marriage Ceremony",
-                    venueLabel: props.venuePlace || "St. Antony Church, Kaval Kinaru",
-                    address: props.venuePlace || "St. Antony Church, Kaval Kinaru",
-                    mapLink: "https://maps.google.com",
-                  },
-                  {
-                    name: "Grand Reception",
-                    venueLabel: "Ubahara Matha Mahal, Kaval Kinaru",
-                    address: "Ubahara Matha Mahal, Kaval Kinaru",
-                    mapLink: "https://maps.google.com",
-                  },
-                ]
-            ).map((loc, idx) => (
+            {locationList.slice(0, 2).map((loc, idx) => (
               <motion.div
                 key={idx}
                 whileHover={{ y: -4 }}
                 className="bg-white rounded-2xl overflow-hidden border border-[#c5c8bc]/30 shadow-md flex flex-col justify-between"
               >
-                <div className="aspect-video w-full">
+                <div className="relative aspect-video w-full">
                   <iframe
-                    title={loc.name}
-                    src={loc.mapLink && loc.mapLink.includes("embed") ? loc.mapLink : (idx === 0 ? "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15764.041530932822!2d77.7249339!3d8.7135063!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b0411ed00645069%3A0xcb13e9a4440f93ff!2sSt.%20Antony's%20Church!5e0!3m2!1sen!2sin!4v1711200000000!5m2!1sen!2sin" : "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.433433618485!2d77.73359677590827!3d8.74526689408665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b041160ce3959c5%3A0x88981f33f7c4c379!2sUbahara%20Matha%20Mahal!5e0!3m2!1sen!2sin!4v1711200000001!5m2!1sen!2sin")}
+                    title={`${loc.venueLabel || "Venue"} Map`}
+                    src={getEmbedMapUrl(loc)}
                     className="w-full h-full border-0"
                     loading="lazy"
                   />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
                 <div className="p-8">
+                  <span className="text-[10px] font-bold text-[#526442] uppercase tracking-widest block mb-1">
+                    {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                  </span>
                   <h3 className="font-serif text-2xl font-bold text-[#526442] mb-2">
-                    {loc.venueLabel || loc.name || props.venuePlace}
+                    {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
                   </h3>
-                  <p className="text-xs text-[#44483f] mb-4">
-                    {loc.address && loc.address !== (loc.venueLabel || loc.name)
-                      ? loc.address
-                      : loc.name !== (loc.venueLabel || loc.name)
-                      ? loc.name
-                      : props.venuePlace}
+                  <p className="text-xs text-[#44483f] mb-6">
+                    {loc.address || props.contactAddress || props.venuePlace || "Venue address details"}
                   </p>
-                  <a href={loc.mapLink || "https://maps.google.com"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#526442] font-bold text-xs hover:text-[#6c5b4e]">
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[#526442] font-bold text-xs hover:text-[#6c5b4e] transition-colors"
+                  >
                     <MapPin className="w-4 h-4" /> Get Directions
                   </a>
                 </div>

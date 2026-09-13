@@ -1,12 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, ChevronDown, Sparkles, MapPin, ArrowRight } from "lucide-react";
+import { Menu, X, ChevronDown, Sparkles, MapPin, ArrowRight, ExternalLink } from "lucide-react";
 
 export default function ModernMonochromeEditorialInvitation(
   props: TemplateClassicFloralProps
@@ -128,30 +130,29 @@ export default function ModernMonochromeEditorialInvitation(
       ? props.loveStoryText
       : "We gather not just to mark the passage of time, but to celebrate the beautiful tapestry of friendships, experiences, and love that define her world.";
 
-  // Venue location fallback & sanitization
-  const rawVenueName =
+  // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
+  const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0].name || props.locations[0].venueLabel || "The Glasshouse Conservatory"
-      : "The Glasshouse Conservatory";
-
-  const displayVenueName = /marriage|ceremony|wedding/i.test(rawVenueName)
-    ? "The Glasshouse Conservatory"
-    : rawVenueName;
-
-  const rawVenueAddress =
-    props.locations && props.locations[0]
-      ? props.locations[0].address || "123 Botanical Gardens Way, Metropolis, NY 10001"
-      : "123 Botanical Gardens Way, Metropolis, NY 10001";
-
-  const displayVenueAddress = /marriage|wedding/i.test(rawVenueAddress)
-    ? "123 Botanical Gardens Way, Metropolis, NY 10001"
-    : rawVenueAddress;
-
-  const mainVenue = {
-    name: displayVenueName,
-    address: displayVenueAddress,
-    mapLink: (props.locations && props.locations[0] && props.locations[0].mapLink) || "https://maps.google.com",
-  };
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "The Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
+      : {
+          name: props.venuePlace || "The Venue",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
+        };
 
   return (
     <div className="bg-[#fcf9f8] text-[#1b1c1c] font-sans antialiased overflow-x-hidden relative selection:bg-[#5f5f00] selection:text-white">
@@ -531,24 +532,23 @@ export default function ModernMonochromeEditorialInvitation(
         <div className="max-w-[1280px] mx-auto px-6 md:px-16">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
             <div className="md:col-span-5 md:col-start-2 order-2 md:order-1">
-              <div className="aspect-square bg-[#e4e2e1] rounded-lg flex items-center justify-center border border-[#cac7b1] overflow-hidden relative shadow-sm">
-                <img
-                  alt="Venue map location"
-                  className="w-full h-full object-cover opacity-80"
-                  src={
-                    (mainVenue as { image?: string }).image ||
-                    props.coverImage ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
-                  }
+              <div className="aspect-square bg-[#e4e2e1] rounded-lg border border-[#cac7b1] overflow-hidden relative shadow-sm">
+                <iframe
+                  title={mainVenue.name || "Event Venue"}
+                  src={mainVenue.embedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg flex items-center gap-3 border border-[#cac7b1]">
-                    <MapPin className="w-6 h-6 text-[#904d00]" />
-                    <span className="font-bold font-serif text-[#5f5f00]">
-                      {mainVenue.name || "The Glasshouse Conservatory"}
-                    </span>
-                  </div>
-                </div>
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>Open in Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
 
@@ -557,13 +557,13 @@ export default function ModernMonochromeEditorialInvitation(
                 The Venue
               </h2>
               <h3 className="text-xl font-bold font-serif text-[#1b1c1c]">
-                {mainVenue.name || "The Glasshouse Conservatory"}
+                {mainVenue.name || "Celebration Venue"}
               </h3>
               <p className="text-base font-serif text-[#484837]">
                 {mainVenue.address}
               </p>
               <p className="text-sm font-serif text-[#484837] leading-relaxed">
-                Valet parking will be provided at the main entrance. Please arrive via the South Gate for expedited entry.
+                Guest parking and reception access provided upon arrival. We can't wait to celebrate together.
               </p>
               <a
                 className="inline-flex items-center gap-2 text-[#5f5f00] hover:text-[#797900] font-semibold text-xs uppercase tracking-wide transition-colors"
@@ -571,7 +571,7 @@ export default function ModernMonochromeEditorialInvitation(
                 target="_blank"
                 rel="noreferrer"
               >
-                <span>Get Directions</span>
+                <span>Open in Google Maps</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>

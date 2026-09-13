@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import { parseYouTubeEmbedUrl, getYouTubeVideoId } from "../classic-floral/LoveStoryVideoFacade";
@@ -277,80 +278,87 @@ export default function EmeraldGoldInvitation(props: TemplateClassicFloralProps)
               ? props.locations
               : [
                   {
-                    name: "Holy Matrimony",
-                    venueLabel: "St. Antony Church",
-                    address: props.contactAddress || "Kaval Kinaru, Tirunelveli District",
+                    name: props.venuePlace || "Holy Matrimony",
+                    venueLabel: "Holy Matrimony",
+                    address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
                     image: "/images/templates/venue-ceremony.jpg",
                     mapLink: "https://maps.google.com",
                   },
                   {
-                    name: "Grand Reception",
-                    venueLabel: "Ubahara Matha Mahal",
-                    address: props.venuePlace || "Kaval Kinaru, Tirunelveli District",
+                    name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Grand Reception",
+                    venueLabel: "Grand Reception",
+                    address: props.contactAddress || props.venuePlace || "Reception Venue Address",
                     image: "/images/templates/venue-reception.jpg",
                     mapLink: "https://maps.google.com",
                   },
                 ]
-            ).map((loc, idx) => (
-              <motion.div
-                key={idx}
-                id={`venue-card-${idx}`}
-                whileHover={{ y: -6 }}
-                className="border-2 border-[#735c00]/50 p-6 rounded bg-white shadow-md hover:shadow-xl transition-all flex flex-col justify-between scroll-mt-28"
-              >
-                <div>
-                  <div className="h-48 rounded overflow-hidden mb-6 border border-[#735c00]/30">
-                    <img
-                      src={
-                        loc.image ||
-                        (idx === 0
-                          ? "/images/templates/venue-ceremony.jpg"
-                          : "/images/templates/venue-reception.jpg")
-                      }
-                      alt={loc.name || "Venue"}
-                      className="w-full h-full object-cover"
-                    />
+            ).map((loc, idx) => {
+              const embedUrl = resolveEmbedMapUrl(loc, props.venuePlace);
+              const directMapUrl = resolveDirectMapUrl(loc, props.venuePlace);
+
+              return (
+                <motion.div
+                  key={idx}
+                  id={`venue-card-${idx}`}
+                  whileHover={{ y: -6 }}
+                  className="border-2 border-[#735c00]/50 p-6 rounded bg-white shadow-md hover:shadow-xl transition-all flex flex-col justify-between scroll-mt-28"
+                >
+                  <div>
+                    <div className="h-48 rounded overflow-hidden mb-6 border border-[#735c00]/30">
+                      <img
+                        src={
+                          loc.image ||
+                          (idx === 0
+                            ? "/images/templates/venue-ceremony.jpg"
+                            : "/images/templates/venue-reception.jpg")
+                        }
+                        alt={loc.name || "Venue"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#735c00] block mb-1">
+                      {loc.venueLabel || (idx === 0 ? "Holy Matrimony" : "Grand Reception")}
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-[#043927] mb-1">
+                      {loc.name || (idx === 0 ? "Holy Matrimony" : "Grand Reception")}
+                    </h3>
+                    <p className="text-xs text-[#414944] mb-4">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
                   </div>
 
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#735c00] block mb-1">
-                    {loc.venueLabel || (idx === 0 ? "Holy Matrimony" : "Grand Reception")}
-                  </span>
-                  <h3 className="font-serif text-2xl font-bold text-[#043927] mb-1">
-                    {loc.name || (idx === 0 ? "Holy Matrimony" : "Grand Reception")}
-                  </h3>
-                  <p className="text-xs text-[#414944] mb-4">
-                    {loc.address || "Kaval Kinaru, Tirunelveli District"}
-                  </p>
-                </div>
+                  <div className="relative w-full h-44 rounded overflow-hidden border border-[#735c00]/30 mb-6 bg-gray-100">
+                    <iframe
+                      title={`Venue Map ${idx + 1}`}
+                      src={embedUrl}
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                    />
+                    <a
+                      href={directMapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
 
-                <div className="w-full h-44 rounded overflow-hidden border border-[#735c00]/30 mb-6 bg-gray-100">
-                  <iframe
-                    title={`Venue Map ${idx + 1}`}
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                    className="w-full h-full border-0"
-                    loading="lazy"
-                  />
-                </div>
-
-                <a
-                  href={
-                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
-                      ? loc.mapLink
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                        )}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 border border-[#735c00] text-[#735c00] px-8 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#735c00] hover:text-white transition-colors"
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>Get Directions</span>
-                </a>
-              </motion.div>
-            ))}
+                  <a
+                    href={directMapUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 border border-[#735c00] text-[#735c00] px-8 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#735c00] hover:text-white transition-colors"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>Get Directions</span>
+                  </a>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>

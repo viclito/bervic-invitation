@@ -1,20 +1,20 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Menu,
   X,
   MapPin,
   Calendar,
   Clock,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, ExternalLink } from "lucide-react";
 
 export default function VeridianGardenInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,6 +36,45 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
+  // Date parsing
+  const parsedDate = props.weddingDate ? new Date(props.weddingDate) : null;
+  const isValidDate = parsedDate && !isNaN(parsedDate.getTime());
+  const dateDisplay = isValidDate
+    ? parsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : (props.weddingDate || "Wedding Day");
+  const yearDisplay = isValidDate
+    ? parsedDate.getFullYear().toString()
+    : "2026";
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "The Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "10:00 AM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "The Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "7:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
+
   const coupleImg1 =
     props.coupleImage ||
     props.coverImage ||
@@ -47,9 +86,9 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
     "/images/templates/groom-bride-2.jpg";
 
   const defaultTimeline = [
-    { time: "10:00 AM", title: "Ceremony", desc: "Exchange of vows and rings at St. Antony Church." },
+    { time: props.weddingTime || "10:00 AM", title: "Ceremony", desc: `Exchange of vows and rings at ${props.venuePlace || "the ceremony venue"}.` },
     { time: "11:30 AM", title: "Photos", desc: "Family portraits and couple session." },
-    { time: "07:00 PM", title: "Reception", desc: "Dinner, drinks, and dancing late into the night at Ubahara Matha Mahal." },
+    { time: "07:00 PM", title: "Reception", desc: `Dinner, drinks, and celebration at ${props.contactAddress || props.venuePlace || "the reception venue"}.` },
   ];
 
   const timelineList =
@@ -243,10 +282,19 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#061b0e]" />
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-[#061b0e] mb-2">The Ceremony</p>
-                <h3 className="text-2xl font-bold text-[#061b0e] mb-1">St. Antony Church</h3>
-                <p className="italic text-sm text-[#434843] mb-4">10:00 AM</p>
-                <p className="text-sm text-[#1b1c1c]">Join us for the solemnization of our vows in the historic sanctuary.</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#061b0e] mb-2">
+                  {locationList[0]?.venueLabel || "The Ceremony"}
+                </p>
+                <h3 className="text-2xl font-bold text-[#061b0e] mb-1">
+                  {locationList[0]?.name || "Ceremony Venue"}
+                </h3>
+                <p className="italic text-sm text-[#434843] mb-2">
+                  {locationList[0]?.time || props.weddingTime || "10:00 AM"}
+                </p>
+                <p className="text-xs text-[#434843] mb-4">
+                  {locationList[0]?.address || props.contactAddress || "Venue address details"}
+                </p>
+                <p className="text-sm text-[#1b1c1c]">Join us for the solemnization of our vows in the presence of loved ones.</p>
               </div>
               <Church className="w-9 h-9 text-[#735c00] flex-shrink-0" />
             </div>
@@ -258,9 +306,18 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
             className="md:col-span-5 bg-[#1b3022] text-[#819986] p-8 relative shadow-sm"
           >
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#735c00]" />
-            <p className="text-xs font-bold uppercase tracking-widest mb-2 opacity-80">The Reception</p>
-            <h3 className="text-2xl font-bold text-white mb-1">Ubahara Matha Mahal</h3>
-            <p className="italic text-sm mb-4 opacity-90">7:00 PM</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2 opacity-80">
+              {locationList[1]?.venueLabel || "The Reception"}
+            </p>
+            <h3 className="text-2xl font-bold text-white mb-1">
+              {locationList[1]?.name || (locationList[0]?.name ? `${locationList[0].name} Reception` : "Reception Venue")}
+            </h3>
+            <p className="italic text-sm mb-2 opacity-90">
+              {locationList[1]?.time || "7:00 PM"}
+            </p>
+            <p className="text-xs text-white/80 mb-4">
+              {locationList[1]?.address || props.contactAddress || "Venue address details"}
+            </p>
             <p className="text-sm text-white/90">An evening of dining, dancing, and joyous celebration to commemorate our union.</p>
           </motion.div>
 
@@ -269,12 +326,12 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
             <div className="absolute inset-1 border border-[#735c00] pointer-events-none" />
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-[#735c00] mb-1">Date</p>
-              <p className="text-2xl font-bold text-[#061b0e]">May 13</p>
+              <p className="text-2xl font-bold text-[#061b0e]">{dateDisplay}</p>
             </div>
             <div className="h-10 w-px bg-[#735c00] hidden md:block" />
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-[#735c00] mb-1">Year</p>
-              <p className="text-2xl font-bold text-[#061b0e]">2026</p>
+              <p className="text-2xl font-bold text-[#061b0e]">{yearDisplay}</p>
             </div>
           </div>
         </div>
@@ -286,49 +343,54 @@ export default function VeridianGardenInvitation(props: TemplateClassicFloralPro
           <h2 className="text-3xl md:text-4xl font-bold text-[#061b0e] text-center mb-12">Event Locations</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Ceremony Map */}
-            <div className="bg-white p-6 border-2 border-[#735c00] relative flex flex-col gap-4 shadow-sm">
-              <div className="absolute inset-1 border border-[#735c00] pointer-events-none" />
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-2xl font-bold text-[#061b0e]">St. Antony Church</h3>
-                  <p className="text-xs text-[#434843] mt-1">123 Sanctuary Way, Cityville</p>
+            {locationList.slice(0, 2).map((loc, idx) => (
+              <div key={idx} className="bg-white p-6 border-2 border-[#735c00] relative flex flex-col justify-between gap-4 shadow-sm">
+                <div className="absolute inset-1 border border-[#735c00] pointer-events-none" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#735c00] uppercase tracking-widest block mb-1">
+                      {loc.venueLabel || (idx === 0 ? "The Ceremony" : "The Reception")}
+                    </span>
+                    <h3 className="text-2xl font-bold text-[#061b0e]">
+                      {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                    </h3>
+                    <p className="text-xs text-[#434843] mt-1 max-w-sm">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
+                  </div>
+                  <MapPin className="w-7 h-7 text-[#735c00] flex-shrink-0" />
                 </div>
-                <MapPin className="w-7 h-7 text-[#735c00]" />
-              </div>
-              <div className="w-full h-60 bg-[#e4e2e1] border border-[#c3c8c1] rounded overflow-hidden">
-                <iframe
-                  title="Ceremony Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            {/* Reception Map */}
-            <div className="bg-white p-6 border-2 border-[#735c00] relative flex flex-col gap-4 shadow-sm">
-              <div className="absolute inset-1 border border-[#735c00] pointer-events-none" />
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-2xl font-bold text-[#061b0e]">Ubahara Matha Mahal</h3>
-                  <p className="text-xs text-[#434843] mt-1">456 Celebration Ave, Cityville</p>
+                <div className="relative w-full h-60 bg-[#e4e2e1] border border-[#c3c8c1] rounded overflow-hidden">
+                  <iframe
+                    title={`${loc.venueLabel || "Venue"} Map`}
+                    src={getEmbedMapUrl(loc)}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                  />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
-                <MapPin className="w-7 h-7 text-[#735c00]" />
+                <a
+                  href={getDirectMapUrl(loc)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-[#735c00] text-[#735c00] hover:bg-[#735c00] hover:text-white font-bold text-xs uppercase tracking-widest transition-all rounded"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Open in Google Maps</span>
+                </a>
               </div>
-              <div className="w-full h-60 bg-[#e4e2e1] border border-[#c3c8c1] rounded overflow-hidden">
-                <iframe
-                  title="Reception Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

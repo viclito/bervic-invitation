@@ -106,8 +106,10 @@ export default function TemplatePreviewBottomBar({
 
   const handleEditEventDetails = (e: React.MouseEvent) => {
     e.preventDefault();
-    const eventType = currentCategory === "birthday" ? "BIRTHDAY" : "WEDDING";
-    const editUrl = `/dashboard/event-profile?eventType=${eventType}&returnToTemplate=${slug}`;
+    const editUrl =
+      isTemplateOwned && matchingOwnedInv?.id
+        ? `/dashboard/event-profile?invitationId=${matchingOwnedInv.id}&returnToTemplate=${slug}`
+        : `/dashboard/event-profile?returnToTemplate=${slug}`;
     if (status === "unauthenticated") {
       router.push(`/auth/login?callbackUrl=${encodeURIComponent(editUrl)}`);
     } else {

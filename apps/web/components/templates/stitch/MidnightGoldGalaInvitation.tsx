@@ -1,20 +1,20 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Menu,
+import { Menu,
   X,
   PlayCircle,
   MapPin,
   Car,
   Sparkles,
-  ArrowRight,
-} from "lucide-react";
+  ArrowRight, ExternalLink } from "lucide-react";
 
 export default function MidnightGoldGalaInvitation(
   props: TemplateClassicFloralProps
@@ -114,13 +114,27 @@ export default function MidnightGoldGalaInvitation(
         ];
 
   // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Gala Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Gala Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: "The Grand Estate",
-          address: "123 Elegance Boulevard, Metropolis, NY 10001",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Gala Venue",
+          address: props.contactAddress || props.venuePlace || "Gala Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   return (
@@ -487,26 +501,35 @@ export default function MidnightGoldGalaInvitation(
         <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto" id="venue">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
             <div className="md:col-span-6 order-2 md:order-1">
-              <div className="w-full h-80 bg-[#e4e2e1] flex flex-col items-center justify-center rounded-lg shadow-md border border-[#cac7b1]/40 p-6 text-center space-y-2">
-                <MapPin className="w-10 h-10 text-[#904d00]" />
-                <span className="text-[#5d5c58] font-semibold text-sm">
-                  {mainVenue.name || "The Grand Estate"}
-                </span>
-                <span className="text-[#484837] text-xs max-w-xs">
-                  {mainVenue.address}
-                </span>
+              <div className="relative w-full h-80 bg-[#e4e2e1] rounded-lg shadow-md border border-[#cac7b1]/40 overflow-hidden">
+                <iframe
+                  title={mainVenue.name || "Gala Location"}
+                  src={mainVenue.embedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                />
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>Open in Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
 
             <div className="md:col-span-6 order-1 md:order-2 space-y-6 md:pl-12">
               <h2 className="text-3xl md:text-5xl font-bold font-serif gold-shimmer">
-                {mainVenue.name || "The Grand Estate"}
+                {mainVenue.name || "Gala Venue"}
               </h2>
               <p className="text-lg text-[#484837] font-serif leading-relaxed">
                 {mainVenue.address}
               </p>
               <p className="text-base text-[#5d5c58] font-serif leading-relaxed">
-                Complimentary valet parking will be available at the main entrance. We recommend arriving 15 minutes prior to the start time.
+                Complimentary parking will be available upon arrival. We recommend arriving 15 minutes prior to the start time.
               </p>
               <a
                 className="inline-flex items-center gap-2 text-[#904d00] hover:text-[#5f5f00] transition-colors font-semibold text-xs uppercase tracking-wider"
@@ -514,7 +537,7 @@ export default function MidnightGoldGalaInvitation(
                 target="_blank"
                 rel="noreferrer"
               >
-                <span>Get Directions</span>
+                <span>Open in Google Maps</span>
                 <span className="material-symbols-outlined text-sm">
                   arrow_forward
                 </span>

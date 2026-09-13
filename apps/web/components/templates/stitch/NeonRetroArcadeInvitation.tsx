@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Menu,
+import { Menu,
   X,
   Play,
   MapPin,
@@ -15,8 +16,7 @@ import {
   Gamepad2,
   Star,
   Trophy,
-  ArrowRight,
-} from "lucide-react";
+  ArrowRight, ExternalLink } from "lucide-react";
 
 export default function NeonRetroArcadeInvitation(
   props: TemplateClassicFloralProps
@@ -119,14 +119,31 @@ export default function NeonRetroArcadeInvitation(
         ];
 
   // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          venueLabel: props.locations[0].venueLabel || props.locations[0].name || props.venuePlace || "The Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+          image:
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuDySUwQFGtF9sIxvghIl4uLA1fSHa-A6b-UMJMDaoxvkFKwvE-WyZS3_sXbPsawxBiAn45feKiltL8dap51TQPPPWswiKpUSFFcSzF_oLpwLUmZLgM1SWyAMIWJ0QQ44xx7-Ggz-gfTd__ORbc18cP3rtVJdS3jLzDvxNqVr7I0amQAHuohADqiAjLR0bJAwCzDCMt3jrkIwVTzybcPYdwTFhkFcugasYwUjDkqSAEdFKCuuds-4MfG",
+        }
       : {
-          name: "The Secret Level",
-          venueLabel: "Villa Seraphina",
-          address: "123 Coastal Drive, Riviera",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Celebration Venue",
+          venueLabel: props.venuePlace || "The Setting",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
           image:
             "https://lh3.googleusercontent.com/aida-public/AB6AXuDySUwQFGtF9sIxvghIl4uLA1fSHa-A6b-UMJMDaoxvkFKwvE-WyZS3_sXbPsawxBiAn45feKiltL8dap51TQPPPWswiKpUSFFcSzF_oLpwLUmZLgM1SWyAMIWJ0QQ44xx7-Ggz-gfTd__ORbc18cP3rtVJdS3jLzDvxNqVr7I0amQAHuohADqiAjLR0bJAwCzDCMt3jrkIwVTzybcPYdwTFhkFcugasYwUjDkqSAEdFKCuuds-4MfG",
         };
@@ -646,10 +663,10 @@ export default function NeonRetroArcadeInvitation(
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div className="max-w-2xl">
               <h2 className="text-4xl md:text-6xl font-bold font-serif text-[#1b1c1c] mb-6">
-                The Secret Level
+                {mainVenue.name || "The Venue"}
               </h2>
               <p className="text-lg text-[#484837] font-serif leading-relaxed">
-                Join us at an exclusive coastal villa transformed into a sophisticated retro haven. Enjoy panoramic views while setting high scores.
+                Join us at an exclusive venue transformed into a sophisticated celebration haven. We look forward to celebrating together!
               </p>
             </div>
             <a
@@ -658,7 +675,7 @@ export default function NeonRetroArcadeInvitation(
               target="_blank"
               rel="noreferrer"
             >
-              <span>Get Directions</span>
+              <span>Open in Google Maps</span>
               <span className="material-symbols-outlined text-[18px]">
                 arrow_forward
               </span>
@@ -690,12 +707,23 @@ export default function NeonRetroArcadeInvitation(
             </div>
 
             {/* Map Tile */}
-            <div className="md:col-span-4 row-span-1 rounded-xl overflow-hidden relative border border-[#cac7b1]/20 group shadow-sm">
-              <img
-                alt="Map Location"
-                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-500"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Ntkfo22ExMuItzuHyaXsO2KiM6v6fUcbfCZrH0MxLDVnahdfU44B9gQNnyKU9aI1woPl4qDrTo5-Tf41Nm74Bs7uJ2MvRE8_uVn0sCxCUO1CHI7r4NPleQjtCwJJAdvh5GtBnRuKtZCKJ-a3lZB74M3Um98BxIVaQoTIcZgCzBGOTKeA3QjlsIAQ-wkgSSaELIda6aVPfwhkOjqpcc2S-Q9uk7cdiu0mCw6cZ5b6m-V8FOqesTpW"
+            <div className="md:col-span-4 row-span-1 rounded-xl overflow-hidden relative border border-[#cac7b1]/20 group shadow-sm bg-[#e4e2e1]">
+              <iframe
+                title={mainVenue.name || "Event Venue"}
+                src={mainVenue.embedUrl}
+                className="w-full h-full border-0"
+                loading="lazy"
               />
+              <a
+                href={mainVenue.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>Open in Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
 
             {/* Info Tile */}

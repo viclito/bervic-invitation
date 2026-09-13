@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   MapPin,
   Menu,
@@ -15,8 +16,7 @@ import {
   Play,
   Sun,
   Heart,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, ExternalLink } from "lucide-react";
 
 export default function SunsetTerracottaInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -58,6 +58,35 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "Holy Matrimony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "10:00 AM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Golden Hour Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "07:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const coupleHeroImg =
     props.heroImage ||
@@ -226,51 +255,57 @@ export default function SunsetTerracottaInvitation(props: TemplateClassicFloralP
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Matrimony */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#31150c] border border-[#e07a5f]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <Church className="w-10 h-10 text-[#f4a261] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#f4a261] uppercase tracking-widest mb-4">MAY 13, 2026 • 10:00 AM</p>
-              <p className="text-xs text-[#d8a899] mb-6 leading-relaxed">
-                St. Antony Church<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#e07a5f] text-[#f4a261] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e07a5f] hover:text-white transition-colors"
+          {locationList.map((loc, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -6 }}
+              className="bg-[#31150c] border border-[#e07a5f]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between overflow-hidden"
             >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
+              <div>
+                {idx % 2 === 0 ? (
+                  <Church className="w-10 h-10 text-[#f4a261] mx-auto mb-4" />
+                ) : (
+                  <PartyPopper className="w-10 h-10 text-[#f4a261] mx-auto mb-4" />
+                )}
+                <h3 className="font-serif text-2xl font-bold text-white mb-1">{loc.venueLabel || loc.name || `Event ${idx + 1}`}</h3>
+                <p className="text-xs font-bold text-[#f4a261] uppercase tracking-widest mb-4">
+                  {loc.time ? `${props.weddingDate ? new Date(props.weddingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase() : "MAY 13, 2026"} • ${loc.time}` : (props.weddingTime || "10:00 AM")}
+                </p>
+                <p className="text-xs text-[#d8a899] mb-4 leading-relaxed font-medium">
+                  {loc.name && <span className="font-semibold text-white block mb-0.5">{loc.name}</span>}
+                  {loc.address || props.contactAddress || props.venuePlace || "Ceremony Venue Address"}
+                </p>
 
-          {/* Reception */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-[#31150c] border border-[#e07a5f]/40 p-8 sm:p-10 text-center rounded-xl shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <PartyPopper className="w-10 h-10 text-[#f4a261] mx-auto mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">Golden Hour Reception</h3>
-              <p className="text-xs font-bold text-[#f4a261] uppercase tracking-widest mb-4">MAY 13, 2026 • 07:00 PM</p>
-              <p className="text-xs text-[#d8a899] mb-6 leading-relaxed">
-                Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
-              </p>
-            </div>
-            <a
-              href="https://maps.google.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-[#e07a5f] text-[#f4a261] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e07a5f] hover:text-white transition-colors"
-            >
-              <MapPin className="w-4 h-4" /> View Location
-            </a>
-          </motion.div>
+                <div className="relative w-full h-40 rounded-lg overflow-hidden border border-[#e07a5f]/30 mb-6 shadow-inner bg-[#1f0d07]">
+                  <iframe
+                    title={loc.name || `Location Map ${idx + 1}`}
+                    src={getEmbedMapUrl(loc)}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+
+              <a
+                href={getDirectMapUrl(loc)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 border border-[#e07a5f] text-[#f4a261] px-6 py-3 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#e07a5f] hover:text-white transition-colors"
+              >
+                <MapPin className="w-4 h-4" /> Open in Google Maps
+              </a>
+            </motion.div>
+          ))}
         </div>
       </section>
 

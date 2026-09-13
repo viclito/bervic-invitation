@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -35,17 +37,12 @@ export default function ArtDecoGrandeurInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "The Grand Gatsby Estate",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "1924 West Egg Boulevard, Long Island, NY",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
         }
       : {
           name: props.venuePlace || "The Grand Gatsby Estate",
           address: props.contactAddress || props.venuePlace || "1924 West Egg Boulevard, Long Island, NY",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Celebrant portrait priority

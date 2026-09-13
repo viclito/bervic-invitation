@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { getWeddingTargetDate } from "@/lib/dateUtils";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 
 const TOTAL_SCENE1_FRAMES = 240;
 const TOTAL_SCENE2_FRAMES = 240;
@@ -62,6 +63,7 @@ export interface ScrollScrubberCanvasProps {
   galleryImages?: string[];
   guestName?: string;
   contactPhone?: string;
+  venuePlace?: string;
   contactAddress?: string;
   onExploreClick?: () => void;
   onSelectBlessing?: (blessing: string) => void;
@@ -81,45 +83,12 @@ export default function ScrollScrubberCanvas({
   partnerTwoImage,
   guestName = "Honored Guest",
   contactPhone,
+  venuePlace,
   contactAddress,
   onExploreClick,
   onSelectBlessing,
-  events = [
-    {
-      time: "03:30 PM",
-      title: "Guest Arrival & Welcome Drinks",
-      location: "Grand Foyer, St. Patrick's",
-      description: "Welcome champagne & classical harp performance",
-    },
-    {
-      time: "04:30 PM",
-      title: "Holy Matrimony Ceremony",
-      location: "St. Patrick's Cathedral",
-      description: "Exchange of vows and ring ceremony",
-    },
-    {
-      time: "07:00 PM",
-      title: "Royal Reception & Gala Dinner",
-      location: "The Palace Ballroom",
-      description: "Live band, dinner feast, and first dance",
-    },
-  ],
-  locations = [
-    {
-      title: "Wedding Ceremony",
-      name: "St. Patrick's Cathedral",
-      address: "124 Cathedral Square, Central City",
-      time: "04:30 PM",
-      mapUrl: "https://maps.google.com",
-    },
-    {
-      title: "Evening Reception",
-      name: "The Palace Grand Ballroom",
-      address: "88 Royal Gardens Boulevard",
-      time: "07:00 PM",
-      mapUrl: "https://maps.google.com",
-    },
-  ],
+  events,
+  locations,
   galleryImages = [
     "/images/templates/gallery-1.jpg",
     "/images/templates/gallery-2.jpg",
@@ -128,6 +97,47 @@ export default function ScrollScrubberCanvas({
   ],
   bgAudioUrl,
 }: ScrollScrubberCanvasProps) {
+  const finalEvents = events && events.length > 0 ? events : [
+    {
+      time: "03:30 PM",
+      title: "Guest Arrival & Welcome Drinks",
+      location: venuePlace ? `${venuePlace} Foyer` : "Grand Foyer",
+      description: "Welcome champagne & classical harp performance",
+    },
+    {
+      time: weddingTime || "04:30 PM",
+      title: "Holy Matrimony Ceremony",
+      location: venuePlace || "Ceremony Venue",
+      description: "Exchange of vows and ring ceremony",
+    },
+    {
+      time: "07:00 PM",
+      title: "Royal Reception & Gala Dinner",
+      location: contactAddress ? (venuePlace ? `${venuePlace} Reception` : "Grand Reception Hall") : (venuePlace || "Reception Venue"),
+      description: "Live band, dinner feast, and first dance",
+    },
+  ];
+
+  const finalLocations = locations && locations.length > 0 ? locations : [
+    {
+      title: "Wedding Ceremony",
+      name: venuePlace || "Ceremony Venue",
+      address: contactAddress || venuePlace || "Ceremony Venue Address",
+      time: weddingTime || "04:30 PM",
+      mapUrl: "https://maps.google.com",
+    },
+    {
+      title: "Evening Reception",
+      name: contactAddress ? (venuePlace ? `${venuePlace} Reception` : "Grand Reception Hall") : "Reception Venue",
+      address: contactAddress || venuePlace || "Reception Venue Address",
+      time: "07:00 PM",
+      mapUrl: "https://maps.google.com",
+    },
+  ];
+
+  const getDirectMapUrl = (loc: LocationItem) => {
+    return resolveDirectMapUrl(loc, venuePlace);
+  };
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<(HTMLImageElement | null)[]>(
@@ -972,8 +982,8 @@ export default function ScrollScrubberCanvas({
 
               {/* Compact 2-Column Responsive Grid for All Events */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
-                {events.map((evt, idx) => {
-                  const itemStyle = calculateEventItemStyle(idx, events.length);
+                {finalEvents.map((evt, idx) => {
+                  const itemStyle = calculateEventItemStyle(idx, finalEvents.length);
                   return (
                     <div
                       key={idx}
@@ -1029,7 +1039,7 @@ export default function ScrollScrubberCanvas({
 
               {/* Venue Cards Grid (Seamless, No Outer Box) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl mx-auto">
-                {locations.map((loc, idx) => (
+                {finalLocations.map((loc, idx) => (
                   <div
                     key={idx}
                     className="p-5 sm:p-6 rounded-2xl bg-[#0C0C0C]/95 sm:bg-[#070707]/80 sm:backdrop-blur-md border border-[#D9A441]/35 shadow-[0_12px_35px_rgba(0,0,0,0.85)] flex flex-col justify-between text-left sm:transition-all sm:duration-300 sm:hover:scale-[1.02] sm:hover:border-[#D9A441]"
@@ -1054,17 +1064,15 @@ export default function ScrollScrubberCanvas({
                       )}
                     </div>
 
-                    {loc.mapUrl && (
-                      <a
-                        href={loc.mapUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-5 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-semibold hover:bg-[#D9A441] hover:text-[#0B0B0B] transition-all shadow-[0_0_12px_rgba(217,164,65,0.2)]"
-                      >
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>Get Directions</span>
-                      </a>
-                    )}
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-5 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D9A441]/15 border border-[#D9A441]/40 text-[#D9A441] text-xs font-semibold hover:bg-[#D9A441] hover:text-[#0B0B0B] transition-all shadow-[0_0_12px_rgba(217,164,65,0.2)]"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>Get Directions</span>
+                    </a>
                   </div>
                 ))}
               </div>

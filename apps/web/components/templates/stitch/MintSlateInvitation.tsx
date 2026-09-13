@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Utensils,
   Menu,
@@ -16,8 +16,7 @@ import {
   MapPin,
   Clock,
   ArrowUpRight,
-  Play,
-} from "lucide-react";
+  Play, ExternalLink } from "lucide-react";
 
 export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -335,80 +334,91 @@ export default function MintSlateInvitation(props: TemplateClassicFloralProps) {
               ? props.locations
               : [
                   {
-                    name: "Marriage Ceremony",
-                    venueLabel: "St. Antony Church",
-                    address: props.contactAddress || "Kaval Kinaru, Tirunelveli District",
+                    name: props.venuePlace || "Marriage Ceremony",
+                    venueLabel: "Marriage Ceremony",
+                    address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
                     image: "/images/templates/venue-ceremony.jpg",
                     mapLink: "https://maps.google.com",
                   },
                   {
-                    name: "Grand Reception",
-                    venueLabel: "Ubahara Matha Mahal",
-                    address: props.venuePlace || "Kaval Kinaru, Tirunelveli District",
+                    name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Grand Reception",
+                    venueLabel: "Grand Reception",
+                    address: props.contactAddress || props.venuePlace || "Reception Venue Address",
                     image: "/images/templates/venue-reception.jpg",
                     mapLink: "https://maps.google.com",
                   },
                 ]
-            ).map((loc, idx) => (
-              <div
-                key={idx}
-                id={`venue-card-${idx}`}
-                className="border border-[#191c1d] p-6 bg-white flex flex-col justify-between hover:bg-[#f2f4f4] transition-colors relative shadow-sm scroll-mt-28"
-              >
-                <div className="h-48 rounded border border-[#191c1d] overflow-hidden mb-6">
-                  <img
-                    src={
-                      loc.image ||
-                      (idx === 0
-                        ? "/images/templates/venue-ceremony.jpg"
-                        : "/images/templates/venue-reception.jpg")
-                    }
-                    alt={loc.name || "Venue"}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            ).map((loc, idx) => {
+              const embedUrl = resolveEmbedMapUrl(loc, props.venuePlace);
+              const directMapUrl = resolveDirectMapUrl(loc, props.venuePlace);
 
-                <div className="flex-1 space-y-2 mb-6">
-                  <p className="font-mono text-xs font-bold text-[#246a52] uppercase">
-                    {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
-                  </p>
-                  <h3 className="text-2xl font-bold text-[#191c1d] uppercase">
-                    {loc.name || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
-                  </h3>
-                  <p className="text-xs text-[#3f4944]">
-                    {loc.address || "Kaval Kinaru, Tirunelveli District"}
-                  </p>
-                </div>
-
-                <div className="h-44 w-full border border-[#191c1d] overflow-hidden rounded mb-6 bg-gray-100">
-                  <iframe
-                    title={`Venue Map ${idx + 1}`}
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                  />
-                </div>
-
-                <a
-                  href={
-                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
-                      ? loc.mapLink
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                        )}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#191c1d] border-b-2 border-[#246a52] pb-0.5 hover:text-[#246a52] uppercase self-start"
+              return (
+                <div
+                  key={idx}
+                  id={`venue-card-${idx}`}
+                  className="border border-[#191c1d] p-6 bg-white flex flex-col justify-between hover:bg-[#f2f4f4] transition-colors relative shadow-sm scroll-mt-28"
                 >
-                  View Location Map <ArrowUpRight className="w-4 h-4" />
-                </a>
-              </div>
-            ))}
+                  <div>
+                    <div className="h-48 rounded border border-[#191c1d] overflow-hidden mb-6">
+                      <img
+                        src={
+                          loc.image ||
+                          (idx === 0
+                            ? "/images/templates/venue-ceremony.jpg"
+                            : "/images/templates/venue-reception.jpg")
+                        }
+                        alt={loc.name || "Venue"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="flex-1 space-y-2 mb-6">
+                      <p className="font-mono text-xs font-bold text-[#246a52] uppercase">
+                        {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                      </p>
+                      <h3 className="text-2xl font-bold text-[#191c1d] uppercase">
+                        {loc.name || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                      </h3>
+                      <p className="text-xs text-[#3f4944]">
+                        {loc.address || props.contactAddress || "Venue address details"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="relative h-44 w-full border border-[#191c1d] overflow-hidden rounded mb-6 bg-gray-100">
+                      <iframe
+                        title={`Venue Map ${idx + 1}`}
+                        src={embedUrl}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                      />
+                      <a
+                        href={directMapUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>Open in Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    <a
+                      href={directMapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#191c1d] border-b-2 border-[#246a52] pb-0.5 hover:text-[#246a52] uppercase self-start"
+                    >
+                      View Location Map <ArrowUpRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

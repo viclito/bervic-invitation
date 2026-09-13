@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -50,12 +52,7 @@ export default function FreshCitrusSummerInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "The Orangery Botanical Pavilion",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Sunlit Avenue, Botanical Gardens",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
           image:
             (props.locations[0] as any).image ||
             "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
@@ -63,7 +60,7 @@ export default function FreshCitrusSummerInvitation(
       : {
           name: props.venuePlace || "The Orangery Botanical Pavilion",
           address: props.contactAddress || props.venuePlace || "123 Sunlit Avenue, Botanical Gardens",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
           image: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };
 

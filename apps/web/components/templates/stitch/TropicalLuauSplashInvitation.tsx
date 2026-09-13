@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -7,8 +9,7 @@ import { TemplateClassicFloralProps } from "@/types/template";
 import FallingTropicalLeaves from "./FallingTropicalLeaves";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Menu,
+import { Menu,
   X,
   Play,
   MapPin,
@@ -17,8 +18,7 @@ import {
   Sparkles,
   Quote,
   Cake,
-  Gift,
-} from "lucide-react";
+  Gift, ExternalLink } from "lucide-react";
 
 export default function TropicalLuauSplashInvitation(
   props: TemplateClassicFloralProps
@@ -133,14 +133,31 @@ export default function TropicalLuauSplashInvitation(
         ];
 
   // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          venueLabel: props.locations[0].venueLabel || props.locations[0].name || props.venuePlace || "The Setting",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+          image:
+            "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq",
+        }
       : {
-          name: "The Birthday Venue",
-          venueLabel: "The Secret Level Coastal Villa",
-          address: "123 Coastal Breeze Way, Mediterranean Coast",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Celebration Venue",
+          venueLabel: props.venuePlace || "The Setting",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
           image:
             "https://lh3.googleusercontent.com/aida-public/AB6AXuAvWe_21aYaIvERquGq11QP4lDuSfJCppNLVOt1dIz4c0LnAUaS93PgIfx_jQCE0TT2Oled51PeaMiaxd81oA9Au5EwOAIV_SPYOnomEmQLpdcLfwguhecc6ggyvogJ3Tak0NcFIPbk_blt02bmnRBealKovkdtW2C80JY-VI3nIJyMZzJDvE9U-AoOCQJtCLD3I6bgb7677rP8GKjaYB6RhhpCC0Xt2PrOuK6-UZR2IoMHBqRmUuJq",
         };
@@ -521,38 +538,46 @@ export default function TropicalLuauSplashInvitation(
       {/* Venue & Logistics Section */}
       <section className="py-20 px-6 md:px-16 bg-[#f6f3f2]" id="venue">
         <div className="max-w-[1280px] mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div className="order-2 md:order-1 relative rounded-2xl overflow-hidden shadow-md h-[380px] bg-[#fcf9f8] border border-[#cac7b1]/30 flex items-center justify-center p-6 text-center">
-            <div
-              className="absolute inset-0 bg-cover bg-center opacity-40"
-              style={{ backgroundImage: `url('${mainVenue.image}')` }}
-            ></div>
-            <div className="relative z-10 bg-[#fcf9f8]/95 backdrop-blur-sm p-6 rounded-xl border border-[#cac7b1]/40 max-w-[85%] shadow-sm">
-              <MapPin className="w-8 h-8 text-[#5f5f00] mx-auto mb-2" />
-              <h4 className="text-2xl font-bold font-serif text-[#5f5f00]">
-                {mainVenue.venueLabel}
-              </h4>
-              <p className="text-sm text-[#484837] mt-2 font-serif">
-                {mainVenue.address}
-              </p>
-              <a
-                href={mainVenue.mapLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block mt-4 text-[#904d00] font-semibold text-xs uppercase tracking-wider hover:underline"
-              >
-                Get Directions →
-              </a>
-            </div>
+          <div className="order-2 md:order-1 relative rounded-2xl overflow-hidden shadow-md h-[380px] bg-[#fcf9f8] border border-[#cac7b1]/30">
+            <iframe
+              title={mainVenue.name || "Celebration Setting"}
+              src={mainVenue.embedUrl}
+              className="w-full h-full border-0"
+              loading="lazy"
+            />
+            <a
+              href={mainVenue.mapLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span>Open in Maps</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
 
           <div className="order-1 md:order-2 space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00]">
-              The Setting
-            </h2>
-            <div className="w-12 h-1 bg-[#904d00] rounded-full"></div>
-            <p className="text-base md:text-lg text-[#484837] font-serif leading-relaxed">
-              Our birthday celebration takes place at a private coastal estate, offering panoramic views of the ocean and lush botanical gardens.
-            </p>
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold font-serif text-[#5f5f00] mb-2">
+                {mainVenue.name || mainVenue.venueLabel || "The Setting"}
+              </h2>
+              <div className="w-12 h-1 bg-[#904d00] rounded-full mb-4"></div>
+              <p className="text-base text-[#1b1c1c] font-semibold font-serif">
+                {mainVenue.address}
+              </p>
+              <div className="pt-3">
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#5f5f00] text-white text-xs font-semibold uppercase tracking-wider px-6 py-3 rounded-lg hover:bg-[#797900] transition-colors shadow-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Open in Google Maps</span>
+                </a>
+              </div>
+            </div>
 
             <ul className="space-y-4 pt-4">
               <li className="flex items-start gap-4">

@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -110,6 +112,29 @@ export default function TinySweetInvitation(
             textColor: "text-[#605929]",
           },
         ];
+
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
+  const mainVenue =
+    props.locations && props.locations.length > 0
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Sunshine Pavilion",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Celebration Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
+      : {
+          name: props.venuePlace || "Sunshine Pavilion",
+          address: props.contactAddress || props.venuePlace || "Celebration Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
+        };
 
   return (
     <div className="bg-[#f8f9ff] text-[#151c26] font-sans antialiased overflow-x-hidden relative selection:bg-[#36666b]/20 selection:text-[#36666b] min-h-screen">
@@ -511,32 +536,43 @@ export default function TinySweetInvitation(
                   </h2>
                   <div>
                     <h3 className="text-xl font-bold text-[#151c26] mb-2 font-serif">
-                      Sunshine Park Pavilion
+                      {mainVenue.name || "Sunshine Park Pavilion"}
                     </h3>
                     <p className="text-base text-[#404849] leading-relaxed">
-                      123 Meadow Lane<br />
-                      Sunnyville, CA 90210
+                      {mainVenue.address}
                     </p>
                   </div>
                   <p className="text-sm text-[#404849] leading-relaxed">
-                    Parking is available near the south entrance. Look for the big bundle of pink and teal balloons!
+                    Parking is available near the entrance. Look for the colorful celebration balloons!
                   </p>
                   <a
                     className="inline-flex items-center justify-center bg-[#36666b] text-white font-bold text-sm px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform soft-shadow mt-4 gap-2"
-                    href="https://maps.google.com"
+                    href={mainVenue.mapLink}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Get Directions
+                    Open in Google Maps
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
 
-                <div className="w-full h-80 bg-[#dce3f1] rounded-[2rem] border-4 border-white soft-shadow flex items-center justify-center">
-                  <div className="text-center text-[#70797a]">
-                    <MapPin className="w-10 h-10 mb-2 mx-auto" />
-                    <p className="font-bold text-sm">Google Map Details</p>
-                  </div>
+                <div className="relative w-full h-80 bg-[#dce3f1] rounded-[2rem] border-4 border-white soft-shadow overflow-hidden">
+                  <iframe
+                    title={mainVenue.name || "Party HQ Map"}
+                    src={mainVenue.embedUrl}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
             </div>

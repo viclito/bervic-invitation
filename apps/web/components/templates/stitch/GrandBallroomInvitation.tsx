@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Wine,
   Menu,
@@ -16,8 +16,7 @@ import {
   MapPin,
   Clock,
   Shirt,
-  Play,
-} from "lucide-react";
+  Play, ExternalLink } from "lucide-react";
 
 export default function GrandBallroomInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -489,27 +488,29 @@ export default function GrandBallroomInvitation(props: TemplateClassicFloralProp
                   </p>
                 </div>
 
-                <div className="w-full h-52 border border-[#D4AF37]/20 mb-6 overflow-hidden rounded-xl bg-gray-100">
+                <div className="relative w-full h-52 border border-[#D4AF37]/20 mb-6 overflow-hidden rounded-xl bg-gray-100">
                   <iframe
                     title={`Venue Map ${idx + 1}`}
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    src={resolveEmbedMapUrl(loc, props.venuePlace)}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     loading="lazy"
                   />
+                  <a
+                    href={resolveDirectMapUrl(loc, props.venuePlace)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
 
                 <a
-                  href={
-                    loc.mapLink && loc.mapLink !== "https://maps.google.com"
-                      ? loc.mapLink
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                        )}`
-                  }
+                  href={resolveDirectMapUrl(loc, props.venuePlace)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 bg-[#31105C] text-[#D4AF37] px-6 py-2.5 rounded text-xs font-bold uppercase tracking-wider hover:bg-[#4a1b8c] transition-colors"

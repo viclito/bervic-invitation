@@ -1,12 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, Sparkles, MapPin, Calendar, Clock } from "lucide-react";
+import { Menu, X, Sparkles, MapPin, Calendar, Clock, ExternalLink } from "lucide-react";
 
 export default function EvelynsCelebrationMasterpieceInvitation(
   props: TemplateClassicFloralProps
@@ -85,21 +87,29 @@ export default function EvelynsCelebrationMasterpieceInvitation(
         ];
 
   // Venue fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations.length > 0
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          venueLabel: props.locations[0].venueLabel || "The Setting",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: props.venuePlace || "The Grand Conservatory Estate",
+          name: props.venuePlace || "Celebration Venue",
           venueLabel: "The Setting",
-          address:
-            props.contactAddress ||
-            props.venuePlace ||
-            "452 Sunset Boulevard, Beverly Hills, CA 90210",
-          mapLink: `https://maps.google.com/?q=${encodeURIComponent(
-            props.contactAddress || props.venuePlace || "Beverly Hills, CA"
-          )}`,
-          image:
-            "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Timeline events fallback
@@ -494,16 +504,23 @@ export default function EvelynsCelebrationMasterpieceInvitation(
         <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto" id="venue">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
             <div className="md:col-span-6 order-2 md:order-1">
-              <div className="w-full aspect-video bg-[#e4e2e1] rounded-2xl overflow-hidden relative shadow-lg border border-[#cac7b1]/50 group">
-                <img
-                  alt="Celebration Venue"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-                  src={
-                    (mainVenue as { image?: string }).image ||
-                    props.coverImage ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuAWyDDqRdYSVN2zy6WM2JG-qkTFXQrCqI_-4B-fUHOS3SVoJ0LrGzi5mRTGSwLaH71u62TUwPp2T1zjzyfayN-BjwAkPeWyNfzsy2FSU4rXDnkavj8knovkF834A5mb--1xZpoUHeaKpRtpJm0uwYynBtyd46V3p6GmKopa_pSu_tJlooSSuLXx6SSgONCv6GsmpUs6plNxF4i7hOEJmJG2WJ9PRtI3LtNns8CHJzMpraldPAbY_Q87"
-                  }
+              <div className="w-full aspect-video bg-[#e4e2e1] rounded-2xl overflow-hidden relative shadow-lg border border-[#cac7b1]/50">
+                <iframe
+                  title={mainVenue.name || "Celebration Location"}
+                  src={mainVenue.embedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
                 />
+                <a
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>Open in Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
 

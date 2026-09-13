@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import { getYouTubeEmbedUrl, getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, MapPin, Car, Compass } from "lucide-react";
+import { Menu, X, MapPin, Car, Compass, ExternalLink } from "lucide-react";
 
 export default function WhimsicalStorybookInvitation(
   props: TemplateClassicFloralProps
@@ -177,7 +178,7 @@ export default function WhimsicalStorybookInvitation(
   const mainVenue = {
     name: displayVenueName,
     address: displayVenueAddress,
-    mapLink: (props.locations && props.locations[0] && props.locations[0].mapLink) || "https://maps.google.com",
+    mapLink: resolveDirectMapUrl(props.locations?.[0], props.venuePlace),
   };
 
   return (
@@ -760,28 +761,30 @@ export default function WhimsicalStorybookInvitation(
                     </div>
                   </div>
 
-                  <div className="h-48 w-full rounded-2xl overflow-hidden border border-[#cac7b1] mt-2 bg-gray-100">
+                  <div className="relative h-48 w-full rounded-2xl overflow-hidden border border-[#cac7b1] mt-2 bg-gray-100">
                     <iframe
                       title={`Venue Map ${idx + 1}`}
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                        `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                      )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                      src={resolveEmbedMapUrl(loc, props.venuePlace)}
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
                       loading="lazy"
                     />
+                    <a
+                      href={resolveDirectMapUrl(loc, props.venuePlace)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
 
                   <a
                     className="inline-flex items-center justify-center gap-2 bg-[#5f5f00] text-white px-6 py-3 rounded-full font-semibold text-xs uppercase tracking-wider hover:bg-[#797900] transition-colors shadow-md mt-2"
-                    href={
-                      loc.mapLink && loc.mapLink !== "https://maps.google.com"
-                        ? loc.mapLink
-                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                            `${loc.name || ""} ${loc.address || ""}`.trim() || "New York, NY"
-                          )}`
-                    }
+                    href={resolveDirectMapUrl(loc, props.venuePlace)}
                     target="_blank"
                     rel="noreferrer"
                   >

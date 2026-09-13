@@ -66,7 +66,11 @@ export default function TemplateClassicFloral(props: TemplateClassicFloralProps)
       />
 
       {/* Section 6: Locations & Venues */}
-      <Locations locations={props.locations} />
+      <Locations
+        locations={props.locations}
+        venuePlace={props.venuePlace}
+        contactAddress={props.contactAddress}
+      />
 
       {/* Section 7: Gallery */}
       <GalleryCarousel galleryImages={props.galleryImages} />

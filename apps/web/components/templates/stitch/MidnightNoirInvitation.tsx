@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -7,16 +9,14 @@ import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import { parseYouTubeEmbedUrl } from "../classic-floral/LoveStoryVideoFacade";
-import {
-  Sparkles,
+import { Sparkles,
   MapPin,
   Clock,
   Play,
   ArrowUpRight,
   Menu,
   X,
-  Heart,
-} from "lucide-react";
+  Heart, ExternalLink } from "lucide-react";
 
 export default function MidnightNoirInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,6 +57,33 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const defaultTimeline = [
     { time: "4:30 PM", title: "Guest Arrival", desc: "Welcome drinks and seating." },
@@ -285,47 +312,33 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
               </motion.div>
 
               <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Ceremony */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                  whileHover={{ x: 4 }}
-                  className="flex flex-col gap-4 relative group p-6 rounded-2xl bg-[#081425] border border-[#45474b]/30 shadow-md"
-                >
-                  <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">Ceremony</span>
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-[#d8e3fb] mb-1">The Grand Atrium</h3>
-                    <p className="text-xs text-[#c6c6cb] leading-relaxed">
-                      {props.weddingTime || "Saturday, November 18th, 2026"}<br />Five O&apos;clock in the Evening
+                {locationList.slice(0, 2).map((loc, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: idx * 0.1 }}
+                    whileHover={{ x: 4 }}
+                    className="flex flex-col gap-4 relative group p-6 rounded-2xl bg-[#081425] border border-[#45474b]/30 shadow-md"
+                  >
+                    <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">
+                      {loc.venueLabel || (idx === 0 ? "Ceremony" : "Reception")}
+                    </span>
+                    <div>
+                      <h3 className="font-serif text-2xl font-bold text-[#d8e3fb] mb-1">
+                        {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                      </h3>
+                      <p className="text-xs text-[#c6c6cb] leading-relaxed">
+                        {props.weddingTime || "Celebration Day"}<br />
+                        {idx === 0 ? "Sacred Union & Ceremony" : "Dinner, drinks, and celebration"}
+                      </p>
+                    </div>
+                    <p className="text-xs text-[#c6c6cb] whitespace-pre-line">
+                      {loc.address || props.contactAddress || "Venue address details"}
                     </p>
-                  </div>
-                  <p className="text-xs text-[#c6c6cb]">
-                    100 Midnight Boulevard<br />Metropolis
-                  </p>
-                </motion.div>
-
-                {/* Reception */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  whileHover={{ x: 4 }}
-                  className="flex flex-col gap-4 relative group p-6 rounded-2xl bg-[#081425] border border-[#45474b]/30 shadow-md"
-                >
-                  <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">Reception</span>
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-[#d8e3fb] mb-1">Noir Gallery</h3>
-                    <p className="text-xs text-[#c6c6cb] leading-relaxed">
-                      Follows immediately after ceremony<br />Dinner, drinks, and dancing
-                    </p>
-                  </div>
-                  <p className="text-xs text-[#c6c6cb]">
-                    Black Tie Strictly Enforced<br />Adults Only Affair
-                  </p>
-                </motion.div>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>
@@ -384,63 +397,57 @@ export default function MidnightNoirInvitation(props: TemplateClassicFloralProps
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Map Card 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="bg-[#081425] border border-[#45474b]/40 rounded-2xl overflow-hidden group hover:border-[#c1c7cf]/50 transition-colors shadow-lg"
-              >
-                <div className="h-[280px] w-full relative overflow-hidden grayscale contrast-125 brightness-75 group-hover:grayscale-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-700">
-                  <iframe
-                    title="Ceremony Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.119763973046!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-8 flex flex-col gap-3">
-                  <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">Ceremony</span>
-                  <h3 className="font-serif text-2xl font-bold text-[#d8e3fb]">The Grand Atrium</h3>
-                  <p className="text-xs text-[#c6c6cb]">100 Midnight Boulevard, Metropolis</p>
-                  <a href="#" className="inline-flex items-center gap-1.5 text-[#c1c7cf] text-xs font-bold tracking-widest uppercase hover:text-white transition-colors mt-3">
-                    <span>Get Directions</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </a>
-                </div>
-              </motion.div>
-
-              {/* Map Card 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-[#081425] border border-[#45474b]/40 rounded-2xl overflow-hidden group hover:border-[#c1c7cf]/50 transition-colors shadow-lg"
-              >
-                <div className="h-[280px] w-full relative overflow-hidden grayscale contrast-125 brightness-75 group-hover:grayscale-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-700">
-                  <iframe
-                    title="Reception Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.119763973046!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-8 flex flex-col gap-3">
-                  <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">Reception</span>
-                  <h3 className="font-serif text-2xl font-bold text-[#d8e3fb]">Noir Gallery</h3>
-                  <p className="text-xs text-[#c6c6cb]">250 Obsidian Way, Metropolis</p>
-                  <a href="#" className="inline-flex items-center gap-1.5 text-[#c1c7cf] text-xs font-bold tracking-widest uppercase hover:text-white transition-colors mt-3">
-                    <span>Get Directions</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </a>
-                </div>
-              </motion.div>
+              {locationList.slice(0, 2).map((loc, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  className="bg-[#081425] border border-[#45474b]/40 rounded-2xl overflow-hidden group hover:border-[#c1c7cf]/50 transition-colors shadow-lg"
+                >
+                  <div className="h-[280px] w-full relative overflow-hidden grayscale contrast-125 brightness-75 group-hover:grayscale-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-700">
+                    <iframe
+                      title={`${loc.venueLabel || "Venue"} Map`}
+                      src={getEmbedMapUrl(loc)}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <div className="p-8 flex flex-col gap-3">
+                    <span className="text-xs font-bold text-[#c1c7cf] tracking-widest uppercase">
+                      {loc.venueLabel || (idx === 0 ? "Ceremony" : "Reception")}
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-[#d8e3fb]">
+                      {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                    </h3>
+                    <p className="text-xs text-[#c6c6cb] whitespace-pre-line">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[#c1c7cf] text-xs font-bold tracking-widest uppercase hover:text-white transition-colors mt-3"
+                    >
+                      <span>Get Directions</span>
+                      <ArrowUpRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>

@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -88,7 +90,10 @@ export default function BotanicalGardenEleganceInvitation(
   // Main venue fallback
   const mainVenue =
     props.locations && props.locations.length > 0
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
           name: props.venuePlace || "The Botanical Greenhouse & Conservatory",
           venueLabel: "The Setting",
@@ -96,9 +101,10 @@ export default function BotanicalGardenEleganceInvitation(
             props.contactAddress ||
             props.venuePlace ||
             "124 Orchard Lane, Greenfield Valley",
-          mapLink: `https://maps.google.com/?q=${encodeURIComponent(
-            props.contactAddress || props.venuePlace || "Greenfield Valley"
-          )}`,
+          mapLink: resolveDirectMapUrl(
+            { name: props.venuePlace, address: props.contactAddress || props.venuePlace },
+            props.venuePlace
+          ),
           image:
             "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80",
         };

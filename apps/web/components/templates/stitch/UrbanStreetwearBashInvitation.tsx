@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -35,17 +37,12 @@ export default function UrbanStreetwearBashInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "The Concrete Warehouse",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "192 Concrete Ave, District 7",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
         }
       : {
           name: props.venuePlace || "The Concrete Warehouse",
           address: props.contactAddress || props.venuePlace || "192 Concrete Ave, District 7",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Celebrant portrait priority

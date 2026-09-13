@@ -1,12 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, Calendar, MapPin, PlayCircle, Play, Sparkles, GlassWater, Utensils, Music, PartyPopper } from "lucide-react";
+import { Menu, X, Calendar, MapPin, PlayCircle, Play, Sparkles, GlassWater, Utensils, Music, PartyPopper, ExternalLink } from "lucide-react";
 
 export default function ElegantWatercolorFloralInvitation(
   props: TemplateClassicFloralProps
@@ -101,6 +103,31 @@ export default function ElegantWatercolorFloralInvitation(
             date: "Sep 15, 2026",
           },
         ];
+
+  const locationList = props.locations && props.locations.length > 0 ? props.locations : [
+    {
+      name: props.venuePlace || "Celebration Pavilion",
+      venueLabel: "Celebration Venue",
+      address: props.contactAddress || props.venuePlace || "Celebration Venue Address",
+      time: props.weddingTime || "06:00 PM",
+      mapLink: "https://maps.google.com",
+    },
+    {
+      name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Lounge` : "Glasshouse Lounge") : "After-Party Venue",
+      venueLabel: "After-Party Venue",
+      address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+      time: "09:30 PM",
+      mapLink: "https://maps.google.com",
+    },
+  ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   return (
     <div className="bg-[#fefae0] text-[#1d1c0d] font-serif antialiased overflow-x-hidden relative selection:bg-[#7d562d]/20 selection:text-[#7d562d] min-h-screen">
@@ -491,74 +518,56 @@ export default function ElegantWatercolorFloralInvitation(
                 Join us at this beautiful estate to celebrate {celebrantName}'s {ageMilestone ? `${ageMilestone} birthday` : "birthday"}.
               </p>
 
-              {/* Party Venue */}
-              <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                  <PartyPopper className="w-6 h-6 text-[#5d6143] mt-1 shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-[#1d1c0d] mb-1 font-serif text-lg">
-                      Celebration Pavilion
-                    </h4>
-                    <p className="text-sm text-[#50453b] leading-relaxed">
-                      The Serene Pavilion<br />
-                      123 Calm Way<br />
-                      Tranquil Hills
-                    </p>
-                    <a
-                      className="text-[#7d562d] hover:underline text-sm font-semibold mt-2 inline-block font-sans"
-                      href="https://maps.google.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View on Google Maps
-                    </a>
+              {locationList.slice(0, 2).map((loc, idx) => (
+                <div key={idx} className="glass-panel p-6 rounded-2xl flex flex-col gap-4 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    {idx === 0 ? (
+                      <PartyPopper className="w-6 h-6 text-[#5d6143] mt-1 shrink-0" />
+                    ) : (
+                      <GlassWater className="w-6 h-6 text-[#5d6143] mt-1 shrink-0" />
+                    )}
+                    <div>
+                      <h4 className="font-bold text-[#1d1c0d] mb-1 font-serif text-lg">
+                        {loc.venueLabel || loc.name || `Location ${idx + 1}`}
+                      </h4>
+                      <p className="text-sm text-[#50453b] leading-relaxed">
+                        {loc.name && <span className="font-semibold block text-[#1d1c0d]">{loc.name}</span>}
+                        {loc.address || props.contactAddress || props.venuePlace || "Celebration Venue"}
+                      </p>
+                      <a
+                        className="text-[#7d562d] hover:underline text-sm font-semibold mt-2 inline-flex items-center gap-1.5 font-sans"
+                        href={getDirectMapUrl(loc)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>Open in Google Maps</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* After-Party Venue */}
-              <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                  <GlassWater className="w-6 h-6 text-[#5d6143] mt-1 shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-[#1d1c0d] mb-1 font-serif text-lg">
-                      Glasshouse Lounge
-                    </h4>
-                    <p className="text-sm text-[#50453b] leading-relaxed">
-                      The Glasshouse Conservatory<br />
-                      123 Calm Way<br />
-                      Tranquil Hills
-                    </p>
-                    <a
-                      className="text-[#7d562d] hover:underline text-sm font-semibold mt-2 inline-block font-sans"
-                      href="https://maps.google.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View on Google Maps
-                    </a>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Map Area */}
             <div className="relative z-10 mt-8 lg:mt-0 h-full flex flex-col justify-center">
-              <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-[0_10px_40px_-10px_rgba(125,86,45,0.2)] border-[8px] border-[#fefae0]/50 bg-[#fefae0] flex items-center justify-center">
-                <div
-                  className="absolute inset-0 opacity-40 pointer-events-none"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(#d4c4b7 1px, transparent 1px)",
-                    backgroundSize: "20px 20px",
-                  }}
+              <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-[0_10px_40px_-10px_rgba(125,86,45,0.2)] border-[8px] border-[#fefae0]/50 bg-[#fefae0]">
+                <iframe
+                  title={locationList[0]?.name || "Venue Map"}
+                  src={getEmbedMapUrl(locationList[0])}
+                  className="w-full h-full border-0"
+                  loading="lazy"
                 />
-                <div className="relative z-10 flex flex-col items-center text-[#5d6143] gap-2">
-                  <MapPin className="w-10 h-10 text-[#7d562d]" />
-                  <span className="font-sans text-xs font-semibold tracking-widest uppercase">
-                    Map Details Provided Upon RSVP
-                  </span>
-                </div>
+                <a
+                  href={getDirectMapUrl(locationList[0])}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span>Open in Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
           </div>

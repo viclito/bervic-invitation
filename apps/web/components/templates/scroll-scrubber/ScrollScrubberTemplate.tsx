@@ -14,6 +14,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 
 export interface EventItem {
   time: string;
@@ -220,7 +221,7 @@ export default function ScrollScrubberTemplate(props: ScrollScrubberTemplateProp
           name: loc.name || loc.venueLabel || (idx === 0 ? props.venuePlace?.split(",")[0] || "Ceremony Venue" : "Reception Hall"),
           address: loc.address || props.venuePlace || "Venue Address",
           time: loc.time || weddingTime || "10:00 AM",
-          mapUrl: loc.mapUrl || loc.mapLink || "https://maps.google.com",
+          mapUrl: resolveDirectMapUrl(loc, props.venuePlace),
         }))
       : defaultLocations;
 

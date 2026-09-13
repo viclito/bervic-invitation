@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
@@ -7,8 +9,7 @@ import confetti from "canvas-confetti";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Zap,
+import { Zap,
   Sparkles,
   Star,
   Flame,
@@ -23,8 +24,7 @@ import {
   Disc,
   Award,
   Menu,
-  X,
-} from "lucide-react";
+  X, ExternalLink } from "lucide-react";
 
 export default function BoldPopArtInvitation(
   props: TemplateClassicFloralProps
@@ -163,13 +163,27 @@ export default function BoldPopArtInvitation(
         ];
 
   // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: "The Grand Estate",
-          address: "123 Neon Avenue, Pop City, CA 90210",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Celebration Venue",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   return (
@@ -585,26 +599,29 @@ export default function BoldPopArtInvitation(
 
             <div className="flex flex-col md:flex-row gap-8 items-center bg-white border-4 border-[#1b1c1c] shadow-[16px_16px_0_#1b1c1c] p-8 md:p-12">
               <div className="w-full md:w-1/2">
-                <div className="aspect-video bg-[#eae7e7] border-4 border-[#1b1c1c] flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-30 bg-[#ffda00]/20" />
-                  {/* Bouncing Pop Art Map Pin */}
-                  <motion.div
-                    animate={{ y: [0, -12, 0] }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className="w-12 h-12 rounded-full pop-accent-2 border-4 border-[#1b1c1c] relative z-10 shadow-[4px_4px_0_#1b1c1c] flex items-center justify-center"
+                <div className="aspect-video bg-[#eae7e7] border-4 border-[#1b1c1c] overflow-hidden relative shadow-inner">
+                  <iframe
+                    title={mainVenue.name || "Event Venue"}
+                    src={mainVenue.embedUrl}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <MapPin className="w-6 h-6 text-white" />
-                  </motion.div>
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
 
               <div className="w-full md:w-1/2 text-center md:text-left space-y-4">
                 <h3 className="text-3xl md:text-4xl font-extrabold font-serif uppercase text-[#1b1c1c]">
-                  {mainVenue.name || "The Grand Estate"}
+                  {mainVenue.name || "The Venue"}
                 </h3>
                 <p className="text-lg font-serif text-[#484837]">
                   {mainVenue.address}
@@ -615,7 +632,7 @@ export default function BoldPopArtInvitation(
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Get Directions
+                  Open in Google Maps
                 </a>
               </div>
             </div>

@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Menu,
+import { Menu,
   X,
   ArrowRight,
   Wine,
@@ -15,8 +16,7 @@ import {
   PartyPopper,
   Music,
   MapPin,
-  Compass,
-} from "lucide-react";
+  Compass, ExternalLink } from "lucide-react";
 
 export default function MinimalistScandinavianInvitation(
   props: TemplateClassicFloralProps
@@ -126,13 +126,27 @@ export default function MinimalistScandinavianInvitation(
         ];
 
   // Venue location fallback
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Event Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: "The Glasshouse Estate",
-          address: "123 Meadow Lane, Countryside Valley, CV1 2AB",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Event Venue",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   return (
@@ -590,13 +604,13 @@ export default function MinimalistScandinavianInvitation(
                 The Venue
               </h2>
               <h3 className="text-xl font-bold font-serif text-[#1b1c1c]">
-                {mainVenue.name || "The Glasshouse Estate"}
+                {mainVenue.name || "Celebration Venue"}
               </h3>
               <p className="text-sm font-serif text-[#484837]">
                 {mainVenue.address}
               </p>
               <p className="text-sm font-serif text-[#484837] leading-relaxed">
-                A beautiful conservatory surrounded by lush gardens, offering a perfect blend of indoor elegance and outdoor natural beauty.
+                A serene atmosphere offering a perfect setting for an unforgettable gathering with friends and family.
               </p>
               <a
                 className="inline-flex items-center gap-2 border border-[#5f5f00] text-[#5f5f00] font-semibold text-xs uppercase tracking-wider px-6 py-3 rounded hover:bg-[#5f5f00] hover:text-white transition-colors"
@@ -605,30 +619,29 @@ export default function MinimalistScandinavianInvitation(
                 rel="noreferrer"
               >
                 <Compass className="w-4 h-4" />
-                <span>Get Directions</span>
+                <span>Open in Google Maps</span>
               </a>
             </div>
           </div>
 
           <div className="lg:col-span-7 order-1 lg:order-2">
             <div className="aspect-video bg-[#e4e2e1] rounded-2xl overflow-hidden relative shadow-md border border-[#DED9D1]">
-              <img
-                alt="Map location"
-                className="w-full h-full object-cover opacity-80"
-                src={
-                  (mainVenue as { image?: string }).image ||
-                  props.coverImage ||
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuCyD-77khF-v4syjvQxKQ7v-G3fEgOMwBqyxCx8uG8G8JI84AeMbFnUPTvPdELLGVgXgG0ojrnpYrgKddU9GYqTAcK9nAmR-hbQvf4wAWsuPKR7aUiQcmRP0sx2PSg8j4HtpeVrXAVc-Z6fDVHzhopdAFWYd4j9EX4TeNzSLEjpzMhMy-WEwK426M1Ag_CBJEgLSuaG06xtTf7xnA71hD60FaNjK2xGMkt6KzdGW_TNt0Ew9uNIG5v-"
-                }
+              <iframe
+                title={mainVenue.name || "Event Venue"}
+                src={mainVenue.embedUrl}
+                className="w-full h-full border-0"
+                loading="lazy"
               />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg flex items-center gap-3 border border-[#DED9D1]">
-                  <MapPin className="w-6 h-6 text-[#904d00]" />
-                  <span className="font-bold font-serif text-[#5f5f00]">
-                    {mainVenue.name || "The Glasshouse Estate"}
-                  </span>
-                </div>
-              </div>
+              <a
+                href={mainVenue.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>Open in Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
         </div>

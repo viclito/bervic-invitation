@@ -3,10 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { LocationVenue } from "@/types/template";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 import { Heart, MapPin, ExternalLink } from "lucide-react";
 
 interface LocationsProps {
-  locations: LocationVenue[];
+  locations?: LocationVenue[];
+  venuePlace?: string;
+  contactAddress?: string;
 }
 
 const DEFAULT_LOCATIONS_FALLBACK = [
@@ -14,8 +17,20 @@ const DEFAULT_LOCATIONS_FALLBACK = [
   "/templates/peach-mandap-bg.png",
 ];
 
-export default function Locations({ locations }: LocationsProps) {
-  const safeLocations = Array.isArray(locations) && locations.length > 0 ? locations : [];
+export default function Locations({ locations, venuePlace, contactAddress }: LocationsProps) {
+  const safeLocations =
+    Array.isArray(locations) && locations.length > 0
+      ? locations
+      : venuePlace || contactAddress
+      ? [
+          {
+            name: venuePlace || "Ceremony Venue",
+            venueLabel: "Celebration Venue",
+            address: contactAddress || venuePlace || "Venue Address",
+            mapLink: resolveDirectMapUrl({ name: venuePlace, address: contactAddress || venuePlace }, venuePlace),
+          },
+        ]
+      : [];
 
   if (safeLocations.length === 0) {
     return null;
@@ -56,7 +71,7 @@ export default function Locations({ locations }: LocationsProps) {
             const locName = loc?.name?.trim() || loc?.venueLabel?.trim() || `Venue ${idx + 1}`;
             const venueLabel = loc?.venueLabel?.trim() || loc?.name?.trim() || "Celebration Venue";
             const address = loc?.address?.trim() || "Address details to be shared";
-            const mapLink = loc?.mapLink?.trim() || "https://maps.google.com";
+            const mapLink = resolveDirectMapUrl(loc, venuePlace);
 
             return (
               <motion.div

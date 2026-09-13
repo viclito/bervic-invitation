@@ -60,15 +60,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Helper to run promises with a fast timeout during static build
+  const withTimeout = <T>(promise: Promise<T>, timeoutMs = 4000): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+      ),
+    ]);
+  };
+
   // Public user invitations from database
   let invitationRoutes: MetadataRoute.Sitemap = [];
   try {
-    const invitations = await prisma.userInvitation.findMany({
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-    });
+    const invitations = await withTimeout(
+      prisma.userInvitation.findMany({
+        select: {
+          slug: true,
+          updatedAt: true,
+        },
+      })
+    );
 
     invitationRoutes = invitations.map((inv) => ({
       url: `${baseUrl}/invitations/${inv.slug}`,
@@ -83,13 +95,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Shop Products (Physical Invitation Cards & Return Gifts)
   let shopProductRoutes: MetadataRoute.Sitemap = [];
   try {
-    const products = await prisma.shopProduct.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        updatedAt: true,
-      },
-    });
+    const products = await withTimeout(
+      prisma.shopProduct.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          updatedAt: true,
+        },
+      })
+    );
 
     shopProductRoutes = products.map((prod) => ({
       url: `${baseUrl}/shop/${prod.id}`,

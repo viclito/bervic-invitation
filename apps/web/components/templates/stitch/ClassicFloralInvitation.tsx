@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Wine,
   Heart,
@@ -15,8 +16,7 @@ import {
   X,
   Sparkles,
   MapPin,
-  Clock,
-} from "lucide-react";
+  Clock, ExternalLink } from "lucide-react";
 
 export default function ClassicFloralInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,12 +57,41 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
 
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "The Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "2:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "The Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "5:00 PM",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
+
   const coupleImg =
     props.coupleImage ||
     "https://lh3.googleusercontent.com/aida-public/AB6AXuC3LWlnsiO1-BBK1c17yXxt18k4AD3WCVwIO_o4sa5hDg203Rg_FgOYNNpucZEPPSyFPYnQQlyG0c3sOa-p_PprhSyzaMKsXKvTWB9H4lWbX2KYsVpqORm_-euQe_sOhHomG4H9UydO9sT3dFxlhFVyehidOB2HxpV7WaQegInAzPko5vf4aICGqPTvye8kFnjgea9yPIn4527jKOMUkKlmDI4HR1o_m6PoyBJnqv0FrV082VAn3eRW";
 
   const defaultTimeline = [
-    { time: "2:00 PM", title: "The Vows", desc: "The ceremony begins at St. Patrick's Cathedral." },
+    { time: "2:00 PM", title: "The Vows", desc: props.venuePlace ? `The ceremony begins at ${props.venuePlace}.` : "The marriage ceremony begins." },
     { time: "4:00 PM", title: "Cocktails & Mingle", desc: "Enjoy drinks and light bites on the terrace." },
     { time: "6:00 PM", title: "Dinner is Served", desc: "A three-course meal honoring the couple." },
     { time: "8:00 PM", title: "Dancing Begins", desc: "Join us on the dance floor to celebrate into the night!" },
@@ -187,8 +216,10 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-2 py-4 border-y border-[#D4AF37]/30 w-full max-w-md bg-white/40 backdrop-blur-sm rounded-xl">
-            <span className="font-serif text-3xl font-bold text-[#1b1c19]">{props.weddingTime || "May 13, 2026"}</span>
-            <span className="text-xs text-[#4a4452] font-semibold uppercase tracking-wider">St. Patrick's Cathedral &amp; The Grand Plaza</span>
+            <span className="font-serif text-2xl sm:text-3xl font-bold text-[#1b1c19]">{props.weddingTime || props.weddingDate || "Wedding Day"}</span>
+            <span className="text-xs text-[#4a4452] font-semibold uppercase tracking-wider text-center px-4">
+              {locationList[0]?.name ? `${locationList[0].name}${locationList[1]?.name ? ` & ${locationList[1].name}` : ""}` : (props.venuePlace || "Celebration Venue")}
+            </span>
           </div>
         </motion.div>
       </header>
@@ -267,59 +298,71 @@ export default function ClassicFloralInvitation(props: TemplateClassicFloralProp
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 relative">
-            {/* Ceremony Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              whileHover={{ y: -6 }}
-              className="bg-[#fbf9f4] p-8 md:p-12 relative shadow-md rounded-2xl text-center border border-[#D4AF37]/30 flex flex-col"
-            >
-              <div className="absolute inset-3 border border-[#D4AF37]/30 rounded-xl pointer-events-none" />
-              <Church className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
-              <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-1">The Ceremony</h3>
-              <p className="text-xs font-semibold text-[#4a4452] uppercase tracking-wider mb-6">2:00 PM</p>
-              <p className="text-sm text-[#1b1c19] font-bold mb-1">St. Patrick&apos;s Cathedral</p>
-              <p className="text-xs text-[#4a4452] mb-8">123 Wedding Lane, Cityville</p>
-              <div className="w-full h-48 bg-[#e4e2dd] mb-8 rounded-xl overflow-hidden shadow-inner">
-                <iframe
-                  title="Ceremony Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
-              </div>
-            </motion.div>
+            {locationList.slice(0, 2).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-[#fbf9f4] p-8 md:p-12 relative shadow-md rounded-2xl text-center border border-[#D4AF37]/30 flex flex-col justify-between"
+              >
+                <div className="absolute inset-3 border border-[#D4AF37]/30 rounded-xl pointer-events-none" />
+                <div>
+                  {idx === 0 ? (
+                    <Church className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
+                  ) : (
+                    <PartyPopper className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
+                  )}
+                  <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-1">
+                    {loc.venueLabel || (idx === 0 ? "The Ceremony" : "The Reception")}
+                  </h3>
+                  <p className="text-xs font-semibold text-[#4a4452] uppercase tracking-wider mb-3">
+                    {loc.time || (idx === 0 ? (props.weddingTime || "2:00 PM") : "5:00 PM")}
+                  </p>
+                  <p className="text-sm text-[#1b1c19] font-bold mb-1">
+                    {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                  </p>
+                  <p className="text-xs text-[#4a4452] mb-6 max-w-sm mx-auto leading-relaxed">
+                    {loc.address || props.contactAddress || "Venue address details"}
+                  </p>
+                </div>
 
-            {/* Reception Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              whileHover={{ y: -6 }}
-              className="bg-[#fbf9f4] p-8 md:p-12 relative shadow-md rounded-2xl text-center border border-[#D4AF37]/30 flex flex-col"
-            >
-              <div className="absolute inset-3 border border-[#D4AF37]/30 rounded-xl pointer-events-none" />
-              <PartyPopper className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
-              <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-1">The Reception</h3>
-              <p className="text-xs font-semibold text-[#4a4452] uppercase tracking-wider mb-6">5:00 PM</p>
-              <p className="text-sm text-[#1b1c19] font-bold mb-1">The Grand Plaza</p>
-              <p className="text-xs text-[#4a4452] mb-8">456 Celebration Blvd, Cityville</p>
-              <div className="w-full h-48 bg-[#e4e2dd] mb-8 rounded-xl overflow-hidden shadow-inner">
-                <iframe
-                  title="Reception Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.2528000654!2d-74.14483011405021!3d40.6976312333469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                />
-              </div>
-            </motion.div>
+                <div>
+                  <div className="relative w-full h-48 bg-[#e4e2dd] mb-6 rounded-xl overflow-hidden shadow-inner">
+                    <iframe
+                      title={`${loc.venueLabel || "Venue"} Map`}
+                      src={getEmbedMapUrl(loc)}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border border-[#D4AF37] text-[#31105C] font-bold text-xs uppercase tracking-wider hover:bg-[#D4AF37] hover:text-white transition-all shadow-sm"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Open in Google Maps</span>
+                  </a>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

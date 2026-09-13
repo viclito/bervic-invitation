@@ -1,12 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, Play, ArrowRight, MapPin, Sparkles, Navigation } from "lucide-react";
+import { Menu, X, Play, ArrowRight, MapPin, Sparkles, Navigation, ExternalLink } from "lucide-react";
 
 export default function CheerfulConfettiCarnivalInvitation(
   props: TemplateClassicFloralProps
@@ -99,14 +101,28 @@ export default function CheerfulConfettiCarnivalInvitation(
           },
         ];
 
-  // Venue location matching exact Stitch screen 64ce78a8a1eb42f9a5887b466b991367
+  // Venue location
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Party Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: "The Grand Ballroom",
-          address: "123 Celebration Ave, Festivity District, Party City, PC 90210",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Celebration Venue",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   return (
@@ -569,21 +585,32 @@ export default function CheerfulConfettiCarnivalInvitation(
                 </span>
               </div>
               <h2 className="text-3xl md:text-5xl text-[#111111] font-black uppercase mb-6 leading-tight">
-                The Grand <br />
-                <span className="text-[#FFEA00] bg-[#111111] px-2 py-0.5">
-                  Ballroom
-                </span>
+                {mainVenue.name ? (
+                  <>
+                    {mainVenue.name.split(" ")[0]} <br />
+                    <span className="text-[#FFEA00] bg-[#111111] px-2 py-0.5">
+                      {mainVenue.name.split(" ").slice(1).join(" ") || "Venue"}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    The <br />
+                    <span className="text-[#FFEA00] bg-[#111111] px-2 py-0.5">
+                      Location
+                    </span>
+                  </>
+                )}
               </h2>
 
               <div className="bg-white brutal-border p-6 mb-8">
                 <h3 className="text-xl font-bold text-[#111111] mb-2">
-                  {mainVenue.name || "The Grand Ballroom"}
+                  {mainVenue.name || "Party Location"}
                 </h3>
                 <p className="text-sm font-medium text-[#111111] mb-4">
                   {mainVenue.address}
                 </p>
                 <p className="text-sm text-[#111111] mb-6 leading-relaxed">
-                  Join us at the city's most vibrant venue. Valet parking is available at the main entrance.
+                  Join us at this amazing venue. We can't wait to celebrate together!
                 </p>
                 <a
                   className="bg-[#FF3366] text-white text-xs font-black px-4 py-3 uppercase tracking-widest brutal-button inline-flex items-center gap-2"
@@ -592,7 +619,7 @@ export default function CheerfulConfettiCarnivalInvitation(
                   rel="noreferrer"
                 >
                   <Navigation className="w-4 h-4" />
-                  <span>Get Directions</span>
+                  <span>Open in Google Maps</span>
                 </a>
               </div>
             </div>
@@ -600,13 +627,25 @@ export default function CheerfulConfettiCarnivalInvitation(
             {/* Map Card */}
             <div className="col-span-1 md:col-span-7">
               <div className="bg-[#FFEA00] brutal-border p-2 w-full h-full min-h-[380px] relative rotate-1">
-                <div className="absolute inset-0 m-2 border-4 border-[#111111] bg-gray-200 overflow-hidden flex items-center justify-center">
-                  <span className="text-[#111111]/50 font-bold text-xl uppercase tracking-widest flex flex-col items-center gap-2">
-                    <MapPin className="w-12 h-12 text-[#FF3366]" />
-                    <span>Map Preview</span>
-                  </span>
+                <div className="relative absolute inset-0 m-2 border-4 border-[#111111] bg-gray-200 overflow-hidden">
+                  <iframe
+                    title={mainVenue.name || "Party Location"}
+                    src={mainVenue.embedUrl}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
-                <div className="absolute -top-5 -right-5 w-14 h-14 bg-[#00E5FF] border-4 border-[#111111] rounded-full flex items-center justify-center animate-bounce shadow-md">
+                <div className="absolute -top-5 -right-5 w-14 h-14 bg-[#00E5FF] border-4 border-[#111111] rounded-full flex items-center justify-center animate-bounce shadow-md pointer-events-none z-20">
                   <MapPin className="w-7 h-7 text-[#111111] font-bold" />
                 </div>
               </div>

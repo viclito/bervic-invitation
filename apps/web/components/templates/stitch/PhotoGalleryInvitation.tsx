@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import {
@@ -15,6 +16,7 @@ import {
   MapPin,
   Clock,
   Heart,
+  ExternalLink,
 } from "lucide-react";
 
 export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps) {
@@ -332,18 +334,53 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
                 <p className="text-xs text-[#4a4452] mb-4">
                   {props.locations?.[0]?.address || props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy"}
                 </p>
-                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100">
+                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100 relative">
                   <iframe
                     title="Ceremony Map"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${props.locations?.[0]?.name || "The Ceremony"} ${props.locations?.[0]?.address || props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy"}`.trim()
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    src={resolveEmbedMapUrl(
+                      props.locations?.[0] || {
+                        name: "The Ceremony",
+                        address: props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy",
+                      },
+                      props.venuePlace
+                    )}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     loading="lazy"
                   />
+                  <a
+                    href={resolveDirectMapUrl(
+                      props.locations?.[0] || {
+                        name: "The Ceremony",
+                        address: props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy",
+                      },
+                      props.venuePlace
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
+                <a
+                  href={resolveDirectMapUrl(
+                    props.locations?.[0] || {
+                      name: "The Ceremony",
+                      address: props.venuePlace || "Villa Cetinale, Sovicille, Siena, Italy",
+                    },
+                    props.venuePlace
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center justify-center gap-1.5 w-full bg-[#31105C] text-[#D4AF37] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#4a1b8c] transition-colors"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>View on Google Maps</span>
+                </a>
               </div>
             </div>
 
@@ -362,18 +399,53 @@ export default function PhotoGalleryInvitation(props: TemplateClassicFloralProps
                 <p className="text-xs text-[#4a4452] mb-4">
                   {props.locations?.[1]?.address || "Borgo Santo Pietro, Chiusdino, Siena, Italy"}
                 </p>
-                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100">
+                <div className="h-44 w-full rounded-xl overflow-hidden border border-[#ccc3d4] mt-auto bg-gray-100 relative">
                   <iframe
                     title="Reception Map"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      `${props.locations?.[1]?.name || "The Reception"} ${props.locations?.[1]?.address || "Borgo Santo Pietro, Chiusdino, Siena, Italy"}`.trim()
-                    )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    src={resolveEmbedMapUrl(
+                      props.locations?.[1] || {
+                        name: "The Reception",
+                        address: "Borgo Santo Pietro, Chiusdino, Siena, Italy",
+                      },
+                      props.venuePlace
+                    )}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     loading="lazy"
                   />
+                  <a
+                    href={resolveDirectMapUrl(
+                      props.locations?.[1] || {
+                        name: "The Reception",
+                        address: "Borgo Santo Pietro, Chiusdino, Siena, Italy",
+                      },
+                      props.venuePlace
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
+                <a
+                  href={resolveDirectMapUrl(
+                    props.locations?.[1] || {
+                      name: "The Reception",
+                      address: "Borgo Santo Pietro, Chiusdino, Siena, Italy",
+                    },
+                    props.venuePlace
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center justify-center gap-1.5 w-full bg-[#31105C] text-[#D4AF37] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#4a1b8c] transition-colors"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>View on Google Maps</span>
+                </a>
               </div>
             </div>
           </div>

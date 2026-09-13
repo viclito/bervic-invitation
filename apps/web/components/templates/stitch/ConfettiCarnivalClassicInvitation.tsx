@@ -1,11 +1,13 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import { Menu, X, GlassWater, Utensils, Music, MapPin, Car, Info, Star, Camera, PartyPopper } from "lucide-react";
+import { Menu, X, GlassWater, Utensils, Music, MapPin, Car, Info, Star, Camera, PartyPopper, ExternalLink } from "lucide-react";
 
 export default function ConfettiCarnivalClassicInvitation(
   props: TemplateClassicFloralProps
@@ -101,14 +103,28 @@ export default function ConfettiCarnivalClassicInvitation(
           },
         ];
 
-  // Venue location matching exact Stitch screen 2dfee62a4912475e8f29cd027b002cba
+  // Venue location
+  const venueQuery = [
+    props.locations?.[0]?.name,
+    props.locations?.[0]?.address,
+    props.venuePlace,
+    props.contactAddress,
+  ].filter(Boolean).join(", ") || "Celebration Venue";
+
   const mainVenue =
     props.locations && props.locations[0]
-      ? props.locations[0]
+      ? {
+          ...props.locations[0],
+          name: props.locations[0].name || props.venuePlace || "Celebration Venue",
+          address: props.locations[0].address || props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
+          embedUrl: resolveEmbedMapUrl(props.locations[0], props.venuePlace),
+        }
       : {
-          name: "The Grand Pavilion",
-          address: "123 Celebration Avenue, Festivity City, FC 90210",
-          mapLink: "https://maps.google.com",
+          name: props.venuePlace || "Celebration Venue",
+          address: props.contactAddress || props.venuePlace || "Venue Address",
+          mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery)}`,
+          embedUrl: resolveEmbedMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   return (
@@ -502,7 +518,7 @@ export default function ConfettiCarnivalClassicInvitation(
             {/* Info Card */}
             <div className="bg-white p-8 pop-border space-y-6">
               <h3 className="text-2xl font-bold text-black font-sans">
-                {mainVenue.name || "The Grand Pavilion"}
+                {mainVenue.name || "The Celebration Venue"}
               </h3>
               <p className="text-base text-black leading-relaxed font-sans">
                 {mainVenue.address}
@@ -517,18 +533,42 @@ export default function ConfettiCarnivalClassicInvitation(
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 text-[#00ffff] shrink-0 mt-0.5" />
                   <p>
-                    <strong>Note:</strong> Look for the giant balloons at the entrance!
+                    <strong>Note:</strong> Look for the vibrant balloons at the entrance!
                   </p>
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  className="bg-[#ff66b2] text-black font-bold font-sans text-xs uppercase tracking-wider px-6 py-3 border-2 border-black inline-flex items-center gap-2 hover:bg-[#00ffff] transition-colors shadow-[4px_4px_0_#000]"
+                  href={mainVenue.mapLink}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin className="w-4 h-4 text-black" />
+                  <span>Open in Google Maps</span>
+                </a>
               </div>
             </div>
 
             {/* Map Area Box */}
-            <div className="bg-[#ffff00] pop-border flex flex-col items-center justify-center min-h-[300px] gap-3">
-              <MapPin className="w-16 h-16 text-black" />
-              <span className="font-bold text-xl uppercase tracking-wider text-black font-sans">
-                Map Area
-              </span>
+            <div className="relative bg-[#ffff00] pop-border min-h-[300px] overflow-hidden p-2">
+              <iframe
+                title={mainVenue.name || "Event Venue"}
+                src={mainVenue.embedUrl}
+                className="w-full h-full min-h-[300px] border-2 border-black"
+                loading="lazy"
+              />
+              <a
+                href={mainVenue.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>Open in Maps</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
         </div>

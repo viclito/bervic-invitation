@@ -284,7 +284,42 @@ export async function POST(req: Request) {
 
     const hasLocations = body.locations !== undefined || body.locationsJson !== undefined;
     const locationsJson = Array.isArray(body.locations)
-      ? JSON.stringify(body.locations)
+      ? JSON.stringify(
+          body.locations.map((loc: Record<string, unknown>, idx: number) => {
+            const mTitle =
+              (typeof loc.mainTitle === "string" && loc.mainTitle) ||
+              (typeof loc.label === "string" && loc.label) ||
+              (typeof loc.title === "string" && loc.title) ||
+              (idx === 0 ? "Marriage Ceremony Venue" : idx === 1 ? "Grand Reception Venue" : `Venue Location #${idx + 1}`);
+            const sLabel =
+              (typeof loc.subLabel === "string" && loc.subLabel) ||
+              (typeof loc.name === "string" && loc.name) ||
+              (typeof loc.venueName === "string" && loc.venueName) ||
+              "";
+            const vPhoto =
+              (typeof loc.venuePhoto === "string" && loc.venuePhoto) ||
+              (typeof loc.image === "string" && loc.image) ||
+              (typeof loc.photo === "string" && loc.photo) ||
+              "";
+            const addr = typeof loc.address === "string" ? loc.address : "";
+            const mUrl =
+              (typeof loc.mapUrl === "string" && loc.mapUrl) ||
+              (typeof loc.mapLink === "string" && loc.mapLink) ||
+              "";
+
+            return {
+              id: loc.id || `loc-${idx + 1}`,
+              mainTitle: mTitle,
+              label: mTitle,
+              subLabel: sLabel,
+              name: sLabel,
+              venuePhoto: vPhoto,
+              image: vPhoto,
+              address: addr,
+              mapUrl: mUrl,
+            };
+          })
+        )
       : typeof body.locations === "string"
       ? body.locations
       : typeof body.locationsJson === "string"

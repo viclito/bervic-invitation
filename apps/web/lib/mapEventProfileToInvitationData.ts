@@ -194,11 +194,13 @@ export function mapEventProfileToInvitationData(
     locations = rawLocations.map((locItem: unknown, idx: number) => {
       const item = (locItem || {}) as Record<string, unknown>;
       const mainTitle = typeof item.mainTitle === "string" ? item.mainTitle : "";
+      const labelStr = typeof item.label === "string" ? item.label : "";
       const venueLabel = typeof item.venueLabel === "string" ? item.venueLabel : "";
       const nameStr = typeof item.name === "string" ? item.name : "";
 
       const title =
         mainTitle.trim() ||
+        labelStr.trim() ||
         venueLabel.trim() ||
         nameStr.trim() ||
         (idx === 0 ? draft.venueName?.trim() : draft.venueTwoName?.trim()) ||
@@ -216,11 +218,11 @@ export function mapEventProfileToInvitationData(
       const mapUrlStr = typeof item.mapUrl === "string" ? item.mapUrl : "";
       const mapLinkStr = typeof item.mapLink === "string" ? item.mapLink : "";
 
-      const mapLink =
+      const rawUserMapLink =
         mapUrlStr.trim() ||
         mapLinkStr.trim() ||
-        (idx === 0 ? draft.venueMapUrl : draft.venueTwoMapUrl) ||
-        "https://maps.google.com";
+        (idx === 0 ? draft.venueMapUrl?.trim() : draft.venueTwoMapUrl?.trim()) ||
+        "";
 
       const venuePhotoStr = typeof item.venuePhoto === "string" ? item.venuePhoto : "";
       const photoUrlStr = typeof item.photoUrl === "string" ? item.photoUrl : "";
@@ -242,8 +244,10 @@ export function mapEventProfileToInvitationData(
       return {
         name: title,
         venueLabel: title,
+        subLabel: subLabelStr.trim(),
         address: addr,
-        mapLink,
+        mapLink: rawUserMapLink,
+        mapUrl: rawUserMapLink,
         image: img,
         contact: contactStr,
       };
@@ -254,7 +258,8 @@ export function mapEventProfileToInvitationData(
       name: primaryTitle,
       venueLabel: primaryTitle,
       address: draft.venueAddress?.trim() || draft.venueName?.trim() || "",
-      mapLink: draft.venueMapUrl || "https://maps.google.com",
+      mapLink: draft.venueMapUrl?.trim() || "",
+      mapUrl: draft.venueMapUrl?.trim() || "",
       image: "/images/templates/venue-ceremony.jpg",
     };
 
@@ -264,7 +269,8 @@ export function mapEventProfileToInvitationData(
         name: secondaryTitle,
         venueLabel: secondaryTitle,
         address: draft.venueTwoAddress?.trim() || draft.venueTwoName?.trim() || "",
-        mapLink: draft.venueTwoMapUrl || "https://maps.google.com",
+        mapLink: draft.venueTwoMapUrl?.trim() || "",
+        mapUrl: draft.venueTwoMapUrl?.trim() || "",
         image: "/images/templates/venue-reception.jpg",
       };
       locations = [mainVenue, receptionVenue];

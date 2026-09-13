@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -110,17 +112,12 @@ export default function IndustrialLoftChicInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "The Architectural Loft",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Blueprint Ave, Design District",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
         }
       : {
           name: props.venuePlace || "The Architectural Loft",
           address: props.contactAddress || props.venuePlace || "123 Blueprint Ave, Design District",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Hero image priority: user's celebrant portrait, cover, or industrial theme

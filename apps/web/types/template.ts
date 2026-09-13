@@ -3,6 +3,9 @@ export interface WeddingEvent {
   title: string;
   time: string;
   date: string;
+  location?: string;
+  venue?: string;
+  address?: string;
 }
 
 export interface TimelineStep {
@@ -18,9 +21,12 @@ export interface TimelineStep {
 export interface LocationVenue {
   name: string;
   venueLabel: string;
+  subLabel?: string;
   address: string;
   mapLink: string;
-  image: string;
+  mapUrl?: string;
+  image?: string;
+  time?: string;
   contact?: string;
 }
 

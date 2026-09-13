@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Coffee,
   Heart,
@@ -17,8 +18,7 @@ import {
   Menu,
   X,
   Play,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, ExternalLink } from "lucide-react";
 
 export default function TealCopperInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,22 +66,30 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
   const artDecoPatternImg =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDY5Zt6iboDwKNt77wxIMSXY8fbpVlmb7lBggYis9bpQ87UdeF4G0fprPj8EM_f8zVs2RGkrifN2pUkhvxW9C-EHjRS_Di2nc3i-Fph57T4XdlZeMNTJawHgbbOdHJvjObfy5OQy6v1UeQS6ME6SR_ETJCOcIz_dVLvSTCZzTZS6QSUpO5G8fEthKmJbOKEFtvDyWCV1-z_KSKHYNfI4vaQ9TXBPwgc_bYE-33-mbNynfBXs6KEUZqw";
 
-  const defaultEvents = [
+  const locationList = props.locations && props.locations.length > 0 ? props.locations : [
     {
-      title: "Holy Matrimony",
-      time: "Thursday, 13 May 2026 • 10:00 AM",
-      venue: "St. Antony Church",
-      address: "Kaval Kinaru, Tirunelveli District",
+      name: props.venuePlace || "Holy Matrimony",
+      venueLabel: "Holy Matrimony",
+      address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+      time: props.weddingTime || "10:00 AM",
       mapLink: "https://maps.google.com",
     },
     {
-      title: "Grand Reception",
-      time: "Thursday, 13 May 2026 • 07:00 PM",
-      venue: "Ubahara Matha Mahal",
-      address: "Kaval Kinaru, Tirunelveli District",
+      name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Grand Reception Hall") : "Grand Reception",
+      venueLabel: "Grand Reception",
+      address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+      time: "07:00 PM",
       mapLink: "https://maps.google.com",
     },
   ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const eventsList =
     props.events && props.events.length > 0
@@ -90,9 +98,17 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
           time: `${e.date || props.weddingDate || "13 May 2026"} • ${e.time || "10:00 AM"}`,
           venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
           address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
-          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
+          embedUrl: getEmbedMapUrl(props.locations?.[idx % props.locations.length] || { name: props.venuePlace, address: props.contactAddress }),
+          mapLink: getDirectMapUrl(props.locations?.[idx % props.locations.length] || { name: props.venuePlace, address: props.contactAddress }),
         }))
-      : defaultEvents;
+      : locationList.map((loc) => ({
+          title: loc.venueLabel || loc.name || "Wedding Event",
+          time: `${props.weddingDate || "13 May 2026"} • ${loc.time || props.weddingTime || "10:00 AM"}`,
+          venue: loc.name || props.venuePlace || "Wedding Venue",
+          address: loc.address || props.contactAddress || "Venue Address",
+          embedUrl: getEmbedMapUrl(loc),
+          mapLink: getDirectMapUrl(loc),
+        }));
 
   const defaultTimeline = [
     { time: "09:00 AM", title: "Guest Arrival", desc: "Welcome drinks and seating", icon: <Coffee className="w-4 h-4 text-[#ffb77b]" /> },
@@ -332,18 +348,37 @@ export default function TealCopperInvitation(props: TemplateClassicFloralProps) 
 
                 <div className="w-16 h-px bg-[#ffb77b]/50 my-4" />
 
-                <div className="mb-6">
+                <div className="mb-4 text-center w-full">
                   <p className="text-base font-bold text-[#e4e4cc] mb-1">{evt.venue}</p>
-                  <p className="text-xs text-[#bdc9c8]">{evt.address}</p>
+                  <p className="text-xs text-[#bdc9c8] mb-4">{evt.address}</p>
+
+                  <div className="relative w-full h-36 border border-[#ffb77b]/30 overflow-hidden bg-[#131407]">
+                    <iframe
+                      title={evt.venue || `Event Map ${idx + 1}`}
+                      src={evt.embedUrl}
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                    />
+                    <a
+                      href={evt.mapLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
 
                 <a
                   href={evt.mapLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 border border-[#ffb77b] text-[#ffb77b] px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#ffb77b] hover:text-[#4d2700] transition-colors"
+                  className="inline-flex items-center gap-2 border border-[#ffb77b] text-[#ffb77b] px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#ffb77b] hover:text-[#4d2700] transition-colors mt-2"
                 >
-                  <MapPin className="w-4 h-4" /> View on Map
+                  <MapPin className="w-4 h-4" /> Open in Google Maps
                 </a>
               </motion.div>
             ))}

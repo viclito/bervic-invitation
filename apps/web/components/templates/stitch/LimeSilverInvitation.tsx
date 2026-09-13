@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Calendar,
   Clock,
@@ -15,8 +15,7 @@ import {
   Menu,
   X,
   Play,
-  Heart,
-} from "lucide-react";
+  Heart, ExternalLink } from "lucide-react";
 
 export default function LimeSilverInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,29 +45,46 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
   const defaultEvents = [
     {
       title: "Marriage",
-      time: "May 13, 2026 • 10:00 AM",
-      venue: "St. Antony Church",
-      address: "Kaval Kinaru, Tirunelveli District",
-      mapLink: "https://maps.google.com",
+      time: `${props.weddingDate || "Wedding Day"} • ${props.weddingTime || "10:00 AM"}`,
+      venue: props.venuePlace || "Ceremony Venue",
+      address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+      embedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Ceremony Venue").trim()
+      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`,
+      mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Ceremony Venue").trim()
+      )}`,
     },
     {
       title: "Reception",
-      time: "May 13, 2026 • 07:00 PM",
-      venue: "Ubahara Matha Mahal",
-      address: "Kaval Kinaru, Tirunelveli District",
-      mapLink: "https://maps.google.com",
+      time: `${props.weddingDate || "Wedding Day"} • 07:00 PM`,
+      venue: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+      address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+      embedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Reception Venue").trim()
+      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`,
+      mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Reception Venue").trim()
+      )}`,
     },
   ];
 
   const eventsList =
     props.events && props.events.length > 0
-      ? props.events.map((e, idx) => ({
-          title: e.title,
-          time: `${e.date || props.weddingDate || "May 13, 2026"} • ${e.time || "10:00 AM"}`,
-          venue: props.locations?.[idx % props.locations.length]?.name || props.venuePlace || "Wedding Venue",
-          address: props.locations?.[idx % props.locations.length]?.address || props.contactAddress || "Venue Location",
-          mapLink: props.locations?.[idx % props.locations.length]?.mapLink || "https://maps.google.com",
-        }))
+      ? props.events.map((e, idx) => {
+          const loc = props.locations?.[idx % props.locations.length];
+          const venueName = e.location || loc?.name || loc?.venueLabel || (idx === 0 ? props.venuePlace : props.contactAddress) || "Wedding Venue";
+          const venueAddress = loc?.address || props.contactAddress || props.venuePlace || "Venue Location";
+
+          return {
+            title: e.title,
+            time: `${e.date || props.weddingDate || "Wedding Day"} • ${e.time || "10:00 AM"}`,
+            venue: venueName,
+            address: venueAddress,
+            embedUrl: resolveEmbedMapUrl(loc || { name: venueName, address: venueAddress }, props.venuePlace),
+            mapLink: resolveDirectMapUrl(loc || { name: venueName, address: venueAddress }, props.venuePlace),
+          };
+        })
       : defaultEvents;
 
   const defaultTimeline = [
@@ -252,9 +268,29 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
                     <h3 className="text-3xl font-black text-white uppercase">{evt.title}</h3>
                   </div>
                   <p className="text-base font-bold text-white mb-2">{evt.venue}</p>
-                  <p className="text-xs text-[#c6c6c6] mb-6 leading-relaxed">
+                  <p className="text-xs text-[#c6c6c6] mb-4 leading-relaxed">
                     {evt.address}
                   </p>
+
+                  <div className="relative w-full h-36 border border-[#32CD32]/40 mb-6 overflow-hidden bg-[#141414] rounded shadow-inner">
+                    <iframe
+                      title={evt.venue || `Event Map ${idx + 1}`}
+                      src={(evt as any).embedUrl}
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                    />
+                    <a
+                      href={evt.mapLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
                   <div className="flex flex-col gap-2 mb-6 text-xs text-[#bccbb4] font-semibold">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-[#32CD32]" />
@@ -268,7 +304,7 @@ export default function LimeSilverInvitation(props: TemplateClassicFloralProps) 
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 bg-[#32CD32] text-[#0A0A0A] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-white transition-colors shadow-[0_0_15px_rgba(50,205,50,0.3)] w-fit"
                 >
-                  <MapPin className="w-4 h-4" /> View on Map
+                  <MapPin className="w-4 h-4" /> Open in Google Maps
                 </a>
               </motion.div>
             ))}

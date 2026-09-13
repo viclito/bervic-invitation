@@ -4,10 +4,10 @@ import { useState } from "react";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Diamond,
+import { Diamond,
   Church,
   PartyPopper,
   Wine,
@@ -16,8 +16,7 @@ import {
   Menu,
   X,
   Sparkles,
-  MapPin,
-} from "lucide-react";
+  MapPin, ExternalLink } from "lucide-react";
 
 export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,6 +25,35 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            mapLink: "https://maps.google.com",
+            image: "/images/templates/venue-ceremony.jpg",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            mapLink: "https://maps.google.com",
+            image: "/images/templates/venue-reception.jpg",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const heroBg =
     props.heroImage ||
@@ -259,13 +287,13 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
                     {
                       time: props.weddingTime || "4:00 PM",
                       title: "Ceremony & Muhurtham",
-                      location: props.venuePlace || "The Grand Cathedral",
+                      location: props.venuePlace || "Ceremony Venue",
                       description: "Traditional marriage rituals surrounded by loved ones.",
                     },
                     {
                       time: "7:00 PM",
                       title: "Grand Reception Party",
-                      location: props.venuePlace || "The Emerald Room at Gatsby Hotel",
+                      location: props.contactAddress || props.venuePlace || "Reception Venue",
                       description: "Dinner, toasts, and dancing to celebrate the newlyweds.",
                     },
                   ]
@@ -316,63 +344,73 @@ export default function ArtDecoRevivalInvitation(props: TemplateClassicFloralPro
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Venue 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-col space-y-4"
-              >
-                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group bg-[#20201c]">
-                  <img
-                    src={
-                      props.locations?.[0]?.image ||
-                      props.coverImage ||
-                      "/images/templates/venue-ceremony.jpg"
-                    }
-                    alt="Ceremony Venue"
-                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">
-                    {props.locations?.[0]?.name || "Ceremony Location"}
-                  </h4>
-                  <p className="text-xs text-[#d0c5af]">
-                    {props.locations?.[0]?.address || props.venuePlace || "The Grand Cathedral"}
-                  </p>
-                </div>
-              </motion.div>
+              {locationList.slice(0, 2).map((loc, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  className="flex flex-col space-y-4 bg-[#1c1d18] border border-[#d4af37]/50 p-6 rounded-xl shadow-xl"
+                >
+                  <div className="border border-[#d4af37] p-1.5 h-56 relative overflow-hidden group bg-[#20201c] rounded-lg">
+                    <img
+                      src={
+                        loc.image ||
+                        props.coverImage ||
+                        (idx === 0
+                          ? "/images/templates/venue-ceremony.jpg"
+                          : "/images/templates/venue-reception.jpg")
+                      }
+                      alt={loc.name || "Venue"}
+                      className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                    />
+                  </div>
 
-              {/* Venue 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="flex flex-col space-y-4"
-              >
-                <div className="border border-[#d4af37] p-2 h-64 relative overflow-hidden group bg-[#20201c]">
-                  <img
-                    src={
-                      props.locations?.[1]?.image ||
-                      props.coverImage ||
-                      "/images/templates/venue-reception.jpg"
-                    }
-                    alt="Reception Venue"
-                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-serif text-xl text-[#f2ca50] uppercase mb-1">
-                    {props.locations?.[1]?.name || "Reception Location"}
-                  </h4>
-                  <p className="text-xs text-[#d0c5af]">
-                    {props.locations?.[1]?.address || "The Emerald Room at Gatsby Hotel"}
-                  </p>
-                </div>
-              </motion.div>
+                  <div className="text-center">
+                    <span className="text-[11px] font-bold text-[#d4af37] uppercase tracking-widest block mb-1">
+                      {loc.venueLabel || (idx === 0 ? "Ceremony" : "Reception")}
+                    </span>
+                    <h4 className="font-serif text-2xl text-[#f2ca50] uppercase mb-1">
+                      {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                    </h4>
+                    <p className="text-xs text-[#d0c5af] max-w-sm mx-auto leading-relaxed">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
+                  </div>
+
+                  <div className="relative w-full h-48 border border-[#d4af37]/30 rounded-lg overflow-hidden bg-black/40">
+                    <iframe
+                      title={`${loc.venueLabel || "Venue"} Map`}
+                      src={getEmbedMapUrl(loc)}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg border border-[#d4af37] text-[#f2ca50] hover:bg-[#d4af37] hover:text-[#1c1d18] font-bold text-xs uppercase tracking-widest transition-all shadow-md mt-2"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Open in Google Maps</span>
+                  </a>
+                </motion.div>
+              ))}
             </div>
           </section>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
@@ -16,6 +18,7 @@ import {
   Menu,
   X,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 
 export default function ModernMinimalistInvitation(props: TemplateClassicFloralProps) {
@@ -30,10 +33,10 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
     "https://lh3.googleusercontent.com/aida-public/AB6AXuAozQTTShxbC2nG0N4AqOQYF9-PJMAj5p4kqugcb0I5t5zZInw42xxfjdzw5JP1O3YU9ohkSXnh1LmqrfIwb0vF402pC3lrLVbSX8cI4QHYkqLqQgAGcZR9viSyKJ0_m_vXwuTELqm1Fqq1zOWoEbOIeLKzLQxb8xgWKJOSZeAyqjJL_MOY7eQhqA-kZlThFG8UyBDAuixWoZ8pcqTBjCZknGbYjZkga0FnKfwKlBiLGMqR4gRIbRjC";
 
   const defaultTimeline = [
-    { time: "3:00 PM", title: "Ceremony Begins", location: "St. Patrick's Cathedral" },
-    { time: "4:30 PM", title: "Cocktail Hour", location: "The Plaza Gardens" },
-    { time: "6:00 PM", title: "Dinner & Dancing", location: "Grand Ballroom" },
-    { time: "11:00 PM", title: "Farewell Sparklers", location: "Main Entrance" },
+    { time: "3:00 PM", title: "Ceremony Begins", location: props.venuePlace || "Main Hall" },
+    { time: "4:30 PM", title: "Cocktail & High Tea", location: props.venuePlace || "Garden Lawn" },
+    { time: "7:00 PM", title: "Grand Feast & Reception", location: props.venuePlace || "Grand Ballroom" },
+    { time: "10:30 PM", title: "Send Off & Blessings", location: props.venuePlace || "Main Entrance" },
   ];
 
   const timelineList =
@@ -41,7 +44,7 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
       ? props.timelineDay.map((t) => ({
           time: t.time,
           title: t.title,
-          location: "Main Venue",
+          location: props.venuePlace || "Main Venue",
         }))
       : defaultTimeline;
 
@@ -55,6 +58,28 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
   ];
 
   const galleryList = props.galleryImages && props.galleryImages.length > 0 ? props.galleryImages : defaultGallery;
+
+  // Dynamic Locations & Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: "Ceremony Venue",
+            venueLabel: props.venuePlace || "Ceremony Venue",
+            address: props.contactAddress || props.venuePlace || "Venue address to be announced",
+            mapLink: "https://maps.google.com",
+            image: "/images/templates/venue-ceremony.jpg",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   return (
     <div className="bg-[#fbf9f4] text-[#1b1c19] font-sans antialiased selection:bg-[#D4AF37] selection:text-[#31105C] relative min-h-screen overflow-hidden">
@@ -349,47 +374,117 @@ export default function ModernMinimalistInvitation(props: TemplateClassicFloralP
       {/* Locations Section with Maps */}
       <section className="py-24 px-6 md:px-16 bg-[#f0eee9]" id="locations">
         <div className="max-w-[1200px] mx-auto space-y-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="h-80 w-full rounded-2xl overflow-hidden shadow-lg border border-[#D4AF37]/30"
-            >
-              <iframe
-                title="Ceremony Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.25983574581!2d-73.97893918459374!3d40.75896697932688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c258fa492b45eb%3A0xc3f8f17548c7bd3a!2sSt.%20Patrick's%20Cathedral!5e0!3m2!1sen!2sus!4v1689269550424!5m2!1sen!2sus"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                loading="lazy"
-              />
-            </motion.div>
-            <div>
-              <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-4">
-                The Ceremony Location
-              </h3>
-              <p className="text-sm text-[#4a4452] mb-6 leading-relaxed">
-                Join us for the exchange of vows in the historic and beautiful setting of St. Patrick's Cathedral.
-              </p>
-              <div className="space-y-3 font-sans text-xs">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-[#31105C] uppercase block mb-0.5">Address</strong>
-                    <span className="text-[#4a4452]">5th Ave, New York, NY 10022</span>
+          <div className="text-center mb-8">
+            <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#31105C] mb-3">
+              Venues &amp; Locations
+            </h2>
+            <p className="text-sm text-[#4a4452] max-w-lg mx-auto">
+              Find directions and live map navigation to our celebration venues.
+            </p>
+            <div className="w-20 h-0.5 bg-[#D4AF37] mx-auto mt-4" />
+          </div>
+
+          <div className="space-y-16">
+            {locationList.map((loc, idx) => {
+              const venueTitle =
+                loc.name?.trim() ||
+                loc.venueLabel?.trim() ||
+                (idx === 0 ? "The Ceremony Location" : "The Reception Location");
+
+              const venueAddress =
+                loc.address?.trim() ||
+                loc.venueLabel?.trim() ||
+                props.contactAddress ||
+                props.venuePlace ||
+                "Address details to be shared";
+
+              const embedUrl = getEmbedMapUrl(loc);
+              const directMapUrl = getDirectMapUrl(loc);
+
+              return (
+                <div
+                  key={idx}
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center ${
+                    idx % 2 === 1 ? "lg:flex-row-reverse" : ""
+                  }`}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className={`h-80 w-full rounded-2xl overflow-hidden shadow-lg border border-[#D4AF37]/30 bg-slate-200 relative ${
+                      idx % 2 === 1 ? "lg:order-2" : "lg:order-1"
+                    }`}
+                  >
+                    <iframe
+                      title={`${venueTitle} Map`}
+                      src={embedUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={directMapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </motion.div>
+
+                  <div className={idx % 2 === 1 ? "lg:order-1" : "lg:order-2"}>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] block mb-2">
+                      {idx === 0 ? "Ceremony & Exchange of Vows" : "Celebration & Feast"}
+                    </span>
+                    <h3 className="font-serif text-3xl font-bold text-[#31105C] mb-3">
+                      {venueTitle}
+                    </h3>
+                    <p className="text-sm text-[#4a4452] mb-6 leading-relaxed">
+                      Join us as we celebrate our auspicious union with family and friends at {venueTitle}.
+                    </p>
+
+                    <div className="space-y-4 font-sans text-xs mb-8">
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-[#31105C] uppercase block mb-0.5 font-bold tracking-wider text-[11px]">
+                            Address
+                          </strong>
+                          <span className="text-[#4a4452] text-sm leading-relaxed">{venueAddress}</span>
+                        </div>
+                      </div>
+
+                      {loc.contact && (
+                        <div className="flex items-start gap-3">
+                          <Info className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="text-[#31105C] uppercase block mb-0.5 font-bold tracking-wider text-[11px]">
+                              Venue Contact
+                            </strong>
+                            <span className="text-[#4a4452] text-sm">{loc.contact}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <a
+                      href={directMapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-[#31105C] text-[#D4AF37] text-[11px] font-bold uppercase tracking-[0.15em] py-3 px-6 rounded-sm hover:bg-[#D4AF37] hover:text-[#31105C] transition-all shadow-md group"
+                    >
+                      <span>Open in Google Maps</span>
+                      <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </a>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Car className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-[#31105C] uppercase block mb-0.5">Parking</strong>
-                    <span className="text-[#4a4452]">Valet parking available at 51st Street entrance.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>

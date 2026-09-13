@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { getWeddingTargetDate, getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Heart,
+import { Heart,
   MapPin,
   Calendar,
   Clock,
@@ -19,8 +19,7 @@ import {
   Phone,
   Menu,
   X,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, ExternalLink } from "lucide-react";
 
 export default function OliveOchreInvitation(props: TemplateClassicFloralProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -82,20 +81,32 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
 
   const defaultLocations = [
     {
-      name: "Marriage Venue",
-      venueLabel: "St. Antony Church",
-      address: "Kaval Kinaru, Tirunelveli District, Tamil Nadu, India",
-      mapLink: "https://maps.google.com/?q=St+Antony+Church+Kaval+Kinaru",
+      name: props.venuePlace || "Marriage Venue",
+      venueLabel: "Marriage Ceremony",
+      address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+      mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Marriage Venue").trim()
+      )}`,
     },
     {
-      name: "Reception Venue",
-      venueLabel: "Ubahara Matha Mahal",
-      address: "Kaval Kinaru, Tirunelveli District, Tamil Nadu, India",
-      mapLink: "https://maps.google.com/?q=Ubahara+Matha+Mahal+Kaval+Kinaru",
+      name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+      venueLabel: "Reception Venue",
+      address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+      mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        (props.contactAddress || props.venuePlace || "Reception Venue").trim()
+      )}`,
     },
   ];
 
   const locationsList = props.locations && props.locations.length > 0 ? props.locations : defaultLocations;
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const defaultGallery = [
     "/images/templates/gallery-1.jpg",
@@ -453,21 +464,51 @@ export default function OliveOchreInvitation(props: TemplateClassicFloralProps) 
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {locationsList.map((loc, idx) => (
+              {locationsList.slice(0, 2).map((loc, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                  className="bg-[#fcf9f8] p-8 rounded-2xl border border-[#cac7b1]/40 flex flex-col shadow-sm hover:shadow-md transition-shadow"
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  className="bg-[#fcf9f8] p-8 rounded-2xl border border-[#cac7b1]/40 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <h3 className="text-2xl font-bold text-[#1b1c1c] mb-3">{loc.name}</h3>
-                  <p className="font-sans text-sm font-semibold text-[#5f5f00] mb-1">{loc.venueLabel}</p>
-                  <p className="font-sans text-xs text-[#484837] mb-6 leading-relaxed">{loc.address}</p>
+                  <div>
+                    <span className="font-sans text-xs font-bold uppercase tracking-wider text-[#5f5f00] block mb-1">
+                      {loc.venueLabel || (idx === 0 ? "Marriage Ceremony" : "Grand Reception")}
+                    </span>
+                    <h3 className="text-2xl font-bold text-[#1b1c1c] mb-2">
+                      {loc.name || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                    </h3>
+                    <p className="font-sans text-xs text-[#484837] mb-6 leading-relaxed">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
+                  </div>
+
+                  <div className="relative w-full h-48 rounded-xl overflow-hidden border border-[#cac7b1]/40 mb-6 bg-gray-100">
+                    <iframe
+                      title={`${loc.venueLabel || "Venue"} Map`}
+                      src={getEmbedMapUrl(loc)}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
                   <div className="mt-auto pt-4 border-t border-[#cac7b1]/30">
                     <a
-                      href={loc.mapLink || "#"}
+                      href={getDirectMapUrl(loc)}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-2 text-[#904d00] hover:underline font-sans text-xs font-bold uppercase tracking-wider"

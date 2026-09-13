@@ -12,6 +12,7 @@ import GallerySection from "./GallerySection";
 import RsvpSection from "./RsvpSection";
 import GlowinnFooter from "./GlowinnFooter";
 import BushOpeningCurtain from "./BushOpeningCurtain";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 import "./GlowinnTemplate.css";
 
 // High-speed CDN video stream with global edge caching
@@ -167,10 +168,7 @@ export default function GlowinnTemplate(props: GlowinnTemplateProps) {
     tag: l.tag || "Ceremony Venue",
     address: l.address || "",
     time: l.time || weddingTime,
-    mapUrl:
-      l.mapLink ||
-      l.mapUrl ||
-      (l.address ? `https://maps.google.com/?q=${encodeURIComponent(l.address)}` : undefined),
+    mapUrl: resolveDirectMapUrl(l, venuePlace),
     contact:
       l.contact && !l.contact.includes("98765 43210")
         ? l.contact.trim()

@@ -295,13 +295,18 @@ function getStepStatus(stepNum: number, draft: DraftData) {
     const primaryName =
       draft.venueName?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as unknown as Record<string, string>)?.mainTitle?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.name?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.venueLabel?.trim()
+        ? (draft.locations[0] as unknown as Record<string, string>)?.subLabel?.trim() ||
+          (draft.locations[0] as unknown as Record<string, string>)?.mainTitle?.trim() ||
+          (draft.locations[0] as unknown as Record<string, string>)?.label?.trim() ||
+          (draft.locations[0] as unknown as Record<string, string>)?.name?.trim() ||
+          (draft.locations[0] as unknown as Record<string, string>)?.venueLabel?.trim()
         : "");
 
     const primaryAddress =
       draft.venueAddress?.trim() ||
       (draft.locations && draft.locations.length > 0
-        ? (draft.locations[0] as unknown as Record<string, string>)?.address?.trim() || (draft.locations[0] as unknown as Record<string, string>)?.subLabel?.trim()
+        ? (draft.locations[0] as unknown as Record<string, string>)?.address?.trim() ||
+          (draft.locations[0] as unknown as Record<string, string>)?.subLabel?.trim()
         : "");
 
     if (!primaryName) missing.push("Venue Name");
@@ -484,30 +489,34 @@ export default function QuickStartDetailsWizard({
             const allRes = await fetch("/api/user/event-draft?all=true");
             const allData = await allRes.json();
             if (allData.success && Array.isArray(allData.profiles)) {
-              if (initialEventType) {
-                const targetType = initialEventType.toUpperCase();
-                const isTargetBirthday = targetType === "BIRTHDAY";
-                setDraft((prev) => ({
-                  ...prev,
-                  eventType: targetType,
-                  ...(isTargetBirthday
-                    ? {
-                        venueName: "Birthday Celebration Venue",
-                        locations: BIRTHDAY_DEFAULT_LOCATIONS,
-                        functions: BIRTHDAY_DEFAULT_FUNCTIONS,
-                        timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
-                        dressCode: "Smart Casual / Party Chic",
-                        inviteLine: "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!",
-                      }
-                    : {
-                        venueName: "Marriage Ceremony Hall",
-                        locations: WEDDING_DEFAULT_LOCATIONS,
-                        functions: WEDDING_DEFAULT_FUNCTIONS,
-                        timelineItems: WEDDING_DEFAULT_TIMELINE,
-                        dressCode: "Traditional / Cocktail Attire",
-                        inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
-                      }),
-                }));
+              setExistingProfiles(allData.profiles);
+              // Only apply fresh template event type defaults if explicitly creating a new profile or no profiles exist
+              if (isNewProfile || allData.profiles.length === 0) {
+                if (initialEventType) {
+                  const targetType = initialEventType.toUpperCase();
+                  const isTargetBirthday = targetType === "BIRTHDAY";
+                  setDraft((prev) => ({
+                    ...prev,
+                    eventType: targetType,
+                    ...(isTargetBirthday
+                      ? {
+                          venueName: "Birthday Celebration Venue",
+                          locations: BIRTHDAY_DEFAULT_LOCATIONS,
+                          functions: BIRTHDAY_DEFAULT_FUNCTIONS,
+                          timelineItems: BIRTHDAY_DEFAULT_TIMELINE,
+                          dressCode: "Smart Casual / Party Chic",
+                          inviteLine: "Join us in celebrating this special birthday with an evening of music, delicious dining, and great company!",
+                        }
+                      : {
+                          venueName: "Marriage Ceremony Hall",
+                          locations: WEDDING_DEFAULT_LOCATIONS,
+                          functions: WEDDING_DEFAULT_FUNCTIONS,
+                          timelineItems: WEDDING_DEFAULT_TIMELINE,
+                          dressCode: "Traditional / Cocktail Attire",
+                          inviteLine: "Together with their families, request the pleasure of your company at the celebration of their wedding",
+                        }),
+                  }));
+                }
               }
             }
           } catch {}
@@ -527,14 +536,45 @@ export default function QuickStartDetailsWizard({
         if (localSaved) {
           try {
             localParsed = JSON.parse(localSaved);
-            if (localParsed && (localParsed.hostNameOne || localParsed.eventDate || localParsed.venueName || localParsed.rsvpContact)) {
-              setDraft((prev) => {
-                const merged = { ...prev, ...localParsed };
-                return {
-                  ...merged,
-                  coupleInitials: merged.coupleInitials || calculateMonogram(merged.hostNameOne, merged.hostNameTwo),
-                };
-              });
+            if (localParsed) {
+              if (Array.isArray(localParsed.locations)) {
+                localParsed.locations = localParsed.locations.map((loc: any, idx: number) => ({
+                  id: (typeof loc.id === "string" && loc.id) || `loc-${idx + 1}`,
+                  mainTitle:
+                    (typeof loc.mainTitle === "string" && loc.mainTitle) ||
+                    (typeof loc.label === "string" && loc.label) ||
+                    (typeof loc.title === "string" && loc.title) ||
+                    (idx === 0
+                      ? "Marriage Ceremony Venue"
+                      : idx === 1
+                      ? "Grand Reception Venue"
+                      : `Venue Location #${idx + 1}`),
+                  subLabel:
+                    (typeof loc.subLabel === "string" && loc.subLabel) ||
+                    (typeof loc.name === "string" && loc.name) ||
+                    (typeof loc.venueName === "string" && loc.venueName) ||
+                    "",
+                  address: typeof loc.address === "string" ? loc.address : "",
+                  mapUrl:
+                    (typeof loc.mapUrl === "string" && loc.mapUrl) ||
+                    (typeof loc.mapLink === "string" && loc.mapLink) ||
+                    "",
+                  venuePhoto:
+                    (typeof loc.venuePhoto === "string" && loc.venuePhoto) ||
+                    (typeof loc.image === "string" && loc.image) ||
+                    (typeof loc.photo === "string" && loc.photo) ||
+                    "",
+                }));
+              }
+              if (localParsed.hostNameOne || localParsed.eventDate || localParsed.venueName || localParsed.rsvpContact) {
+                setDraft((prev) => {
+                  const merged = { ...prev, ...localParsed };
+                  return {
+                    ...merged,
+                    coupleInitials: merged.coupleInitials || calculateMonogram(merged.hostNameOne, merged.hostNameTwo),
+                  };
+                });
+              }
             }
           } catch {
             localParsed = null;
@@ -587,7 +627,22 @@ export default function QuickStartDetailsWizard({
             if (apiDraft.functionsJson) {
               try {
                 const raw = JSON.parse(apiDraft.functionsJson);
-                if (Array.isArray(raw)) parsedFunctions = raw;
+                if (Array.isArray(raw)) {
+                  parsedFunctions = raw.map((fn: Record<string, unknown>, idx: number) => ({
+                    id: (typeof fn.id === "string" && fn.id) || `fn-${idx + 1}`,
+                    icon: (typeof fn.icon === "string" && fn.icon) || "",
+                    title:
+                      (typeof fn.title === "string" && fn.title) ||
+                      (typeof fn.name === "string" && fn.name) ||
+                      (idx === 0 ? "Marriage Ceremony" : idx === 1 ? "Reception & Dinner" : `Event #${idx + 1}`),
+                    date: typeof fn.date === "string" ? fn.date : "",
+                    time: typeof fn.time === "string" ? fn.time : "",
+                    venue:
+                      (typeof fn.venue === "string" && fn.venue) ||
+                      (typeof fn.place === "string" && fn.place) ||
+                      "",
+                  }));
+                }
               } catch {
                 parsedFunctions = null;
               }
@@ -596,7 +651,18 @@ export default function QuickStartDetailsWizard({
             if (apiDraft.dayTimelineJson) {
               try {
                 const raw = JSON.parse(apiDraft.dayTimelineJson);
-                if (Array.isArray(raw)) parsedTimeline = raw;
+                if (Array.isArray(raw)) {
+                  parsedTimeline = raw.map((item: Record<string, unknown>, idx: number) => ({
+                    id: (typeof item.id === "string" && item.id) || `tl-${idx + 1}`,
+                    icon: (typeof item.icon === "string" && item.icon) || "",
+                    title:
+                      (typeof item.title === "string" && item.title) ||
+                      (typeof item.name === "string" && item.name) ||
+                      `Timeline #${idx + 1}`,
+                    date: typeof item.date === "string" ? item.date : "",
+                    time: typeof item.time === "string" ? item.time : "",
+                  }));
+                }
               } catch {
                 parsedTimeline = null;
               }
@@ -605,7 +671,35 @@ export default function QuickStartDetailsWizard({
             if (apiDraft.locationsJson) {
               try {
                 const raw = JSON.parse(apiDraft.locationsJson);
-                if (Array.isArray(raw)) parsedLocations = raw;
+                if (Array.isArray(raw)) {
+                  parsedLocations = raw.map((loc: Record<string, unknown>, idx: number) => ({
+                    id: (typeof loc.id === "string" && loc.id) || `loc-${idx + 1}`,
+                    mainTitle:
+                      (typeof loc.mainTitle === "string" && loc.mainTitle) ||
+                      (typeof loc.label === "string" && loc.label) ||
+                      (typeof loc.title === "string" && loc.title) ||
+                      (idx === 0
+                        ? "Marriage Ceremony Venue"
+                        : idx === 1
+                        ? "Grand Reception Venue"
+                        : `Venue Location #${idx + 1}`),
+                    subLabel:
+                      (typeof loc.subLabel === "string" && loc.subLabel) ||
+                      (typeof loc.name === "string" && loc.name) ||
+                      (typeof loc.venueName === "string" && loc.venueName) ||
+                      "",
+                    address: typeof loc.address === "string" ? loc.address : "",
+                    mapUrl:
+                      (typeof loc.mapUrl === "string" && loc.mapUrl) ||
+                      (typeof loc.mapLink === "string" && loc.mapLink) ||
+                      "",
+                    venuePhoto:
+                      (typeof loc.venuePhoto === "string" && loc.venuePhoto) ||
+                      (typeof loc.image === "string" && loc.image) ||
+                      (typeof loc.photo === "string" && loc.photo) ||
+                      "",
+                  }));
+                }
               } catch {
                 parsedLocations = null;
               }
@@ -664,15 +758,26 @@ export default function QuickStartDetailsWizard({
     }
 
     loadSavedDraft();
-  }, [status, profileId, isNewProfile, startAtStepOne]);
+  }, [status, profileId, invitationId, initialEventType, isNewProfile, startAtStepOne]);
 
   // Continuously persist draft to localStorage so navigation never loses typing progress
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("bervic_quick_start_draft", JSON.stringify(draft));
-      localStorage.setItem("bervic_user_draft_details", JSON.stringify(draft));
+      const searchParams = new URLSearchParams(window.location.search);
+      const paramInvId = draft.invitationId || invitationId || searchParams.get("invitationId") || "";
+      const paramProfId = draft.id || profileId || searchParams.get("id") || "";
+      const key = paramInvId
+        ? `bervic_invitation_draft_${paramInvId}`
+        : paramProfId
+        ? `bervic_profile_draft_${paramProfId}`
+        : `bervic_quick_start_draft`;
+      try {
+        localStorage.setItem(key, JSON.stringify(draft));
+        localStorage.setItem("bervic_quick_start_draft", JSON.stringify(draft));
+        localStorage.setItem("bervic_user_draft_details", JSON.stringify(draft));
+      } catch {}
     }
-  }, [draft]);
+  }, [draft, invitationId, profileId]);
 
   // Calculate accurate progress percentage based on 9 wizard steps completion
   const calculateProgress = () => {
@@ -903,7 +1008,31 @@ export default function QuickStartDetailsWizard({
       if (ext.locationsJson) {
         try {
           const raw = JSON.parse(ext.locationsJson);
-          if (Array.isArray(raw)) parsedLocations = raw;
+          if (Array.isArray(raw)) {
+            parsedLocations = raw.map((loc: Record<string, unknown>, idx: number) => ({
+              id: (typeof loc.id === "string" && loc.id) || `loc-${idx + 1}`,
+              mainTitle:
+                (typeof loc.mainTitle === "string" && loc.mainTitle) ||
+                (typeof loc.label === "string" && loc.label) ||
+                (typeof loc.title === "string" && loc.title) ||
+                (idx === 0 ? "Marriage Ceremony Venue" : idx === 1 ? "Grand Reception Venue" : `Venue Location #${idx + 1}`),
+              subLabel:
+                (typeof loc.subLabel === "string" && loc.subLabel) ||
+                (typeof loc.name === "string" && loc.name) ||
+                (typeof loc.venueName === "string" && loc.venueName) ||
+                "",
+              address: typeof loc.address === "string" ? loc.address : "",
+              mapUrl:
+                (typeof loc.mapUrl === "string" && loc.mapUrl) ||
+                (typeof loc.mapLink === "string" && loc.mapLink) ||
+                "",
+              venuePhoto:
+                (typeof loc.venuePhoto === "string" && loc.venuePhoto) ||
+                (typeof loc.image === "string" && loc.image) ||
+                (typeof loc.photo === "string" && loc.photo) ||
+                "",
+            }));
+          }
         } catch {
           parsedLocations = null;
         }
@@ -2247,10 +2376,10 @@ export default function QuickStartDetailsWizard({
                             <input
                               type="text"
                               placeholder={draft.eventType === "BIRTHDAY" ? "e.g. Birthday Party Venue" : "e.g. Marriage Ceremony Venue"}
-                              value={currentLoc.mainTitle}
+                              value={currentLoc.mainTitle || ""}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
-                                newLocs[safeIdx].mainTitle = e.target.value;
+                                newLocs[safeIdx] = { ...newLocs[safeIdx], mainTitle: e.target.value };
                                 setDraft({ ...draft, locations: newLocs });
                               }}
                               className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
@@ -2264,10 +2393,10 @@ export default function QuickStartDetailsWizard({
                             <input
                               type="text"
                               placeholder={draft.eventType === "BIRTHDAY" ? "e.g. Celebration Hall & Lawn" : "e.g. JW Marriott Grand Ballroom"}
-                              value={currentLoc.subLabel}
+                              value={currentLoc.subLabel || ""}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
-                                newLocs[safeIdx].subLabel = e.target.value;
+                                newLocs[safeIdx] = { ...newLocs[safeIdx], subLabel: e.target.value };
                                 setDraft({ ...draft, locations: newLocs });
                               }}
                               className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
@@ -2303,7 +2432,7 @@ export default function QuickStartDetailsWizard({
                                       const data = await res.json();
                                       if (data.url) {
                                         const newLocs = [...draft.locations];
-                                        newLocs[safeIdx].venuePhoto = data.url;
+                                        newLocs[safeIdx] = { ...newLocs[safeIdx], venuePhoto: data.url };
                                         setDraft({ ...draft, locations: newLocs });
                                       }
                                     } catch (err) {
@@ -2321,7 +2450,7 @@ export default function QuickStartDetailsWizard({
                                     onClick={async () => {
                                       const prevPhoto = currentLoc.venuePhoto;
                                       const newLocs = [...draft.locations];
-                                      newLocs[safeIdx].venuePhoto = "";
+                                      newLocs[safeIdx] = { ...newLocs[safeIdx], venuePhoto: "" };
                                       setDraft({ ...draft, locations: newLocs });
                                       if (prevPhoto) await deleteCloudinaryAsset(prevPhoto);
                                     }}
@@ -2336,10 +2465,10 @@ export default function QuickStartDetailsWizard({
                             <input
                               type="text"
                               placeholder="Or paste direct image URL"
-                              value={currentLoc.venuePhoto}
+                              value={currentLoc.venuePhoto || ""}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
-                                newLocs[safeIdx].venuePhoto = e.target.value;
+                                newLocs[safeIdx] = { ...newLocs[safeIdx], venuePhoto: e.target.value };
                                 setDraft({ ...draft, locations: newLocs });
                               }}
                               className="w-full h-8 px-2.5 rounded-md border border-slate-200 text-[11px] font-medium focus:outline-none focus:border-[#EA580C] bg-white mt-1.5"
@@ -2353,10 +2482,10 @@ export default function QuickStartDetailsWizard({
                             <input
                               type="text"
                               placeholder="e.g. https://maps.google.com"
-                              value={currentLoc.mapUrl}
+                              value={currentLoc.mapUrl || ""}
                               onChange={(e) => {
                                 const newLocs = [...draft.locations];
-                                newLocs[safeIdx].mapUrl = e.target.value;
+                                newLocs[safeIdx] = { ...newLocs[safeIdx], mapUrl: e.target.value };
                                 setDraft({ ...draft, locations: newLocs });
                               }}
                               className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"
@@ -2372,10 +2501,10 @@ export default function QuickStartDetailsWizard({
                           <textarea
                             rows={2}
                             placeholder="e.g. Your Full Address, City, State 000000"
-                            value={currentLoc.address}
+                            value={currentLoc.address || ""}
                             onChange={(e) => {
                               const newLocs = [...draft.locations];
-                              newLocs[safeIdx].address = e.target.value;
+                              newLocs[safeIdx] = { ...newLocs[safeIdx], address: e.target.value };
                               setDraft({ ...draft, locations: newLocs });
                             }}
                             className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#EA580C] bg-white"

@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -35,17 +37,12 @@ export default function EclecticChicMasterpieceInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "The Artisan Foundry",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "123 Creative District Avenue, Metropolis, NY 10001",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
         }
       : {
           name: props.venuePlace || "The Artisan Foundry",
           address: props.contactAddress || props.venuePlace || "123 Creative District Avenue, Metropolis, NY 10001",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Celebrant portrait priority
@@ -372,36 +369,35 @@ export default function EclecticChicMasterpieceInvitation(
           </div>
         </section>
 
-        {/* Venue & Map (The Grand Estate) */}
+        {/* Venue & Map */}
         <section className="py-16 border-b border-[#7c766e]/40" id="venue">
           <h2 className="font-serif-caslon text-3xl md:text-4xl text-[#1c1b1b] mb-12 text-center md:text-left">
-            The Grand Estate
+            {mainVenue.name || "Venue & Location"}
           </h2>
           <div className="flex flex-col md:flex-row-reverse gap-12 items-center">
-            {/* Interactive Clickable Map Card */}
-            <a
-              href={mainVenue.mapLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex-1 w-full block group"
-            >
-              <div className="border border-[#7c766e] p-2 bg-[#fcf9f8]">
-                <div className="w-full h-64 md:h-80 border border-[#7c766e]/40 bg-[#f4f4ee] flex flex-col items-center justify-center relative overflow-hidden p-6 text-center group-hover:bg-[#e5e2e1] transition-colors">
-                  <div className="absolute inset-0 blueprint-grid opacity-30" />
-                  <MapPin className="w-10 h-10 text-[#4b463f] mb-2 relative z-10 group-hover:text-[#94492c] group-hover:scale-110 transition-all" />
-                  <span className="font-serif-caslon text-xl text-[#1c1b1b] font-bold relative z-10 block mb-1">
-                    {mainVenue.name || "The Artisan Foundry"}
-                  </span>
-                  <span className="font-mono-space text-xs text-[#4b463f] relative z-10 block max-w-xs mb-3">
-                    {mainVenue.address}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 border border-[#1c1b1b] px-3 py-1 font-sans-work text-xs uppercase tracking-[0.2em] font-semibold text-[#1c1b1b] group-hover:bg-[#94492c] group-hover:text-white group-hover:border-[#94492c] transition-all">
-                    <span>Open in Google Maps</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </span>
+            {/* Interactive Embedded Map Card */}
+            <div className="flex-1 w-full block">
+              <div className="border border-[#7c766e] p-2 bg-[#fcf9f8] shadow-md">
+                <div className="w-full h-64 md:h-80 border border-[#7c766e]/40 bg-[#f4f4ee] overflow-hidden relative rounded-sm">
+                  <iframe
+                    title={mainVenue.name || "Venue Map"}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                  />
+                  <a
+                    href={mainVenue.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
-            </a>
+            </div>
 
             <div className="flex-1 space-y-6 text-center md:text-left">
               <div>

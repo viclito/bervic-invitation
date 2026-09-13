@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   MapPin,
   Menu,
@@ -15,8 +16,7 @@ import {
   Play,
   Sparkles,
   Clock,
-  Calendar,
-} from "lucide-react";
+  Calendar, ExternalLink } from "lucide-react";
 
 export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,6 +38,35 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
   const partner1 = props.partnerOne || "Terance";
   const partner2 = props.partnerTwo || "Ancy";
   const initials = props.coupleInitials || `${partner1[0]} & ${partner2[0]}`;
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "Ceremony Venue",
+            venueLabel: "Holy Matrimony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            time: props.weddingTime || "10:00 AM",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue",
+            venueLabel: "Grand Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            time: "06:30 PM",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const archHeroImg =
     props.heroImage ||
@@ -185,47 +214,60 @@ export default function MossStoneInvitation(props: TemplateClassicFloralProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Matrimony */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="border-2 border-[#76786b] p-8 sm:p-10 bg-[#eeeeec] flex flex-col items-center text-center rounded shadow-sm hover:shadow-xl transition-all"
-            >
-              <Church className="w-12 h-12 text-[#56642b] mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-[#1a1c1b] mb-2">Holy Matrimony</h3>
-              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • {props.weddingTime || "10:00 AM"}</p>
-              <p className="text-xs text-[#1a1c1b] mb-8 leading-relaxed">
-                St. Antony Church<br />Kaval Kinaru, Tirunelveli District
-              </p>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border-2 border-[#56642b] text-[#56642b] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#56642b] hover:text-white transition-colors"
+            {locationList.slice(0, 2).map((loc, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -6 }}
+                className="border-2 border-[#76786b] p-8 sm:p-10 bg-[#eeeeec] flex flex-col justify-between items-center text-center rounded shadow-sm hover:shadow-xl transition-all"
               >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="w-full flex flex-col items-center">
+                  {idx === 0 ? (
+                    <Church className="w-12 h-12 text-[#56642b] mb-4" />
+                  ) : (
+                    <PartyPopper className="w-12 h-12 text-[#56642b] mb-4" />
+                  )}
+                  <h3 className="font-serif text-2xl font-bold text-[#1a1c1b] mb-2">
+                    {loc.name || (idx === 0 ? "Holy Matrimony" : "Grand Reception")}
+                  </h3>
+                  <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-3">
+                    {props.weddingDate || "Wedding Day"} • {loc.time || (idx === 0 ? (props.weddingTime || "10:00 AM") : "06:30 PM")}
+                  </p>
+                  <p className="text-xs text-[#1a1c1b] mb-6 leading-relaxed max-w-sm">
+                    {loc.address || props.contactAddress || props.venuePlace || "Venue address details"}
+                  </p>
+                </div>
 
-            {/* Reception */}
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="border-2 border-[#76786b] p-8 sm:p-10 bg-[#eeeeec] flex flex-col items-center text-center rounded shadow-sm hover:shadow-xl transition-all"
-            >
-              <PartyPopper className="w-12 h-12 text-[#56642b] mb-4" />
-              <h3 className="font-serif text-2xl font-bold text-[#1a1c1b] mb-2">Grand Reception</h3>
-              <p className="text-xs font-bold text-[#46483c] uppercase tracking-widest mb-6">{props.weddingDate || "13th May 2026"} • 06:30 PM</p>
-              <p className="text-xs text-[#1a1c1b] mb-8 leading-relaxed">
-                Ubahara Matha Mahal<br />Kaval Kinaru, Tirunelveli District
-              </p>
-              <a
-                href="https://maps.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 border-2 border-[#56642b] text-[#56642b] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#56642b] hover:text-white transition-colors"
-              >
-                <MapPin className="w-4 h-4" /> View on Map
-              </a>
-            </motion.div>
+                <div className="relative w-full h-44 rounded overflow-hidden border border-[#76786b]/40 mb-6 bg-white">
+                  <iframe
+                    title={`${loc.venueLabel || "Venue"} Map`}
+                    src={getEmbedMapUrl(loc)}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                  />
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <a
+                  href={getDirectMapUrl(loc)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 border-2 border-[#56642b] text-[#56642b] font-bold text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#56642b] hover:text-white transition-colors rounded"
+                >
+                  <MapPin className="w-4 h-4" /> Open in Google Maps
+                </a>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

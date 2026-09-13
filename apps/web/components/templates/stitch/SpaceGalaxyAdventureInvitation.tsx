@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { getWeddingTargetDate, formatAgeOrdinal } from "@/lib/dateUtils";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -116,17 +118,12 @@ export default function SpaceGalaxyAdventureInvitation(
           ...props.locations[0],
           name: props.locations[0].name || props.venuePlace || "St. Antony Church Hall",
           address: props.locations[0].address || props.contactAddress || props.venuePlace || "Kaval Kinaru, Tirunelveli District, Tamil Nadu, Earth",
-          mapLink:
-            props.locations[0].mapLink &&
-            props.locations[0].mapLink !== "https://maps.google.com" &&
-            props.locations[0].mapLink !== "https://maps.google.com/"
-              ? props.locations[0].mapLink
-              : `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl(props.locations[0], props.venuePlace),
         }
       : {
           name: props.venuePlace || "St. Antony Church Hall",
           address: props.contactAddress || props.venuePlace || "Kaval Kinaru, Tirunelveli District, Tamil Nadu, Earth",
-          mapLink: `https://maps.google.com/?q=${mapQuery}`,
+          mapLink: resolveDirectMapUrl({ name: props.venuePlace, address: props.contactAddress || props.venuePlace }, props.venuePlace),
         };
 
   // Celebrant portrait priority: user's celebrant portrait or cover photo

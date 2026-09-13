@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { MapPin, Navigation, ExternalLink, Phone } from "lucide-react";
+import { resolveDirectMapUrl } from "@/lib/mapUrlHelper";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -40,7 +41,7 @@ export default function LocationsSection({
             name: venuePlace || "Wedding Venue",
             tag: "Celebration Venue",
             address: contactAddress || venuePlace || "Venue Address",
-            mapUrl: `https://maps.google.com/?q=${encodeURIComponent(contactAddress || venuePlace || "")}`,
+            mapUrl: resolveDirectMapUrl({ name: venuePlace, address: contactAddress || venuePlace }, venuePlace),
             contact: contactPhone,
           },
         ]
@@ -138,7 +139,7 @@ export default function LocationsSection({
               {loc.mapUrl && (
                 <div className="glowinn-location-card__actions">
                   <a
-                    href={loc.mapUrl}
+                    href={resolveDirectMapUrl(loc, venuePlace)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="glowinn-btn glowinn-btn--pearl w-full"

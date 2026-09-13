@@ -1,13 +1,14 @@
 "use client";
 
+import { resolveDirectMapUrl, resolveEmbedMapUrl } from "@/lib/mapUrlHelper";
+
 import { useState } from "react";
 import { getYouTubeEmbedUrl, formatAgeOrdinal } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TemplateClassicFloralProps } from "@/types/template";
 import PersonalizedEnvelopeCover from "../classic-floral/PersonalizedEnvelopeCover";
 import RsvpSection from "../classic-floral/RsvpSection";
-import {
-  Church,
+import { Church,
   PartyPopper,
   Wine,
   Clock,
@@ -15,8 +16,7 @@ import {
   Menu,
   X,
   Sparkles,
-  MapPin,
-} from "lucide-react";
+  MapPin, ExternalLink } from "lucide-react";
 
 export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,10 +31,37 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
     "https://lh3.googleusercontent.com/aida-public/AB6AXuBvtRGl_mmbjLP_vTzc6MHhDEp4Q4QvyJjYtlb4btMTXd_x56p7IxFHwLQvcexORPcCmzinjuiJvrfP03V_lc3XzaN_gMzivL6e79e79MbG18n2aRFEkX2dQcEbiz0P2KUxvORqK005ZQSwig8soBxdcjuCFPpFbejuhP4WCLUTr2SqOSu5AAoo3ZfZhtbOBGN6Vy3nxvUdDegW_Y4NAoHfwFHLI9XeWucoRz_6UeJvILRrEmtwfoih";
 
   const defaultTimeline = [
-    { time: "3:00 PM", title: "Ceremony", venue: "The Grand Estate Gardens", icon: "church" },
-    { time: "4:30 PM", title: "Cocktails", venue: "The Rose Terrace", icon: "bar" },
-    { time: "6:00 PM", title: "Reception", venue: "The Glass Conservatory", icon: "party" },
+    { time: "3:00 PM", title: "Ceremony", venue: props.venuePlace || "Ceremony Venue", icon: "church" },
+    { time: "4:30 PM", title: "Cocktails", venue: "The Terrace", icon: "bar" },
+    { time: "6:00 PM", title: "Reception", venue: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Reception Hall") : "Reception Venue", icon: "party" },
   ];
+
+  // Dynamic Locations and Maps
+  const locationList =
+    props.locations && props.locations.length > 0
+      ? props.locations
+      : [
+          {
+            name: props.venuePlace || "The Ceremony",
+            venueLabel: "The Ceremony",
+            address: props.contactAddress || props.venuePlace || "Ceremony Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+          {
+            name: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "The Reception") : "The Reception",
+            venueLabel: "The Reception",
+            address: props.contactAddress || props.venuePlace || "Reception Venue Address",
+            mapLink: "https://maps.google.com",
+          },
+        ];
+
+  const getEmbedMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveEmbedMapUrl(loc, props.venuePlace);
+  };
+
+  const getDirectMapUrl = (loc: { name?: string; venueLabel?: string; subLabel?: string; address?: string; mapLink?: string; mapUrl?: string }) => {
+    return resolveDirectMapUrl(loc, props.venuePlace);
+  };
 
   const timelineList =
     props.timelineDay && props.timelineDay.length > 0
@@ -275,13 +302,13 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
                     {
                       time: props.weddingTime || "3:00 PM",
                       title: "Wedding Ceremony",
-                      location: props.venuePlace || "The Grand Estate Gardens",
+                      location: props.venuePlace || "Ceremony Venue",
                       description: "Sacred marriage ceremony surrounded by family & friends.",
                     },
                     {
                       time: "6:00 PM",
                       title: "Evening Reception",
-                      location: props.venuePlace || "The Glass Conservatory",
+                      location: props.contactAddress ? (props.venuePlace ? `${props.venuePlace} Reception` : "Grand Reception Hall") : (props.venuePlace || "Reception Venue"),
                       description: "Dinner, dancing, and celebrations to follow.",
                     },
                   ]
@@ -329,49 +356,59 @@ export default function ChampagneLuxeInvitation(props: TemplateClassicFloralProp
             </div>
 
             <div className="grid lg:grid-cols-2 gap-10">
-              {/* Ceremony Map */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="bg-white/60 backdrop-blur-xl p-8 rounded-2xl border border-[#d0c5af]/40 shadow-sm flex flex-col gap-4"
-              >
-                <h3 className="font-serif text-2xl font-light text-[#735c00]">The Ceremony</h3>
-                <p className="text-xs text-[#685d4a] font-semibold uppercase tracking-wider">The Grand Estate Gardens</p>
-                <div className="w-full h-64 rounded-xl overflow-hidden bg-[#e3e2e0] border border-[#d0c5af]/30">
-                  <iframe
-                    title="Ceremony Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3303.7432328738316!2d-118.40685952448375!3d34.07542917314842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2bc04d6d147ab%3A0xd6c7c379fd081ed1!2sBeverly%20Hills%2C%20CA%2090210!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                  />
-                </div>
-              </motion.div>
+              {locationList.slice(0, 2).map((loc, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  className="bg-white/60 backdrop-blur-xl p-8 rounded-2xl border border-[#d0c5af]/40 shadow-sm flex flex-col justify-between gap-4"
+                >
+                  <div>
+                    <h3 className="font-serif text-2xl font-light text-[#735c00]">
+                      {loc.name || (idx === 0 ? "The Ceremony" : "The Reception")}
+                    </h3>
+                    <p className="text-xs text-[#685d4a] font-semibold uppercase tracking-wider mb-2">
+                      {loc.venueLabel || (idx === 0 ? "Ceremony Venue" : "Reception Venue")}
+                    </p>
+                    <p className="text-xs text-[#685d4a] leading-relaxed mb-4">
+                      {loc.address || props.contactAddress || "Venue address details"}
+                    </p>
+                  </div>
 
-              {/* Reception Map */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-white/60 backdrop-blur-xl p-8 rounded-2xl border border-[#d0c5af]/40 shadow-sm flex flex-col gap-4"
-              >
-                <h3 className="font-serif text-2xl font-light text-[#735c00]">The Reception</h3>
-                <p className="text-xs text-[#685d4a] font-semibold uppercase tracking-wider">The Glass Conservatory</p>
-                <div className="w-full h-64 rounded-xl overflow-hidden bg-[#e3e2e0] border border-[#d0c5af]/30">
-                  <iframe
-                    title="Reception Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3303.7432328738316!2d-118.40685952448375!3d34.07542917314842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2bc04d6d147ab%3A0xd6c7c379fd081ed1!2sBeverly%20Hills%2C%20CA%2090210!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                  />
-                </div>
-              </motion.div>
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden bg-[#e3e2e0] border border-[#d0c5af]/30">
+                    <iframe
+                      title={`${loc.venueLabel || "Venue"} Map`}
+                      src={getEmbedMapUrl(loc)}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
+                    <a
+                      href={getDirectMapUrl(loc)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#1a73e8] hover:text-[#1558b0] text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-200 backdrop-blur-sm transition-all hover:scale-105"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Open in Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <a
+                    href={getDirectMapUrl(loc)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border border-[#735c00]/30 text-[#735c00] text-xs font-semibold uppercase tracking-wider hover:bg-[#735c00] hover:text-white transition-all shadow-sm"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Open in Google Maps</span>
+                  </a>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
