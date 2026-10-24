@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-const CanvaCardStudio = dynamic(
-  () => import("@/components/canva/CanvaCardStudio"),
+const CanvaUserStudio = dynamic(
+  () => import("@/components/canva/CanvaUserStudio"),
   {
     ssr: false,
     loading: () => (
@@ -26,7 +26,8 @@ export default function CanvaClientWrapper() {
         </div>
       }
     >
-      <CanvaCardStudio />
+      <CanvaUserStudio />
     </Suspense>
   );
 }
+
