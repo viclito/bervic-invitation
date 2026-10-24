@@ -313,15 +313,15 @@ export default function PricingCheckoutModal({
               disabled={loadingPlan !== null}
               className={`mt-6 w-full py-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
                 isCinematicRequired
-                  ? "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-105 animate-pulse"
-                  : "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-[1.02]"
+                  ? "bg-[#991B1B] text-white hover:bg-[#7F1D1D] hover:scale-105"
+                  : "bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02]"
               }`}
             >
               {loadingPlan === "CINEMATIC_2000" ? (
                 <span>Processing...</span>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-[#070707]" />
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
                   <span>Pay ₹2000 &amp; Unlock</span>
                 </>
               )}

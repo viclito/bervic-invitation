@@ -73,10 +73,17 @@ export async function GET(req: Request) {
       }
     }
 
-    let minPrice = minPriceParam ? parseFloat(minPriceParam) : undefined;
-    let maxPrice = maxPriceParam ? parseFloat(maxPriceParam) : undefined;
+    let minPrice: number | undefined = undefined;
+    let maxPrice: number | undefined = undefined;
 
-    if (priceRange) {
+    if (minPriceParam && !isNaN(parseFloat(minPriceParam))) {
+      minPrice = Math.max(0, parseFloat(minPriceParam));
+    }
+    if (maxPriceParam && !isNaN(parseFloat(maxPriceParam))) {
+      maxPrice = Math.max(0, parseFloat(maxPriceParam));
+    }
+
+    if (priceRange && priceRange !== "all") {
       if (priceRange === "under_10") {
         minPrice = 0;
         maxPrice = 10;
@@ -86,7 +93,7 @@ export async function GET(req: Request) {
       } else if (priceRange === "25_50") {
         minPrice = 25;
         maxPrice = 50;
-      } else if (priceRange === "50_plus") {
+      } else if (priceRange === "50_plus" || priceRange === "above_100") {
         minPrice = 50;
         maxPrice = undefined;
       }
@@ -94,8 +101,8 @@ export async function GET(req: Request) {
 
     if (minPrice !== undefined || maxPrice !== undefined) {
       where.pricePerCard = {};
-      if (minPrice !== undefined) where.pricePerCard.gte = minPrice;
-      if (maxPrice !== undefined) where.pricePerCard.lte = maxPrice;
+      if (minPrice !== undefined && !isNaN(minPrice)) where.pricePerCard.gte = minPrice;
+      if (maxPrice !== undefined && !isNaN(maxPrice)) where.pricePerCard.lte = maxPrice;
     }
 
     if (search) {

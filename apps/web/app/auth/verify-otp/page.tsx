@@ -115,7 +115,7 @@ function VerifyOtpContent() {
           disabled={loading || otp.length < 6}
           className="w-full py-4 rounded-2xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all cursor-pointer disabled:opacity-50"
         >
-          <Sparkles className="w-4 h-4 text-amber-300" />
+          <Sparkles className="w-4 h-4 text-white" />
           <span>{loading ? "Verifying..." : "Verify & Continue"}</span>
         </button>
       </form>

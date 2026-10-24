@@ -196,7 +196,7 @@ export default function Navbar() {
             className="px-3.5 xl:px-4 py-2 rounded-full bg-[#991B1B] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm hover:bg-[#7F1D1D] hover:scale-[1.03] transition-all shrink-0"
             title="Shop Traditional Printed Invitations"
           >
-            <ShoppingBag className="w-3.5 h-3.5 text-amber-300" />
+            <ShoppingBag className="w-3.5 h-3.5 text-white" />
             <span>Shop Now</span>
           </Link>
 
@@ -247,36 +247,36 @@ export default function Navbar() {
                   <Link
                     href="/dashboard"
                     onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors group"
                   >
-                    <User className="w-4 h-4 text-amber-500" />
+                    <User className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     <span>My Dashboard</span>
                   </Link>
 
                   <Link
                     href="/dashboard/orders"
                     onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors group"
                   >
-                    <Package className="w-4 h-4 text-amber-500" />
+                    <Package className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     <span>My Print Orders</span>
                   </Link>
 
                   <Link
                     href="/dashboard?tab=invitations"
                     onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors group"
                   >
-                    <LayoutGrid className="w-4 h-4 text-amber-500" />
+                    <LayoutGrid className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     <span>Saved Invitations</span>
                   </Link>
 
                   <Link
                     href="/dashboard?tab=subscription"
                     onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-[#991B1B] hover:text-white transition-colors group"
                   >
-                    <CreditCard className="w-4 h-4 text-amber-500" />
+                    <CreditCard className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     <span>Quota &amp; Subscription</span>
                   </Link>
 
@@ -285,9 +285,9 @@ export default function Navbar() {
                     <Link
                       href="/admin"
                       onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-extrabold text-[#991B1B] bg-red-50 hover:bg-[#991B1B] hover:text-white transition-colors border border-red-200"
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-extrabold text-[#991B1B] bg-red-50 hover:bg-[#991B1B] hover:text-white transition-colors border border-red-200 group"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-600" />
+                      <ShieldCheck className="w-4 h-4 text-[#991B1B] group-hover:text-white transition-colors" />
                       <span>Admin Control Panel</span>
                     </Link>
                   )}
@@ -315,7 +315,7 @@ export default function Navbar() {
                 href="/auth/login"
                 className="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs border border-red-300 text-[#991B1B] hover:bg-[#991B1B] hover:text-white"
               >
-                <LogIn className="w-3.5 h-3.5 text-amber-500" />
+                <LogIn className="w-3.5 h-3.5 text-[#991B1B]" />
                 <span>Login</span>
               </Link>
             </div>
@@ -329,7 +329,7 @@ export default function Navbar() {
             href="/shop"
             className="px-3 py-1.5 rounded-full bg-[#991B1B] text-white text-xs font-extrabold flex items-center gap-1 shadow-xs"
           >
-            <ShoppingBag className="w-3 h-3 text-amber-300" />
+            <ShoppingBag className="w-3 h-3 text-white" />
             <span>Shop</span>
           </Link>
 
@@ -407,8 +407,8 @@ export default function Navbar() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-amber-300">Physical Prints</span>
-                    <span className="text-[9px] font-bold bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded-full">Shop Now</span>
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-red-200">Physical Prints</span>
+                    <span className="text-[9px] font-bold bg-white text-[#991B1B] px-1.5 py-0.2 rounded-full shadow-xs">Shop Now</span>
                   </div>
                   <h4 className="text-sm font-bold text-white leading-tight">Traditional Cards Shop</h4>
                   <p className="text-[11px] text-white/80">Browse designs &amp; place print orders</p>
@@ -565,7 +565,7 @@ export default function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full py-3 rounded-xl bg-[#991B1B] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-300" />
+                      <ShieldCheck className="w-4 h-4 text-white" />
                       <span>Admin Authority Panel</span>
                     </Link>
                   )}
@@ -588,7 +588,7 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="btn-maroon w-full py-3.5 text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <Sparkles className="w-4 h-4 text-white" />
                     <span>Explore Digital Invitations</span>
                   </Link>
                   <Link
@@ -596,7 +596,7 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="w-full py-3 rounded-xl border-2 border-red-200 text-[#991B1B] bg-red-50 hover:bg-[#991B1B] hover:text-white text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xs"
                   >
-                    <LogIn className="w-4 h-4 text-amber-500" />
+                    <LogIn className="w-4 h-4 text-[#991B1B]" />
                     <span>Login to Account</span>
                   </Link>
                 </>

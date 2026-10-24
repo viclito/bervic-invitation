@@ -400,9 +400,15 @@ export default function FreshCitrusSummerInvitation(
                 return (
                   <div key={idx} className="relative">
                     <div
-                      className={`absolute -left-[41px] top-1 w-8 h-8 rounded-full ${step.bgColor} flex items-center justify-center border-4 border-white shadow-sm`}
+                      className={`absolute -left-[41px] top-1 w-8 h-8 rounded-full ${step.bgColor || "bg-orange-100"} flex items-center justify-center border-4 border-white shadow-sm`}
                     >
-                      <IconComp className={`w-4 h-4 ${step.textColor}`} />
+                      {typeof IconComp === "string" ? (
+                        <span className="text-sm leading-none">{IconComp}</span>
+                      ) : typeof IconComp === "function" || typeof IconComp === "object" ? (
+                        <IconComp className={`w-4 h-4 ${step.textColor || "text-[#904d00]"}`} />
+                      ) : (
+                        <Coffee className={`w-4 h-4 ${step.textColor || "text-[#904d00]"}`} />
+                      )}
                     </div>
                     <h3 className="font-mono-citrus text-xs text-[#904d00] uppercase tracking-wider mb-1 font-bold">
                       {step.time}

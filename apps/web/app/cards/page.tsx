@@ -49,16 +49,54 @@ export const metadata: Metadata = {
   },
 };
 
+const cardsJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: baseUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Instagram Card Studio",
+          item: `${baseUrl}/cards`,
+        },
+      ],
+    },
+    {
+      "@type": "WebApplication",
+      name: "Bervic Instagram & WhatsApp Card Studio",
+      url: `${baseUrl}/cards`,
+      applicationCategory: "MultimediaApplication",
+      operatingSystem: "All (Web Browser)",
+      description:
+        "Create square 1080x1080px high-resolution announcement graphics for Instagram posts, stories, and WhatsApp statuses with 31+ luxury Indian wedding presets.",
+    },
+  ],
+};
+
 export default function CardsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center text-slate-900 text-sm font-bold">
-          Loading Instagram Card Studio...
-        </div>
-      }
-    >
-      <CardGenerator />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(cardsJsonLd) }}
+      />
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center text-slate-900 text-sm font-bold">
+            Loading Instagram Card Studio...
+          </div>
+        }
+      >
+        <CardGenerator />
+      </Suspense>
+    </>
   );
 }

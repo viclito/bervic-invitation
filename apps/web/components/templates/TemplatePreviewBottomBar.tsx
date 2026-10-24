@@ -177,7 +177,7 @@ export default function TemplatePreviewBottomBar({
         const targetSlug = activateData.slug || activateData.invitation?.slug;
         if (targetSlug) {
           const cleanSlug = targetSlug.trim().replace(/[\s%20]+/g, "-");
-          router.push(`/invitations/${encodeURIComponent(cleanSlug)}`);
+          router.push(`/invitations/${cleanSlug}`);
         } else {
           router.push("/dashboard?tab=invitations");
         }
@@ -266,7 +266,7 @@ export default function TemplatePreviewBottomBar({
               onClick={handleEditEventDetails}
               className="px-3 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-1 cursor-pointer hover:scale-105"
             >
-              <Sparkles className="w-3 h-3 text-amber-300" />
+              <Sparkles className="w-3 h-3 text-white" />
               <span>Activate</span>
             </button>
             <button

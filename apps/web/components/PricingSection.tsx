@@ -49,7 +49,7 @@ export default function PricingSection() {
       period: "1 Full Year",
       desc: "Exclusive 480-Frame Apple-Style Video Scroll invitation with 3D depth & effects.",
       badgeText: "CINEMATIC MASTERPIECE",
-      badgeColor: "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707]",
+      badgeColor: "bg-zinc-800 text-zinc-100 border border-zinc-700",
       buttonText: "Choose Cinematic (₹2000)",
       buttonLink: "/checkout?plan=CINEMATIC_2000",
       popular: false,
@@ -88,7 +88,7 @@ export default function PricingSection() {
               key={idx}
               className={`rounded-3xl p-7 relative flex flex-col justify-between transition-all ${
                 plan.isCinematic
-                  ? "bg-[#0D0D0D] text-[#FDF6F3] border-2 border-amber-400 shadow-2xl hover:scale-[1.02]"
+                  ? "bg-[#0D0D0D] text-[#FDF6F3] border border-zinc-700/80 shadow-2xl hover:border-zinc-500 hover:scale-[1.02]"
                   : plan.popular
                   ? "bg-[#991B1B] text-white border-2 border-amber-300 shadow-2xl md:scale-105"
                   : "bg-white text-slate-900 border-2 border-slate-200 shadow-md hover:border-[#991B1B]/40 hover:shadow-xl"
@@ -102,8 +102,8 @@ export default function PricingSection() {
               )}
 
               {plan.isCinematic && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1 shadow-md">
-                  <Sparkles className="w-3 h-3 fill-current text-[#070707]" />
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-zinc-800 text-zinc-100 border border-zinc-700 text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 shadow-md">
+                  <Sparkles className="w-3 h-3 text-zinc-300" />
                   <span>{plan.badgeText}</span>
                 </div>
               )}
@@ -153,7 +153,7 @@ export default function PricingSection() {
                   <span
                     className={`text-4xl font-extrabold tracking-tight ${
                       plan.isCinematic
-                        ? "text-amber-300"
+                        ? "text-white"
                         : plan.popular
                         ? "text-white"
                         : "text-slate-900"
@@ -219,7 +219,7 @@ export default function PricingSection() {
                   href={plan.buttonLink}
                   className={`w-full py-3.5 px-6 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all text-center ${
                     plan.isCinematic
-                      ? "bg-gradient-to-r from-[#D9A441] via-[#F7E7C4] to-[#D9A441] text-[#070707] hover:scale-[1.02]"
+                      ? "bg-white text-slate-950 hover:bg-slate-100 hover:scale-[1.02]"
                       : plan.popular
                       ? "bg-white text-[#991B1B] hover:bg-red-50"
                       : "bg-slate-900 text-white hover:bg-slate-800"

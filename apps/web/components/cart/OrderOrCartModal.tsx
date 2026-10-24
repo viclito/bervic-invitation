@@ -852,7 +852,7 @@ export default function OrderOrCartModal({
           {autoFetched && (
             <div className="bg-red-50 text-[#991B1B] px-4 py-2.5 rounded-2xl border border-red-200 flex items-center justify-between text-xs font-bold">
               <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <Sparkles className="w-4 h-4 text-[#991B1B]" />
                 <span>Auto-filled from your Event Profile. You can edit any details below.</span>
               </span>
             </div>
@@ -1685,7 +1685,7 @@ export default function OrderOrCartModal({
                   disabled={loadingAction !== null}
                   className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 hover:scale-102 active:scale-98"
                 >
-                  {loadingAction === "order" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                  {loadingAction === "order" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
                   <span>✨ Place Order Now</span>
                 </button>
               </>

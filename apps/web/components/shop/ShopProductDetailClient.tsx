@@ -1312,7 +1312,7 @@ export default function ShopProductDetailClient({
                     className="absolute top-2 right-2 z-10 py-1 px-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 hover:text-[#991B1B] font-bold text-[10.5px] border border-slate-200 shadow-sm flex items-center gap-1 backdrop-blur-xs transition-all no-underline cursor-pointer"
                     title="Customize design in Canva Studio"
                   >
-                    <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+                    <Edit3 className="w-3 h-3 text-[#991B1B]" />
                     <span>Edit in Studio</span>
                   </a>
                 )}
@@ -1637,7 +1637,7 @@ export default function ShopProductDetailClient({
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
                   </div>
                   <span className="text-[10px] font-semibold text-slate-700 leading-tight">
                     Gold Foil

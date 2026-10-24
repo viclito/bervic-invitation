@@ -735,7 +735,7 @@ export default function CartDrawer({ isOpen, onClose, onCartChange }: CartDrawer
                   disabled={ordering}
                   className="flex-2 py-3 rounded-2xl bg-[#991B1B] text-white font-extrabold text-xs uppercase tracking-wider hover:bg-[#7F1D1D] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  {ordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                  {ordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
                   <span>Confirm &amp; Order (₹{activeCheckoutPrice})</span>
                 </button>
               </div>

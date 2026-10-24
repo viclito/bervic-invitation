@@ -61,6 +61,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: baseUrl,
   },
+  other: {
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "geo.position": "20.5937;78.9629",
+    "ICBM": "20.5937, 78.9629",
+  },
   robots: {
     index: true,
     follow: true,
@@ -115,7 +121,15 @@ const jsonLdOrganization = {
   url: baseUrl,
   logo: `${baseUrl}/logo.png`,
   description:
-    "Bervic is India's leading digital invitation platform for weddings, birthdays, and religious celebrations.",
+    "Bervic is India's leading digital invitation platform and print studio for weddings, birthdays, and religious celebrations.",
+  areaServed: {
+    "@type": "Country",
+    name: "India",
+  },
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "IN",
+  },
   sameAs: [
     "https://instagram.com/bervicapp",
     "https://facebook.com/bervicapp",
@@ -133,8 +147,8 @@ const jsonLdWebApplication = {
     "@type": "AggregateOffer",
     priceCurrency: "INR",
     lowPrice: "0",
-    highPrice: "999",
-    offerCount: "3",
+    highPrice: "2000",
+    offerCount: "4",
   },
   aggregateRating: {
     "@type": "AggregateRating",
@@ -157,18 +171,50 @@ const jsonLdFaq = {
     },
     {
       "@type": "Question",
-      name: "Can I track guest RSVPs with Bervic?",
+      name: "Can I preview templates before paying?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes! Bervic provides built-in guest RSVP tracking where guests can confirm their attendance, plus-ones, and dietary preferences directly from your invitation link.",
+        text: "Yes! You can browse and live-preview all digital invitation templates and 31 Instagram announcement card designs anytime for free before choosing a plan.",
       },
     },
     {
       "@type": "Question",
-      name: "Can I download Instagram announcement cards?",
+      name: "Can I track guest RSVPs with Bervic?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes, Bervic includes an Instagram Card Studio (/cards) that lets you generate 1080x1080px high-resolution PNG or PDF cards for Instagram posts, stories, and WhatsApp status updates.",
+        text: "Yes! Bervic provides built-in guest RSVP tracking where guests can confirm attendance, plus-ones, and dietary preferences directly from their personalized link.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I download Instagram and WhatsApp status announcement cards?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes! Bervic includes an Instagram Card Studio (/cards) that lets you generate 1080x1080px high-resolution PNG or PDF cards for Instagram posts, stories, and WhatsApp statuses.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I order physical printed invitation cards and return gifts?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes! Bervic's Traditional Cards Shop (/shop) offers 250+ luxury gold foil, floral, and vintage physical wedding cards on heavy 350 GSM cardstock, plus festive return gifts like brass diyas and sweet hampers with doorstep delivery across India.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do my invitations or assets expire after the event date?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No! Your invitations, cards, and guest RSVPs do NOT auto-delete on your event date. They remain active for the full duration of your pass (6 months for Basic Pass ₹599, 1 year for Cinematic Exclusive ₹2000).",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What payment methods are supported on Bervic?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "We accept all major Indian payment methods including UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, and Net Banking securely processed via Razorpay.",
       },
     },
   ],
@@ -180,8 +226,55 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
+        {/* Strip browser-extension injected attributes (e.g. bis_skin_checked, bis_register) before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var clean = function() {
+                    var els = document.querySelectorAll('[bis_skin_checked]');
+                    for (var i = 0; i < els.length; i++) {
+                      els[i].removeAttribute('bis_skin_checked');
+                    }
+                    if (document.body) {
+                      document.body.removeAttribute('bis_register');
+                      for (var a = 0; a < document.body.attributes.length; a++) {
+                        var attr = document.body.attributes[a];
+                        if (attr && attr.name && (attr.name.indexOf('__processed_') === 0 || attr.name.indexOf('bis_') === 0)) {
+                          document.body.removeAttribute(attr.name);
+                        }
+                      }
+                    }
+                  };
+                  clean();
+                  var obs = new MutationObserver(function(mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                      var m = mutations[i];
+                      if (m.type === 'attributes' && m.attributeName && m.target && m.target.removeAttribute) {
+                        if (m.attributeName === 'bis_skin_checked' || m.attributeName.indexOf('__processed_') === 0 || m.attributeName.indexOf('bis_') === 0) {
+                          m.target.removeAttribute(m.attributeName);
+                        }
+                      }
+                    }
+                  });
+                  if (document.body) {
+                    obs.observe(document.body, { attributes: true, subtree: true });
+                  } else {
+                    document.addEventListener('DOMContentLoaded', function() {
+                      clean();
+                      if (document.body) {
+                        obs.observe(document.body, { attributes: true, subtree: true });
+                      }
+                    });
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -196,10 +289,17 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApplication) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+        />
         {/* Official Razorpay Checkout Script */}
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>
-      <body className="min-h-full flex flex-col bg-white text-slate-900 font-sans selection:bg-[#991B1B] selection:text-white">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-white text-slate-900 font-sans selection:bg-[#991B1B] selection:text-white"
+      >
         {/* Google Analytics (gtag.js) */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}

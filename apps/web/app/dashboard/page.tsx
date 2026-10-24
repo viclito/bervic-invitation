@@ -382,7 +382,7 @@ function DashboardContent() {
               href="/templates"
               className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs hover:shadow-md transition-all whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Sparkles className="w-3.5 h-3.5 text-white" />
               <span>Create Invitation</span>
             </Link>
           </div>
@@ -668,7 +668,7 @@ function DashboardContent() {
                   href="/templates"
                   className="btn-maroon px-6 py-3 text-xs font-bold flex items-center gap-2 mt-2 shadow-xs"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <Sparkles className="w-4 h-4 text-white" />
                   <span>Browse Templates Gallery</span>
                 </Link>
               </div>
@@ -809,13 +809,13 @@ function DashboardContent() {
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {subData.plan && subData.plan !== "NONE" && (
                     <span className="px-3 py-1 rounded-full bg-[#991B1B] text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-2xs">
-                      <Crown className="w-3.5 h-3.5 text-amber-300" />
+                      <Crown className="w-3.5 h-3.5 text-white" />
                       <span>{subData.plan === "PRO_1799" ? "Pro Pass (₹1799)" : "Basic Pass (₹599)"}</span>
                     </span>
                   )}
                   {(subData.allowedCinematicCount || 0) > 0 && (
-                    <span className="px-3 py-1 rounded-full bg-slate-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider border border-amber-500/30 flex items-center gap-1 shadow-2xs">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span className="px-3 py-1 rounded-full bg-slate-900 text-white text-[10px] font-extrabold uppercase tracking-wider border border-slate-700 flex items-center gap-1 shadow-2xs">
+                      <Sparkles className="w-3.5 h-3.5 text-white" />
                       <span>
                         {session?.user?.email?.toLowerCase() === "berglin1998@gmail.com"
                           ? "Admin Full Access (₹2000)"
@@ -899,14 +899,14 @@ function DashboardContent() {
               </div>
 
               {/* Card 2: Premium Templates */}
-              <div className="bg-white border border-slate-200/90 hover:border-amber-300 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <Sparkles className="w-4 h-4 text-[#991B1B]" />
                       <span>Premium Templates</span>
                     </span>
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
                       ₹2000 PASS
                     </span>
                   </div>

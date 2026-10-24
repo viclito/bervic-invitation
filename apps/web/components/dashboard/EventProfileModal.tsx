@@ -144,7 +144,7 @@ export default function EventProfileModal({
         <div className="bg-[#991B1B] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-              <Sparkles className="w-5 h-5 text-amber-300" />
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-serif font-bold text-white">

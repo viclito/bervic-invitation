@@ -1,10 +1,11 @@
 # Bervic Invitations (www.bervic.in)
 
-> Bervic is a premier Indian digital invitation generator for weddings, birthdays, religious functions (Puja, Griha Pravesh), and special celebrations. It enables users to create high-resolution, interactive digital invitations, RSVP tracking systems, and custom Instagram announcement cards in minutes.
+> Bervic is a premier Indian digital invitation platform and print studio for weddings, birthdays, religious functions (Puja, Griha Pravesh), and milestone celebrations. It enables users to create high-resolution interactive digital invitation web pages, automated RSVP tracking systems, custom Instagram announcement cards, and order luxury physical printed wedding cards.
 
 ## Core Capabilities & Features
 
-- **Interactive Digital Invitations:** Dynamic web invitations featuring love stories, day-by-day event itineraries, venue map locations, photo galleries, background music, and RSVP management.
+- **Interactive Digital Invitations:** Dynamic web invitations featuring love stories, day-by-day event itineraries, venue map locations, photo galleries, background music player, and RSVP management.
+- **Physical Invitation Cards & Return Gifts Shop (`/shop`):** 250+ handcrafted physical invitation cards across Royal & Heritage, Floral & Botanical, Vintage Parchment, Modern Die-Cut Arch, and Luxury Velvet suites on premium 350 GSM cardstock with real gold foil stamping, plus festive brass diyas and sweet hampers with doorstep delivery across India.
 - **Instant WhatsApp Sharing:** Share personalized invitation links directly on WhatsApp, email, or social media without heavy PDF downloads.
 - **31+ Premium Template Themes:** Handcrafted Indian wedding and event designs (Royal Gold, Botanical Luxe, Traditional Maroon, Boho Chic, Cinematic Modern).
 - **Instagram Card Studio (`/cards`):** High-resolution (1080x1080px) Instagram & WhatsApp Status announcement card generator with 31+ design presets and custom photo uploader.
@@ -14,16 +15,20 @@
 ## URL Map & Navigation
 
 - Main Homepage: https://www.bervic.in
+- Traditional Cards & Return Gifts Shop: https://www.bervic.in/shop
 - Template Catalog: https://www.bervic.in/templates
 - Instagram Card Studio: https://www.bervic.in/cards
+- Transparent Pricing: https://www.bervic.in/pricing
 - User Login: https://www.bervic.in/auth/login
 - Account Signup: https://www.bervic.in/auth/signup
 
 ## Pricing & Plans
 
-- **Free Tier:** Access to basic templates, instant preview, and guest links.
-- **Standard Pass (₹299 for 6 Months):** 1 Live Invitation, 5 Instagram Cards, Full Customization, RSVP tracking.
-- **Cinematic Pass (₹999 for 1 Year):** 3 Live Invitations, 20 Instagram Cards, Audio Music Player, Video Embeds, Priority WhatsApp Delivery.
+- **Free Explorer Pass (₹0):** 2 Free high-res Instagram announcement card downloads, full live interactive preview of all digital templates, and physical shop browsing.
+- **Instagram Card Pass (₹99 One-Time):** 5 Extra high-res card download slots with lifetime validity across 31+ design presets.
+- **Basic Pass (₹599 for 6 Months):** 1 Live interactive digital invitation website, 5 Instagram cards, full customization, guest list & RSVP tracking, unlimited WhatsApp delivery.
+- **Cinematic Exclusive Pass (₹2000 for 1 Year):** 1 Exclusive 480-frame cinematic video sequence invitation template, 20 Instagram cards, audio music player, video embeds, priority support.
+- **Physical Cards & Gifts Catalog (`/shop`):** Custom pricing per unit (₹10 to ₹250/piece) with tiered bulk pricing, custom foil stamping, and nationwide shipping.
 
 ## Documentation & Full AI Knowledge Base
 

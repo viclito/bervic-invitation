@@ -120,9 +120,26 @@ function CheckoutContent() {
             if (plan === "CARDS_99") {
               router.push("/cards?payment=success");
             } else if (templateSlug) {
+              // Automatically activate the purchased template into a live invitation
+              try {
+                const activateRes = await fetch("/api/user/event-draft/activate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ templateSlug }),
+                });
+                const activateData = await activateRes.json();
+                const targetSlug = activateData?.slug || activateData?.invitation?.slug;
+                if (activateData?.success && targetSlug) {
+                  const cleanSlug = String(targetSlug).trim().replace(/[\s%20]+/g, "-");
+                  router.push(`/invitations/${cleanSlug}?payment=success`);
+                  return;
+                }
+              } catch (actErr) {
+                console.warn("Auto-activation notice in checkout:", actErr);
+              }
               router.push(`/templates/${templateSlug}?payment=success`);
             } else {
-              router.push("/templates?payment=success");
+              router.push("/dashboard?tab=invitations&payment=success");
             }
           } catch (err: any) {
             console.error("Verification error:", err);
@@ -211,7 +228,7 @@ function CheckoutContent() {
             <div className="mb-10 max-w-4xl mx-auto p-5 rounded-2xl bg-[#1A0507] border-2 border-[#991B1B] text-white shadow-[0_10px_30px_rgba(153,27,27,0.35)] flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 text-center sm:text-left">
                 <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-400 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-amber-200 flex items-center gap-1.5 justify-center sm:justify-start">
@@ -307,7 +324,7 @@ function CheckoutContent() {
             >
               {initialPlan === "CARDS_99" && (
                 <span className="absolute -top-3.5 right-6 px-3 py-0.5 rounded-full bg-[#991B1B] text-white text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <Sparkles className="w-3 h-3 text-white" />
                   <span>Selected Pass</span>
                 </span>
               )}
@@ -492,7 +509,7 @@ function CheckoutContent() {
             {/* Plan 4: CINEMATIC ₹2000 EXCLUSIVE (Dark Velvet Red Noir) */}
             <div className={`bg-gradient-to-b from-[#1C0608] via-[#140405] to-[#0A0203] text-white rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative group ${isCinematicRequired ? "border-4 border-red-500 ring-8 ring-red-500/30 scale-[1.04] shadow-[0_0_60px_rgba(153,27,27,0.6)] z-10" : "border-2 border-red-900/60 shadow-2xl"}`}>
               <span className={`absolute -top-3.5 right-6 px-3.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 ${isCinematicRequired ? "bg-[#991B1B] text-white animate-bounce" : "bg-[#991B1B] text-white border border-red-400/50"}`}>
-                <Sparkles className="w-3 h-3 text-amber-300" />
+                <Sparkles className="w-3 h-3 text-white" />
                 <span>{isCinematicRequired ? "⭐ REQUIRED" : "Cinematic Exclusive"}</span>
               </span>
 
@@ -506,7 +523,7 @@ function CheckoutContent() {
 
                 <div className="flex items-baseline gap-2 my-5">
                   <span className="line-through text-xs text-white/40 font-semibold">₹4,999</span>
-                  <span className="text-3xl sm:text-4xl font-extrabold text-amber-400">₹2000</span>
+                  <span className="text-3xl sm:text-4xl font-extrabold text-white">₹2000</span>
                   <span className="text-xs text-white/70 font-medium">/ 1 Full Year</span>
                 </div>
 
@@ -514,15 +531,15 @@ function CheckoutContent() {
 
                 <ul className="space-y-2.5 text-xs text-white/90">
                   <li className="flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <Sparkles className="w-4 h-4 text-white shrink-0 mt-0.5" />
                     <span><strong>1 Exclusive 480-Frame Scroll Template</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <span><strong>1 Premium Website Slot</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <span><strong>10 High-Res Instagram Cards</strong></span>
                   </li>
                 </ul>
@@ -537,7 +554,7 @@ function CheckoutContent() {
                   <span>Processing...</span>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <Sparkles className="w-4 h-4 text-white" />
                     <span>Pay ₹2000 &amp; Unlock</span>
                   </>
                 )}

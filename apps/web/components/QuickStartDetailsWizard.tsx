@@ -1365,9 +1365,9 @@ export default function QuickStartDetailsWizard({
               onClick={() => router.push("/templates")}
               className="w-full sm:w-auto flex-1 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#8B1420] via-[#991B1B] to-[#7B101A] hover:from-[#7B101A] hover:to-[#650B14] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20 hover:shadow-xl hover:shadow-rose-950/30 hover:-translate-y-0.5 transition-all cursor-pointer group border border-rose-900/40"
             >
-              <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform shrink-0" />
+              <Sparkles className="w-4 h-4 text-white group-hover:rotate-12 transition-transform shrink-0" />
               <span className="whitespace-nowrap">Choose Template &amp; Build Website</span>
-              <ArrowRight className="w-4 h-4 text-amber-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
             <button

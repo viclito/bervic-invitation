@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingBag,
+  Edit3,
   Sparkles,
   Check,
   Star,
@@ -130,7 +131,12 @@ export default function TraditionalShopClient() {
   const [dbCategories, setDbCategories] = useState<DynamicShopCategory[]>([]);
   const [shopOccasions, setShopOccasions] = useState<ShopOccasionItem[]>([]);
   const [selectedOccasion, setSelectedOccasion] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<string>("all");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState<string>("");
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState<string>("");
+  const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
+  const priceMenuRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<ShopProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -193,6 +199,26 @@ export default function TraditionalShopClient() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Debounce custom min and max price inputs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMinPrice(minPrice.trim());
+      setDebouncedMaxPrice(maxPrice.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [minPrice, maxPrice]);
+
+  // Click outside to close price presets dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (priceMenuRef.current && !priceMenuRef.current.contains(event.target as Node)) {
+        setPriceDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Redirect if someone arrived at /shop?product=prod_...
   useEffect(() => {
@@ -399,8 +425,11 @@ export default function TraditionalShopClient() {
         if (selectedOccasion && selectedOccasion !== "all") {
           params.set("occasion", selectedOccasion);
         }
-        if (priceRange && priceRange !== "all") {
-          params.set("priceRange", priceRange);
+        if (debouncedMinPrice !== "") {
+          params.set("minPrice", debouncedMinPrice);
+        }
+        if (debouncedMaxPrice !== "") {
+          params.set("maxPrice", debouncedMaxPrice);
         }
         const res = await fetch(`/api/shop/products?${params.toString()}`);
         const data = await res.json();
@@ -425,7 +454,7 @@ export default function TraditionalShopClient() {
         setLoadingMore(false);
       }
     },
-    [mainTab, selectedCategory, selectedOccasion, priceRange, debouncedSearch, sortBy]
+    [mainTab, selectedCategory, selectedOccasion, debouncedMinPrice, debouncedMaxPrice, debouncedSearch, sortBy]
   );
 
   // Trigger page 1 fetch when filters change
@@ -957,7 +986,7 @@ export default function TraditionalShopClient() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
+    <div suppressHydrationWarning className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#991B1B] text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-amber-400 flex items-center gap-3 animate-slide-up">
@@ -982,8 +1011,8 @@ export default function TraditionalShopClient() {
         <header className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mb-4 sm:mb-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 border-b border-slate-100 pb-3 sm:pb-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-amber-800 text-[11px] font-bold mb-1.5">
-                <Sparkles className="w-3 h-3 text-amber-600" />
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-[#991B1B] text-[11px] font-bold mb-1.5">
+                <ShoppingBag className="w-3 h-3 text-[#991B1B]" />
                 <span>Handcrafted Print Store • Doorstep Delivery Across India</span>
               </div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-black text-slate-900 tracking-tight">
@@ -1011,7 +1040,7 @@ export default function TraditionalShopClient() {
               <span className="text-[10px] font-bold text-slate-400 shrink-0">
                 • {totalCount} designs
               </span>
-              {(selectedCategory !== "all" || selectedOccasion !== "all" || priceRange !== "all" || searchQuery) && (
+              {(selectedCategory !== "all" || selectedOccasion !== "all" || debouncedMinPrice !== "" || debouncedMaxPrice !== "" || searchQuery) && (
                 <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-[#991B1B] text-white shrink-0">
                   Filtered
                 </span>
@@ -1106,20 +1135,145 @@ export default function TraditionalShopClient() {
                   </select>
                 </div>
 
-                {/* Pricing Filter */}
+                {/* Pricing Filter: Custom Numerical Range + Quick Presets */}
                 <div className="relative flex items-center">
                   <span className="text-[11px] font-bold text-slate-500 mr-1.5 hidden sm:inline">Price:</span>
-                  <select
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] cursor-pointer transition-colors"
-                  >
-                    <option value="all">🏷️ All Prices</option>
-                    <option value="under_10">Under ₹10</option>
-                    <option value="10_25">₹10 - ₹25</option>
-                    <option value="25_50">₹25 - ₹50</option>
-                    <option value="50_plus">₹50 &amp; Above</option>
-                  </select>
+                  <div className="h-9 flex items-center bg-slate-50/80 hover:bg-white border border-slate-200 rounded-xl px-2 transition-colors focus-within:border-[#991B1B] focus-within:bg-white focus-within:ring-1 focus-within:ring-[#991B1B]/20 shadow-2xs">
+                    <div className="flex items-center">
+                      <span className="text-[11px] font-bold text-slate-400 select-none mr-1">₹</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        placeholder="Min"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="w-12 sm:w-14 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        title="Minimum price in Rupees"
+                      />
+                    </div>
+
+                    <span className="text-xs text-slate-400 font-bold px-1 select-none">–</span>
+
+                    <div className="flex items-center">
+                      <span className="text-[11px] font-bold text-slate-400 select-none mr-1">₹</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        placeholder="Max"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="w-12 sm:w-14 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        title="Maximum price in Rupees"
+                      />
+                    </div>
+
+                    {/* Clear button if either min or max has value */}
+                    {(minPrice !== "" || maxPrice !== "") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMinPrice("");
+                          setMaxPrice("");
+                        }}
+                        className="ml-1 p-0.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/60 transition-colors cursor-pointer"
+                        title="Clear price filter"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    {/* Quick Presets dropdown */}
+                    <div className="relative ml-1 border-l border-slate-200 pl-1" ref={priceMenuRef}>
+                      <button
+                        type="button"
+                        onClick={() => setPriceDropdownOpen(!priceDropdownOpen)}
+                        className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200/50 transition-colors cursor-pointer"
+                        title="Quick Price Presets"
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${priceDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {priceDropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-100">
+                          <div className="px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                            Quick Presets
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMinPrice("");
+                              setMaxPrice("");
+                              setPriceDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between ${
+                              minPrice === "" && maxPrice === "" ? "text-[#991B1B] font-bold bg-red-50/50" : "text-slate-700"
+                            }`}
+                          >
+                            <span>All Prices</span>
+                            {minPrice === "" && maxPrice === "" && <Check className="w-3.5 h-3.5 text-[#991B1B]" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMinPrice("0");
+                              setMaxPrice("10");
+                              setPriceDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between ${
+                              minPrice === "0" && maxPrice === "10" ? "text-[#991B1B] font-bold bg-red-50/50" : "text-slate-700"
+                            }`}
+                          >
+                            <span>Under ₹10</span>
+                            {minPrice === "0" && maxPrice === "10" && <Check className="w-3.5 h-3.5 text-[#991B1B]" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMinPrice("10");
+                              setMaxPrice("25");
+                              setPriceDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between ${
+                              minPrice === "10" && maxPrice === "25" ? "text-[#991B1B] font-bold bg-red-50/50" : "text-slate-700"
+                            }`}
+                          >
+                            <span>₹10 - ₹25</span>
+                            {minPrice === "10" && maxPrice === "25" && <Check className="w-3.5 h-3.5 text-[#991B1B]" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMinPrice("25");
+                              setMaxPrice("50");
+                              setPriceDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between ${
+                              minPrice === "25" && maxPrice === "50" ? "text-[#991B1B] font-bold bg-red-50/50" : "text-slate-700"
+                            }`}
+                          >
+                            <span>₹25 - ₹50</span>
+                            {minPrice === "25" && maxPrice === "50" && <Check className="w-3.5 h-3.5 text-[#991B1B]" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMinPrice("50");
+                              setMaxPrice("");
+                              setPriceDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between ${
+                              minPrice === "50" && maxPrice === "" ? "text-[#991B1B] font-bold bg-red-50/50" : "text-slate-700"
+                            }`}
+                          >
+                            <span>₹50 &amp; Above</span>
+                            {minPrice === "50" && maxPrice === "" && <Check className="w-3.5 h-3.5 text-[#991B1B]" />}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Sort By Selector */}
@@ -1212,6 +1366,9 @@ export default function TraditionalShopClient() {
               <button
                 onClick={() => {
                   setSelectedCategory("all");
+                  setSelectedOccasion("all");
+                  setMinPrice("");
+                  setMaxPrice("");
                   setSearchQuery("");
                 }}
                 className="mt-4 px-4 py-2 rounded-xl bg-[#991B1B] text-white text-xs font-bold cursor-pointer"
@@ -1249,8 +1406,8 @@ export default function TraditionalShopClient() {
 
                           {/* Studio Customizable Badge */}
                           {product.canvaTemplateId && (
-                            <div className="absolute bottom-1.5 left-1.5 bg-gradient-to-r from-amber-500 to-[#991B1B] text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded shadow border border-amber-300 flex items-center gap-0.5 z-10">
-                              <Sparkles className="w-2.5 h-2.5 text-amber-200" />
+                            <div className="absolute bottom-1.5 left-1.5 bg-[#991B1B] text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded shadow border border-red-400 flex items-center gap-0.5 z-10">
+                              <Edit3 className="w-2.5 h-2.5 text-white" />
                               <span>Studio Edit</span>
                             </div>
                           )}

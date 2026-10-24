@@ -63,33 +63,60 @@ export default async function TemplateDetailLayout({ params, children }: Props) 
   const { slug } = await params;
   const template = templatesRegistry.find((t) => t.slug === slug);
 
-  const jsonLdProduct = template
+  const jsonLdData = template
     ? {
         "@context": "https://schema.org",
-        "@type": "Product",
-        name: template.title,
-        description: template.description,
-        image: `${baseUrl}${template.previewImage}`,
-        brand: {
-          "@type": "Brand",
-          name: "Bervic Invitations",
-        },
-        offers: {
-          "@type": "Offer",
-          priceCurrency: "INR",
-          price: template.price ? String(template.price) : "0",
-          availability: "https://schema.org/InStock",
-          url: `${baseUrl}/templates/${slug}`,
-        },
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: baseUrl,
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Templates",
+                item: `${baseUrl}/templates`,
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: template.title,
+                item: `${baseUrl}/templates/${slug}`,
+              },
+            ],
+          },
+          {
+            "@type": "Product",
+            name: template.title,
+            description: template.description,
+            image: `${baseUrl}${template.previewImage}`,
+            brand: {
+              "@type": "Brand",
+              name: "Bervic Invitations",
+            },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "INR",
+              price: template.price ? String(template.price) : "0",
+              availability: "https://schema.org/InStock",
+              url: `${baseUrl}/templates/${slug}`,
+            },
+          },
+        ],
       }
     : null;
 
   return (
     <>
-      {jsonLdProduct && (
+      {jsonLdData && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdProduct) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
       )}
       {children}

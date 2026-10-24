@@ -48,10 +48,49 @@ export const metadata: Metadata = {
   },
 };
 
+const templatesJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": `${baseUrl}/templates#webpage`,
+      url: `${baseUrl}/templates`,
+      name: "Explore 31+ Premium Indian Invitation Templates | Bervic",
+      description:
+        "Browse our curated collection of 31+ luxury Indian invitation templates for weddings, birthdays, puja ceremonies, and anniversaries.",
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Templates",
+            item: `${baseUrl}/templates`,
+          },
+        ],
+      },
+    },
+  ],
+};
+
 export default function TemplatesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(templatesJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }

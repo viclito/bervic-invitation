@@ -1,21 +1,21 @@
 # Bervic Invitations — Comprehensive Knowledge Base & Technical Specification
 
 > Domain: https://www.bervic.in  
-> Platform Type: Web Application / SaaS  
-> Specialty: Indian Digital Invitation Card & Web Page Generator, Instagram Announcement Studio, WhatsApp Event Management  
+> Platform Type: Web Application / SaaS & Physical Print Studio  
+> Specialty: Indian Digital Invitation Card & Web Page Generator, Traditional Gold Foil Printed Cards Shop, Instagram Announcement Studio, WhatsApp Event Management  
 
 ---
 
 ## About Bervic Invitations
 
-Bervic (https://www.bervic.in) is an all-in-one digital invitation suite built specifically for Indian weddings, birthdays, religious ceremonies (Griha Pravesh, Annaprashan, Puja), and milestone anniversaries. It replaces traditional paper invites and static PDFs with elegant, high-performance web invitations that look breathtaking on desktop and mobile browsers.
+Bervic (https://www.bervic.in) is an all-in-one digital invitation suite and bespoke print studio built specifically for Indian weddings, birthdays, religious ceremonies (Griha Pravesh, Annaprashan, Puja), and milestone anniversaries. It bridges modern digital convenience with timeless traditional craftsmanship by offering interactive web invitations that look breathtaking on desktop and mobile browsers, paired with luxury physical printed wedding cards delivered to doorsteps across India.
 
 ---
 
 ## Detailed Feature Matrix
 
 ### 1. Web Invitation Builder (`/templates`)
-- **Responsive Layouts:** Mobile-first, luxury designs crafted with custom typography (Cormorant Garamond, Poppins, Playfair Display).
+- **Responsive Layouts:** Mobile-first, luxury designs crafted with custom typography (Cormorant Garamond, Poppins, Playfair Display, Cinzel).
 - **Interactive Multi-Section Pages:**
   - Hero Header with Couple / Host Photo & Countdowns
   - Our Love Story / Host Journey Timeline & Video Embeds
@@ -25,15 +25,21 @@ Bervic (https://www.bervic.in) is an all-in-one digital invitation suite built s
   - Background Audio Music Player
   - Instant RSVP Guest Form
 
-### 2. Instagram & WhatsApp Announcement Card Generator (`/cards`)
+### 2. Traditional Physical Cards & Return Gifts Shop (`/shop`)
+- **Handcrafted Wedding Suites:** Over 250+ designs categorized into Royal & Heritage, Floral & Botanical, Vintage Parchment, Modern Die-Cut Arch, and Luxury Velvet Suites.
+- **Print Craftsmanship:** Heavy 350 GSM textured boards, real gold foil stamping, debossing, and premium wax-sealed envelopes.
+- **Festive Return Gifts:** Brass diyas, silver pooja coins, brocade & jute bags, aromatherapy candles, and gourmet sweets & dry fruit hampers.
+- **Doorstep Delivery:** Safe, insured shipping across all cities and towns in India.
+
+### 3. Instagram & WhatsApp Announcement Card Generator (`/cards`)
 - Generates square 1080x1080px high-resolution graphics for Instagram Posts, Stories, and WhatsApp Statuses.
 - 31+ design presets including Pink Floral, Boho Earthy, Classic Mono, Verdant Gold, Art Deco, Whimsical Garden, and Minimalist.
-- One-click export to PNG or high-quality PDF.
+- One-click export to crystal-clear PNG or print-ready PDF.
 
-### 3. Guest List & RSVP Management (`/dashboard`)
-- Generate unique guest invite URLs with personalized greeting tags (`?to=GuestName`).
-- Track attendance status (Attending, Declined, Pending), plus-ones, and dietary restrictions.
-- Automated cleanup of past invitations after event completion.
+### 4. Guest List & RSVP Management (`/dashboard`)
+- Generate unique guest invite URLs with personalized greeting tags (`?to=GuestName` or unique guest codes).
+- Track attendance status (Attending, Declined, Pending), plus-ones, and dietary restrictions in real-time.
+- Digital check-in metrics and attendee counting.
 
 ---
 
@@ -48,22 +54,67 @@ Bervic (https://www.bervic.in) is an all-in-one digital invitation suite built s
 
 ---
 
+## Pricing & Passes Breakdown
+
+- **Free Explorer Pass (₹0 Forever):**
+  - 2 Free High-Res (1080x1080px) Instagram Announcement Card Downloads
+  - Full live interactive preview of all digital invitation website templates
+  - Browse all physical card designs and return gifts in the Traditional Shop
+  - Live draft customization & couple photo upload testing
+
+- **Instagram Card Pass (₹99 One-Time):**
+  - 5 Extra High-Res Instagram Announcement Card Download Slots
+  - Access to all 31+ luxury wedding & event announcement templates
+  - Crystal-clear PNG & Print-Ready PDF Exports
+  - Card credits never expire
+
+- **Basic Pass (₹599 for 6 Months):**
+  - 1 Live interactive digital invitation website
+  - 5 High-res Instagram announcement cards
+  - Full customization (couple photos, love story, multi-event schedules, venue map)
+  - Guest list & 1-click WhatsApp RSVP tracking
+  - Background music playback & photo gallery
+
+- **Cinematic Exclusive Pass (₹2000 for 1 Year):**
+  - 1 Exclusive 480-frame cinematic video sequence invitation template
+  - 20 High-res Instagram announcement cards
+  - Video embed support & audio track player
+  - Priority WhatsApp support and delivery
+
+- **Physical Cards Catalog (`/shop`):**
+  - Pricing starting from ₹10 to ₹250 per piece depending on paper GSM, gold foil stamping, and quantity.
+
+---
+
 ## Frequently Asked Questions (FAQ)
 
-### Q: How do guests receive the invitation?
-A: Users copy their unique Bervic invitation link (`https://www.bervic.in/invitations/your-custom-slug`) and share it directly on WhatsApp, iMessage, Instagram, or Email.
+### Q: How do guests receive the digital invitation?
+A: Hosts copy their unique Bervic invitation link (`https://www.bervic.in/invitations/your-custom-slug`) and share it directly on WhatsApp, iMessage, Instagram, or Email. Guests open it in any mobile browser with zero app download required.
 
 ### Q: Can guests RSVP directly on the web page?
 A: Yes! Guests can select their attendance status, add plus-ones, and submit notes, which instantly reflect in the host's private dashboard.
 
-### Q: Are Bervic invitations mobile friendly?
-A: Bervic invitations are 100% responsive and optimized for instant loading on iOS, Android, tablets, and desktop browsers.
+### Q: Can I preview templates before paying?
+A: Absolutely! You can browse and live-preview all digital invitation templates and Instagram announcement card designs anytime for free before choosing a plan.
+
+### Q: How does template locking work?
+A: When you activate a template on your plan slot, that slot locks to your chosen design theme. However, you can edit all details (names, dates, photos, venue maps, schedules) as many times as you want!
+
+### Q: Do invitations expire on the wedding date?
+A: No! Invitations, cards, and guest RSVPs do NOT auto-delete on your event date. They remain active for the full duration of your pass (6 months for Basic Pass ₹599, 1 year for Cinematic Exclusive ₹2000).
+
+### Q: Can I order physical printed invitation cards on Bervic?
+A: Yes! Bervic's Traditional Cards Shop (`/shop`) offers 250+ luxury physical wedding cards on heavy 350 GSM cardstock, gold foil printing, and matching envelopes, delivered directly across India.
+
+### Q: What payment methods are accepted?
+A: All major Indian payment methods are accepted, including UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, and Net Banking securely processed via Razorpay.
 
 ---
 
 ## Contact & Business Details
 
 - Platform Name: Bervic Invitations
-- Domain: https://www.bervic.in
+- Official Website: https://www.bervic.in
+- Shop Catalog: https://www.bervic.in/shop
 - Support Email: support@bervic.in
-- Target Regions: India, NRI Community worldwide, Global Event Organizers
+- Target Regions: India (all states and cities), NRI community worldwide, Global Event Organizers

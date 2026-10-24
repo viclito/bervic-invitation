@@ -79,7 +79,7 @@ function TemplateGalleryContent() {
       const targetSlug = data.slug || data.invitation?.slug;
       if (targetSlug) {
         const cleanSlug = targetSlug.trim().replace(/[\s%20]+/g, "-");
-        router.push(`/invitations/${encodeURIComponent(cleanSlug)}`);
+        router.push(`/invitations/${cleanSlug}`);
       } else {
         router.push("/dashboard");
       }

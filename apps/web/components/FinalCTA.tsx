@@ -34,7 +34,7 @@ export default function FinalCTA() {
             href="/templates"
             className="px-8 py-4 rounded-full bg-white text-[#991B1B] hover:bg-slate-50 text-sm font-bold flex items-center gap-2.5 shadow-xl transition-all group w-full sm:w-auto justify-center"
           >
-            <Sparkles className="w-4 h-4 text-amber-500" />
+            <Sparkles className="w-4 h-4 text-[#991B1B]" />
             <span>Create Invitation Now</span>
             <ArrowRight className="w-4 h-4 text-[#991B1B] group-hover:translate-x-1 transition-transform" />
           </Link>

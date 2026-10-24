@@ -411,7 +411,7 @@ export default function UserOrdersPage() {
             href="/cards"
             className="btn-maroon inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs hover:shadow-md shrink-0 cursor-pointer w-full sm:w-auto text-white"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <Sparkles className="w-3.5 h-3.5 text-white" />
             <span>Design New Card</span>
           </Link>
         </div>
@@ -466,7 +466,7 @@ export default function UserOrdersPage() {
                 href="/cards"
                 className="btn-maroon inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white text-xs font-bold transition-all shadow-xs hover:shadow-md"
               >
-                <Sparkles className="w-4 h-4 text-amber-300" />
+                <Sparkles className="w-4 h-4 text-white" />
                 <span>Explore &amp; Order Cards</span>
               </Link>
             </div>
