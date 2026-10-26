@@ -57,6 +57,8 @@ import {
   ZoomIn,
   ZoomOut,
   FolderUp,
+  FolderKanban,
+  LayoutGrid,
   IndianRupee,
   Tag,
   Zap,
@@ -372,6 +374,12 @@ export default function CanvaUserStudio() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusToast, setStatusToast] = useState("");
+
+  // User Saved Cards & Projects Gallery State
+  const [userSavedCards, setUserSavedCards] = useState<any[]>([]);
+  const [isLoadingSavedCards, setIsLoadingSavedCards] = useState(true);
+  const [showGalleryView, setShowGalleryView] = useState(false);
+  const hasLoadedInitialStateRef = useRef(false);
 
   // Text Presets Search & Filter State (200+ Presets)
   const [textSearchQuery, setTextSearchQuery] = useState("");
@@ -876,76 +884,241 @@ export default function CanvaUserStudio() {
     };
   }, [session?.user?.email]);
 
-  // Preload saved user card or template if specified in query param
+  // Open / Load a saved card into studio
+  const handleOpenSavedCard = useCallback((card: any) => {
+    setCurrentCardId(card.id === "guest-draft" ? null : card.id);
+    setDocTitle(card.templateName || "My Wedding Invitation");
+    let parsed: any = null;
+    try {
+      parsed = typeof card.cardDataJson === "string" ? JSON.parse(card.cardDataJson) : card.cardDataJson;
+    } catch {}
+
+    if (parsed?.cardLayers && Array.isArray(parsed.cardLayers) && parsed.cardLayers.length > 0) {
+      setCardLayers(parsed.cardLayers);
+      setActiveLayerId(parsed.cardLayers[0]?.id || "layer-1");
+    }
+
+    setShowGalleryView(false);
+    setHasUnsavedChanges(false);
+
+    if (card.id && card.id !== "guest-draft" && typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("id", card.id);
+      window.history.replaceState({}, "", newUrl.toString());
+    }
+
+    setStatusToast(`📂 Opened "${card.templateName || "Invitation Card"}"`);
+    setTimeout(() => setStatusToast(""), 3000);
+  }, []);
+
+  // Delete saved card from gallery
+  const handleDeleteSavedCard = async (e: React.MouseEvent, cardId: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this saved invitation card?")) return;
+
+    if (cardId === "guest-draft") {
+      try {
+        localStorage.removeItem("canva_user_card_draft");
+      } catch {}
+      setUserSavedCards((prev) => {
+        const updated = prev.filter((c) => c.id !== cardId);
+        if (updated.length === 0) {
+          setShowGalleryView(false);
+          setShowCreateModal(true);
+        }
+        return updated;
+      });
+      setStatusToast("🗑️ Deleted draft");
+      setTimeout(() => setStatusToast(""), 3000);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/user/cards?id=${cardId}`, { method: "DELETE" });
+      if (res.ok) {
+        setUserSavedCards((prev) => {
+          const updated = prev.filter((c) => c.id !== cardId);
+          if (updated.length === 0) {
+            setShowGalleryView(false);
+            setShowCreateModal(true);
+          }
+          return updated;
+        });
+        if (currentCardId === cardId) {
+          setCurrentCardId(null);
+        }
+        setStatusToast("🗑️ Card deleted from your gallery");
+        setTimeout(() => setStatusToast(""), 3000);
+      } else {
+        alert("Could not delete card. Please try again.");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Network error deleting card.");
+    }
+  };
+
+  // Duplicate saved card in gallery
+  const handleDuplicateSavedCard = async (e: React.MouseEvent, card: any) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch("/api/user/cards/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateName: `${card.templateName || "Invitation Card"} (Copy)`,
+          partnerOne: card.partnerOne || "Sophia",
+          partnerTwo: card.partnerTwo || "Alexander",
+          weddingDate: card.weddingDate || "October 30, 2026",
+          cardDataJson: card.cardDataJson,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.card) {
+          setUserSavedCards((prev) => [data.card, ...prev]);
+          setStatusToast(`✨ Duplicated "${card.templateName || "Card"}"`);
+          setTimeout(() => setStatusToast(""), 3000);
+        }
+      } else {
+        alert("Failed to duplicate card.");
+      }
+    } catch (err) {
+      console.error("Duplicate error:", err);
+    }
+  };
+
+  // Preload saved user card or template if specified in query param, or check saved cards
   useEffect(() => {
+    let isCancelled = false;
+
     if (searchParams.get("order") === "true") {
       setShowOrderModal(true);
     }
-    if (!templateParam) return;
-    async function loadTemplate() {
+
+    if (hasLoadedInitialStateRef.current) return;
+    hasLoadedInitialStateRef.current = true;
+
+    async function checkCardsAndInit() {
+      setIsLoadingSavedCards(true);
       try {
-        // 1. First check if it's a saved card in the user's gallery
-        try {
-          const cardRes = await fetch(`/api/user/cards?id=${templateParam}`);
-          if (cardRes.ok) {
-            const cardData = await cardRes.json();
-            if (cardData?.card) {
-              const c = cardData.card;
-              setCurrentCardId(c.id);
-              setDocTitle(c.templateName || "My Wedding Invitation");
-              let parsed: any = null;
-              try {
-                parsed = typeof c.cardDataJson === "string" ? JSON.parse(c.cardDataJson) : c.cardDataJson;
-              } catch {}
-              if (parsed?.cardLayers && Array.isArray(parsed.cardLayers) && parsed.cardLayers.length > 0) {
-                setCardLayers(parsed.cardLayers);
-                setActiveLayerId(parsed.cardLayers[0]?.id || "layer-1");
+        // 1. Fetch user saved cards from API
+        const res = await fetch("/api/user/cards");
+        let cards: any[] = [];
+        if (res.ok) {
+          const data = await res.json();
+          cards = data.cards || [];
+        }
+
+        // 2. If user is guest/local, check localStorage draft
+        if (cards.length === 0 && typeof window !== "undefined") {
+          try {
+            const guestDraft = localStorage.getItem("canva_user_card_draft");
+            if (guestDraft) {
+              const parsed = JSON.parse(guestDraft);
+              if (parsed?.cardLayers && parsed.cardLayers.length > 0) {
+                cards = [
+                  {
+                    id: "guest-draft",
+                    templateName: parsed.docTitle || "My Draft Invitation",
+                    cardDataJson: guestDraft,
+                    updatedAt: new Date().toISOString(),
+                    isGuestDraft: true,
+                  },
+                ];
+              }
+            }
+          } catch {}
+        }
+
+        if (isCancelled) return;
+        setUserSavedCards(cards);
+        setIsLoadingSavedCards(false);
+
+        // 3. Direct template / card param in URL: load that card directly
+        if (templateParam) {
+          const matchedCard = cards.find((c) => c.id === templateParam);
+          if (matchedCard) {
+            handleOpenSavedCard(matchedCard);
+            return;
+          }
+
+          try {
+            const cardRes = await fetch(`/api/user/cards?id=${templateParam}`);
+            if (cardRes.ok) {
+              const cardData = await cardRes.json();
+              if (cardData?.card) {
+                handleOpenSavedCard(cardData.card);
                 return;
               }
             }
-          }
-        } catch (err) {
-          console.warn("Not a user card or error fetching user card:", err);
+          } catch {}
+
+          // Check predefined canva templates
+          try {
+            const tplRes = await fetch("/api/canva/templates");
+            const tplData = await tplRes.json();
+            if (tplData.templates && Array.isArray(tplData.templates)) {
+              const found = tplData.templates.find(
+                (t: any) => t.id === templateParam || t.dbId === templateParam || t.slug === templateParam
+              );
+              if (found) {
+                setDocTitle(found.name || "Custom Invitation Card");
+                if (found.elements && found.elements.layers) {
+                  setCardLayers(found.elements.layers);
+                  setActiveLayerId(found.elements.activeLayerId || found.elements.layers[0]?.id || "layer-1");
+                } else if (Array.isArray(found.elements)) {
+                  setCardLayers([
+                    {
+                      id: "layer-1",
+                      name: "Main Invitation (Base)",
+                      isBase: true,
+                      heightPercent: 100,
+                      aspectRatio: found.aspectRatio || "classic",
+                      customWidth: 480,
+                      customHeight: 672,
+                      lockRatio: true,
+                      backgroundColor: found.backgroundColor || "#F3EAD8",
+                      backgroundImage: found.backgroundImage || null,
+                      bgMode: found.backgroundImage ? "image" : "textures",
+                      elements: found.elements,
+                    },
+                  ]);
+                }
+              }
+            }
+          } catch {}
+          return;
         }
 
-        // 2. Otherwise check predefined canva templates
-        const res = await fetch("/api/canva/templates");
-        const data = await res.json();
-        if (data.templates && Array.isArray(data.templates)) {
-          const found = data.templates.find(
-            (t: any) => t.id === templateParam || t.dbId === templateParam || t.slug === templateParam
-          );
-          if (found) {
-            setDocTitle(found.name || "Custom Invitation Card");
-            if (found.elements && found.elements.layers) {
-              setCardLayers(found.elements.layers);
-              setActiveLayerId(found.elements.activeLayerId || found.elements.layers[0]?.id || "layer-1");
-            } else if (Array.isArray(found.elements)) {
-              setCardLayers([
-                {
-                  id: "layer-1",
-                  name: "Main Invitation (Base)",
-                  isBase: true,
-                  heightPercent: 100,
-                  aspectRatio: found.aspectRatio || "classic",
-                  customWidth: 480,
-                  customHeight: 672,
-                  lockRatio: true,
-                  backgroundColor: found.backgroundColor || "#F3EAD8",
-                  backgroundImage: found.backgroundImage || null,
-                  bgMode: found.backgroundImage ? "image" : "textures",
-                  elements: found.elements,
-                },
-              ]);
-            }
+        // 4. No specific card param in URL:
+        if (cards.length === 0) {
+          // User with NO saved invitations enters /canva:
+          // Immediately prompt them to create a new card as they wish!
+          setShowGalleryView(false);
+          setShowCreateModal(true);
+        } else {
+          // User HAS created and saved card(s):
+          // While opening the page, display the list of cards they designed & saved!
+          setShowGalleryView(true);
+        }
+      } catch (err) {
+        console.warn("Failed to check saved cards:", err);
+        if (!isCancelled) {
+          setIsLoadingSavedCards(false);
+          if (!templateParam) {
+            setShowCreateModal(true);
           }
         }
-      } catch (e) {
-        console.warn("Failed to load template param:", e);
       }
     }
-    loadTemplate();
-  }, [templateParam, searchParams]);
+
+    checkCardsAndInit();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [templateParam, searchParams, handleOpenSavedCard]);
 
   // BRAND NEW FEATURE: CREATE NEW INVITATION CARD HANDLER
   const handleCreateNewCard = () => {
@@ -1136,7 +1309,16 @@ export default function CanvaUserStudio() {
     setCardLayers(newLayers);
     setActiveLayerId("layer-1");
     setSelectedElementId(null);
+    setSelectedIds([]);
+    setCurrentCardId(null);
     setShowCreateModal(false);
+    setShowGalleryView(false);
+    if (typeof window !== "undefined") {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("id");
+      cleanUrl.searchParams.delete("template");
+      window.history.replaceState({}, "", cleanUrl.pathname);
+    }
     setHistory([]);
     setHistoryIndex(-1);
     setHasUnsavedChanges(true);
@@ -1893,7 +2075,34 @@ export default function CanvaUserStudio() {
               newUrl.searchParams.set("id", data.card.id);
               window.history.replaceState({}, "", newUrl.toString());
             }
+            setUserSavedCards((prev) => {
+              const existingIdx = prev.findIndex((c) => c.id === data.card.id);
+              if (existingIdx >= 0) {
+                const nextList = [...prev];
+                nextList[existingIdx] = data.card;
+                return nextList;
+              }
+              return [data.card, ...prev];
+            });
           }
+        }
+      } else {
+        if (typeof window !== "undefined") {
+          const guestCard = {
+            id: "guest-draft",
+            templateName: docTitle,
+            partnerOne,
+            partnerTwo,
+            weddingDate,
+            venue,
+            cardDataJson: JSON.stringify(cardPayload),
+            updatedAt: new Date().toISOString(),
+            isGuestDraft: true,
+          };
+          setUserSavedCards((prev) => {
+            const nextList = prev.filter((c) => c.id !== "guest-draft");
+            return [guestCard, ...nextList];
+          });
         }
       }
 
@@ -1966,12 +2175,27 @@ export default function CanvaUserStudio() {
 
           <button
             type="button"
+            onClick={() => setShowGalleryView(true)}
+            className="flex px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0"
+            title="Browse all your saved cards & designs"
+          >
+            <FolderKanban className="w-3.5 h-3.5 text-amber-700" />
+            <span className="hidden sm:inline">My Cards</span>
+            {userSavedCards.length > 0 && (
+              <span className="px-1.5 py-0.2 text-[10px] bg-red-100 text-[#991B1B] rounded-full font-extrabold border border-red-200">
+                {userSavedCards.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
-            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] border border-red-200 text-xs font-bold items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0"
+            className="flex px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] border border-red-200 text-xs font-bold items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0"
             title="Create a brand new invitation card from scratch"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
-            <span>New Card</span>
+            <span className="hidden sm:inline">New Card</span>
           </button>
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
@@ -5871,21 +6095,243 @@ export default function CanvaUserStudio() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateNewCard}
-                className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-md cursor-pointer flex items-center gap-2"
-              >
-                <span>Create Card & Open Studio →</span>
-              </button>
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              {userSavedCards.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setShowGalleryView(true);
+                  }}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>My Saved Cards</span>
+                </button>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateNewCard}
+                  className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-md cursor-pointer flex items-center gap-2"
+                >
+                  <span>Create Card & Open Studio →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 🌟 MODAL: SAVED CARDS & PROJECTS GALLERY VIEW 🌟 ── */}
+      {showGalleryView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden">
+            {/* Gallery Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3 shrink-0">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-[#991B1B]">
+                    <FolderKanban className="w-4 h-4" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                    My Saved Invitations
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-red-100/70 text-[#991B1B] border border-red-200">
+                    {userSavedCards.length} {userSavedCards.length === 1 ? "Card" : "Cards"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Choose a previously designed invitation to resume designing, or start a new card from scratch.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGalleryView(false);
+                    setShowCreateModal(true);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create New Card</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowGalleryView(false)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                  title="Close and continue editing current canvas"
+                >
+                  <span>Resume Studio</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Gallery Grid Container */}
+            <div className="flex-1 overflow-y-auto py-5 pr-1 custom-scrollbar">
+              {isLoadingSavedCards ? (
+                <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <RefreshCw className="w-6 h-6 animate-spin text-[#991B1B]" />
+                  <span className="text-xs font-semibold">Loading your saved invitations...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* 1. START NEW CARD TILE */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowGalleryView(false);
+                      setShowCreateModal(true);
+                    }}
+                    className="group min-h-[240px] rounded-2xl border-2 border-dashed border-red-200 hover:border-[#991B1B] bg-red-50/30 hover:bg-red-50/70 p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer shadow-2xs hover:shadow-md"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-white border border-red-200 group-hover:border-[#991B1B] flex items-center justify-center text-[#991B1B] shadow-2xs group-hover:scale-110 transition-all mb-3">
+                      <Plus className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900 group-hover:text-[#991B1B] transition-colors">
+                      + Create New Card
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-1 max-w-[210px] leading-relaxed">
+                      Design from scratch with custom dimensions, paper textures & multi-sheet decks.
+                    </p>
+                    <span className="mt-3 px-3 py-1 rounded-full text-[10px] font-extrabold bg-red-100/70 text-[#991B1B] border border-red-200">
+                      Start Custom Card
+                    </span>
+                  </button>
+
+                  {/* 2. USER'S SAVED CARDS */}
+                  {userSavedCards.map((card) => {
+                    let parsed: any = null;
+                    try {
+                      parsed = typeof card.cardDataJson === "string" ? JSON.parse(card.cardDataJson) : card.cardDataJson;
+                    } catch {}
+
+                    const layers = parsed?.cardLayers || [];
+                    const baseLayerObj = layers[0] || {};
+                    const layerCount = layers.length || 1;
+                    const bgVal = baseLayerObj.backgroundColor || "#F3EAD8";
+                    const bgImg = baseLayerObj.backgroundImage || null;
+                    const title = card.templateName || "Custom Invitation Card";
+                    const isCurrent = currentCardId === card.id;
+
+                    return (
+                      <div
+                        key={card.id}
+                        onClick={() => handleOpenSavedCard(card)}
+                        className={`group rounded-2xl border transition-all cursor-pointer overflow-hidden flex flex-col bg-white shadow-2xs hover:shadow-lg ${
+                          isCurrent
+                            ? "border-[#991B1B] ring-2 ring-[#991B1B]/20"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {/* Card Preview Header / Texture Box */}
+                        <div
+                          className="h-32 w-full relative flex items-center justify-center p-3 border-b border-slate-100 overflow-hidden"
+                          style={{
+                            backgroundColor: bgVal.startsWith("#") ? bgVal : "#F3EAD8",
+                            backgroundImage: bgImg ? `url(${bgImg})` : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
+                        >
+                          {/* Subtle overlay gradient */}
+                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
+
+                          {/* Mini Sheet Badge */}
+                          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-[10px] font-extrabold text-slate-800 shadow-2xs border border-white/60">
+                            <Layers className="w-3 h-3 text-[#991B1B]" />
+                            <span>{layerCount} {layerCount === 1 ? "Sheet" : "Sheets"}</span>
+                          </div>
+
+                          {isCurrent && (
+                            <div className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full bg-[#991B1B] text-white text-[10px] font-extrabold shadow-2xs">
+                              Active In Studio
+                            </div>
+                          )}
+
+                          {/* Preview Text Content */}
+                          <div className="relative z-10 text-center max-w-[85%] bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-white/80 shadow-xs group-hover:scale-102 transition-transform">
+                            <p className="text-[11px] font-black text-slate-900 truncate">
+                              {title}
+                            </p>
+                            {(card.weddingDate || card.partnerOne) && (
+                              <p className="text-[9px] font-medium text-slate-600 truncate mt-0.5">
+                                {card.partnerOne && card.partnerTwo ? `${card.partnerOne} & ${card.partnerTwo}` : card.weddingDate || ""}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Card Body & Details */}
+                        <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
+                          <div>
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className="text-xs font-black text-slate-900 truncate flex-1" title={title}>
+                                {title}
+                              </h4>
+                              {card.isGuestDraft && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                  Local Draft
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                              {card.updatedAt
+                                ? `Updated ${new Date(card.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+                                : "Ready to edit"}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100 gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenSavedCard(card);
+                              }}
+                              className="flex-1 py-1.5 px-3 rounded-xl bg-slate-900 group-hover:bg-[#991B1B] text-white text-xs font-extrabold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <span>Open in Studio</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleDuplicateSavedCard(e, card)}
+                              title="Duplicate this card"
+                              className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteSavedCard(e, card.id)}
+                              title="Delete this card"
+                              className="p-1.5 rounded-xl border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
