@@ -66,6 +66,7 @@ interface SavedCard {
   weddingTime?: string;
   venue?: string;
   city?: string;
+  cardDataJson?: string;
   createdAt: string;
 }
 
@@ -166,21 +167,21 @@ function DashboardContent() {
   const router = useRouter();
 
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"profiles" | "invitations" | "subscription">(() => {
+  const [activeTab, setActiveTab] = useState<"profiles" | "invitations" | "cards" | "subscription">(() => {
     const tabParam = searchParams?.get("tab");
-    if (tabParam === "invitations" || tabParam === "subscription" || tabParam === "profiles") {
+    if (tabParam === "invitations" || tabParam === "subscription" || tabParam === "profiles" || tabParam === "cards") {
       return tabParam;
     }
     if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("bervic_active_dashboard_tab") as "profiles" | "invitations" | "subscription" | null;
-      if (cached === "invitations" || cached === "subscription" || cached === "profiles") {
+      const cached = localStorage.getItem("bervic_active_dashboard_tab") as "profiles" | "invitations" | "subscription" | "cards" | null;
+      if (cached === "invitations" || cached === "subscription" || cached === "profiles" || cached === "cards") {
         return cached;
       }
     }
     return "profiles";
   });
 
-  const handleTabChange = (tab: "profiles" | "invitations" | "subscription") => {
+  const handleTabChange = (tab: "profiles" | "invitations" | "cards" | "subscription") => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
       localStorage.setItem("bervic_active_dashboard_tab", tab);
@@ -188,6 +189,7 @@ function DashboardContent() {
   };
 
   const [invitations, setInvitations] = useState<SavedInvitation[]>([]);
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [subData, setSubData] = useState<SubscriptionData>({
     plan: "NONE",
     planExpiresAt: null,
@@ -245,9 +247,10 @@ function DashboardContent() {
     if (status === "authenticated") {
       const loadAllData = async () => {
         try {
-          const [invData, subDataRes] = await Promise.all([
+          const [invData, subDataRes, cardsRes] = await Promise.all([
             fetch("/api/invitations/my-invitations").then((res) => res.json()),
             fetch("/api/user/subscription?activateTest=true").then((res) => res.json()),
+            fetch("/api/user/cards").then((res) => res.json()).catch(() => ({ cards: [] })),
           ]);
 
           if (invData.invitations) {
@@ -255,6 +258,11 @@ function DashboardContent() {
           }
           if (subDataRes && !subDataRes.error) {
             setSubData(subDataRes);
+          }
+          if (cardsRes?.cards && Array.isArray(cardsRes.cards)) {
+            setSavedCards(cardsRes.cards);
+          } else if (subDataRes?.savedCards && Array.isArray(subDataRes.savedCards)) {
+            setSavedCards(subDataRes.savedCards);
           }
 
           await fetchProfiles();
@@ -268,6 +276,18 @@ function DashboardContent() {
       loadAllData();
     }
   }, [status, router]);
+
+  const handleDeleteCard = async (cardId: string) => {
+    if (!window.confirm("Are you sure you want to remove this card from your gallery?")) return;
+    try {
+      const res = await fetch(`/api/user/cards?id=${cardId}`, { method: "DELETE" });
+      if (res.ok) {
+        setSavedCards((prev) => prev.filter((c) => c.id !== cardId));
+      }
+    } catch (err) {
+      console.error("Delete card error:", err);
+    }
+  };
 
   const handleShare = (slug: string, id: string) => {
     const url = `${window.location.origin}/invitations/${slug}`;
@@ -413,6 +433,18 @@ function DashboardContent() {
             >
               <Layers className="w-4 h-4" />
               <span>My Invitations ({invitations.length})</span>
+            </button>
+
+            <button
+              onClick={() => handleTabChange("cards")}
+              className={`px-3.5 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === "cards"
+                  ? "bg-[#991B1B] text-white shadow-xs"
+                  : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 text-rose-500" />
+              <span>Saved Cards Gallery ({savedCards.length})</span>
             </button>
 
             <button
@@ -795,6 +827,166 @@ function DashboardContent() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 1.5: SAVED CARDS GALLERY */}
+        {activeTab === "cards" && (
+          <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-serif font-bold text-slate-900">Custom Cards Gallery</h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-0.5">
+                  All bespoke wedding and event invitation cards created and saved in Canva Studio.
+                </p>
+              </div>
+
+              <Link
+                href="/canva"
+                className="btn-maroon px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs hover:shadow-md transition-all whitespace-nowrap self-stretch sm:self-auto"
+              >
+                <Plus className="w-4 h-4 text-white" />
+                <span>+ Create New Card</span>
+              </Link>
+            </div>
+
+            {savedCards.length === 0 ? (
+              <div className="bg-white border-2 border-dashed border-red-200 rounded-3xl p-10 sm:p-14 text-center flex flex-col items-center gap-4 max-w-xl mx-auto shadow-xs my-6">
+                <div className="w-16 h-16 rounded-2xl bg-red-50 text-[#991B1B] flex items-center justify-center border border-red-200 shadow-2xs">
+                  <ImageIcon className="w-8 h-8 text-[#991B1B]" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-serif font-bold text-slate-900 mb-1">No Saved Custom Cards Yet</h4>
+                  <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                    Create luxury multi-layer cards, style typography, add motifs, and save them directly to your account gallery.
+                  </p>
+                </div>
+                <Link
+                  href="/canva"
+                  className="mt-2 btn-maroon px-6 py-2.5 text-xs font-bold flex items-center gap-2 shadow-sm hover:shadow-md"
+                >
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span>Launch Canva Invitation Studio</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {savedCards.map((card) => {
+                  let parsedData: any = {};
+                  try {
+                    parsedData = card.cardDataJson ? JSON.parse(card.cardDataJson) : {};
+                  } catch {}
+
+                  const layersCount = parsedData.cardLayers?.length || 1;
+                  const ratio = parsedData.aspectRatio || "classic";
+                  const baseLayer = parsedData.cardLayers?.[0];
+                  const bgImage = baseLayer?.backgroundImage;
+                  const bgColor = baseLayer?.backgroundColor || "#F3EAD8";
+
+                  return (
+                    <div
+                      key={card.id}
+                      className="bg-white border border-slate-200/90 hover:border-red-300 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                    >
+                      {/* Card Preview Window */}
+                      <div
+                        style={{
+                          backgroundColor: bgColor.startsWith("#") ? bgColor : "#F3EAD8",
+                          backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
+                        className="relative w-full aspect-[4/5] p-5 flex flex-col justify-between items-center text-center border-b border-slate-100 overflow-hidden"
+                      >
+                        {/* Overlay subtle shadow */}
+                        <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+
+                        {/* Top Badges */}
+                        <div className="relative z-10 w-full flex items-center justify-between gap-1">
+                          <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-slate-800 text-[10px] font-extrabold uppercase tracking-wider border border-slate-200/80 shadow-2xs">
+                            {ratio}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-[#991B1B] text-white text-[10px] font-extrabold tracking-wider shadow-2xs">
+                            {layersCount > 1 ? `${layersCount}-Layer Deck` : "Single Layer"}
+                          </span>
+                        </div>
+
+                        {/* Middle Content Preview */}
+                        <div className="relative z-10 my-auto space-y-1 max-w-[90%]">
+                          <h4 className="font-serif font-extrabold text-base sm:text-lg text-slate-900 leading-tight drop-shadow-xs line-clamp-2">
+                            {card.templateName || "Wedding Invitation Card"}
+                          </h4>
+                          {(card.partnerOne || card.partnerTwo) && (
+                            <p className="text-xs font-serif italic text-slate-700">
+                              {card.partnerOne} &amp; {card.partnerTwo}
+                            </p>
+                          )}
+                          {card.weddingDate && (
+                            <p className="text-[10px] font-mono tracking-wider text-slate-600 uppercase font-semibold">
+                              {card.weddingDate}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Bottom Tag */}
+                        <div className="relative z-10 w-full flex items-center justify-center">
+                          <span className="text-[9.5px] font-bold text-slate-500 bg-white/80 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-slate-200/60">
+                            Saved Card
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Meta & Action Footer */}
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-800 truncate max-w-[200px]">
+                            {card.templateName || "Invitation Card"}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(card.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        {/* Actions Grid */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <Link
+                            href={`/canva?id=${card.id}`}
+                            className="py-2 px-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit in Studio</span>
+                          </Link>
+
+                          <Link
+                            href={`/canva?id=${card.id}&order=true`}
+                            className="py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                          >
+                            <Package className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Order Prints</span>
+                          </Link>
+                        </div>
+
+                        {/* Delete Action */}
+                        <div className="flex items-center justify-end pt-1 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCard(card.id)}
+                            className="text-[10.5px] font-bold text-slate-400 hover:text-red-600 flex items-center gap-1 transition-colors cursor-pointer py-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Delete from Gallery</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

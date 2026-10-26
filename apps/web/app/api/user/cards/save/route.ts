@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/getAuthUser";
+import { ensureDbSchema } from "@/lib/ensureDbSchema";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    await ensureDbSchema();
     const authUser = await getAuthUser(req);
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
@@ -18,7 +22,6 @@ export async function POST(req: Request) {
         plan: true,
         planExpiresAt: true,
         allowedCardsCount: true,
-        cards: true,
       },
     });
 
@@ -26,20 +29,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const effectiveAllowedCards = Math.max(2, user.allowedCardsCount || 2);
-    const usedCardsCount = user.cards.length;
-
-    if (usedCardsCount >= effectiveAllowedCards) {
-      return NextResponse.json(
-        {
-          error: `You have used all your card download credits (${usedCardsCount} of ${effectiveAllowedCards} cards used). Get 5 additional High-Res Card Credits for just ₹99!`,
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await req.json();
     const {
+      cardId,
+      id,
       templateId,
       templateName,
       partnerOne,
@@ -51,58 +44,69 @@ export async function POST(req: Request) {
       tagline,
       couplePhoto,
       hashtag,
+      cardDataJson,
     } = body;
 
-    // Check if user already saved this exact card previously
-    const existingCard = await prisma.userCard.findFirst({
-      where: {
-        userId: user.id,
-        templateId: Number(templateId),
-        partnerOne: partnerOne || "Sophia",
-        partnerTwo: partnerTwo || "Alexander",
-      },
-    });
+    const targetCardId = cardId || id;
 
-    if (existingCard) {
-      return NextResponse.json({
-        success: true,
-        message: "Card already recorded in your subscription.",
-        card: existingCard,
-        remainingCardSlots: Math.max(0, effectiveAllowedCards - usedCardsCount),
+    // 1. If updating an existing card by ID
+    if (targetCardId) {
+      const existing = await prisma.userCard.findFirst({
+        where: { id: targetCardId, userId: user.id },
       });
+
+      if (existing) {
+        const updated = await prisma.userCard.update({
+          where: { id: existing.id },
+          data: {
+            templateName: templateName || existing.templateName,
+            partnerOne: partnerOne || existing.partnerOne,
+            partnerTwo: partnerTwo || existing.partnerTwo,
+            weddingDate: weddingDate || existing.weddingDate,
+            weddingTime: weddingTime || existing.weddingTime,
+            venue: venue || existing.venue,
+            city: city || existing.city,
+            tagline: tagline || existing.tagline,
+            couplePhoto: couplePhoto || existing.couplePhoto,
+            hashtag: hashtag || existing.hashtag,
+            cardDataJson: typeof cardDataJson === "string" ? cardDataJson : JSON.stringify(cardDataJson || body),
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: "Card updated in your gallery!",
+          card: updated,
+        });
+      }
     }
 
-    // Save new card to database (deducts 1 credit count)
+    // 2. Otherwise create a new saved card in the user's gallery
     const newCard = await prisma.userCard.create({
       data: {
         userId: user.id,
         templateId: Number(templateId) || 1,
-        templateName: templateName || `Template #${templateId}`,
+        templateName: templateName || "Custom Invitation Card",
         partnerOne: partnerOne || "Sophia",
         partnerTwo: partnerTwo || "Alexander",
-        weddingDate: weddingDate || "August 14, 2025",
-        weddingTime: weddingTime || "4:00 PM",
-        venue: venue || "The Grand Chapel",
-        city: city || "Bangalore, India",
+        weddingDate: weddingDate || "October 30, 2026",
+        weddingTime: weddingTime || "6:30 PM",
+        venue: venue || "Elamba Mudakkal Palace",
+        city: city || "Kerala, India",
         tagline: tagline || "Together Forever",
-        couplePhoto: couplePhoto || "/images/templates/couple-photo.jpg",
-        hashtag: hashtag || "#ForeverTogether",
-        cardDataJson: JSON.stringify(body),
+        couplePhoto: couplePhoto || null,
+        hashtag: hashtag || null,
+        cardDataJson: typeof cardDataJson === "string" ? cardDataJson : JSON.stringify(cardDataJson || body),
       },
     });
 
-    const updatedUsedCount = usedCardsCount + 1;
-    const remainingCardSlots = Math.max(0, effectiveAllowedCards - updatedUsedCount);
-
     return NextResponse.json({
       success: true,
-      message: "Card recorded successfully!",
+      message: "Card saved to your dashboard gallery!",
       card: newCard,
-      usedCardsCount: updatedUsedCount,
-      remainingCardSlots,
     });
   } catch (error: any) {
-    console.error("Error saving downloaded card:", error);
-    return NextResponse.json({ error: "Failed to record downloaded card." }, { status: 500 });
+    console.error("Error saving card to gallery:", error);
+    return NextResponse.json({ error: error?.message || "Failed to save card." }, { status: 500 });
   }
 }

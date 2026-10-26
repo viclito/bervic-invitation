@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -63,9 +63,18 @@ import {
   Download,
   ShoppingCart,
   Share2,
+  Search,
 } from "lucide-react";
 import { calculateTieredCardPrice, CARD_PRICING_TIERS } from "@/lib/pricing";
 import OrderOrCartModal from "@/components/cart/OrderOrCartModal";
+import {
+  WEDDING_TEXT_PRESETS,
+  type TextPresetCategory,
+  type TextPresetItem,
+} from "@/data/canvaTextPresets";
+
+export { WEDDING_TEXT_PRESETS };
+export type { TextPresetCategory, TextPresetItem };
 
 export interface CanvasElement {
   id: string;
@@ -347,136 +356,6 @@ export const PRESET_SHAPES = [
   { id: "divider-line", name: "Thin Gold Line", type: "shape" as const, width: 70, height: 0.4, backgroundColor: "#D4AF37", opacity: 0.85 },
 ];
 
-export const WEDDING_TEXT_PRESETS = [
-  {
-    category: "Auspicious Slokas",
-    items: [
-      {
-        label: "|| Shree Ganeshay Namah ||",
-        text: "|| श्री गणेशाय नमः ||",
-        fontFamily: "'Rozha One', serif",
-        fontSize: 16,
-        color: "#991B1B",
-        letterSpacing: 2,
-        fontWeight: "bold",
-      },
-      {
-        label: "|| Vakratunda Mahakaya ||",
-        text: "वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ।\nनिर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा॥",
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 13,
-        color: "#5C3619",
-        lineHeight: 1.5,
-        letterSpacing: 1,
-      },
-      {
-        label: "|| Shubham Karoti Kalyanam ||",
-        text: "शुभं करोति कल्याणम् आरोग्यम् धनसंपदा।\nशत्रुबुद्धिविनाशाय दीपज्योतिर्नमोऽस्तुते॥",
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 13,
-        color: "#5C3619",
-        lineHeight: 1.5,
-        letterSpacing: 1,
-      },
-    ],
-  },
-  {
-    category: "Royal Couple Names",
-    items: [
-      {
-        label: "Calligraphy Couple Headline",
-        text: "Sophia & Alexander",
-        fontFamily: "'Great Vibes', cursive",
-        fontSize: 38,
-        color: "#1E293B",
-        fontWeight: "bold",
-      },
-      {
-        label: "Imperial Roman Names",
-        text: "SOPHIA  &  ALEXANDER",
-        fontFamily: "'Cinzel', serif",
-        fontSize: 22,
-        color: "#991B1B",
-        letterSpacing: 4,
-        fontWeight: "bold",
-      },
-      {
-        label: "Warm Garamond Serif Names",
-        text: "Sophia  &  Alexander",
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 32,
-        color: "#2C1810",
-        fontStyle: "italic",
-        letterSpacing: 1,
-      },
-    ],
-  },
-  {
-    category: "Invitations & Taglines",
-    items: [
-      {
-        label: "Formal Family Invitation",
-        text: "TOGETHER WITH THEIR PARENTS\nINVITE YOU TO CELEBRATE THE WEDDING OF",
-        fontFamily: "'Cinzel', serif",
-        fontSize: 10,
-        color: "#78350F",
-        letterSpacing: 3,
-        lineHeight: 1.8,
-      },
-      {
-        label: "Save Our Date Header",
-        text: "SAVE OUR DATE",
-        fontFamily: "'Cinzel', serif",
-        fontSize: 14,
-        color: "#991B1B",
-        letterSpacing: 5,
-        fontWeight: "bold",
-      },
-      {
-        label: "Wedding Ceremony Callout",
-        text: "WEDDING CEREMONY & RECEPTION",
-        fontFamily: "'Montserrat', sans-serif",
-        fontSize: 11,
-        color: "#1E293B",
-        letterSpacing: 3,
-        fontWeight: "bold",
-      },
-    ],
-  },
-  {
-    category: "Event Date, Venue & RSVP",
-    items: [
-      {
-        label: "Classic Date Callout",
-        text: "SATURDAY | OCTOBER 30, 2026 | 6:30 PM",
-        fontFamily: "'Montserrat', sans-serif",
-        fontSize: 11,
-        color: "#475569",
-        letterSpacing: 2,
-        fontWeight: "600",
-      },
-      {
-        label: "Venue & Palace Address",
-        text: "ELAMBA MUDAKKAL PALACE\nMG Road, Kerala, India",
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 14,
-        color: "#1E293B",
-        letterSpacing: 2,
-        lineHeight: 1.6,
-      },
-      {
-        label: "RSVP Contact Block",
-        text: "RSVP: +91 98765 43210\nKindly respond by September 15",
-        fontFamily: "'Outfit', sans-serif",
-        fontSize: 10,
-        color: "#64748B",
-        letterSpacing: 1,
-        lineHeight: 1.6,
-      },
-    ],
-  },
-];
-
 export default function CanvaUserStudio() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -486,11 +365,16 @@ export default function CanvaUserStudio() {
   const orderIdParam = searchParams.get("orderId");
   const itemIdParam = searchParams.get("itemId");
 
-  // Template / Card Metadata
+  // Template / Card Metadata & Gallery State
+  const [currentCardId, setCurrentCardId] = useState<string | null>(searchParams.get("id") || null);
   const [docTitle, setDocTitle] = useState("Sophia & Alexander's Wedding");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusToast, setStatusToast] = useState("");
+
+  // Text Presets Search & Filter State (200+ Presets)
+  const [textSearchQuery, setTextSearchQuery] = useState("");
+  const [selectedTextCategory, setSelectedTextCategory] = useState("All");
 
   // Create New Card Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -501,7 +385,7 @@ export default function CanvaUserStudio() {
     bgMode: "textures",
     val: "/images/canva/backgrounds/texture-01.webp",
   });
-  const [createStarterStyle, setCreateStarterStyle] = useState<"blank" | "sloka_names">("sloka_names");
+  const [createStarterStyle, setCreateStarterStyle] = useState<"blank" | "classic_names">("classic_names");
 
   // Multi-Layer Card Deck State
   const [cardLayers, setCardLayers] = useState<CardDeckLayer[]>([
@@ -519,17 +403,18 @@ export default function CanvaUserStudio() {
       bgMode: "textures",
       elements: [
         {
-          id: "starter-sloka",
+          id: "starter-headline",
           type: "text",
-          text: "|| श्री गणेशाय नमः ||",
-          fontFamily: "'Rozha One', serif",
-          fontSize: 16,
+          text: "THE WEDDING CELEBRATION",
+          fontFamily: "'Cinzel', serif",
+          fontSize: 12,
           color: "#991B1B",
           fontWeight: "bold",
+          letterSpacing: 4,
           textAlign: "center",
-          x: 20,
+          x: 15,
           y: 7,
-          width: 60,
+          width: 70,
           height: 6,
           rotation: 0,
           opacity: 1,
@@ -673,7 +558,7 @@ export default function CanvaUserStudio() {
     | "INSPECTOR_OPACITY";
 
   const [mobileSheet, setMobileSheet] = useState<MobileSheetType>(null);
-  const [mobileAddTab, setMobileAddTab] = useState<"text" | "slokas" | "assets" | "shapes">("text");
+  const [mobileAddTab, setMobileAddTab] = useState<"text" | "presets" | "assets" | "shapes">("text");
   const [mobileSettingsTab, setMobileSettingsTab] = useState<"bg" | "format">("bg");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
@@ -753,6 +638,32 @@ export default function CanvaUserStudio() {
   const baseDimensions = getLayerDimensions(baseLayer, baseLayer);
   const selectedRatio = ASPECT_RATIOS.find((r) => r.id === activeLayer.aspectRatio) || ASPECT_RATIOS[0];
   const selectedElement = activeLayer.elements.find((el) => el.id === selectedElementId) || null;
+
+  // Categorized Wedding Typography Presets (200+ Presets) Filter & Search
+  const allTextCategories = useMemo(() => {
+    return ["All", ...WEDDING_TEXT_PRESETS.map((c) => c.category)];
+  }, []);
+
+  const filteredTextPresets = useMemo(() => {
+    const q = textSearchQuery.trim().toLowerCase();
+    return WEDDING_TEXT_PRESETS.map((cat) => {
+      if (selectedTextCategory !== "All" && cat.category !== selectedTextCategory) {
+        return { ...cat, items: [] };
+      }
+      if (!q) return cat;
+      const matchedItems = cat.items.filter(
+        (item) =>
+          item.label.toLowerCase().includes(q) ||
+          item.text.toLowerCase().includes(q) ||
+          cat.category.toLowerCase().includes(q)
+      );
+      return { ...cat, items: matchedItems };
+    }).filter((cat) => cat.items.length > 0);
+  }, [textSearchQuery, selectedTextCategory]);
+
+  const totalFilteredPresetsCount = useMemo(() => {
+    return filteredTextPresets.reduce((sum, cat) => sum + cat.items.length, 0);
+  }, [filteredTextPresets]);
 
   // History Recording
   const recordHistory = useCallback((newLayers: CardDeckLayer[]) => {
@@ -948,11 +859,39 @@ export default function CanvaUserStudio() {
     };
   }, [session?.user?.email]);
 
-  // Preload template if specified in query param
+  // Preload saved user card or template if specified in query param
   useEffect(() => {
+    if (searchParams.get("order") === "true") {
+      setShowOrderModal(true);
+    }
     if (!templateParam) return;
     async function loadTemplate() {
       try {
+        // 1. First check if it's a saved card in the user's gallery
+        try {
+          const cardRes = await fetch(`/api/user/cards?id=${templateParam}`);
+          if (cardRes.ok) {
+            const cardData = await cardRes.json();
+            if (cardData?.card) {
+              const c = cardData.card;
+              setCurrentCardId(c.id);
+              setDocTitle(c.templateName || "My Wedding Invitation");
+              let parsed: any = null;
+              try {
+                parsed = typeof c.cardDataJson === "string" ? JSON.parse(c.cardDataJson) : c.cardDataJson;
+              } catch {}
+              if (parsed?.cardLayers && Array.isArray(parsed.cardLayers) && parsed.cardLayers.length > 0) {
+                setCardLayers(parsed.cardLayers);
+                setActiveLayerId(parsed.cardLayers[0]?.id || "layer-1");
+                return;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn("Not a user card or error fetching user card:", err);
+        }
+
+        // 2. Otherwise check predefined canva templates
         const res = await fetch("/api/canva/templates");
         const data = await res.json();
         if (data.templates && Array.isArray(data.templates)) {
@@ -989,7 +928,7 @@ export default function CanvaUserStudio() {
       }
     }
     loadTemplate();
-  }, [templateParam]);
+  }, [templateParam, searchParams]);
 
   // BRAND NEW FEATURE: CREATE NEW INVITATION CARD HANDLER
   const handleCreateNewCard = () => {
@@ -1002,20 +941,21 @@ export default function CanvaUserStudio() {
 
     // Base Layer
     const starterElements: CanvasElement[] =
-      createStarterStyle === "sloka_names"
+      createStarterStyle === "classic_names"
         ? [
             {
-              id: `starter-sloka-${Date.now()}`,
+              id: `starter-headline-${Date.now()}`,
               type: "text",
-              text: "|| श्री गणेशाय नमः ||",
-              fontFamily: "'Rozha One', serif",
-              fontSize: 16,
+              text: "THE WEDDING CELEBRATION",
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
               color: "#991B1B",
               fontWeight: "bold",
+              letterSpacing: 4,
               textAlign: "center",
-              x: 20,
+              x: 15,
               y: 8,
-              width: 60,
+              width: 70,
               height: 6,
               rotation: 0,
               opacity: 1,
@@ -1266,7 +1206,10 @@ export default function CanvaUserStudio() {
   };
 
   // Element Actions (Add, Delete, Duplicate, Bring to Front, Send to Back)
-  const handleAddTextElement = (preset?: Partial<CanvasElement>) => {
+  const handleAddTextElement = (
+    preset?: Partial<CanvasElement>,
+    customPos?: { x: number; y: number; width?: number; height?: number }
+  ) => {
     const newId = `text-${Date.now()}`;
     const newEl: CanvasElement = {
       id: newId,
@@ -1280,10 +1223,10 @@ export default function CanvaUserStudio() {
       textAlign: preset?.textAlign || "center",
       letterSpacing: preset?.letterSpacing || 1,
       lineHeight: preset?.lineHeight || 1.4,
-      x: 15,
-      y: 40,
-      width: 70,
-      height: 10,
+      x: customPos?.x !== undefined ? customPos.x : 15,
+      y: customPos?.y !== undefined ? customPos.y : 40,
+      width: customPos?.width !== undefined ? customPos.width : 70,
+      height: customPos?.height !== undefined ? customPos.height : 10,
       rotation: 0,
       opacity: 1,
       zIndex: activeLayer.elements.length + 1,
@@ -1510,6 +1453,7 @@ export default function CanvaUserStudio() {
     data:
       | { type: "image"; src: string; defaultWidth?: number; defaultHeight?: number }
       | { type: "shape"; shape: typeof PRESET_SHAPES[0] }
+      | { type: "text"; preset: Partial<CanvasElement> }
   ) => {
     e.dataTransfer.setData("application/json", JSON.stringify(data));
     e.dataTransfer.effectAllowed = "copy";
@@ -1554,6 +1498,15 @@ export default function CanvaUserStudio() {
       const y = Math.max(0, Math.min(100 - elH, Math.round(dropYPct - elH / 2)));
       handleAddShapeElement(shape, { x, y });
       setStatusToast("✨ Shape placed at drop position");
+      setTimeout(() => setStatusToast(""), 2000);
+    } else if (data.type === "text" && data.preset) {
+      const preset = data.preset;
+      const elW = preset.fontSize && preset.fontSize > 30 ? 80 : 70;
+      const elH = preset.fontSize && preset.fontSize > 30 ? 14 : 9;
+      const x = Math.max(0, Math.min(100 - elW, Math.round(dropXPct - elW / 2)));
+      const y = Math.max(0, Math.min(100 - elH, Math.round(dropYPct - elH / 2)));
+      handleAddTextElement(preset, { x, y, width: elW, height: elH });
+      setStatusToast("✨ Text preset placed at drop position");
       setTimeout(() => setStatusToast(""), 2000);
     }
   };
@@ -1730,23 +1683,72 @@ export default function CanvaUserStudio() {
       };
       localStorage.setItem("canva_user_card_draft", JSON.stringify(cardPayload));
 
+      // Extract couple names, date, venue from card layers if available
+      let partnerOne = "Sophia";
+      let partnerTwo = "Alexander";
+      let weddingDate = "October 30, 2026";
+      let venue = "Elamba Mudakkal Palace";
+
+      const baseLayer = cardLayers.find((l) => l.isBase) || cardLayers[0];
+      if (baseLayer) {
+        const textElements = baseLayer.elements.filter((el) => el.type === "text" && el.text);
+        for (const el of textElements) {
+          const t = el.text || "";
+          if (t.includes("&") && t.length < 50 && !t.includes("CEREMONY") && !t.includes("PROGRAM")) {
+            const parts = t.split("&");
+            if (parts.length === 2) {
+              partnerOne = parts[0].trim();
+              partnerTwo = parts[1].trim();
+            }
+          } else if (
+            (t.includes("2025") || t.includes("2026") || t.includes("2027") || t.includes("2028")) &&
+            t.length < 60
+          ) {
+            weddingDate = t.replace(/\n/g, " ").trim();
+          } else if (
+            (t.toLowerCase().includes("palace") ||
+              t.toLowerCase().includes("resort") ||
+              t.toLowerCase().includes("hall") ||
+              t.toLowerCase().includes("hotel") ||
+              t.toLowerCase().includes("mandapam")) &&
+            t.length < 70
+          ) {
+            venue = t.split("\n")[0].trim();
+          }
+        }
+      }
+
       if (session?.user) {
-        await fetch("/api/user/cards/save", {
+        const res = await fetch("/api/user/cards/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            cardId: currentCardId || undefined,
             templateId: 1,
             templateName: docTitle,
-            partnerOne: "Sophia",
-            partnerTwo: "Alexander",
-            weddingDate: "October 30, 2026",
+            partnerOne,
+            partnerTwo,
+            weddingDate,
+            venue,
             cardDataJson: JSON.stringify(cardPayload),
           }),
         });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.card?.id) {
+            setCurrentCardId(data.card.id);
+            if (typeof window !== "undefined") {
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.set("id", data.card.id);
+              window.history.replaceState({}, "", newUrl.toString());
+            }
+          }
+        }
       }
 
       setHasUnsavedChanges(false);
-      setStatusToast("✨ Invitation card saved successfully!");
+      setStatusToast("✨ Saved to your dashboard gallery!");
       setTimeout(() => setStatusToast(""), 3500);
     } catch (e) {
       console.error("Save card error:", e);
@@ -2350,40 +2352,136 @@ export default function CanvaUserStudio() {
                 </div>
 
                 {/* Pre-Curated Wedding Typography Presets */}
-                <div className="space-y-4 pt-2 border-t border-slate-100">
-                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                    Wedding Typography Presets & Slokas
-                  </label>
-                  {WEDDING_TEXT_PRESETS.map((cat) => (
-                    <div key={cat.category} className="space-y-2">
-                      <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider">
-                        {cat.category}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                        Royal & Wedding Typography
+                      </label>
+                      <span className="text-[10px] text-slate-500">
+                        {totalFilteredPresetsCount} curated presets • Click or drag to canvas
                       </span>
-                      <div className="space-y-1.5">
-                        {cat.items.map((item) => (
-                          <button
-                            key={item.label}
-                            type="button"
-                            onClick={() => handleAddTextElement(item)}
-                            className="w-full p-2.5 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-xl text-left transition-all cursor-pointer group"
-                          >
-                            <span className="text-[10px] font-bold text-slate-500 block mb-1 group-hover:text-[#991B1B]">
-                              {item.label}
-                            </span>
-                            <div
-                              style={{
-                                fontFamily: item.fontFamily,
-                                color: item.color,
-                              }}
-                              className="text-xs truncate"
-                            >
-                              {item.text.split("\n")[0]}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
                     </div>
-                  ))}
+                    <span className="text-[10px] font-extrabold text-[#991B1B] bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                      200+ Designs
+                    </span>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={textSearchQuery}
+                      onChange={(e) => setTextSearchQuery(e.target.value)}
+                      placeholder="Search names, ceremonies, vows, venues..."
+                      className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
+                    />
+                    {textSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setTextSearchQuery("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Filter Pills (Horizontal Scroll) */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 -mx-1 px-1 custom-scrollbar scrollbar-none">
+                    {allTextCategories.map((catName) => (
+                      <button
+                        key={catName}
+                        type="button"
+                        onClick={() => setSelectedTextCategory(catName)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                          selectedTextCategory === catName
+                            ? "bg-[#991B1B] text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                        }`}
+                      >
+                        {catName}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Presets List */}
+                  {filteredTextPresets.length === 0 ? (
+                    <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                      <p className="text-xs text-slate-600 font-medium">
+                        No presets found for &ldquo;{textSearchQuery}&rdquo;
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTextSearchQuery("");
+                          setSelectedTextCategory("All");
+                        }}
+                        className="text-[11px] font-bold text-[#991B1B] hover:underline cursor-pointer"
+                      >
+                        Reset filters & view all presets
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 custom-scrollbar">
+                      {filteredTextPresets.map((cat) => (
+                        <div key={cat.category} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider">
+                              {cat.category}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-semibold">
+                              {cat.items.length} options
+                            </span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {cat.items.map((item) => (
+                              <div
+                                key={item.label}
+                                draggable
+                                onDragStart={(e) =>
+                                  handleDragStartAsset(e, {
+                                    type: "text",
+                                    preset: item,
+                                  })
+                                }
+                                onClick={() => handleAddTextElement(item)}
+                                className="w-full p-2.5 bg-slate-50 hover:bg-red-50/60 hover:border-[#991B1B] border border-slate-200 rounded-xl text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-sm"
+                                title="Click or drag onto canvas"
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-[10px] font-bold text-slate-500 group-hover:text-[#991B1B] transition-colors">
+                                    {item.label}
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono">
+                                    Drag / Click ↗
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    fontFamily: item.fontFamily,
+                                    color: item.color,
+                                    letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
+                                    fontWeight: item.fontWeight as any,
+                                    fontStyle: item.fontStyle,
+                                  }}
+                                  className="text-xs leading-snug truncate"
+                                >
+                                  {item.text.split("\n")[0]}
+                                </div>
+                                {item.text.includes("\n") && (
+                                  <span className="text-[9px] text-slate-400 block mt-0.5 truncate">
+                                    {item.text.split("\n").slice(1).join(" ")}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -3921,7 +4019,7 @@ export default function CanvaUserStudio() {
 
             {/* Sheet Scrollable Content Body */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar text-xs">
-              {/* ── SHEET: ADD ELEMENTS (TEXT, SLOKAS, MOTIFS, SHAPES) ── */}
+              {/* ── SHEET: ADD ELEMENTS (TEXT, PRESETS, MOTIFS, SHAPES) ── */}
               {mobileSheet === "ADD" && (
                 <div className="space-y-4">
                   {/* Category Chips */}
@@ -3933,16 +4031,16 @@ export default function CanvaUserStudio() {
                         mobileAddTab === "text" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
                       }`}
                     >
-                      Text
+                      Basic Text
                     </button>
                     <button
                       type="button"
-                      onClick={() => setMobileAddTab("slokas")}
+                      onClick={() => setMobileAddTab("presets")}
                       className={`py-1.5 rounded-lg transition-all cursor-pointer ${
-                        mobileAddTab === "slokas" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                        mobileAddTab === "presets" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
                       }`}
                     >
-                      Slokas
+                      Presets (200+)
                     </button>
                     <button
                       type="button"
@@ -4003,18 +4101,18 @@ export default function CanvaUserStudio() {
                         </button>
                       </div>
 
-                      {/* Wedding Lines */}
+                      {/* Quick Wedding Lines */}
                       <div className="space-y-1.5 pt-2 border-t border-slate-100">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                          Curated Invitation Lines
+                          Quick Invitation Lines
                         </label>
                         {[
                           { label: "Couple Names", text: "Sophia & Alexander", font: "'Great Vibes', cursive", size: 36 },
-                          { label: "Formal Header", text: "TOGETHER WITH THEIR PARENTS\nINVITE YOU TO CELEBRATE THE WEDDING OF", font: "'Cinzel', serif", size: 10 },
+                          { label: "Formal Header", text: "TOGETHER WITH THEIR FAMILIES\nINVITE YOU TO CELEBRATE THE WEDDING OF", font: "'Cinzel', serif", size: 10 },
                           { label: "Save Our Date", text: "SAVE OUR DATE", font: "'Cinzel', serif", size: 16 },
                           { label: "Ceremony & Reception", text: "WEDDING CEREMONY & RECEPTION", font: "'Montserrat', sans-serif", size: 12 },
                           { label: "Event Date & Time", text: "SATURDAY | OCTOBER 30, 2026 | 6:30 PM", font: "'Montserrat', sans-serif", size: 11 },
-                          { label: "Palace Venue", text: "THE LEELA PALACE, UDAIPUR\nRAJASTHAN, INDIA", font: "'Cormorant Garamond', serif", size: 12 },
+                          { label: "Palace Venue", text: "ELAMBA MUDAKKAL PALACE\nKERALA, INDIA", font: "'Cormorant Garamond', serif", size: 12 },
                         ].map((item) => (
                           <button
                             key={item.label}
@@ -4039,36 +4137,99 @@ export default function CanvaUserStudio() {
                     </div>
                   )}
 
-                  {/* Add Tab 2: Slokas & Presets */}
-                  {mobileAddTab === "slokas" && (
-                    <div className="space-y-4">
-                      {WEDDING_TEXT_PRESETS.map((cat) => (
-                        <div key={cat.category} className="space-y-1.5">
-                          <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
-                            {cat.category}
-                          </span>
-                          {cat.items.map((item) => (
-                            <div
-                              key={item.label}
-                              onClick={() => {
-                                handleAddTextElement(item);
-                                setMobileSheet(null);
-                              }}
-                              className="p-2.5 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left"
-                            >
-                              <span className="text-[10px] font-bold text-[#991B1B] block mb-0.5">
-                                {item.label}
+                  {/* Add Tab 2: 200+ Categorized Wedding Typography Presets */}
+                  {mobileAddTab === "presets" && (
+                    <div className="space-y-3">
+                      {/* Search */}
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={textSearchQuery}
+                          onChange={(e) => setTextSearchQuery(e.target.value)}
+                          placeholder="Search 200+ presets..."
+                          className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white"
+                        />
+                        {textSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setTextSearchQuery("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Horizontal Category Filters */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 custom-scrollbar scrollbar-none">
+                        {allTextCategories.map((catName) => (
+                          <button
+                            key={catName}
+                            type="button"
+                            onClick={() => setSelectedTextCategory(catName)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                              selectedTextCategory === catName
+                                ? "bg-[#991B1B] text-white shadow-xs"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            }`}
+                          >
+                            {catName}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Presets List */}
+                      {filteredTextPresets.length === 0 ? (
+                        <div className="p-4 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-1.5">
+                          <p className="text-xs text-slate-600">No presets found</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTextSearchQuery("");
+                              setSelectedTextCategory("All");
+                            }}
+                            className="text-[11px] font-bold text-[#991B1B]"
+                          >
+                            Reset filters
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                          {filteredTextPresets.map((cat) => (
+                            <div key={cat.category} className="space-y-1.5">
+                              <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
+                                {cat.category} ({cat.items.length})
                               </span>
-                              <p
-                                style={{ fontFamily: item.fontFamily }}
-                                className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"
-                              >
-                                {item.text}
-                              </p>
+                              {cat.items.map((item) => (
+                                <div
+                                  key={item.label}
+                                  onClick={() => {
+                                    handleAddTextElement(item);
+                                    setMobileSheet(null);
+                                  }}
+                                  className="p-2.5 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left bg-white active:scale-98"
+                                >
+                                  <span className="text-[10px] font-bold text-[#991B1B] block mb-0.5">
+                                    {item.label}
+                                  </span>
+                                  <p
+                                    style={{
+                                      fontFamily: item.fontFamily,
+                                      color: item.color,
+                                      fontWeight: item.fontWeight as any,
+                                      fontStyle: item.fontStyle,
+                                    }}
+                                    className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"
+                                  >
+                                    {item.text}
+                                  </p>
+                                </div>
+                              ))}
                             </div>
                           ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
 
@@ -5116,15 +5277,15 @@ export default function CanvaUserStudio() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setCreateStarterStyle("sloka_names")}
+                  onClick={() => setCreateStarterStyle("classic_names")}
                   className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                    createStarterStyle === "sloka_names"
+                    createStarterStyle === "classic_names"
                       ? "bg-red-50/70 border-[#991B1B] ring-1 ring-[#991B1B]/20"
                       : "border-slate-200"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-slate-900">✨ Traditional Wedding Starter</span>
-                  <span className="text-[10px] text-slate-500">Includes Auspicious Sloka, couple names, and floral motifs</span>
+                  <span className="text-xs font-bold block text-slate-900">✨ Royal Wedding Starter</span>
+                  <span className="text-[10px] text-slate-500">Includes royal couple headline, floral motifs, date & palace venue</span>
                 </button>
                 <button
                   type="button"
