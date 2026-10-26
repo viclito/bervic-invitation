@@ -370,7 +370,7 @@ export default function CanvaUserStudio() {
 
   // Template / Card Metadata & Gallery State
   const [currentCardId, setCurrentCardId] = useState<string | null>(searchParams.get("id") || null);
-  const [docTitle, setDocTitle] = useState("Sophia & Alexander's Wedding");
+  const [docTitle, setDocTitle] = useState("My Wedding Invitation");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusToast, setStatusToast] = useState("");
@@ -379,7 +379,6 @@ export default function CanvaUserStudio() {
   const [userSavedCards, setUserSavedCards] = useState<any[]>([]);
   const [isLoadingSavedCards, setIsLoadingSavedCards] = useState(true);
   const [showGalleryView, setShowGalleryView] = useState(false);
-  const hasLoadedInitialStateRef = useRef(false);
 
   // Text Presets Search & Filter State (200+ Presets)
   const [textSearchQuery, setTextSearchQuery] = useState("");
@@ -391,10 +390,10 @@ export default function CanvaUserStudio() {
   const [createRatio, setCreateRatio] = useState("classic");
   const [createDeckLayers, setCreateDeckLayers] = useState<number>(1);
   const [createTheme, setCreateTheme] = useState<{ bgMode: "solid" | "gradient" | "image" | "textures"; val: string }>({
-    bgMode: "textures",
-    val: "/images/canva/backgrounds/texture-01.webp",
+    bgMode: "solid",
+    val: "#FFFFFF",
   });
-  const [createStarterStyle, setCreateStarterStyle] = useState<"blank" | "classic_names">("classic_names");
+  const [createStarterStyle, setCreateStarterStyle] = useState<"blank" | "classic_names">("blank");
 
   // Multi-Layer Card Deck State
   const [cardLayers, setCardLayers] = useState<CardDeckLayer[]>([
@@ -407,136 +406,10 @@ export default function CanvaUserStudio() {
       customWidth: 480,
       customHeight: 672,
       lockRatio: true,
-      backgroundColor: "#F3EAD8",
-      backgroundImage: "/images/canva/backgrounds/texture-01.webp",
-      bgMode: "textures",
-      elements: [
-        {
-          id: "starter-headline",
-          type: "text",
-          text: "THE WEDDING CELEBRATION",
-          fontFamily: "'Cinzel', serif",
-          fontSize: 12,
-          color: "#991B1B",
-          fontWeight: "bold",
-          letterSpacing: 4,
-          textAlign: "center",
-          x: 15,
-          y: 7,
-          width: 70,
-          height: 6,
-          rotation: 0,
-          opacity: 1,
-          zIndex: 1,
-        },
-        {
-          id: "starter-motif-top",
-          type: "image",
-          src: "/images/canva/floral-header.webp",
-          x: 22,
-          y: 13,
-          width: 56,
-          height: 12,
-          rotation: 0,
-          opacity: 0.95,
-          zIndex: 2,
-        },
-        {
-          id: "starter-tagline",
-          type: "text",
-          text: "TOGETHER WITH THEIR FAMILIES\nINVITE YOU TO CELEBRATE THE WEDDING OF",
-          fontFamily: "'Cinzel', serif",
-          fontSize: 10,
-          color: "#78350F",
-          letterSpacing: 2.5,
-          lineHeight: 1.6,
-          textAlign: "center",
-          x: 10,
-          y: 26,
-          width: 80,
-          height: 8,
-          rotation: 0,
-          opacity: 0.9,
-          zIndex: 3,
-        },
-        {
-          id: "starter-names",
-          type: "text",
-          text: "Sophia & Alexander",
-          fontFamily: "'Great Vibes', cursive",
-          fontSize: 40,
-          color: "#1E293B",
-          fontWeight: "bold",
-          textAlign: "center",
-          x: 10,
-          y: 35,
-          width: 80,
-          height: 14,
-          rotation: 0,
-          opacity: 1,
-          zIndex: 4,
-        },
-        {
-          id: "starter-divider",
-          type: "image",
-          src: "/images/canva/leaf-divider.webp",
-          x: 30,
-          y: 49,
-          width: 40,
-          height: 5,
-          rotation: 0,
-          opacity: 0.85,
-          zIndex: 5,
-        },
-        {
-          id: "starter-date",
-          type: "text",
-          text: "SATURDAY | OCTOBER 30, 2026 | 6:30 PM",
-          fontFamily: "'Montserrat', sans-serif",
-          fontSize: 11,
-          color: "#991B1B",
-          letterSpacing: 2,
-          fontWeight: "bold",
-          textAlign: "center",
-          x: 10,
-          y: 56,
-          width: 80,
-          height: 6,
-          rotation: 0,
-          opacity: 1,
-          zIndex: 6,
-        },
-        {
-          id: "starter-venue",
-          type: "text",
-          text: "ELAMBA MUDAKKAL PALACE\nMG Road, Kerala, India",
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 15,
-          color: "#2C1810",
-          letterSpacing: 1.5,
-          lineHeight: 1.5,
-          textAlign: "center",
-          x: 10,
-          y: 64,
-          width: 80,
-          height: 10,
-          rotation: 0,
-          opacity: 0.95,
-          zIndex: 7,
-        },
-        {
-          id: "starter-footer-motif",
-          type: "image",
-          src: "/images/canva/floral-footer.webp",
-          x: 24,
-          y: 77,
-          width: 52,
-          height: 14,
-          rotation: 0,
-          opacity: 0.9,
-          zIndex: 8,
-        },
-      ],
+      backgroundColor: "#FFFFFF",
+      backgroundImage: null,
+      bgMode: "solid",
+      elements: [],
     },
   ]);
   const [activeLayerId, setActiveLayerId] = useState<string>("layer-1");
@@ -990,14 +863,11 @@ export default function CanvaUserStudio() {
 
   // Preload saved user card or template if specified in query param, or check saved cards
   useEffect(() => {
-    let isCancelled = false;
+    let active = true;
 
     if (searchParams.get("order") === "true") {
       setShowOrderModal(true);
     }
-
-    if (hasLoadedInitialStateRef.current) return;
-    hasLoadedInitialStateRef.current = true;
 
     async function checkCardsAndInit() {
       setIsLoadingSavedCards(true);
@@ -1031,9 +901,8 @@ export default function CanvaUserStudio() {
           } catch {}
         }
 
-        if (isCancelled) return;
+        if (!active) return;
         setUserSavedCards(cards);
-        setIsLoadingSavedCards(false);
 
         // 3. Direct template / card param in URL: load that card directly
         if (templateParam) {
@@ -1078,7 +947,7 @@ export default function CanvaUserStudio() {
                       customWidth: 480,
                       customHeight: 672,
                       lockRatio: true,
-                      backgroundColor: found.backgroundColor || "#F3EAD8",
+                      backgroundColor: found.backgroundColor || "#FFFFFF",
                       backgroundImage: found.backgroundImage || null,
                       bgMode: found.backgroundImage ? "image" : "textures",
                       elements: found.elements,
@@ -1101,14 +970,16 @@ export default function CanvaUserStudio() {
           // User HAS created and saved card(s):
           // While opening the page, display the list of cards they designed & saved!
           setShowGalleryView(true);
+          setShowCreateModal(false);
         }
       } catch (err) {
         console.warn("Failed to check saved cards:", err);
-        if (!isCancelled) {
+        if (active && !templateParam) {
+          setShowCreateModal(true);
+        }
+      } finally {
+        if (active) {
           setIsLoadingSavedCards(false);
-          if (!templateParam) {
-            setShowCreateModal(true);
-          }
         }
       }
     }
@@ -1116,7 +987,7 @@ export default function CanvaUserStudio() {
     checkCardsAndInit();
 
     return () => {
-      isCancelled = true;
+      active = false;
     };
   }, [templateParam, searchParams, handleOpenSavedCard]);
 
@@ -1246,26 +1117,29 @@ export default function CanvaUserStudio() {
         backgroundColor: "#FFFFFF",
         backgroundImage: null,
         bgMode: "solid",
-        elements: [
-          {
-            id: `insert-title-${Date.now()}`,
-            type: "text",
-            text: "WEDDING ITINERARY & PROGRAM",
-            fontFamily: "'Cinzel', serif",
-            fontSize: 14,
-            color: "#991B1B",
-            letterSpacing: 3,
-            fontWeight: "bold",
-            textAlign: "center",
-            x: 10,
-            y: 12,
-            width: 80,
-            height: 8,
-            rotation: 0,
-            opacity: 1,
-            zIndex: 1,
-          },
-        ],
+        elements:
+          createStarterStyle === "classic_names"
+            ? [
+                {
+                  id: `insert-title-${Date.now()}`,
+                  type: "text",
+                  text: "WEDDING ITINERARY & PROGRAM",
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 14,
+                  color: "#991B1B",
+                  letterSpacing: 3,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  x: 10,
+                  y: 12,
+                  width: 80,
+                  height: 8,
+                  rotation: 0,
+                  opacity: 1,
+                  zIndex: 1,
+                },
+              ]
+            : [],
       });
     }
 
@@ -1282,26 +1156,29 @@ export default function CanvaUserStudio() {
         backgroundColor: "#FAF6EE",
         backgroundImage: null,
         bgMode: "solid",
-        elements: [
-          {
-            id: `rsvp-title-${Date.now()}`,
-            type: "text",
-            text: "KINDLY RSVP",
-            fontFamily: "'Cinzel', serif",
-            fontSize: 14,
-            color: "#991B1B",
-            letterSpacing: 3,
-            fontWeight: "bold",
-            textAlign: "center",
-            x: 10,
-            y: 14,
-            width: 80,
-            height: 8,
-            rotation: 0,
-            opacity: 1,
-            zIndex: 1,
-          },
-        ],
+        elements:
+          createStarterStyle === "classic_names"
+            ? [
+                {
+                  id: `rsvp-title-${Date.now()}`,
+                  type: "text",
+                  text: "KINDLY RSVP",
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 14,
+                  color: "#991B1B",
+                  letterSpacing: 3,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  x: 10,
+                  y: 14,
+                  width: 80,
+                  height: 8,
+                  rotation: 0,
+                  opacity: 1,
+                  zIndex: 1,
+                },
+              ]
+            : [],
       });
     }
 
@@ -1929,8 +1806,33 @@ export default function CanvaUserStudio() {
         }
       }
 
-      // 2. Escape: Deselect current element
+      // 2. Escape: Close modals or deselect elements
       if (e.key === "Escape") {
+        if (showGalleryView) {
+          e.preventDefault();
+          setShowGalleryView(false);
+          return;
+        }
+        if (showCreateModal) {
+          e.preventDefault();
+          setShowCreateModal(false);
+          return;
+        }
+        if (showStackModal) {
+          e.preventDefault();
+          setShowStackModal(false);
+          return;
+        }
+        if (showPreviewModal) {
+          e.preventDefault();
+          setShowPreviewModal(false);
+          return;
+        }
+        if (showPricingModal) {
+          e.preventDefault();
+          setShowPricingModal(false);
+          return;
+        }
         if (selectedElementId || (selectedIds && selectedIds.length > 0)) {
           e.preventDefault();
           setSelectedElementId(null);
@@ -5928,8 +5830,14 @@ export default function CanvaUserStudio() {
 
       {/* ── 🌟 MODAL: BRAND NEW "CREATE NEW INVITATION CARD" FEATURE 🌟 ── */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div
+          onClick={() => setShowCreateModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar"
+          >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
@@ -5944,7 +5852,7 @@ export default function CanvaUserStudio() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -5957,7 +5865,7 @@ export default function CanvaUserStudio() {
                 type="text"
                 value={createCardTitle}
                 onChange={(e) => setCreateCardTitle(e.target.value)}
-                placeholder="e.g. Sophia & Alexander's Royal Wedding"
+                placeholder="e.g. Wedding Invitation Card"
                 className="w-full p-3 rounded-xl border border-slate-200 focus:border-[#991B1B] text-xs font-bold text-slate-900 outline-none"
               />
             </div>
@@ -6025,16 +5933,16 @@ export default function CanvaUserStudio() {
               </div>
             </div>
 
-            {/* Step 4: Starting Paper Texture */}
+            {/* Step 4: Starting Paper Texture (Pure White FIRST) */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-800 block">Starting Paper Texture / Theme</label>
               <div className="grid grid-cols-4 gap-2">
                 {[
+                  { name: "Pure White", bgMode: "solid" as const, val: "#FFFFFF" },
+                  { name: "Silk Cream", bgMode: "solid" as const, val: "#F3EAD8" },
                   { name: "Handmade Ivory", bgMode: "textures" as const, val: "/images/canva/backgrounds/texture-01.webp" },
                   { name: "Gold Foil Fleck", bgMode: "textures" as const, val: "/images/canva/backgrounds/texture-03.webp" },
                   { name: "Vintage Parchment", bgMode: "textures" as const, val: "/images/canva/backgrounds/texture-07.webp" },
-                  { name: "Silk Cream", bgMode: "solid" as const, val: "#F3EAD8" },
-                  { name: "Pure White", bgMode: "solid" as const, val: "#FFFFFF" },
                   { name: "Royal Maroon", bgMode: "solid" as const, val: "#4A0E17" },
                   { name: "Midnight Navy", bgMode: "solid" as const, val: "#0B192C" },
                   { name: "Vintage Linen", bgMode: "textures" as const, val: "/images/canva/backgrounds/texture-05.webp" },
@@ -6054,7 +5962,7 @@ export default function CanvaUserStudio() {
                       {theme.bgMode === "textures" ? (
                         <img src={theme.val} alt={theme.name} className="w-8 h-8 rounded-lg object-cover border" />
                       ) : (
-                        <div style={{ backgroundColor: theme.val }} className="w-8 h-8 rounded-lg border" />
+                        <div style={{ backgroundColor: theme.val }} className="w-8 h-8 rounded-lg border border-slate-200" />
                       )}
                       <span className="text-[10px] font-bold text-slate-800 truncate max-w-full">{theme.name}</span>
                     </button>
@@ -6063,33 +5971,33 @@ export default function CanvaUserStudio() {
               </div>
             </div>
 
-            {/* Step 5: Starter Content Style */}
+            {/* Step 5: Starter Content Style (Blank Canvas FIRST) */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-800 block">Starter Template Style</label>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCreateStarterStyle("classic_names")}
-                  className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                    createStarterStyle === "classic_names"
-                      ? "bg-red-50/70 border-[#991B1B] ring-1 ring-[#991B1B]/20"
-                      : "border-slate-200"
-                  }`}
-                >
-                  <span className="text-xs font-bold block text-slate-900">✨ Royal Wedding Starter</span>
-                  <span className="text-[10px] text-slate-500">Includes royal couple headline, floral motifs, date & palace venue</span>
-                </button>
                 <button
                   type="button"
                   onClick={() => setCreateStarterStyle("blank")}
                   className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
                     createStarterStyle === "blank"
                       ? "bg-red-50/70 border-[#991B1B] ring-1 ring-[#991B1B]/20"
-                      : "border-slate-200"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
                   <span className="text-xs font-bold block text-slate-900">📄 Blank Canvas</span>
                   <span className="text-[10px] text-slate-500">Start completely clean from scratch</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateStarterStyle("classic_names")}
+                  className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                    createStarterStyle === "classic_names"
+                      ? "bg-red-50/70 border-[#991B1B] ring-1 ring-[#991B1B]/20"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-xs font-bold block text-slate-900">✨ Royal Wedding Starter</span>
+                  <span className="text-[10px] text-slate-500">Includes royal couple headline, floral motifs, date & palace venue</span>
                 </button>
               </div>
             </div>
@@ -6134,8 +6042,14 @@ export default function CanvaUserStudio() {
 
       {/* ── 🌟 MODAL: SAVED CARDS & PROJECTS GALLERY VIEW 🌟 ── */}
       {showGalleryView && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden">
+        <div
+          onClick={() => setShowGalleryView(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-5xl w-full p-5 sm:p-7 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden"
+          >
             {/* Gallery Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3 shrink-0">
               <div>
@@ -6177,6 +6091,15 @@ export default function CanvaUserStudio() {
                   <span>Resume Studio</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowGalleryView(false)}
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer ml-1"
+                  title="Close Gallery"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -6186,6 +6109,27 @@ export default function CanvaUserStudio() {
                 <div className="h-64 flex flex-col items-center justify-center gap-3 text-slate-400">
                   <RefreshCw className="w-6 h-6 animate-spin text-[#991B1B]" />
                   <span className="text-xs font-semibold">Loading your saved invitations...</span>
+                </div>
+              ) : userSavedCards.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <div className="w-16 h-16 rounded-3xl bg-red-50 border border-red-200 flex items-center justify-center text-[#991B1B] shadow-sm mb-4">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-900">No Saved Invitations Yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mt-1 mb-5 leading-relaxed">
+                    You haven’t designed or saved any wedding cards yet. Click below to create your first card from scratch with custom dimensions, paper textures, and layers.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowGalleryView(false);
+                      setShowCreateModal(true);
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Your First Card</span>
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -6339,8 +6283,14 @@ export default function CanvaUserStudio() {
 
       {/* ── MODAL: PRICING TIERS ── */}
       {showPricingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+        <div
+          onClick={() => setShowPricingModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200 cursor-default"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                 <IndianRupee className="w-5 h-5 text-[#991B1B]" />
@@ -6389,8 +6339,14 @@ export default function CanvaUserStudio() {
 
       {/* ── MODAL: MULTI-DECK PHYSICAL STACK VISUALIZER ── */}
       {showStackModal && (
-        <div className="fixed inset-0 z-[105] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
+        <div
+          onClick={() => setShowStackModal(false)}
+          className="fixed inset-0 z-[105] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 cursor-default"
+          >
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0">
               <div className="flex items-center gap-2.5">
@@ -6617,8 +6573,14 @@ export default function CanvaUserStudio() {
 
       {/* ── MODAL: PREVIEW CARD ── */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+        <div
+          onClick={() => setShowPreviewModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 cursor-default"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-black text-slate-900">{docTitle}</h3>
