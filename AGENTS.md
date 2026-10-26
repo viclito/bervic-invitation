@@ -25,3 +25,8 @@ Before executing any user command, chat instruction, or modifying codebase files
 8. **Permanent Deletion & No Auto-Generation / Re-Seeding (Zero Category or Record Resurrection - Mandatory Check in EVERY Chat):**
    - NEVER auto-generate, re-seed, or re-insert default records (such as `ShopCategory`, `ShopDimension`, `ShopProduct`, or templates) in database initialization or auto-migration files (`ensureDbSchema.ts`).
    - When an administrator or user deletes a record (e.g., categories, templates, dimensions), that entity MUST stay deleted permanently. NEVER use `INSERT ... ON CONFLICT DO NOTHING` or hardcoded fallback arrays that resurrect deleted records upon server requests or page reloads.
+9. **Mandatory Mobile-First Responsive & Apt Touch UI Verification (In EVERY Single Chat):**
+   - In EVERY single chat and task across all web pages and mobile views, actively audit and enforce mobile responsiveness and ergonomic touch UX.
+   - Fixed and floating controls (such as zoom pills, bottom action docks, and contextual toolbars) must remain firmly pinned / fixed to the viewport and NEVER scroll away horizontally or clip out of bounds when inner canvases or containers scroll.
+   - Minimize bulky panels and multi-row bars on mobile viewports into sleek floating glassmorphic pills, collapsible switchers, or sliding bottom sheets so that mobile editing receives maximal screen real estate.
+   - Global floating overlay buttons (such as customer support / WhatsApp bubbles) must never obscure or overlap bottom editing docks or touch navigation.

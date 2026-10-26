@@ -8,7 +8,7 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bervic.in";
 export const metadata: Metadata = {
   title: "Invitation Cards - Buy Wedding & Event Invitations Online | Bervic Shop",
   description:
-    "Buy premium wedding invitation cards, traditional marriage invites, birthday cards, house warming & celebration cards online at Bervic. Explore luxury gold foil designs, custom textured cardstock, and door-step delivery starting at ₹10 across India.",
+    "Buy premium wedding invitation cards, traditional marriage invites, birthday cards, house warming & celebration cards online at Bervic. Explore luxury gold foil designs, custom textured cardstock, and door-step delivery starting at ₹4 across India.",
   keywords: [
     "invitation",
     "invitations",

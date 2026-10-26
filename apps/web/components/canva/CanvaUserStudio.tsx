@@ -15,6 +15,8 @@ import {
   Save,
   Trash2,
   Eye,
+  EyeOff,
+  Ruler,
   CheckCircle2,
   AlertCircle,
   Plus,
@@ -38,6 +40,7 @@ import {
   FlipVertical,
   Settings,
   Crosshair,
+  Bold,
   Italic,
   Underline,
   Palette,
@@ -93,6 +96,7 @@ export interface CanvasElement {
   flipH?: boolean;
   flipV?: boolean;
   isLocked?: boolean;
+  isHidden?: boolean;
 }
 
 export interface CardDeckLayer {
@@ -108,6 +112,14 @@ export interface CardDeckLayer {
   backgroundImage: string | null;
   bgMode: "solid" | "gradient" | "image" | "textures";
   elements: CanvasElement[];
+}
+
+export interface UserUploadedAsset {
+  id: string;
+  url: string;
+  name?: string;
+  createdAt?: string;
+  isGuest?: boolean;
 }
 
 export const ASPECT_RATIOS = [
@@ -231,6 +243,42 @@ export function getLayerDimensions(
     width: targetW,
     height: targetH,
     ratioStr: layerRatioObj ? layerRatioObj.ratioStr : "Custom",
+  };
+}
+
+export function getPhysicalDimensions(
+  layer: CardDeckLayer,
+  baseLayer?: CardDeckLayer
+): {
+  pixelW: number;
+  pixelH: number;
+  widthInches: string;
+  heightInches: string;
+  widthMm: string;
+  heightMm: string;
+  pct: number;
+  ratioStr: string;
+} {
+  const basePg = baseLayer || layer;
+  const lDim = getLayerDimensions(layer, basePg);
+  const bDim = getLayerDimensions(basePg, basePg);
+  const pct = layer.isBase ? 100 : layer.heightPercent || 85;
+
+  // Reference standard 5" x 7" base card
+  const widthInches = ((lDim.width / bDim.width) * 5.0).toFixed(2);
+  const heightInches = ((lDim.height / bDim.height) * 7.0).toFixed(2);
+  const widthMm = Math.round((lDim.width / bDim.width) * 127);
+  const heightMm = Math.round((lDim.height / bDim.height) * 178);
+
+  return {
+    pixelW: lDim.width,
+    pixelH: lDim.height,
+    widthInches: `${widthInches}"`,
+    heightInches: `${heightInches}"`,
+    widthMm: `${widthMm} mm`,
+    heightMm: `${heightMm} mm`,
+    pct,
+    ratioStr: lDim.ratioStr,
   };
 }
 
@@ -606,12 +654,34 @@ export default function CanvaUserStudio() {
   const [testMode, setTestMode] = useState(false);
   const [zoom, setZoom] = useState<number>(0.9);
   const [scaleContentWithSize, setScaleContentWithSize] = useState<boolean>(true);
+  const [stackAlign, setStackAlign] = useState<"bottom" | "top" | "center">("bottom");
 
-  // Mobile Drawers
+  // Mobile App Native UI State
+  type MobileSheetType =
+    | null
+    | "ADD"
+    | "TEXT"
+    | "ASSETS"
+    | "SETTINGS"
+    | "LAYERS"
+    | "TEMPLATES"
+    | "INSPECTOR_TEXT"
+    | "INSPECTOR_FONT"
+    | "INSPECTOR_SIZE"
+    | "INSPECTOR_COLOR"
+    | "INSPECTOR_STYLE"
+    | "INSPECTOR_OPACITY";
+
+  const [mobileSheet, setMobileSheet] = useState<MobileSheetType>(null);
+  const [mobileAddTab, setMobileAddTab] = useState<"text" | "slokas" | "assets" | "shapes">("text");
+  const [mobileSettingsTab, setMobileSettingsTab] = useState<"bg" | "format">("bg");
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
   const [mobileRightOpen, setMobileRightOpen] = useState(false);
+  const [isDeckBarMinimized, setIsDeckBarMinimized] = useState(false);
 
   // Modals
+  const [showStackModal, setShowStackModal] = useState<boolean>(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -621,7 +691,10 @@ export default function CanvaUserStudio() {
   const [pricePerCard, setPricePerCard] = useState<number>(30);
   const [minCopies, setMinCopies] = useState<number>(50);
   const [dynamicTemplates, setDynamicTemplates] = useState<any[]>([]);
-  const [uploadedGraphics, setUploadedGraphics] = useState<string[]>([
+  // User Assets (Private to this user's account) & Curated Stock Motifs
+  const [userAssets, setUserAssets] = useState<UserUploadedAsset[]>([]);
+  const [isLoadingUserAssets, setIsLoadingUserAssets] = useState(false);
+  const [stockMotifs, setStockMotifs] = useState<string[]>([
     "/images/canva/leaf-divider.webp",
     "/images/canva/floral-footer.webp",
     "/images/canva/floral-header.webp",
@@ -639,6 +712,7 @@ export default function CanvaUserStudio() {
   const [texturesList, setTexturesList] = useState<Array<{ id: string; name: string; num: string; src: string }>>(DEFAULT_TEXTURES);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragOverCanvas, setIsDragOverCanvas] = useState(false);
 
   // Canvas & Interaction Refs
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -719,22 +793,35 @@ export default function CanvaUserStudio() {
     });
   };
 
-  const setElements = (updater: CanvasElement[] | ((prev: CanvasElement[]) => CanvasElement[])) => {
+  const setElements = (
+    updater: CanvasElement[] | ((prev: CanvasElement[]) => CanvasElement[]),
+    record: boolean = true
+  ) => {
     setCardLayers((prev) => {
       const updated = prev.map((l) => {
         if (l.id !== activeLayer.id) return l;
         const newElements = typeof updater === "function" ? updater(l.elements) : updater;
         return { ...l, elements: newElements };
       });
-      recordHistory(updated);
+      if (record) {
+        recordHistory(updated);
+      }
       return updated;
     });
   };
 
-  const updateSelectedElement = (updates: Partial<CanvasElement>) => {
+  const updateSelectedElement = (updates: Partial<CanvasElement>, record: boolean = true) => {
     if (!selectedElementId) return;
-    setElements((prev) =>
-      prev.map((el) => (el.id === selectedElementId ? { ...el, ...updates } : el))
+    setElements(
+      (prev) => prev.map((el) => (el.id === selectedElementId ? { ...el, ...updates } : el)),
+      record
+    );
+  };
+
+  const updateElementById = (id: string, updates: Partial<CanvasElement>, record: boolean = true) => {
+    setElements(
+      (prev) => prev.map((el) => (el.id === id ? { ...el, ...updates } : el)),
+      record
     );
   };
 
@@ -762,12 +849,15 @@ export default function CanvaUserStudio() {
   // Fit to screen helper
   const handleFitToScreen = useCallback(() => {
     if (!containerRef.current) return;
-    const containerH = containerRef.current.clientHeight - 130;
-    const containerW = containerRef.current.clientWidth - 70;
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const padH = isMobile ? 100 : 130;
+    const padW = isMobile ? 24 : 70;
+    const containerH = containerRef.current.clientHeight - padH;
+    const containerW = containerRef.current.clientWidth - padW;
     const scaleH = containerH / activeDimensions.height;
     const scaleW = containerW / activeDimensions.width;
     const fitScale = Math.min(scaleH, scaleW, 1.0);
-    setZoom(Math.max(0.35, Math.round(fitScale * 100) / 100));
+    setZoom(Math.max(0.25, Math.round(fitScale * 100) / 100));
   }, [activeDimensions.height, activeDimensions.width]);
 
   useEffect(() => {
@@ -776,6 +866,12 @@ export default function CanvaUserStudio() {
     }, 120);
     return () => clearTimeout(timer);
   }, [activeLayerId, activeLayer.aspectRatio, activeLayer.heightPercent, handleFitToScreen]);
+
+  useEffect(() => {
+    const onResize = () => handleFitToScreen();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [handleFitToScreen]);
 
   // Load public assets, textures, and templates
   useEffect(() => {
@@ -792,12 +888,12 @@ export default function CanvaUserStudio() {
           })
           .catch(() => {});
 
-        // Load graphic assets
+        // Load curated stock graphic assets
         fetch("/api/canva/assets")
           .then((r) => r.json())
           .then((d) => {
             if (d.assets && Array.isArray(d.assets) && d.assets.length > 0) {
-              setUploadedGraphics((prev) => Array.from(new Set([...d.assets, ...prev])));
+              setStockMotifs((prev) => Array.from(new Set([...d.assets, ...prev])));
             }
           })
           .catch(() => {});
@@ -817,6 +913,40 @@ export default function CanvaUserStudio() {
     }
     loadResources();
   }, []);
+
+  // Load user assets strictly for current user / local device
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchUserAssets() {
+      setIsLoadingUserAssets(true);
+      try {
+        const res = await fetch("/api/user/assets");
+        const d = await res.json();
+        if (isMounted && d.success && Array.isArray(d.assets)) {
+          if (session?.user?.email) {
+            setUserAssets(d.assets);
+          } else {
+            // Guest user: load from localStorage
+            const stored = localStorage.getItem("bervic_canva_guest_assets");
+            if (stored) {
+              try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) setUserAssets(parsed);
+              } catch {}
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load user assets:", err);
+      } finally {
+        if (isMounted) setIsLoadingUserAssets(false);
+      }
+    }
+    fetchUserAssets();
+    return () => {
+      isMounted = false;
+    };
+  }, [session?.user?.email]);
 
   // Preload template if specified in query param
   useEffect(() => {
@@ -1066,7 +1196,7 @@ export default function CanvaUserStudio() {
     const baseDim = getLayerDimensions(baseLayer, baseLayer);
     const newLayer: CardDeckLayer = {
       id: newId,
-      name: `Card Sheet ${nextIdx}`,
+      name: `Insert Sheet ${nextIdx}`,
       isBase: false,
       heightPercent: defaultPct,
       aspectRatio: activeLayer.aspectRatio === "custom" ? "classic" : activeLayer.aspectRatio,
@@ -1162,33 +1292,44 @@ export default function CanvaUserStudio() {
     setSelectedElementId(newId);
   };
 
-  const handleAddImageElement = (src: string) => {
-    const newId = `img-${Date.now()}`;
+  const handleAddImageElement = (
+    src: string,
+    customPos?: { x: number; y: number; width?: number; height?: number }
+  ) => {
+    const newId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const w = customPos?.width || 50;
+    const h = customPos?.height || 25;
+    const x = customPos !== undefined ? customPos.x : 25;
+    const y = customPos !== undefined ? customPos.y : 30;
     const newEl: CanvasElement = {
       id: newId,
       type: "image",
       src,
-      x: 25,
-      y: 30,
-      width: 50,
-      height: 25,
+      x,
+      y,
+      width: w,
+      height: h,
       rotation: 0,
       opacity: 1,
       zIndex: activeLayer.elements.length + 1,
     };
     setElements((prev) => [...prev, newEl]);
     setSelectedElementId(newId);
+    setHasUnsavedChanges(true);
   };
 
-  const handleAddShapeElement = (shape: typeof PRESET_SHAPES[0]) => {
-    const newId = `shape-${Date.now()}`;
+  const handleAddShapeElement = (
+    shape: typeof PRESET_SHAPES[0],
+    customPos?: { x: number; y: number }
+  ) => {
+    const newId = `shape-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const newEl: CanvasElement = {
       id: newId,
       type: "shape",
       backgroundColor: shape.backgroundColor,
       opacity: shape.opacity,
-      x: 30,
-      y: 40,
+      x: customPos !== undefined ? customPos.x : 30,
+      y: customPos !== undefined ? customPos.y : 40,
       width: shape.width,
       height: shape.height,
       rotation: 0,
@@ -1196,6 +1337,7 @@ export default function CanvaUserStudio() {
     };
     setElements((prev) => [...prev, newEl]);
     setSelectedElementId(newId);
+    setHasUnsavedChanges(true);
   };
 
   const handleDeleteElement = (id: string) => {
@@ -1254,7 +1396,7 @@ export default function CanvaUserStudio() {
     updateSelectedElement(updates);
   };
 
-  // Image Upload Handler
+  // Image Upload Handler (Strictly scoped to user's account)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -1263,23 +1405,156 @@ export default function CanvaUserStudio() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+
+        // 1. Try backend /api/user/assets to attach to user account
+        let uploadedUrl = "";
+        let assetId = "";
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/user/assets", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.asset?.url) {
+              uploadedUrl = data.asset.url;
+              assetId = data.asset.id;
+              const newAsset: UserUploadedAsset = {
+                id: assetId || `asset-${Date.now()}`,
+                url: uploadedUrl,
+                name: data.asset.name || file.name,
+                isGuest: data.isGuest,
+              };
+              setUserAssets((prev) => [newAsset, ...prev]);
+              handleAddImageElement(uploadedUrl);
+
+              if (data.isGuest) {
+                try {
+                  const stored = JSON.parse(localStorage.getItem("bervic_canva_guest_assets") || "[]");
+                  localStorage.setItem(
+                    "bervic_canva_guest_assets",
+                    JSON.stringify([newAsset, ...stored.slice(0, 20)])
+                  );
+                } catch {}
+              }
+              continue;
+            }
+          }
+        } catch (apiErr) {
+          console.warn("Backend user asset upload failed, using local FileReader:", apiErr);
+        }
+
+        // 2. Fallback to local FileReader if backend or Cloudinary is unavailable
         const reader = new FileReader();
         reader.onload = (loadEvent) => {
           const result = loadEvent.target?.result as string;
           if (result) {
-            setUploadedGraphics((prev) => [result, ...prev]);
+            const fallbackAsset: UserUploadedAsset = {
+              id: `local-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              url: result,
+              name: file.name,
+              isGuest: true,
+            };
+            setUserAssets((prev) => [fallbackAsset, ...prev]);
             handleAddImageElement(result);
+            try {
+              const stored = JSON.parse(localStorage.getItem("bervic_canva_guest_assets") || "[]");
+              localStorage.setItem(
+                "bervic_canva_guest_assets",
+                JSON.stringify([fallbackAsset, ...stored.slice(0, 20)])
+              );
+            } catch {}
           }
         };
         reader.readAsDataURL(file);
       }
-      setStatusToast("📷 Photo uploaded to your canvas");
+      setStatusToast("📷 Photo uploaded to your account");
       setTimeout(() => setStatusToast(""), 3500);
     } catch {
-      alert("Failed to upload image.");
+      alert("Failed to upload image. Please try again.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // Delete an asset from user's account
+  const handleDeleteUserAsset = async (e: React.MouseEvent, assetId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this asset from your account?")) return;
+
+    try {
+      await fetch(`/api/user/assets?id=${assetId}`, { method: "DELETE" });
+      setUserAssets((prev) => prev.filter((a) => a.id !== assetId));
+      try {
+        const stored = JSON.parse(localStorage.getItem("bervic_canva_guest_assets") || "[]");
+        localStorage.setItem(
+          "bervic_canva_guest_assets",
+          JSON.stringify(stored.filter((a: any) => a.id !== assetId))
+        );
+      } catch {}
+      setStatusToast("🗑️ Asset removed from your account");
+      setTimeout(() => setStatusToast(""), 2500);
+    } catch (err) {
+      console.error("Failed to delete asset:", err);
+    }
+  };
+
+  // Drag & drop element placement from sidebar onto canvas
+  const handleDragStartAsset = (
+    e: React.DragEvent,
+    data:
+      | { type: "image"; src: string; defaultWidth?: number; defaultHeight?: number }
+      | { type: "shape"; shape: typeof PRESET_SHAPES[0] }
+  ) => {
+    e.dataTransfer.setData("application/json", JSON.stringify(data));
+    e.dataTransfer.effectAllowed = "copy";
+  };
+
+  const handleDropOnCanvas = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOverCanvas(false);
+    const rawData = e.dataTransfer.getData("application/json");
+    if (!rawData) return;
+
+    let data: any;
+    try {
+      data = JSON.parse(rawData);
+    } catch {
+      return;
+    }
+
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+
+    const rect = canvasEl.getBoundingClientRect();
+    const dropXRatio = (e.clientX - rect.left) / rect.width;
+    const dropYRatio = (e.clientY - rect.top) / rect.height;
+
+    const dropXPct = Math.max(0, Math.min(100, dropXRatio * 100));
+    const dropYPct = Math.max(0, Math.min(100, dropYRatio * 100));
+
+    if (data.type === "image" && data.src) {
+      const elW = data.defaultWidth || 45;
+      const elH = data.defaultHeight || 20;
+      const x = Math.max(0, Math.min(100 - elW, Math.round(dropXPct - elW / 2)));
+      const y = Math.max(0, Math.min(100 - elH, Math.round(dropYPct - elH / 2)));
+      handleAddImageElement(data.src, { x, y, width: elW, height: elH });
+      setStatusToast("✨ Element placed at drop position");
+      setTimeout(() => setStatusToast(""), 2000);
+    } else if (data.type === "shape" && data.shape) {
+      const shape = data.shape;
+      const elW = shape.width || 30;
+      const elH = shape.height || 30;
+      const x = Math.max(0, Math.min(100 - elW, Math.round(dropXPct - elW / 2)));
+      const y = Math.max(0, Math.min(100 - elH, Math.round(dropYPct - elH / 2)));
+      handleAddShapeElement(shape, { x, y });
+      setStatusToast("✨ Shape placed at drop position");
+      setTimeout(() => setStatusToast(""), 2000);
     }
   };
 
@@ -1293,6 +1568,23 @@ export default function CanvaUserStudio() {
     interactionStartRef.current = {
       startX: e.clientX,
       startY: e.clientY,
+      elemX: el.x,
+      elemY: el.y,
+      elemW: el.width,
+      elemH: el.height,
+    };
+  };
+
+  const handleTouchStartElement = (e: React.TouchEvent, el: CanvasElement) => {
+    e.stopPropagation();
+    setSelectedElementId(el.id);
+    if (el.isLocked || e.touches.length === 0) return;
+
+    const touch = e.touches[0];
+    isInteractingRef.current = true;
+    interactionStartRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
       elemX: el.x,
       elemY: el.y,
       elemW: el.width,
@@ -1316,9 +1608,32 @@ export default function CanvaUserStudio() {
     };
   };
 
-  // Global mousemove & mouseup for drag/resize
+  const handleTouchStartResize = (e: React.TouchEvent, handle: string, el: CanvasElement) => {
+    e.stopPropagation();
+    if (el.isLocked || e.touches.length === 0) return;
+
+    const touch = e.touches[0];
+    isInteractingRef.current = true;
+    interactionStartRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      elemX: el.x,
+      elemY: el.y,
+      elemW: el.width,
+      elemH: el.height,
+      handle,
+    };
+  };
+
+  // Keep a fresh reference to cardLayers for recording history at drag completion
+  const cardLayersRef = useRef(cardLayers);
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    cardLayersRef.current = cardLayers;
+  }, [cardLayers]);
+
+  // Global mousemove, mouseup, touchmove, touchend for drag/resize
+  useEffect(() => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!isInteractingRef.current || !interactionStartRef.current || !selectedElementId) return;
 
       const { startX, startY, elemX, elemY, elemW, elemH, handle } = interactionStartRef.current;
@@ -1326,16 +1641,16 @@ export default function CanvaUserStudio() {
       if (!canvasEl) return;
 
       const rect = canvasEl.getBoundingClientRect();
-      const deltaXPercent = ((e.clientX - startX) / rect.width) * 100;
-      const deltaYPercent = ((e.clientY - startY) / rect.height) * 100;
+      const deltaXPercent = ((clientX - startX) / rect.width) * 100;
+      const deltaYPercent = ((clientY - startY) / rect.height) * 100;
 
       if (!handle) {
-        // Dragging Element
+        // Dragging Element (without saving history on every drag frame)
         const newX = Math.max(-20, Math.min(100, Math.round((elemX + deltaXPercent) * 10) / 10));
         const newY = Math.max(-20, Math.min(100, Math.round((elemY + deltaYPercent) * 10) / 10));
-        updateSelectedElement({ x: newX, y: newY });
+        updateSelectedElement({ x: newX, y: newY }, false);
       } else {
-        // Resizing Element
+        // Resizing Element (without saving history on every drag frame)
         let newW = elemW;
         let newH = elemH;
         let newX = elemX;
@@ -1358,30 +1673,50 @@ export default function CanvaUserStudio() {
           }
         }
 
-        updateSelectedElement({
-          width: Math.round(newW * 10) / 10,
-          height: Math.round(newH * 10) / 10,
-          x: Math.round(newX * 10) / 10,
-          y: Math.round(newY * 10) / 10,
-        });
+        updateSelectedElement(
+          {
+            width: Math.round(newW * 10) / 10,
+            height: Math.round(newH * 10) / 10,
+            x: Math.round(newX * 10) / 10,
+            y: Math.round(newY * 10) / 10,
+          },
+          false
+        );
       }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.clientY);
     };
 
     const handleMouseUp = () => {
       if (isInteractingRef.current) {
         isInteractingRef.current = false;
         interactionStartRef.current = null;
-        recordHistory(cardLayers);
+        recordHistory(cardLayersRef.current);
       }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isInteractingRef.current || e.touches.length === 0) return;
+      handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const handleTouchEnd = () => {
+      handleMouseUp();
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [selectedElementId, cardLayers, recordHistory]);
+  }, [selectedElementId, recordHistory]);
 
   // Save Card Handler
   const handleSaveCard = async () => {
@@ -1464,33 +1799,33 @@ export default function CanvaUserStudio() {
 
   return (
     <div className="h-screen w-screen max-h-screen overflow-hidden flex flex-col bg-slate-100/70 text-slate-900 font-sans select-none">
-      {/* ── TOPBAR: CLEAN WHITE & RED BRANDING WITH BRAND NEW "CREATE NEW CARD" FEATURE ── */}
-      <header className="h-14 bg-white border-b border-slate-200 shrink-0 z-30 shadow-xs flex items-center justify-between px-2 sm:px-4 md:px-6 gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+      {/* ── TOPBAR: CLEAN RESPONSIVE MOBILE & DESKTOP STUDIO HEADER ── */}
+      <header className="h-12 sm:h-14 bg-white border-b border-slate-200 shrink-0 z-30 shadow-xs flex items-center justify-between px-2 sm:px-4 md:px-6 gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
           <Link
             href="/templates"
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5 text-xs font-bold shrink-0"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
             title="Back to Templates"
           >
             <ArrowLeft className="w-4 h-4 text-[#991B1B]" />
             <span className="hidden md:inline">Templates</span>
           </Link>
 
-          {/* 🌟 BRAND NEW FEATURE: CREATE NEW CARD BUTTON 🌟 */}
+          {/* Create New Card Button (Desktop / Tablet) */}
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer shrink-0"
+            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0"
             title="Create a brand new invitation card from scratch"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Create New Card</span>
+            <span>New Card</span>
           </button>
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
 
           {/* Card Title Input & Badge */}
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1 min-w-0">
             <input
               type="text"
               value={docTitle}
@@ -1498,34 +1833,19 @@ export default function CanvaUserStudio() {
                 setDocTitle(e.target.value);
                 setHasUnsavedChanges(true);
               }}
-              className="bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#991B1B] text-xs sm:text-sm font-bold text-slate-900 outline-none px-2 py-1 rounded-xl transition-all w-28 sm:w-44 md:w-56 truncate shadow-2xs"
+              className="bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#991B1B] text-xs sm:text-sm font-bold text-slate-900 outline-none px-2 py-1 rounded-xl transition-all w-20 sm:w-40 md:w-52 truncate shadow-2xs"
               placeholder="Card Title..."
             />
             <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[8.5px] font-bold border border-slate-200 hidden lg:inline-flex shrink-0">
               {selectedRatio.name}
             </span>
-
-            {/* Print Pricing Pill */}
-            <div className="flex items-center gap-1 bg-red-50/70 border border-red-200 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-xl shadow-2xs shrink-0">
-              <span className="text-[11px] font-bold text-[#991B1B] hidden xl:inline">Print:</span>
-              <span className="text-xs font-black text-[#991B1B]">₹{pricePerCard}</span>
-              <span className="text-[9.5px] font-bold text-slate-600 hidden xs:inline">/card</span>
-              <button
-                type="button"
-                onClick={() => setShowPricingModal(true)}
-                className="text-[9px] bg-[#991B1B] hover:bg-[#7F1D1D] text-white font-extrabold px-1.5 py-0.5 rounded cursor-pointer transition-colors shadow-2xs"
-                title="View volume pricing table"
-              >
-                Tiers
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Action Buttons: Undo/Redo, Preview, Download, Save, Order */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Undo / Redo */}
-          <div className="hidden sm:flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {/* Undo / Redo - Enabled on both Mobile and Desktop */}
+          <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
             <button
               type="button"
               onClick={handleUndo}
@@ -1550,7 +1870,7 @@ export default function CanvaUserStudio() {
           <button
             type="button"
             onClick={() => setShowPreviewModal(true)}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer border bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
             title="Preview full invitation card"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -1558,35 +1878,50 @@ export default function CanvaUserStudio() {
           </button>
 
           {/* Download Dropdown */}
-          <div className="relative group">
+          <div className="relative">
             <button
               type="button"
               disabled={isExporting}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              onClick={() => setShowExportMenu((prev) => !prev)}
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
               title="Download Card"
             >
               <Download className="w-3.5 h-3.5 text-slate-600" />
               <span className="hidden sm:inline">Export</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <ChevronDown className="w-3 h-3 text-slate-400 hidden sm:inline" />
             </button>
-            <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 hidden group-hover:block">
-              <button
-                type="button"
-                onClick={() => handleExport("png")}
-                className="w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
-              >
-                <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-                <span>High-Res PNG</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleExport("pdf")}
-                className="w-full text-left px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
-              >
-                <FileText className="w-3.5 h-3.5 text-slate-500" />
-                <span>Print-Ready PDF</span>
-              </button>
-            </div>
+            {showExportMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowExportMenu(false)}
+                />
+                <div className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowExportMenu(false);
+                      handleExport("png");
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
+                    <span>High-Res PNG</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowExportMenu(false);
+                      handleExport("pdf");
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Print-Ready PDF</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Save Button */}
@@ -1594,11 +1929,12 @@ export default function CanvaUserStudio() {
             type="button"
             disabled={saving}
             onClick={handleSaveCard}
-            className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer ${
+            className={`p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 shadow-sm transition-all cursor-pointer ${
               hasUnsavedChanges
                 ? "bg-[#991B1B] hover:bg-[#7F1D1D] text-white"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-300"
             }`}
+            title={hasUnsavedChanges ? "Save Changes" : "Saved"}
           >
             {saving ? (
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -1607,17 +1943,19 @@ export default function CanvaUserStudio() {
             ) : (
               <Check className="w-3.5 h-3.5" />
             )}
-            <span className="hidden sm:inline">{saving ? "Saving..." : hasUnsavedChanges ? "Save" : "Saved"}</span>
+            <span className="hidden md:inline">{saving ? "Saving..." : hasUnsavedChanges ? "Save" : "Saved"}</span>
           </button>
 
           {/* Order Physical Prints Button */}
           <button
             type="button"
             onClick={() => setShowOrderModal(true)}
-            className="px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-extrabold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+            title="Order Physical Prints"
           >
             <ShoppingCart className="w-3.5 h-3.5 text-amber-300" />
-            <span>Order Prints</span>
+            <span className="hidden sm:inline">Order Prints</span>
+            <span className="sm:hidden text-[11px]">Order</span>
           </button>
         </div>
       </header>
@@ -1631,34 +1969,9 @@ export default function CanvaUserStudio() {
       )}
 
       {/* ── 3-COLUMN WORKSPACE: LEFT TOOLS, CANVAS, RIGHT INSPECTOR ── */}
-      <div className="flex-1 min-h-0 flex flex-row overflow-hidden">
-        {/* Mobile Left Backdrop */}
-        {mobileLeftOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden"
-            onClick={() => setMobileLeftOpen(false)}
-          />
-        )}
-
-        {/* ── LEFT SIDEBAR: TOOLS & PRESETS (SETTINGS, TEXT, ASSETS, LAYERS, TEMPLATES) ── */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-[88vw] max-w-sm bg-white shadow-2xl transition-transform duration-200 flex flex-col border-r border-slate-200 shrink-0 lg:static lg:z-10 lg:w-80 lg:translate-x-0 lg:shadow-xs ${
-            mobileLeftOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          }`}
-        >
-          {/* Mobile Drawer Header */}
-          <div className="lg:hidden p-3 bg-slate-900 text-white flex items-center justify-between shrink-0">
-            <span className="font-extrabold text-xs flex items-center gap-1.5">
-              <span>🛠️</span> Studio Tools
-            </span>
-            <button
-              type="button"
-              onClick={() => setMobileLeftOpen(false)}
-              className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
+        {/* ── DESKTOP LEFT SIDEBAR: TOOLS & PRESETS (SETTINGS, TEXT, ASSETS, LAYERS, TEMPLATES) ── */}
+        <aside className="hidden lg:flex lg:static lg:z-10 lg:w-80 flex-col border-r border-slate-200 shrink-0 bg-white shadow-xs">
 
           {/* Tabs: SETTINGS | TEXT | ASSETS | LAYERS | TEMPLATES */}
           <div className="shrink-0 grid grid-cols-5 p-2 gap-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold">
@@ -2078,39 +2391,124 @@ export default function CanvaUserStudio() {
             {/* ── TAB 3: ASSETS (UPLOAD PHOTOS, TRADITIONAL MOTIFS, BORDERS, SHAPES) ── */}
             {activeTab === "ASSETS" && (
               <div className="p-4 space-y-5 text-xs">
-                {/* Photo Uploader */}
+                {/* 1. Photo Uploader */}
                 <div className="space-y-2">
-                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                    Upload Photos & Graphics
-                  </label>
-                  <label className="block p-4 border-2 border-dashed border-slate-200 hover:border-[#991B1B] rounded-2xl text-center cursor-pointer transition-colors bg-slate-50/50">
-                    <Upload className="w-5 h-5 text-[#991B1B] mx-auto mb-1" />
-                    <span className="text-xs font-bold text-slate-800 block">Click to Upload Couple Photo / PNG</span>
-                    <span className="text-[10px] text-slate-500">Supports PNG, JPG, WebP</span>
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Upload Photos & Graphics
+                    </label>
+                    {session?.user ? (
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-emerald-200">
+                        <Lock className="w-2.5 h-2.5" /> Account Private
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold border border-amber-200">
+                        Guest Storage
+                      </span>
+                    )}
+                  </div>
+
+                  <label className="block p-4 border-2 border-dashed border-slate-200 hover:border-[#991B1B] rounded-2xl text-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-red-50/20 group">
+                    <Upload className="w-5 h-5 text-[#991B1B] mx-auto mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-slate-800 block">
+                      {isUploading ? "Uploading to your account..." : "Click to Upload Couple Photo / PNG"}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Supports PNG, JPG, WebP • Drag & drop onto card
+                    </span>
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       multiple
+                      disabled={isUploading}
                       className="hidden"
                       onChange={handleImageUpload}
                     />
                   </label>
                 </div>
 
-                {/* Geometric Shapes */}
+                {/* 2. User's Account Assets (Private to this logged-in account) */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                    Shapes & Frames
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Your Account Assets ({userAssets.length})
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-medium">Drag to place</span>
+                  </div>
+
+                  {isLoadingUserAssets ? (
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 text-center text-slate-500 text-[11px]">
+                      Loading your assets...
+                    </div>
+                  ) : userAssets.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 text-center text-slate-500 text-[11px]">
+                      <p className="font-bold text-slate-700 mb-0.5">No uploaded assets yet</p>
+                      <p className="text-[10px] text-slate-400">
+                        Photos, PNGs, and graphics you upload appear here and are only visible in your account.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto custom-scrollbar p-1">
+                      {userAssets.map((asset) => (
+                        <div
+                          key={asset.id}
+                          draggable
+                          onDragStart={(e) =>
+                            handleDragStartAsset(e, {
+                              type: "image",
+                              src: asset.url,
+                              defaultWidth: 45,
+                              defaultHeight: 30,
+                            })
+                          }
+                          onClick={() => handleAddImageElement(asset.url)}
+                          className="group relative p-1.5 bg-slate-50 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-all hover:bg-white shadow-2xs aspect-square"
+                          title="Drag onto card to place at desired position, or click to place at center"
+                        >
+                          <img
+                            src={asset.url}
+                            alt={asset.name || "User Asset"}
+                            className="max-w-full max-h-full object-contain pointer-events-none group-hover:scale-105 transition-transform"
+                          />
+                          {/* Delete button from account */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteUserAsset(e, asset.id)}
+                            className="absolute top-1 right-1 w-5 h-5 bg-white/95 hover:bg-red-600 text-slate-500 hover:text-white rounded-md flex items-center justify-center shadow-xs opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                            title="Delete from your account"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Geometric Shapes */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Shapes & Frames
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-medium">Drag or Click</span>
+                  </div>
                   <div className="grid grid-cols-4 gap-2">
                     {PRESET_SHAPES.map((shape) => (
                       <button
                         key={shape.id}
                         type="button"
+                        draggable
+                        onDragStart={(e) =>
+                          handleDragStartAsset(e, {
+                            type: "shape",
+                            shape,
+                          })
+                        }
                         onClick={() => handleAddShapeElement(shape)}
-                        className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/50 flex flex-col items-center justify-center gap-1 transition-all cursor-pointer aspect-square"
-                        title={shape.name}
+                        className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/50 flex flex-col items-center justify-center gap-1 transition-all cursor-grab active:cursor-grabbing aspect-square"
+                        title={`Drag ${shape.name} onto card`}
                       >
                         <div
                           style={{
@@ -2125,23 +2523,36 @@ export default function CanvaUserStudio() {
                   </div>
                 </div>
 
-                {/* Traditional Motifs & Overlays */}
+                {/* 4. Traditional Motifs & Overlays */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                      Wedding Motifs & Overlays ({uploadedGraphics.length})
+                      Wedding Motifs & Overlays ({stockMotifs.length})
                     </label>
-                    <span className="text-[10px] text-slate-500 font-medium">Click to place</span>
+                    <span className="text-[10px] text-slate-500 font-medium">Drag to place</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto custom-scrollbar p-1">
-                    {uploadedGraphics.map((src, idx) => (
+                    {stockMotifs.map((src, idx) => (
                       <div
                         key={`${src}-${idx}`}
+                        draggable
+                        onDragStart={(e) =>
+                          handleDragStartAsset(e, {
+                            type: "image",
+                            src,
+                            defaultWidth: 45,
+                            defaultHeight: 20,
+                          })
+                        }
                         onClick={() => handleAddImageElement(src)}
-                        className="group relative p-2 bg-slate-50 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center cursor-pointer transition-all hover:bg-white shadow-2xs aspect-square"
-                        title="Click to place on card"
+                        className="group relative p-2 bg-slate-50 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-all hover:bg-white shadow-2xs aspect-square"
+                        title="Drag onto card to place at desired position, or click to place at center"
                       >
-                        <img src={src} alt="Motif" className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" />
+                        <img
+                          src={src}
+                          alt="Motif"
+                          className="max-w-full max-h-full object-contain pointer-events-none group-hover:scale-105 transition-transform"
+                        />
                       </div>
                     ))}
                   </div>
@@ -2149,98 +2560,253 @@ export default function CanvaUserStudio() {
               </div>
             )}
 
-            {/* ── TAB 4: LAYERS (ELEMENT STACK, REORDER, LOCK, ALIGN) ── */}
+            {/* ── TAB 4: LAYERS (CARD DECK VISUALIZER & ELEMENTS) ── */}
             {activeTab === "LAYERS" && (
               <div className="p-4 space-y-4 text-xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">
-                    Active Card Elements ({activeLayer.elements.length})
-                  </label>
-                  <span className="text-[10px] text-slate-500">Top to bottom</span>
+                {/* ── 1. 2.5D DECK PREVIEW (CLEAN WHITE & RED) ── */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Ruler className="w-3.5 h-3.5 text-[#991B1B]" />
+                      <h3 className="text-xs font-extrabold text-[#991B1B] uppercase tracking-wider">
+                        Deck Preview
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowStackModal(true)}
+                      className="px-2.5 py-1 rounded-xl bg-red-50 text-[#991B1B] hover:bg-red-100 text-[10px] font-extrabold flex items-center gap-1 border border-red-200 transition-colors cursor-pointer"
+                      title="Open Fullscreen Stack Visualizer"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Enlarge</span>
+                    </button>
+                  </div>
+
+                  {/* Red & White Alignment Selector */}
+                  <div className="flex items-center p-1 bg-red-50/60 rounded-2xl border border-red-100 text-[10px] font-extrabold">
+                    <button
+                      type="button"
+                      onClick={() => setStackAlign("bottom")}
+                      className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                        stackAlign === "bottom"
+                          ? "bg-[#991B1B] text-white shadow-xs font-bold"
+                          : "text-slate-700 hover:text-[#991B1B]"
+                      }`}
+                    >
+                      Bottom Stepped
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStackAlign("top")}
+                      className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                        stackAlign === "top"
+                          ? "bg-[#991B1B] text-white shadow-xs font-bold"
+                          : "text-slate-700 hover:text-[#991B1B]"
+                      }`}
+                    >
+                      Top Stepped
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStackAlign("center")}
+                      className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                        stackAlign === "center"
+                          ? "bg-[#991B1B] text-white shadow-xs font-bold"
+                          : "text-slate-700 hover:text-[#991B1B]"
+                      }`}
+                    >
+                      Center
+                    </button>
+                  </div>
+
+                  {/* 2.5D Live Stack Preview Box (Clean White & Red Canvas) */}
+                  <div
+                    className="h-56 bg-gradient-to-b from-red-50/30 via-white to-red-50/50 rounded-2xl p-4 flex items-center justify-center relative border border-red-100 shadow-sm overflow-hidden select-none"
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(#fecaca_1px,transparent_1px)] [background-size:12px_12px] opacity-60 pointer-events-none" />
+
+                    {/* Stack Container */}
+                    <div
+                      className={`relative w-full h-full flex justify-center ${
+                        stackAlign === "bottom"
+                          ? "items-end"
+                          : stackAlign === "top"
+                          ? "items-start"
+                          : "items-center"
+                      }`}
+                    >
+                      {(() => {
+                        const baseL = cardLayers.find((p) => p.isBase) || cardLayers[0];
+                        const baseDim = getLayerDimensions(baseL, baseL);
+                        const maxHeightPx = 180;
+                        const scaleFactor = maxHeightPx / baseDim.height;
+
+                        const sortedForStack = [...cardLayers]
+                          .map((layer, origIdx) => ({ layer, origIdx }))
+                          .sort((a, b) => {
+                            const aPct = a.layer.isBase !== false ? 100 : a.layer.heightPercent || 85;
+                            const bPct = b.layer.isBase !== false ? 100 : b.layer.heightPercent || 85;
+                            return bPct - aPct;
+                          });
+
+                        return sortedForStack.map((item, stackPos) => {
+                          const { layer: p, origIdx } = item;
+                          const isSelected = p.id === activeLayerId;
+                          const pDim = getPhysicalDimensions(p, baseL);
+                          const renderW = Math.round(pDim.pixelW * scaleFactor);
+                          const renderH = Math.round(pDim.pixelH * scaleFactor);
+
+                          return (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                setActiveLayerId(p.id);
+                                setSelectedElementId(null);
+                              }}
+                              style={{
+                                width: `${renderW}px`,
+                                height: `${renderH}px`,
+                                zIndex: stackPos + 10,
+                                backgroundColor: p.backgroundColor?.startsWith("#") ? p.backgroundColor : "#FFFFFF",
+                                backgroundImage: p.backgroundImage ? `url(${p.backgroundImage})` : undefined,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                              }}
+                              className={`absolute rounded-xl transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl flex flex-col justify-between p-2 border ${
+                                isSelected
+                                  ? "ring-2 ring-[#991B1B] border-[#991B1B] shadow-xl scale-[1.02]"
+                                  : "border-slate-200 hover:border-slate-300 hover:scale-[1.01]"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span
+                                  className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-md truncate max-w-[100px] shadow-2xs ${
+                                    isSelected
+                                      ? "bg-[#991B1B] text-white"
+                                      : "bg-slate-900/80 text-white backdrop-blur-xs"
+                                  }`}
+                                >
+                                  {p.name || `Sheet ${origIdx + 1}`}
+                                </span>
+                                <span className="text-[8px] font-mono font-bold bg-white text-slate-800 px-1 py-0.5 rounded border border-slate-200 shadow-2xs">
+                                  {pDim.pct}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
                 </div>
 
-                {activeLayer.elements.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400">
-                    No elements on this card layer yet. Add text or motifs from the tabs above.
+                {/* ── 2. CANVAS ELEMENTS ON ACTIVE SHEET ── */}
+                <div className="space-y-2 pt-2 border-t border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                      Elements on Active Sheet ({activeLayer.elements.length})
+                    </h3>
+                    <span className="text-[10px] text-slate-500">Top to bottom</span>
                   </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {[...activeLayer.elements].reverse().map((el) => {
-                      const isSelected = el.id === selectedElementId;
-                      return (
-                        <div
-                          key={el.id}
-                          onClick={() => setSelectedElementId(el.id)}
-                          className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-red-50/40 border-[#991B1B] ring-1 ring-[#991B1B]/20"
-                              : "border-slate-200 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            {el.type === "text" ? (
-                              <Type className="w-3.5 h-3.5 text-[#991B1B] shrink-0" />
-                            ) : el.type === "image" ? (
-                              <ImageIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                            ) : (
-                              <Square className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            )}
-                            <span className="font-bold text-xs text-slate-800 truncate">
-                              {el.type === "text" ? el.text : el.type === "image" ? "Photo / Motif" : "Shape"}
-                            </span>
-                          </div>
 
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateSelectedElement({ isLocked: !el.isLocked });
-                              }}
-                              className="p-1 text-slate-400 hover:text-slate-700"
-                              title={el.isLocked ? "Unlock" : "Lock"}
-                            >
-                              {el.isLocked ? <Lock className="w-3 h-3 text-amber-600" /> : <Unlock className="w-3 h-3" />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleMoveLayerZIndex(el.id, "up");
-                              }}
-                              className="p-1 text-slate-400 hover:text-slate-700"
-                              title="Bring forward"
-                            >
-                              <MoveUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleMoveLayerZIndex(el.id, "down");
-                              }}
-                              className="p-1 text-slate-400 hover:text-slate-700"
-                              title="Send backward"
-                            >
-                              <MoveDown className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteElement(el.id);
-                              }}
-                              className="p-1 text-slate-400 hover:text-red-600"
-                              title="Delete element"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                  {activeLayer.elements.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400">
+                      No elements on this card insert sheet yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {[...activeLayer.elements].reverse().map((el) => {
+                        const isSelected = el.id === selectedElementId;
+                        return (
+                          <div
+                            key={el.id}
+                            onClick={() => {
+                              setSelectedElementId(el.id);
+                              setMobileSheet(null);
+                            }}
+                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs font-bold cursor-pointer transition-colors ${
+                              isSelected
+                                ? "bg-red-50/60 border-[#991B1B] text-[#991B1B] ring-1 ring-[#991B1B]/30"
+                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {el.type === "text" ? (
+                                <Type className="w-3.5 h-3.5 text-[#991B1B] shrink-0" />
+                              ) : el.type === "image" ? (
+                                <ImageIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              ) : (
+                                <Square className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              )}
+                              <span className="truncate">
+                                {el.text || (el.type === "image" ? "Graphic Image" : "Shape")}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateElementById(el.id, { isHidden: !el.isHidden });
+                                }}
+                                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                                title={el.isHidden ? "Unhide Element" : "Hide Element"}
+                              >
+                                {el.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateElementById(el.id, { isLocked: !el.isLocked });
+                                }}
+                                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                                title={el.isLocked ? "Unlock Element" : "Lock Element"}
+                              >
+                                {el.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-600" /> : <Unlock className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveLayerZIndex(el.id, "up");
+                                }}
+                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                                title="Bring forward"
+                              >
+                                <MoveUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveLayerZIndex(el.id, "down");
+                                }}
+                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                                title="Send backward"
+                              >
+                                <MoveDown className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteElement(el.id);
+                                }}
+                                className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                                title="Delete element"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -2303,9 +2869,111 @@ export default function CanvaUserStudio() {
         {/* ── CENTER CANVAS WORKSPACE (INTERACTIVE DRAG, RESIZE, 3D DECK VIEW) ── */}
         <main
           ref={containerRef}
-          className="flex-1 min-h-0 relative flex flex-col items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8 bg-slate-100/70 custom-scrollbar select-none"
-          onClick={() => setSelectedElementId(null)}
+          className="flex-1 min-h-0 relative flex flex-col items-center justify-start lg:justify-center overflow-auto p-2 sm:p-4 lg:p-8 bg-slate-100/70 custom-scrollbar select-none pb-24 lg:pb-8 pt-12 sm:pt-14 lg:pt-8"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedElementId(null);
+            }
+          }}
         >
+          {/* ── 📱 MOBILE SLEEK FLOATING CARD DECK PILL (MINIMIZED & INTERACTIVE) ── */}
+          {!isDeckBarMinimized ? (
+            <div className="lg:hidden fixed top-[54px] sm:top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full shadow-md border border-slate-200/90 max-w-[94vw] select-none pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
+              {/* Sheets Switcher Tabs */}
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[55vw] sm:max-w-[65vw]">
+                {cardLayers.map((layer, idx) => {
+                  const isSelected = layer.id === activeLayerId;
+                  return (
+                    <button
+                      key={layer.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveLayerId(layer.id);
+                        setSelectedElementId(null);
+                      }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all shrink-0 cursor-pointer ${
+                        isSelected
+                          ? "bg-[#991B1B] text-white shadow-xs"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                      }`}
+                      title={`Switch to ${layer.name}`}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full border border-white/50 shrink-0"
+                        style={{
+                          backgroundColor: layer.backgroundColor?.startsWith("#") ? layer.backgroundColor : "#FFFFFF",
+                        }}
+                      />
+                      <span className="truncate max-w-[64px]">
+                        {layer.name || (idx === 0 ? "Base" : `Sheet ${idx + 1}`)}
+                      </span>
+                      <span className={`text-[8.5px] font-mono ${isSelected ? "text-red-100" : "text-slate-400"}`}>
+                        {layer.isBase ? "Base" : `${layer.heightPercent || 85}%`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Quick (+) Add Card Insert Sheet */}
+              <button
+                type="button"
+                onClick={handleAddLayer}
+                className="w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 active:bg-red-200 text-[#991B1B] border border-red-200 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs ml-0.5"
+                title="Add card insert sheet"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="w-px h-3.5 bg-slate-200 mx-0.5 shrink-0" />
+
+              {/* Full Deck Drawer Trigger */}
+              <button
+                type="button"
+                onClick={() => setMobileSheet("LAYERS")}
+                className="p-1 rounded-full text-slate-500 hover:text-slate-800 transition-colors shrink-0 cursor-pointer"
+                title="Open Deck Manager"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+              </button>
+
+              {/* Minimize Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsDeckBarMinimized(true)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 transition-colors shrink-0 cursor-pointer"
+                title="Minimize sheet switcher"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="lg:hidden fixed top-[54px] sm:top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full shadow-md border border-slate-200/90 select-none pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
+              <button
+                type="button"
+                onClick={() => setIsDeckBarMinimized(false)}
+                className="flex items-center gap-1 text-[10.5px] font-bold text-slate-800 cursor-pointer"
+                title="Expand sheet switcher"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+                <span className="truncate max-w-[100px]">
+                  {activeLayer.name || (activeLayer.isBase ? "Base Card" : "Insert Sheet")}
+                </span>
+                <span className="text-[9px] text-slate-400 font-mono">({cardLayers.length})</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+              <div className="w-px h-3 bg-slate-200" />
+              <button
+                type="button"
+                onClick={handleAddLayer}
+                className="w-5 h-5 rounded-full bg-red-50 hover:bg-red-100 text-[#991B1B] flex items-center justify-center cursor-pointer transition-colors"
+                title="Add card insert sheet"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
           {/* Zoom Wrapper */}
           <div
             style={{
@@ -2313,7 +2981,18 @@ export default function CanvaUserStudio() {
               transformOrigin: "center center",
               transition: "transform 0.15s ease",
             }}
-            className="relative flex items-center justify-center p-8 shrink-0"
+            className={`relative flex justify-center p-2 sm:p-4 lg:p-8 shrink-0 ${
+              stackAlign === "bottom"
+                ? "items-end"
+                : stackAlign === "top"
+                ? "items-start"
+                : "items-center"
+            }`}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedElementId(null);
+              }
+            }}
           >
             {/* 3D / Stacked Card Deck Layers Behind Active Layer */}
             {cardLayers.map((layer) => {
@@ -2335,15 +3014,30 @@ export default function CanvaUserStudio() {
                     zIndex: layer.isBase ? 1 : 2,
                     pointerEvents: "none",
                     opacity: 0.7,
+                    ...(stackAlign === "bottom"
+                      ? { bottom: "2rem" }
+                      : stackAlign === "top"
+                      ? { top: "2rem" }
+                      : {}),
                   }}
                   className="border border-slate-300"
                 />
               );
             })}
 
-            {/* 🌟 ACTIVE CANVAS CARD 🌟 */}
+            {/* 🌟 ACTIVE CANVAS CARD (DRAG & DROP PLACEMENT TARGET) 🌟 */}
             <div
               ref={canvasRef}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "copy";
+                if (!isDragOverCanvas) setIsDragOverCanvas(true);
+              }}
+              onDragLeave={(e) => {
+                if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                setIsDragOverCanvas(false);
+              }}
+              onDrop={handleDropOnCanvas}
               style={{
                 width: `${activeDimensions.width}px`,
                 height: `${activeDimensions.height}px`,
@@ -2355,25 +3049,44 @@ export default function CanvaUserStudio() {
                   : undefined,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)",
+                boxShadow: isDragOverCanvas
+                  ? "0 30px 60px -12px rgba(153, 27, 27, 0.35), 0 0 0 2px rgba(153, 27, 27, 0.5)"
+                  : "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)",
                 borderRadius: "16px",
                 position: "relative",
                 overflow: "hidden",
                 zIndex: 10,
               }}
-              className="transition-shadow"
+              className={`transition-all duration-150 ${
+                isDragOverCanvas ? "ring-4 ring-dashed ring-[#991B1B] scale-[1.01]" : "transition-shadow"
+              }`}
               onClick={(e) => {
-                e.stopPropagation();
-                setSelectedElementId(null);
+                if (e.target === e.currentTarget) {
+                  setSelectedElementId(null);
+                }
               }}
             >
+              {/* Drag-over live helper pill overlay */}
+              {isDragOverCanvas && (
+                <div className="absolute inset-0 bg-[#991B1B]/5 pointer-events-none z-50 flex items-center justify-center">
+                  <div className="bg-white/95 text-[#991B1B] border-2 border-[#991B1B] px-4 py-2 rounded-full font-extrabold text-xs shadow-xl flex items-center gap-2 animate-bounce">
+                    <Sparkles className="w-4 h-4 text-[#991B1B]" />
+                    <span>Drop element at cursor position</span>
+                  </div>
+                </div>
+              )}
               {/* Elements on Active Canvas */}
               {activeLayer.elements.map((el) => {
                 const isSelected = el.id === selectedElementId;
                 return (
                   <div
                     key={el.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedElementId(el.id);
+                    }}
                     onMouseDown={(e) => handleMouseDownElement(e, el)}
+                    onTouchStart={(e) => handleTouchStartElement(e, el)}
                     style={{
                       position: "absolute",
                       left: `${el.x}%`,
@@ -2381,10 +3094,11 @@ export default function CanvaUserStudio() {
                       width: `${el.width}%`,
                       height: `${el.height}%`,
                       transform: `rotate(${el.rotation || 0}deg) scaleX(${el.flipH ? -1 : 1}) scaleY(${el.flipV ? -1 : 1})`,
-                      opacity: el.opacity ?? 1,
+                      opacity: el.isHidden ? 0 : el.opacity ?? 1,
+                      display: el.isHidden ? "none" : "block",
                       zIndex: el.zIndex || 1,
                     }}
-                    className={`cursor-move select-none group/item ${
+                    className={`cursor-move select-none touch-none group/item ${
                       isSelected ? "ring-2 ring-[#991B1B] ring-offset-1 rounded-sm" : "hover:ring-1 hover:ring-slate-400/60"
                     }`}
                   >
@@ -2404,7 +3118,7 @@ export default function CanvaUserStudio() {
                           lineHeight: el.lineHeight || 1.3,
                           textShadow: el.textShadow || "none",
                         }}
-                        className="w-full h-full flex items-center justify-center p-0.5 whitespace-pre-wrap leading-tight"
+                        className="w-full h-full flex items-center justify-center p-0.5 whitespace-pre-wrap leading-tight pointer-events-none"
                       >
                         {el.text}
                       </div>
@@ -2424,6 +3138,7 @@ export default function CanvaUserStudio() {
                           height: "100%",
                           borderRadius: el.backgroundColor?.includes("circle") ? "50%" : "4px",
                         }}
+                        className="pointer-events-none"
                       />
                     )}
 
@@ -2431,20 +3146,28 @@ export default function CanvaUserStudio() {
                     {isSelected && !el.isLocked && (
                       <>
                         <div
+                          onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => handleMouseDownResize(e, "nw", el)}
-                          className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nwse-resize z-30"
+                          onTouchStart={(e) => handleTouchStartResize(e, "nw", el)}
+                          className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 sm:w-3 sm:h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nwse-resize z-30 touch-none shadow-xs"
                         />
                         <div
+                          onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => handleMouseDownResize(e, "ne", el)}
-                          className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nesw-resize z-30"
+                          onTouchStart={(e) => handleTouchStartResize(e, "ne", el)}
+                          className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 sm:w-3 sm:h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nesw-resize z-30 touch-none shadow-xs"
                         />
                         <div
+                          onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => handleMouseDownResize(e, "sw", el)}
-                          className="absolute -bottom-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nesw-resize z-30"
+                          onTouchStart={(e) => handleTouchStartResize(e, "sw", el)}
+                          className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 sm:w-3 sm:h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nesw-resize z-30 touch-none shadow-xs"
                         />
                         <div
+                          onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => handleMouseDownResize(e, "se", el)}
-                          className="absolute -bottom-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nwse-resize z-30"
+                          onTouchStart={(e) => handleTouchStartResize(e, "se", el)}
+                          className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 sm:w-3 sm:h-3 rounded-full bg-white border-2 border-[#991B1B] cursor-nwse-resize z-30 touch-none shadow-xs"
                         />
                       </>
                     )}
@@ -2455,19 +3178,19 @@ export default function CanvaUserStudio() {
           </div>
 
           {/* ── FLOATING ZOOM & CANVAS CONTROLS (BOTTOM CENTER) ── */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-3 py-1.5 shadow-xl flex items-center gap-2 z-30 text-xs font-bold text-slate-700 select-none">
+          <div className="fixed bottom-[68px] lg:absolute lg:bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xl flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-700 select-none pointer-events-auto shrink-0">
             <button
               type="button"
-              onClick={() => setZoom((prev) => Math.max(0.3, Math.round((prev - 0.1) * 10) / 10))}
-              className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+              onClick={() => setZoom((prev) => Math.max(0.25, Math.round((prev - 0.1) * 10) / 10))}
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
               title="Zoom Out"
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
               type="button"
               onClick={handleFitToScreen}
-              className="w-12 text-center text-[11px] font-extrabold text-slate-900 font-mono hover:text-[#991B1B] cursor-pointer"
+              className="w-10 sm:w-12 text-center text-[10px] sm:text-[11px] font-extrabold text-slate-900 font-mono hover:text-[#991B1B] cursor-pointer"
               title="Auto-Fit Screen"
             >
               {Math.round(zoom * 100)}%
@@ -2475,16 +3198,16 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10))}
-              className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
               title="Zoom In"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <div className="h-4 w-px bg-slate-200 mx-0.5" />
             <button
               type="button"
               onClick={handleFitToScreen}
-              className="px-2.5 py-1 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] text-[10px] font-extrabold flex items-center gap-1 cursor-pointer border border-red-200"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] text-[10px] font-extrabold flex items-center gap-1 cursor-pointer border border-red-200"
             >
               <Maximize2 className="w-3 h-3" />
               <span>Fit</span>
@@ -2492,12 +3215,109 @@ export default function CanvaUserStudio() {
           </div>
         </main>
 
-        {/* ── RIGHT INSPECTOR PANEL (TYPOGRAPHY, COLORS, DIMENSIONS, ALIGNMENT) ── */}
-        <aside
-          className={`fixed inset-y-0 right-0 z-50 w-[88vw] max-w-sm bg-white shadow-2xl transition-transform duration-200 flex flex-col border-l border-slate-200 shrink-0 lg:static lg:z-10 lg:w-80 lg:translate-x-0 lg:shadow-xs ${
-            mobileRightOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-          }`}
-        >
+        {/* ── DESKTOP CARD THUMBNAILS STACK (RIGHT COLUMN 1: SHEET SELECTOR & ADD EXTRA LAYER) ── */}
+        <div className="hidden lg:flex w-24 sm:w-28 h-full flex-col items-center shrink-0 py-6 px-1 z-10 select-none overflow-y-auto custom-scrollbar bg-slate-50 border-l border-slate-200">
+          <div className="flex flex-col items-center gap-4 w-full">
+            {cardLayers.map((layer, idx) => {
+              const isSelected = layer.id === activeLayerId;
+              const lDim = getLayerDimensions(layer, baseLayer);
+              const maxThumbW = 54;
+              const maxThumbH = 76;
+              const scale = Math.min(maxThumbW / lDim.width, maxThumbH / lDim.height);
+              const thumbW = Math.max(34, Math.round(lDim.width * scale));
+              const thumbH = Math.max(34, Math.round(lDim.height * scale));
+
+              return (
+                <div
+                  key={layer.id}
+                  onClick={() => {
+                    setActiveLayerId(layer.id);
+                    setSelectedElementId(null);
+                  }}
+                  className="flex flex-col items-center gap-1 w-full cursor-pointer group relative"
+                >
+                  {/* Proportional Card Frame Thumbnail */}
+                  <div className="relative p-1 flex items-center justify-center">
+                    <div
+                      style={{
+                        width: `${thumbW}px`,
+                        height: `${thumbH}px`,
+                        backgroundColor: layer.backgroundColor?.startsWith("#") ? layer.backgroundColor : "#FFFFFF",
+                        backgroundImage: layer.backgroundImage ? `url(${layer.backgroundImage})` : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                      className={`rounded-md overflow-hidden transition-all relative select-none ${
+                        isSelected
+                          ? "opacity-100 ring-2 ring-[#991B1B] border-2 border-[#991B1B] shadow-sm bg-white scale-102"
+                          : "opacity-45 hover:opacity-85 border border-slate-300 bg-white hover:scale-102"
+                      }`}
+                    >
+                      {/* Mini Elements inside Thumbnail */}
+                      {layer.elements.map((el) => (
+                        <div
+                          key={el.id}
+                          style={{
+                            position: "absolute",
+                            left: `${el.x}%`,
+                            top: `${el.y}%`,
+                            width: `${el.width}%`,
+                            height: el.height ? `${el.height}%` : "auto",
+                            transform: `rotate(${el.rotation || 0}deg)`,
+                            opacity: 0.8,
+                          }}
+                          className="pointer-events-none"
+                        >
+                          {el.type === "image" && el.src && (
+                            <img src={el.src} alt="" className="w-full h-full object-contain pointer-events-none" />
+                          )}
+                          {el.type === "text" && (
+                            <div
+                              style={{
+                                fontSize: "4.5px",
+                                color: el.color || "#1E293B",
+                                textAlign: el.textAlign || "center",
+                              }}
+                              className="truncate font-sans leading-none pointer-events-none"
+                            >
+                              {el.text}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sheet Name */}
+                  <span
+                    className={`text-[9.5px] text-center truncate max-w-[80px] transition-colors leading-tight ${
+                      isSelected ? "font-bold text-[#991B1B]" : "font-medium text-slate-500 group-hover:text-slate-700"
+                    }`}
+                  >
+                    {layer.name || (idx === 0 ? "Main Invi..." : `Insert Shee ${idx + 1}`)}
+                  </span>
+                  {/* Sheet Subtitle: Base / Percentage */}
+                  <span className="text-[8px] font-mono text-slate-400">
+                    {layer.isBase ? "Base" : `${layer.heightPercent || 85}%`}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* Plus Button to Add Card Insert Sheet */}
+            <button
+              type="button"
+              onClick={handleAddLayer}
+              className="w-8 h-8 rounded-full border border-slate-300 hover:border-[#991B1B] hover:bg-red-50 text-slate-500 hover:text-[#991B1B] flex items-center justify-center transition-all cursor-pointer shadow-2xs mt-1"
+              title="Add new card insert sheet"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── DESKTOP RIGHT INSPECTOR PANEL (TYPOGRAPHY, COLORS, DIMENSIONS, ALIGNMENT) ── */}
+        <aside className="hidden lg:flex lg:static lg:z-10 lg:w-80 flex-col border-l border-slate-200 shrink-0 bg-white shadow-xs">
           {/* Header */}
           <div className="p-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
             <span className="font-extrabold text-[#991B1B] uppercase tracking-wider text-[11px]">
@@ -2507,26 +3327,37 @@ export default function CanvaUserStudio() {
                   : "🖼️ Element Inspector"
                 : "⚙️ Studio Inspector"}
             </span>
-            {selectedElement && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleDuplicateElement(selectedElement.id)}
-                  className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  title="Duplicate"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteElement(selectedElement.id)}
-                  className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#991B1B]"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-1">
+              {selectedElement && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleDuplicateElement(selectedElement.id)}
+                    className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+                    title="Duplicate"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteElement(selectedElement.id)}
+                    className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#991B1B] cursor-pointer"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+              {/* Close Button on Mobile Drawer */}
+              <button
+                type="button"
+                onClick={() => setMobileRightOpen(false)}
+                className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                title="Close Inspector"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Inspector Body */}
@@ -2711,6 +3542,1436 @@ export default function CanvaUserStudio() {
           </div>
         </aside>
       </div>
+
+      {/* ── 📱 MOBILE APP BOTTOM NAVIGATION DOCK (FIXED AT BOTTOM) ── */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl lg:hidden select-none"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
+        aria-label="Mobile Studio Navigation"
+      >
+        {/* MODE 1: CONTEXTUAL EDITING TOOLBAR (WHEN ELEMENT IS SELECTED) */}
+        {selectedElement ? (
+          <div className="flex items-center gap-1.5 px-2 py-2 overflow-x-auto custom-scrollbar bg-slate-900 text-white">
+            {/* If Text Element */}
+            {selectedElement.type === "text" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_TEXT")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Type className="w-4 h-4 text-red-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Edit Text</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_FONT")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Font</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_SIZE")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Maximize2 className="w-4 h-4 text-emerald-400" />
+                  <span className="text-[9px] font-bold mt-0.5">{selectedElement.fontSize || 16}px</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_COLOR")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <div
+                    className="w-4 h-4 rounded-full border border-white/60 shadow-xs"
+                    style={{ backgroundColor: selectedElement.color || "#1E293B" }}
+                  />
+                  <span className="text-[9px] font-bold mt-0.5">Color</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_STYLE")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-purple-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Format</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const aligns: ("left" | "center" | "right")[] = ["left", "center", "right"];
+                    const cur = selectedElement.textAlign || "center";
+                    const next = aligns[(aligns.indexOf(cur as any) + 1) % aligns.length];
+                    updateElementById(selectedElement.id, { textAlign: next });
+                  }}
+                  className="flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  {selectedElement.textAlign === "left" ? (
+                    <AlignLeft className="w-4 h-4 text-slate-300" />
+                  ) : selectedElement.textAlign === "right" ? (
+                    <AlignRight className="w-4 h-4 text-slate-300" />
+                  ) : (
+                    <AlignCenter className="w-4 h-4 text-slate-300" />
+                  )}
+                  <span className="text-[9px] font-bold mt-0.5 capitalize">{selectedElement.textAlign || "center"}</span>
+                </button>
+              </>
+            )}
+
+            {/* If Image Element */}
+            {selectedElement.type === "image" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("ASSETS")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="w-4 h-4 text-amber-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Replace</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_OPACITY")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-emerald-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Opacity</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => updateElementById(selectedElement.id, { flipH: !selectedElement.flipH })}
+                  className={`flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl transition-colors cursor-pointer ${
+                    selectedElement.flipH ? "bg-red-500/40 text-red-200" : "hover:bg-white/10 text-white"
+                  }`}
+                >
+                  <span className="text-xs">⇄</span>
+                  <span className="text-[9px] font-bold mt-0.5">Flip H</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => updateElementById(selectedElement.id, { flipV: !selectedElement.flipV })}
+                  className={`flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl transition-colors cursor-pointer ${
+                    selectedElement.flipV ? "bg-red-500/40 text-red-200" : "hover:bg-white/10 text-white"
+                  }`}
+                >
+                  <span className="text-xs">⇅</span>
+                  <span className="text-[9px] font-bold mt-0.5">Flip V</span>
+                </button>
+              </>
+            )}
+
+            {/* If Shape Element */}
+            {selectedElement.type === "shape" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_COLOR")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <div
+                    className="w-4 h-4 rounded-full border border-white/60 shadow-xs"
+                    style={{ backgroundColor: selectedElement.backgroundColor || "#D4AF37" }}
+                  />
+                  <span className="text-[9px] font-bold mt-0.5">Color</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet("INSPECTOR_OPACITY")}
+                  className="flex flex-col items-center justify-center min-w-[56px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-emerald-400" />
+                  <span className="text-[9px] font-bold mt-0.5">Opacity</span>
+                </button>
+              </>
+            )}
+
+            {/* Common Action Buttons: Layer Forward, Duplicate, Delete, Done */}
+            <button
+              type="button"
+              onClick={() => handleMoveLayerZIndex(selectedElement.id, "up")}
+              className="flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+              title="Bring forward"
+            >
+              <MoveUp className="w-4 h-4 text-slate-300" />
+              <span className="text-[9px] font-bold mt-0.5">Forward</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDuplicateElement(selectedElement.id)}
+              className="flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl hover:bg-white/10 active:bg-white/20 text-white transition-colors cursor-pointer"
+              title="Duplicate"
+            >
+              <Copy className="w-4 h-4 text-slate-300" />
+              <span className="text-[9px] font-bold mt-0.5">Duplicate</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDeleteElement(selectedElement.id)}
+              className="flex flex-col items-center justify-center min-w-[50px] py-1 px-1.5 rounded-xl hover:bg-red-500/20 active:bg-red-500/30 text-rose-400 transition-colors cursor-pointer"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-[9px] font-bold mt-0.5">Delete</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedElementId(null)}
+              className="flex flex-col items-center justify-center min-w-[52px] py-1 px-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors ml-auto shrink-0 cursor-pointer"
+              title="Done editing element"
+            >
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span className="text-[9px] font-extrabold mt-0.5">Done</span>
+            </button>
+          </div>
+        ) : (
+          /* MODE 2: MAIN CREATION DOCK (WHEN NO ELEMENT SELECTED) */
+          <div className="flex items-center justify-between px-3 py-1.5">
+            {/* 🌟 + Add Button (Primary Action) 🌟 */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSheet("ADD");
+                setMobileAddTab("text");
+              }}
+              className="flex flex-col items-center justify-center px-3.5 py-1 rounded-2xl bg-gradient-to-r from-[#991B1B] to-[#B91C1C] text-white shadow-md active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-[10px] font-black tracking-wide">Add</span>
+            </button>
+
+            {/* Text Presets */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSheet("ADD");
+                setMobileAddTab("text");
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl text-slate-700 hover:text-slate-900 active:scale-95 transition-all cursor-pointer"
+            >
+              <Type className="w-4 h-4 text-slate-700" />
+              <span className="text-[9.5px] font-bold mt-0.5">Text</span>
+            </button>
+
+            {/* Motifs & Graphics */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSheet("ASSETS");
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl text-slate-700 hover:text-slate-900 active:scale-95 transition-all cursor-pointer"
+            >
+              <ImageIcon className="w-4 h-4 text-slate-700" />
+              <span className="text-[9.5px] font-bold mt-0.5">Graphics</span>
+            </button>
+
+            {/* Background & Paper Textures */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("SETTINGS");
+                setMobileSettingsTab("bg");
+                setMobileSheet("SETTINGS");
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl text-slate-700 hover:text-slate-900 active:scale-95 transition-all cursor-pointer"
+            >
+              <Palette className="w-4 h-4 text-slate-700" />
+              <span className="text-[9.5px] font-bold mt-0.5">Paper</span>
+            </button>
+
+            {/* Card Sheets / Multi-Deck Layers */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("LAYERS");
+                setMobileSheet("LAYERS");
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl text-slate-700 hover:text-slate-900 active:scale-95 transition-all relative cursor-pointer"
+            >
+              <Layers className="w-4 h-4 text-[#991B1B]" />
+              <span className="text-[9.5px] font-bold mt-0.5">Sheets ({cardLayers.length})</span>
+            </button>
+
+            {/* Templates Gallery */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("TEMPLATES");
+                setMobileSheet("TEMPLATES");
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl text-slate-700 hover:text-slate-900 active:scale-95 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span className="text-[9.5px] font-bold mt-0.5">Designs</span>
+            </button>
+          </div>
+        )}
+      </nav>
+
+      {/* ── 📱 MOBILE APP SLIDING BOTTOM SHEET (MODAL DRAWER) ── */}
+      {mobileSheet && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 lg:hidden animate-in fade-in duration-200"
+            onClick={() => setMobileSheet(null)}
+          />
+
+          {/* Bottom Sheet Modal Container */}
+          <div
+            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 max-h-[80vh] flex flex-col animate-in slide-in-from-bottom duration-200 lg:hidden select-none"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+          >
+            {/* Grab Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+
+            {/* Sheet Header */}
+            <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                {mobileSheet === "ADD" && (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Add Elements</span>
+                  </>
+                )}
+                {mobileSheet === "ASSETS" && (
+                  <>
+                    <ImageIcon className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Graphic Motifs & Stickers</span>
+                  </>
+                )}
+                {mobileSheet === "SETTINGS" && (
+                  <>
+                    <Palette className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Paper & Format</span>
+                  </>
+                )}
+                {mobileSheet === "LAYERS" && (
+                  <>
+                    <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Deck Sheets & Elements</span>
+                  </>
+                )}
+                {mobileSheet === "TEMPLATES" && (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Pre-Designed Templates</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_TEXT" && (
+                  <>
+                    <Type className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Edit Text</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_FONT" && (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Select Font Family</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_SIZE" && (
+                  <>
+                    <Maximize2 className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Font Size</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_COLOR" && (
+                  <>
+                    <Palette className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Colors & Gradients</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_STYLE" && (
+                  <>
+                    <Sliders className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Format & Spacing</span>
+                  </>
+                )}
+                {mobileSheet === "INSPECTOR_OPACITY" && (
+                  <>
+                    <Sliders className="w-3.5 h-3.5 text-[#991B1B]" />
+                    <span>Opacity</span>
+                  </>
+                )}
+              </h3>
+
+              <button
+                type="button"
+                onClick={() => setMobileSheet(null)}
+                className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                title="Close sheet"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Sheet Scrollable Content Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar text-xs">
+              {/* ── SHEET: ADD ELEMENTS (TEXT, SLOKAS, MOTIFS, SHAPES) ── */}
+              {mobileSheet === "ADD" && (
+                <div className="space-y-4">
+                  {/* Category Chips */}
+                  <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-xl text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setMobileAddTab("text")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileAddTab === "text" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Text
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileAddTab("slokas")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileAddTab === "slokas" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Slokas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileAddTab("assets")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileAddTab === "assets" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Motifs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileAddTab("shapes")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileAddTab === "shapes" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Shapes
+                    </button>
+                  </div>
+
+                  {/* Add Tab 1: Typography Presets */}
+                  {mobileAddTab === "text" && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleAddTextElement({ text: "Heading", fontSize: 32, fontWeight: "bold" });
+                            setMobileSheet(null);
+                          }}
+                          className="p-3 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 text-center transition-all cursor-pointer"
+                        >
+                          <span className="text-base font-bold text-slate-900 block">Heading</span>
+                          <span className="text-[9px] text-slate-500">32px Serif</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleAddTextElement({ text: "Subheading", fontSize: 20, fontWeight: "600" });
+                            setMobileSheet(null);
+                          }}
+                          className="p-3 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 text-center transition-all cursor-pointer"
+                        >
+                          <span className="text-sm font-semibold text-slate-800 block">Subheading</span>
+                          <span className="text-[9px] text-slate-500">20px Medium</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleAddTextElement({ text: "Add body description text here...", fontSize: 13 });
+                            setMobileSheet(null);
+                          }}
+                          className="p-3 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 text-center transition-all cursor-pointer"
+                        >
+                          <span className="text-xs text-slate-700 block truncate">Body text</span>
+                          <span className="text-[9px] text-slate-500">13px Regular</span>
+                        </button>
+                      </div>
+
+                      {/* Wedding Lines */}
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Curated Invitation Lines
+                        </label>
+                        {[
+                          { label: "Couple Names", text: "Sophia & Alexander", font: "'Great Vibes', cursive", size: 36 },
+                          { label: "Formal Header", text: "TOGETHER WITH THEIR PARENTS\nINVITE YOU TO CELEBRATE THE WEDDING OF", font: "'Cinzel', serif", size: 10 },
+                          { label: "Save Our Date", text: "SAVE OUR DATE", font: "'Cinzel', serif", size: 16 },
+                          { label: "Ceremony & Reception", text: "WEDDING CEREMONY & RECEPTION", font: "'Montserrat', sans-serif", size: 12 },
+                          { label: "Event Date & Time", text: "SATURDAY | OCTOBER 30, 2026 | 6:30 PM", font: "'Montserrat', sans-serif", size: 11 },
+                          { label: "Palace Venue", text: "THE LEELA PALACE, UDAIPUR\nRAJASTHAN, INDIA", font: "'Cormorant Garamond', serif", size: 12 },
+                        ].map((item) => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => {
+                              handleAddTextElement({
+                                text: item.text,
+                                fontFamily: item.font,
+                                fontSize: item.size,
+                              });
+                              setMobileSheet(null);
+                            }}
+                            className="w-full p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/30 text-left transition-all cursor-pointer flex items-center justify-between"
+                          >
+                            <span className="font-bold text-slate-800 text-xs">{item.label}</span>
+                            <span className="text-[10px] text-slate-500 truncate max-w-[180px] font-mono">
+                              {item.text.replace("\n", " ")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add Tab 2: Slokas & Presets */}
+                  {mobileAddTab === "slokas" && (
+                    <div className="space-y-4">
+                      {WEDDING_TEXT_PRESETS.map((cat) => (
+                        <div key={cat.category} className="space-y-1.5">
+                          <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
+                            {cat.category}
+                          </span>
+                          {cat.items.map((item) => (
+                            <div
+                              key={item.label}
+                              onClick={() => {
+                                handleAddTextElement(item);
+                                setMobileSheet(null);
+                              }}
+                              className="p-2.5 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left"
+                            >
+                              <span className="text-[10px] font-bold text-[#991B1B] block mb-0.5">
+                                {item.label}
+                              </span>
+                              <p
+                                style={{ fontFamily: item.fontFamily }}
+                                className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"
+                              >
+                                {item.text}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Tab 3: Motifs & Graphics */}
+                  {mobileAddTab === "assets" && (
+                    <div className="space-y-3">
+                      {/* Upload Button */}
+                      <label className="w-full py-2.5 px-3 border border-dashed border-red-300 rounded-xl bg-red-50/50 hover:bg-red-50 text-center flex items-center justify-center gap-2 text-xs font-bold text-[#991B1B] cursor-pointer">
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Custom Photo / Motif</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            handleImageUpload(e);
+                            setMobileSheet(null);
+                          }}
+                        />
+                      </label>
+
+                      {/* Your Account Assets */}
+                      {userAssets.length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
+                            Your Account Assets ({userAssets.length})
+                          </span>
+                          <div className="grid grid-cols-3 gap-2">
+                            {userAssets.map((asset) => (
+                              <div
+                                key={asset.id}
+                                onClick={() => {
+                                  handleAddImageElement(asset.url);
+                                  setMobileSheet(null);
+                                }}
+                                className="group relative p-2 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center aspect-square cursor-pointer hover:bg-red-50/40 transition-all"
+                              >
+                                <img src={asset.url} alt={asset.name || "Asset"} className="max-w-full max-h-full object-contain" />
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteUserAsset(e, asset.id)}
+                                  className="absolute top-1 right-1 w-5 h-5 bg-white/95 text-slate-500 hover:text-red-600 rounded-md flex items-center justify-center shadow-xs"
+                                  title="Delete from account"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stock Motifs Grid */}
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider block">
+                          Curated Motifs ({stockMotifs.length})
+                        </span>
+                        <div className="grid grid-cols-3 gap-2">
+                          {stockMotifs.map((src, idx) => (
+                            <div
+                              key={`${src}-${idx}`}
+                              onClick={() => {
+                                handleAddImageElement(src);
+                                setMobileSheet(null);
+                              }}
+                              className="p-2 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center aspect-square cursor-pointer hover:bg-red-50/40 transition-all"
+                            >
+                              <img src={src} alt="Motif" className="max-w-full max-h-full object-contain" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add Tab 4: Shapes */}
+                  {mobileAddTab === "shapes" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {PRESET_SHAPES.map((shape) => (
+                        <button
+                          key={shape.id}
+                          type="button"
+                          onClick={() => {
+                            handleAddShapeElement(shape);
+                            setMobileSheet(null);
+                          }}
+                          className="p-3 border border-slate-200 hover:border-[#991B1B] rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-red-50/40 transition-all"
+                        >
+                          <div
+                            style={{
+                              backgroundColor: shape.backgroundColor,
+                              width: shape.id.includes("line") ? "80%" : "36px",
+                              height: shape.id.includes("line") ? "2px" : "36px",
+                              borderRadius: shape.id.includes("circle") ? "50%" : "6px",
+                            }}
+                          />
+                          <span className="text-xs font-bold text-slate-800">{shape.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── SHEET: GRAPHIC MOTIFS & ASSETS ── */}
+              {mobileSheet === "ASSETS" && (
+                <div className="space-y-3">
+                  <label className="w-full py-2.5 px-3 border border-dashed border-red-300 rounded-xl bg-red-50/50 hover:bg-red-50 text-center flex items-center justify-center gap-2 text-xs font-bold text-[#991B1B] cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload PNG / Motif</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        handleImageUpload(e);
+                        setMobileSheet(null);
+                      }}
+                    />
+                  </label>
+
+                  {/* Your Account Assets */}
+                  {userAssets.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
+                        Your Account Assets ({userAssets.length})
+                      </span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {userAssets.map((asset) => (
+                          <div
+                            key={asset.id}
+                            onClick={() => {
+                              if (selectedElement && selectedElement.type === "image") {
+                                updateElementById(selectedElement.id, { src: asset.url });
+                              } else {
+                                handleAddImageElement(asset.url);
+                              }
+                              setMobileSheet(null);
+                            }}
+                            className="group relative p-2 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center aspect-square cursor-pointer hover:bg-red-50/40 transition-all"
+                          >
+                            <img src={asset.url} alt={asset.name || "Asset"} className="max-w-full max-h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteUserAsset(e, asset.id)}
+                              className="absolute top-1 right-1 w-5 h-5 bg-white/95 text-slate-500 hover:text-red-600 rounded-md flex items-center justify-center shadow-xs"
+                              title="Delete from account"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider block">
+                      Curated Motifs ({stockMotifs.length})
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {stockMotifs.map((src, idx) => (
+                        <div
+                          key={`${src}-${idx}`}
+                          onClick={() => {
+                            if (selectedElement && selectedElement.type === "image") {
+                              updateElementById(selectedElement.id, { src });
+                            } else {
+                              handleAddImageElement(src);
+                            }
+                            setMobileSheet(null);
+                          }}
+                          className="p-2 border border-slate-200 hover:border-[#991B1B] rounded-xl flex items-center justify-center aspect-square cursor-pointer hover:bg-red-50/40 transition-all"
+                        >
+                          <img src={src} alt="Motif" className="max-w-full max-h-full object-contain" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: PAPER TEXTURES, COLORS & DIMENSIONS ── */}
+              {mobileSheet === "SETTINGS" && (
+                <div className="space-y-4">
+                  {/* Mode Selector */}
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setMobileSettingsTab("bg")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileSettingsTab === "bg" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Paper Textures
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileSettingsTab("format")}
+                      className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                        mobileSettingsTab === "format" ? "bg-white text-[#991B1B] shadow-xs" : "text-slate-600"
+                      }`}
+                    >
+                      Dimensions
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateModal(true)}
+                      className="py-1.5 rounded-lg bg-[#991B1B] text-white transition-all cursor-pointer font-extrabold flex items-center justify-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> New Card
+                    </button>
+                  </div>
+
+                  {mobileSettingsTab === "bg" ? (
+                    <div className="space-y-3">
+                      {/* Textures Grid */}
+                      <label className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider block">
+                        Luxury Wedding Paper Textures
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {texturesList.map((tex) => {
+                          const isSel = activeLayer.backgroundImage === tex.src;
+                          return (
+                            <div
+                              key={tex.id}
+                              onClick={() => {
+                                updateActiveLayer({
+                                  backgroundImage: tex.src,
+                                  bgMode: "textures",
+                                });
+                              }}
+                              className={`p-1.5 rounded-xl border flex flex-col items-center gap-1 cursor-pointer transition-all ${
+                                isSel
+                                  ? "border-[#991B1B] ring-2 ring-[#991B1B]/40 bg-red-50/50"
+                                  : "border-slate-200 hover:border-slate-300"
+                              }`}
+                            >
+                              <img src={tex.src} alt={tex.name} className="w-10 h-10 rounded-lg object-cover border" />
+                              <span className="text-[8.5px] font-bold text-slate-700 truncate w-full text-center">
+                                {tex.name}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Solid Colors */}
+                      <div className="pt-2 border-t border-slate-100 space-y-2">
+                        <label className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider block">
+                          Solid Colors
+                        </label>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {[
+                            { name: "White", val: "#FFFFFF" },
+                            { name: "Ivory", val: "#FAF6EE" },
+                            { name: "Silk Cream", val: "#F3EAD8" },
+                            { name: "Gold Foil", val: "#D4AF37" },
+                            { name: "Maroon", val: "#4A0E17" },
+                            { name: "Navy", val: "#0B192C" },
+                            { name: "Charcoal", val: "#1E293B" },
+                          ].map((c) => (
+                            <button
+                              key={c.val}
+                              type="button"
+                              onClick={() => {
+                                updateActiveLayer({
+                                  backgroundColor: c.val,
+                                  backgroundImage: null,
+                                  bgMode: "solid",
+                                });
+                              }}
+                              style={{ backgroundColor: c.val }}
+                              className="w-8 h-8 rounded-full border-2 border-white shadow-md active:scale-95 transition-transform"
+                              title={c.name}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Aspect Ratios */
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {ASPECT_RATIOS.map((ratio) => {
+                          const isSelected = activeLayer.aspectRatio === ratio.id;
+                          return (
+                            <button
+                              key={ratio.id}
+                              type="button"
+                              onClick={() => {
+                                const oldW = activeDimensions.width;
+                                const oldH = activeDimensions.height;
+                                const newW = ratio.width;
+                                const newH = ratio.height;
+                                const scaledElements = getScaledElementsForDimensions(
+                                  activeLayer.elements,
+                                  oldW,
+                                  oldH,
+                                  newW,
+                                  newH
+                                );
+                                updateActiveLayer({
+                                  aspectRatio: ratio.id,
+                                  customWidth: newW,
+                                  customHeight: newH,
+                                  elements: scaledElements,
+                                });
+                              }}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                                isSelected
+                                  ? "bg-red-50/60 border-[#991B1B] ring-1 ring-[#991B1B]/30"
+                                  : "border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`font-bold text-xs ${isSelected ? "text-[#991B1B]" : "text-slate-800"}`}>
+                                  {ratio.shortName}
+                                </span>
+                                <span className="text-[9px] text-[#991B1B] font-bold">{ratio.ratioStr}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-mono mt-1">
+                                {ratio.width} × {ratio.height}px
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── SHEET: DECK SHEETS, 2.5D PREVIEW & ACTIVE SHEET ELEMENTS ── */}
+              {mobileSheet === "LAYERS" && (
+                <div className="space-y-4">
+                  {/* Sheets Manager */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-[#991B1B]" />
+                        Card Deck Sheets ({cardLayers.length})
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAddLayer}
+                        className="px-2.5 py-1 rounded-lg bg-red-50 text-[#991B1B] hover:bg-red-100 text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Plus className="w-3 h-3" /> Add Sheet
+                      </button>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {cardLayers.map((layer, idx) => {
+                        const isSelected = layer.id === activeLayerId;
+                        return (
+                          <div
+                            key={layer.id}
+                            onClick={() => {
+                              setActiveLayerId(layer.id);
+                              setSelectedElementId(null);
+                            }}
+                            className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-red-50/40 border-[#991B1B] ring-1 ring-[#991B1B]/20"
+                                : "border-slate-200 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-[10px] shrink-0">
+                                {idx + 1}
+                              </span>
+                              <div className="truncate">
+                                <span className="font-bold text-xs text-slate-800 block truncate">{layer.name}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  {layer.isBase ? "⭐ Fixed Base Layer (100%)" : `Height: ${layer.heightPercent}%`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {!layer.isBase && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteLayer(layer.id);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                                  title="Delete sheet"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2.5D Stepped Deck Visualizer */}
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                        <Ruler className="w-3.5 h-3.5 text-[#991B1B]" />
+                        Deck Preview
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileSheet(null);
+                          setShowStackModal(true);
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-[#991B1B] text-[10px] font-extrabold flex items-center gap-1 shadow-2xs"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                        <span>Enlarge</span>
+                      </button>
+                    </div>
+
+                    {/* Stepped Alignment Controls */}
+                    <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-[10px] font-bold text-center">
+                      <button
+                        type="button"
+                        onClick={() => setStackAlign("bottom")}
+                        className={`py-1 rounded-lg transition-all cursor-pointer ${
+                          stackAlign === "bottom" ? "bg-[#991B1B] text-white shadow-xs font-extrabold" : "text-slate-600"
+                        }`}
+                      >
+                        Bottom
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStackAlign("top")}
+                        className={`py-1 rounded-lg transition-all cursor-pointer ${
+                          stackAlign === "top" ? "bg-[#991B1B] text-white shadow-xs font-extrabold" : "text-slate-600"
+                        }`}
+                      >
+                        Top
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStackAlign("center")}
+                        className={`py-1 rounded-lg transition-all cursor-pointer ${
+                          stackAlign === "center" ? "bg-[#991B1B] text-white shadow-xs font-extrabold" : "text-slate-600"
+                        }`}
+                      >
+                        Center
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Elements on Active Sheet */}
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
+                      Elements on Active Sheet ({activeLayer.elements.length})
+                    </label>
+                    {activeLayer.elements.length === 0 ? (
+                      <p className="text-center py-4 text-xs text-slate-400">No elements on this sheet yet.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {[...activeLayer.elements].reverse().map((el) => {
+                          const isSelected = el.id === selectedElementId;
+                          return (
+                            <div
+                              key={el.id}
+                              onClick={() => {
+                                setSelectedElementId(el.id);
+                                setMobileSheet(null);
+                              }}
+                              className={`p-2 rounded-xl border flex items-center justify-between gap-2 text-xs font-bold cursor-pointer transition-colors ${
+                                isSelected
+                                  ? "bg-red-50/60 border-[#991B1B] text-[#991B1B] ring-1 ring-[#991B1B]/30"
+                                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {el.type === "text" ? (
+                                  <Type className="w-3.5 h-3.5 text-[#991B1B] shrink-0" />
+                                ) : el.type === "image" ? (
+                                  <ImageIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                ) : (
+                                  <Square className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                )}
+                                <span className="truncate">
+                                  {el.text || (el.type === "image" ? "Graphic Image" : "Shape")}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateElementById(el.id, { isHidden: !el.isHidden });
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                                  title={el.isHidden ? "Unhide" : "Hide"}
+                                >
+                                  {el.isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-600" /> : <Eye className="w-3.5 h-3.5" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteElement(el.id);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: TEMPLATES GALLERY ── */}
+              {mobileSheet === "TEMPLATES" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {dynamicTemplates.map((tpl) => (
+                    <div
+                      key={tpl.id}
+                      onClick={() => {
+                        if (confirm(`Load template "${tpl.name}" onto your canvas?`)) {
+                          setDocTitle(tpl.name);
+                          if (tpl.elements && tpl.elements.layers) {
+                            setCardLayers(tpl.elements.layers);
+                          } else if (Array.isArray(tpl.elements)) {
+                            setCardLayers([
+                              {
+                                id: "layer-1",
+                                name: "Main Invitation (Base)",
+                                isBase: true,
+                                heightPercent: 100,
+                                aspectRatio: tpl.aspectRatio || "classic",
+                                customWidth: 480,
+                                customHeight: 672,
+                                lockRatio: true,
+                                backgroundColor: tpl.backgroundColor || "#F3EAD8",
+                                backgroundImage: tpl.backgroundImage || null,
+                                bgMode: tpl.backgroundImage ? "image" : "textures",
+                                elements: tpl.elements,
+                              },
+                            ]);
+                          }
+                          setSelectedElementId(null);
+                          setMobileSheet(null);
+                        }
+                      }}
+                      className="p-2 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left"
+                    >
+                      <img
+                        src={tpl.previewImage || "/images/canva/template1-thumb.webp"}
+                        alt={tpl.name}
+                        className="w-full aspect-[4/5] object-cover rounded-lg mb-1.5"
+                      />
+                      <span className="font-bold text-xs text-slate-800 block truncate">{tpl.name}</span>
+                      <span className="text-[10px] text-slate-500 block">₹{tpl.pricePerCard || 30}/card</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - EDIT TEXT ── */}
+              {mobileSheet === "INSPECTOR_TEXT" && selectedElement && selectedElement.type === "text" && (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-800 block text-xs">Text Content</label>
+                    <textarea
+                      rows={4}
+                      value={selectedElement.text || ""}
+                      onChange={(e) => updateSelectedElement({ text: e.target.value })}
+                      placeholder="Type your invitation text here..."
+                      className="w-full p-3 rounded-xl border border-slate-300 focus:border-[#991B1B] text-sm text-slate-900 outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Casing Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateSelectedElement({
+                          text: (selectedElement.text || "").toUpperCase(),
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold"
+                    >
+                      UPPERCASE
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateSelectedElement({
+                          text: (selectedElement.text || "").toLowerCase(),
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold"
+                    >
+                      lowercase
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - FONT PICKER ── */}
+              {mobileSheet === "INSPECTOR_FONT" && selectedElement && (
+                <div className="space-y-2">
+                  {CURATED_FONTS.map((font) => {
+                    const isSel = selectedElement.fontFamily === font.family;
+                    return (
+                      <button
+                        key={font.name}
+                        type="button"
+                        onClick={() => {
+                          updateSelectedElement({ fontFamily: font.family });
+                          setMobileSheet(null);
+                        }}
+                        style={{ fontFamily: font.family }}
+                        className={`w-full p-3 rounded-xl border text-left text-base transition-all flex items-center justify-between cursor-pointer ${
+                          isSel
+                            ? "border-[#991B1B] bg-red-50/50 text-[#991B1B] ring-2 ring-[#991B1B]/30"
+                            : "border-slate-200 hover:bg-slate-50 text-slate-900"
+                        }`}
+                      >
+                        <span>{font.name.split(" (")[0]}</span>
+                        {isSel && <Check className="w-4 h-4 text-[#991B1B]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - FONT SIZE ── */}
+              {mobileSheet === "INSPECTOR_SIZE" && selectedElement && (
+                <div className="space-y-5 p-2">
+                  <div className="text-center">
+                    <span className="text-3xl font-extrabold text-[#991B1B] font-mono">
+                      {selectedElement.fontSize || 16}px
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="8"
+                    max="96"
+                    value={selectedElement.fontSize || 16}
+                    onChange={(e) => updateSelectedElement({ fontSize: Number(e.target.value) })}
+                    className="w-full accent-[#991B1B]"
+                  />
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {[-10, -2, +2, +10].map((step) => (
+                      <button
+                        key={step}
+                        type="button"
+                        onClick={() =>
+                          updateSelectedElement({
+                            fontSize: Math.max(8, Math.min(120, (selectedElement.fontSize || 16) + step)),
+                          })
+                        }
+                        className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-800"
+                      >
+                        {step > 0 ? `+${step}` : step}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - COLOR & GRADIENTS ── */}
+              {mobileSheet === "INSPECTOR_COLOR" && selectedElement && (
+                <div className="space-y-4">
+                  {/* Luxury Color Swatches */}
+                  <div className="space-y-2">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Luxury Palette Swatches
+                    </label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {[
+                        { name: "Charcoal", hex: "#1E293B" },
+                        { name: "Imperial Gold", hex: "#D4AF37" },
+                        { name: "Royal Maroon", hex: "#991B1B" },
+                        { name: "Emerald Green", hex: "#065F46" },
+                        { name: "Midnight Navy", hex: "#0F172A" },
+                        { name: "Deep Ruby", hex: "#7F1D1D" },
+                        { name: "Rose Gold", hex: "#B76E79" },
+                        { name: "Warm Bronze", hex: "#8A4B29" },
+                        { name: "Pure White", hex: "#FFFFFF" },
+                        { name: "Jet Black", hex: "#000000" },
+                      ].map((item) => (
+                        <button
+                          key={item.hex}
+                          type="button"
+                          onClick={() => {
+                            if (selectedElement.type === "shape") {
+                              updateSelectedElement({ backgroundColor: item.hex });
+                            } else {
+                              updateSelectedElement({ color: item.hex, textShadow: "none" });
+                            }
+                          }}
+                          className="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-slate-300"
+                        >
+                          <div
+                            style={{ backgroundColor: item.hex }}
+                            className="w-7 h-7 rounded-full border border-slate-200 shadow-xs"
+                          />
+                          <span className="text-[8.5px] font-bold text-slate-700 truncate w-full text-center">
+                            {item.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Foil Gradients (For Text) */}
+                  {selectedElement.type === "text" && (
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                        Foil & Gradients
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {TEXT_GRADIENTS.filter((g) => g.value).map((grad) => (
+                          <button
+                            key={grad.name}
+                            type="button"
+                            onClick={() => updateSelectedElement({ color: "#B38728", textShadow: "0 1px 2px rgba(0,0,0,0.3)" })}
+                            className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] text-left text-xs font-bold"
+                          >
+                            <div style={{ background: grad.value }} className="h-4 rounded-md mb-1" />
+                            <span className="text-[10px] text-slate-800 block truncate">{grad.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Hex Picker */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={selectedElement.color?.startsWith("#") ? selectedElement.color : "#1E293B"}
+                      onChange={(e) => updateSelectedElement({ color: e.target.value })}
+                      className="w-9 h-9 rounded-xl border border-slate-200 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={selectedElement.color || "#1E293B"}
+                      onChange={(e) => updateSelectedElement({ color: e.target.value })}
+                      className="flex-1 p-2 rounded-xl border border-slate-200 text-xs font-mono font-bold"
+                      placeholder="#HEX"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - FORMAT & SPACING ── */}
+              {mobileSheet === "INSPECTOR_STYLE" && selectedElement && selectedElement.type === "text" && (
+                <div className="space-y-4">
+                  {/* Styling Toggles: Bold, Italic, Underline, Uppercase */}
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                      Style & Casing
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateSelectedElement({
+                            fontWeight: selectedElement.fontWeight === "bold" ? "normal" : "bold",
+                          })
+                        }
+                        className={`py-2 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1 ${
+                          selectedElement.fontWeight === "bold"
+                            ? "bg-[#991B1B] text-white border-[#991B1B]"
+                            : "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <Bold className="w-3.5 h-3.5" />
+                        <span>Bold</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateSelectedElement({
+                            fontStyle: selectedElement.fontStyle === "italic" ? "normal" : "italic",
+                          })
+                        }
+                        className={`py-2 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1 ${
+                          selectedElement.fontStyle === "italic"
+                            ? "bg-[#991B1B] text-white border-[#991B1B]"
+                            : "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <Italic className="w-3.5 h-3.5" />
+                        <span>Italic</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateSelectedElement({
+                            textDecoration: selectedElement.textDecoration === "underline" ? "none" : "underline",
+                          })
+                        }
+                        className={`py-2 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1 ${
+                          selectedElement.textDecoration === "underline"
+                            ? "bg-[#991B1B] text-white border-[#991B1B]"
+                            : "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <Underline className="w-3.5 h-3.5" />
+                        <span>Line</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateSelectedElement({
+                            textTransform: selectedElement.textTransform === "uppercase" ? "none" : "uppercase",
+                          })
+                        }
+                        className={`py-2 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1 ${
+                          selectedElement.textTransform === "uppercase"
+                            ? "bg-[#991B1B] text-white border-[#991B1B]"
+                            : "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <span>aA</span>
+                        <span>Caps</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Letter Spacing */}
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-slate-800 text-xs">Letter Spacing</label>
+                      <span className="text-xs font-mono font-bold text-[#991B1B]">
+                        {selectedElement.letterSpacing || 0}px
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-2"
+                      max="12"
+                      value={selectedElement.letterSpacing || 0}
+                      onChange={(e) => updateSelectedElement({ letterSpacing: Number(e.target.value) })}
+                      className="w-full accent-[#991B1B]"
+                    />
+                  </div>
+
+                  {/* Line Height */}
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-slate-800 text-xs">Line Height</label>
+                      <span className="text-xs font-mono font-bold text-[#991B1B]">
+                        {selectedElement.lineHeight || 1.3}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.9"
+                      max="2.2"
+                      step="0.1"
+                      value={selectedElement.lineHeight || 1.3}
+                      onChange={(e) => updateSelectedElement({ lineHeight: Number(e.target.value) })}
+                      className="w-full accent-[#991B1B]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── SHEET: INSPECTOR - OPACITY ── */}
+              {mobileSheet === "INSPECTOR_OPACITY" && selectedElement && (
+                <div className="space-y-4 p-2">
+                  <div className="text-center">
+                    <span className="text-3xl font-extrabold text-[#991B1B] font-mono">
+                      {Math.round((selectedElement.opacity ?? 1) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
+                    value={selectedElement.opacity ?? 1}
+                    onChange={(e) => updateSelectedElement({ opacity: Number(e.target.value) })}
+                    className="w-full accent-[#991B1B]"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── 🌟 MODAL: BRAND NEW "CREATE NEW INVITATION CARD" FEATURE 🌟 ── */}
       {showCreateModal && (
@@ -2947,6 +5208,234 @@ export default function CanvaUserStudio() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: MULTI-DECK PHYSICAL STACK VISUALIZER ── */}
+      {showStackModal && (
+        <div className="fixed inset-0 z-[105] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-200 text-[#991B1B] flex items-center justify-center font-bold">
+                  <Ruler className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-slate-900">
+                    Multi-Deck Physical Stack Visualizer
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Visualize how the layered cards align and step over one another when physically printed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Alignment Toggle */}
+                <div className="flex items-center gap-1 bg-slate-200/80 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("bottom")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "bottom"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Bottom Stepped
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("top")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "top"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Top Stepped
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStackAlign("center")}
+                    className={`py-1 px-2.5 rounded-lg transition-all cursor-pointer ${
+                      stackAlign === "center"
+                        ? "bg-white text-[#991B1B] shadow-xs font-extrabold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Center
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowStackModal(false)}
+                  className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors cursor-pointer"
+                  title="Close Visualizer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+              {/* Large 2.5D Stack Preview Area */}
+              <div className="h-80 sm:h-96 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200/90 rounded-3xl p-6 flex items-center justify-center relative border border-slate-200 shadow-inner overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+
+                <div
+                  className={`relative w-full h-full flex justify-center ${
+                    stackAlign === "bottom"
+                      ? "items-end"
+                      : stackAlign === "top"
+                      ? "items-start"
+                      : "items-center"
+                  }`}
+                >
+                  {(() => {
+                    const baseL = cardLayers.find((p) => p.isBase) || cardLayers[0];
+                    const baseDim = getLayerDimensions(baseL, baseL);
+                    const maxHeightPx = 280;
+                    const scaleFactor = maxHeightPx / baseDim.height;
+
+                    const sortedForStack = [...cardLayers]
+                      .map((p, origIdx) => ({ layer: p, origIdx }))
+                      .sort((a, b) => {
+                        const aPct = a.layer.isBase !== false ? 100 : a.layer.heightPercent || 85;
+                        const bPct = b.layer.isBase !== false ? 100 : b.layer.heightPercent || 85;
+                        return bPct - aPct;
+                      });
+
+                    return sortedForStack.map((item, stackPos) => {
+                      const { layer: p, origIdx } = item;
+                      const isSelected = p.id === activeLayerId;
+                      const pDim = getPhysicalDimensions(p, baseL);
+                      const renderW = Math.round(pDim.pixelW * scaleFactor);
+                      const renderH = Math.round(pDim.pixelH * scaleFactor);
+
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            setActiveLayerId(p.id);
+                            setSelectedElementId(null);
+                          }}
+                          style={{
+                            width: `${renderW}px`,
+                            height: `${renderH}px`,
+                            zIndex: stackPos + 10,
+                            backgroundColor: p.backgroundColor?.startsWith("#") ? p.backgroundColor : "#FFFFFF",
+                            backgroundImage: p.backgroundImage ? `url(${p.backgroundImage})` : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
+                          className={`absolute rounded-2xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl group flex flex-col justify-between p-3 border ${
+                            isSelected
+                              ? "ring-4 ring-[#991B1B]/40 border-[#991B1B] shadow-2xl scale-[1.02]"
+                              : "border-slate-300 hover:scale-[1.01]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span
+                              className={`text-[10px] sm:text-xs font-extrabold px-2 py-0.5 rounded-lg truncate max-w-[140px] ${
+                                isSelected
+                                  ? "bg-[#991B1B] text-white shadow-2xs"
+                                  : "bg-black/60 text-white backdrop-blur-xs"
+                              }`}
+                            >
+                              {p.name || `Sheet ${origIdx + 1}`}
+                            </span>
+                            <span className="text-[9px] sm:text-[10px] font-mono font-bold bg-white/90 text-slate-900 px-1.5 py-0.5 rounded-md shadow-2xs">
+                              {pDim.pct}%
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-center w-full">
+                            <span className="text-[9px] sm:text-[10px] font-mono font-extrabold bg-white/95 text-slate-900 px-2 py-1 rounded-lg border border-slate-200 shadow-md">
+                              {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Specifications Grid Breakdown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {(() => {
+                  const baseL = cardLayers.find((p) => p.isBase) || cardLayers[0];
+                  return cardLayers.map((p, idx) => {
+                    const isSelected = p.id === activeLayerId;
+                    const pDim = getPhysicalDimensions(p, baseL);
+
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setActiveLayerId(p.id);
+                          setSelectedElementId(null);
+                        }}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                          isSelected
+                            ? "bg-red-50/80 border-[#991B1B] ring-2 ring-[#991B1B]/30 shadow-xs"
+                            : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shrink-0 ${
+                              p.isBase
+                                ? "bg-[#991B1B] text-white"
+                                : "bg-slate-200 text-slate-800"
+                            }`}
+                          >
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-slate-900">
+                                {p.name || `Sheet ${idx + 1}`}
+                              </h4>
+                              {p.isBase && (
+                                <span className="text-[9px] font-extrabold bg-red-100 text-[#991B1B] px-1.5 py-0.5 rounded-md">
+                                  Base
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-600 mt-0.5">
+                              {pDim.widthInches} × {pDim.heightInches} ({pDim.widthMm} × {pDim.heightMm})
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-mono font-extrabold text-[#991B1B] bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs block">
+                            {pDim.pct}% Height
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-200 flex items-center justify-end bg-slate-50 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowStackModal(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Close Visualizer
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -310,6 +310,23 @@ export async function ensureDbSchema() {
           CREATE INDEX IF NOT EXISTS "ProductReview_orderId_idx" ON "ProductReview"("orderId");
         `);
 
+        // User Assets Table for private account uploads
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS "UserAsset" (
+            "id" TEXT PRIMARY KEY,
+            "userId" TEXT NOT NULL,
+            "name" TEXT,
+            "url" TEXT NOT NULL,
+            "publicId" TEXT,
+            "fileType" TEXT DEFAULT 'image',
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "UserAsset_userId_idx" ON "UserAsset"("userId");
+        `);
+
         // Safely insert initial default occasions ONLY if newly created and completely empty
         try {
           const occCount: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*)::int as count FROM "ShopOccasion"`);

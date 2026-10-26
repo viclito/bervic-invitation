@@ -62,6 +62,11 @@ Every AI agent or developer making changes to this codebase **MUST** strictly ex
 8. **Permanent Deletion & Zero Record Resurrection (Mandatory Check in EVERY Chat):**
    - NEVER auto-generate, re-seed, or re-insert default records (such as `ShopCategory`, `ShopDimension`, `ShopProduct`, or templates) in database initialization or auto-migration files (`ensureDbSchema.ts`).
    - When an administrator or user deletes an entity, it MUST permanently stay deleted. NEVER use `INSERT ... ON CONFLICT DO NOTHING` or hardcoded fallback lists that resurrect deleted records upon server requests or page reloads.
+9. **Mandatory Mobile-First Responsive & Apt Touch UI Verification (In EVERY Single Chat):**
+   - In EVERY single chat and task across both mobile and web surfaces, actively audit and ensure mobile responsiveness and ergonomic touch UX.
+   - Fixed and floating controls (such as zoom pills, bottom action docks, and contextual toolbars) must remain firmly pinned / fixed to the viewport and NEVER scroll away horizontally or clip out of bounds when inner canvases or containers scroll.
+   - Minimize bulky panels and multi-row bars on mobile viewports into sleek floating glassmorphic pills, collapsible switchers, or sliding bottom sheets so that mobile editing receives maximal screen real estate.
+   - Global floating overlay buttons (such as customer support / WhatsApp bubbles) must never obscure or overlap bottom editing docks or touch navigation.
 
 ### 1.2 Post-Execution Verification Commands
 Before marking any chat request or command as complete, run the following verification steps:
@@ -164,3 +169,4 @@ Before submitting any code change, verify against this checklist:
 - [ ] Application builds successfully via `npm run build`.
 - [ ] `userId` multi-tenant boundaries are strictly enforced.
 - [ ] Performance metrics (no un-debounced state, no N+1 queries, dynamic imports used for heavy components) are preserved.
+- [ ] Mobile-first responsiveness and apt touch ergonomics audited: floating controls stay fixed to viewport, no horizontal scroll clipping, and no overlapping overlay buttons.

@@ -28,7 +28,7 @@
 - **Instagram Card Pass (₹99 One-Time):** 5 Extra high-res card download slots with lifetime validity across 31+ design presets.
 - **Basic Pass (₹599 for 6 Months):** 1 Live interactive digital invitation website, 5 Instagram cards, full customization, guest list & RSVP tracking, unlimited WhatsApp delivery.
 - **Cinematic Exclusive Pass (₹2000 for 1 Year):** 1 Exclusive 480-frame cinematic video sequence invitation template, 20 Instagram cards, audio music player, video embeds, priority support.
-- **Physical Cards & Gifts Catalog (`/shop`):** Custom pricing per unit (₹10 to ₹250/piece) with tiered bulk pricing, custom foil stamping, and nationwide shipping.
+- **Physical Cards & Gifts Catalog (`/shop`):** Custom pricing per unit (from ₹4/piece) with tiered bulk pricing, custom foil stamping, and nationwide shipping.
 
 ## Documentation & Full AI Knowledge Base
 

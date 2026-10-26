@@ -82,7 +82,7 @@ Bervic (https://www.bervic.in) is an all-in-one digital invitation suite and bes
   - Priority WhatsApp support and delivery
 
 - **Physical Cards Catalog (`/shop`):**
-  - Pricing starting from ₹10 to ₹250 per piece depending on paper GSM, gold foil stamping, and quantity.
+  - Pricing starting from ₹4 per piece depending on paper GSM, gold foil stamping, and quantity.
 
 ---
 

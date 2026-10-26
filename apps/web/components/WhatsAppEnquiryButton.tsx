@@ -23,8 +23,12 @@ export default function WhatsAppEnquiryButton() {
 
   if (!mounted) return null;
 
-  // Don't obscure full-screen builder canvases if on canvas studio editor
-  const isBuilder = pathname?.includes("/admin/canva-templates/builder");
+  // Don't obscure full-screen builder canvases or user studio if on canvas editor
+  const isBuilder =
+    pathname?.includes("/admin/canva-templates/builder") ||
+    pathname === "/canva" ||
+    pathname?.startsWith("/canva/") ||
+    pathname === "/cards";
   if (isBuilder) return null;
 
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;

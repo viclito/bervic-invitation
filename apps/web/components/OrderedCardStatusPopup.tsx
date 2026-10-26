@@ -123,7 +123,11 @@ export default function OrderedCardStatusPopup() {
   const [order, setOrder] = useState<OrderedCardInfo | null>(null);
   const [popupMode, setPopupMode] = useState<PopupMode>("EXPLORE_PROMO");
   const [isDismissed, setIsDismissed] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [userToggledMinimize, setUserToggledMinimize] = useState<boolean | null>(null);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [minCardPrice, setMinCardPrice] = useState<number>(4);
+
+  const effectiveMinimized = userToggledMinimize !== null ? userToggledMinimize : isMobileScreen;
 
   // Review Form States
   const [rating, setRating] = useState<number>(5);
@@ -297,6 +301,24 @@ export default function OrderedCardStatusPopup() {
 
   useEffect(() => {
     setMounted(true);
+
+    const checkMobile = () => {
+      setIsMobileScreen(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    // Dynamically fetch lowest starting price for physical invitation cards
+    fetch("/api/shop/products?limit=1&sortBy=price_low&mainTab=invitations")
+      .then((res) => res.json())
+      .then((data) => {
+        const lowest = Number(data?.products?.[0]?.pricePerCard);
+        if (!isNaN(lowest) && lowest > 0) {
+          setMinCardPrice(lowest);
+        }
+      })
+      .catch(() => {});
+
     syncPopupState();
 
     const handleEvent = () => {
@@ -308,6 +330,7 @@ export default function OrderedCardStatusPopup() {
     window.addEventListener("storage", handleEvent);
 
     return () => {
+      window.removeEventListener("resize", checkMobile);
       window.removeEventListener("bervic_order_updated", handleEvent);
       window.removeEventListener("bervic_review_submitted", handleEvent);
       window.removeEventListener("storage", handleEvent);
@@ -403,7 +426,7 @@ export default function OrderedCardStatusPopup() {
 
   const handleToggleMinimize = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMinimized((prev) => !prev);
+    setUserToggledMinimize(!effectiveMinimized);
   };
 
   // Active status config for tracking
@@ -423,15 +446,19 @@ export default function OrderedCardStatusPopup() {
   return (
     <aside
       aria-label="Customer Engagement & Order Status Notification"
-      className="fixed bottom-4 left-3 right-3 sm:right-auto sm:left-6 z-40 max-w-sm select-none print:hidden transition-all duration-300"
+      className={`fixed bottom-4 z-40 select-none print:hidden transition-all duration-300 ${
+        effectiveMinimized
+          ? "left-3 right-3 sm:right-auto sm:left-6 flex justify-center sm:justify-start pointer-events-none"
+          : "left-3 right-3 sm:right-auto sm:left-6 max-w-sm"
+      }`}
     >
-      {isMinimized ? (
+      {effectiveMinimized ? (
         /* ========================================================= */
         /* Minimized Compact Floating Chip                           */
         /* ========================================================= */
         <div
-          onClick={() => setIsMinimized(false)}
-          className="flex items-center justify-between gap-2.5 px-3.5 py-2 bg-white/95 backdrop-blur-md border border-amber-300/80 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer group hover:scale-[1.02]"
+          onClick={() => setUserToggledMinimize(false)}
+          className="pointer-events-auto flex items-center justify-between gap-2.5 px-3.5 py-1.5 sm:py-2 bg-white/95 backdrop-blur-md border border-amber-300/80 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer group hover:scale-[1.02] max-w-full"
         >
           <div className="flex items-center gap-2 min-w-0">
             {popupMode === "EXPLORE_PROMO" ? (
@@ -459,7 +486,7 @@ export default function OrderedCardStatusPopup() {
 
             <span className="text-[11px] font-extrabold text-slate-800 truncate">
               {popupMode === "EXPLORE_PROMO"
-                ? "Physical Cards from ₹10"
+                ? `Physical Cards from ₹${minCardPrice}`
                 : popupMode === "ORDER_TRACKING"
                 ? `${statusInfo.pillText} • ${order?.templateName || "Card"}`
                 : popupMode === "REVIEW_PROMPT"
@@ -470,6 +497,7 @@ export default function OrderedCardStatusPopup() {
 
           <div className="flex items-center gap-1 shrink-0">
             <button
+              type="button"
               onClick={handleToggleMinimize}
               className="p-1 text-slate-400 hover:text-slate-700 rounded-full"
               title="Expand"
@@ -477,6 +505,7 @@ export default function OrderedCardStatusPopup() {
               <ChevronUp className="w-3.5 h-3.5" />
             </button>
             <button
+              type="button"
               onClick={handleDismiss}
               className="p-1 text-slate-400 hover:text-red-500 rounded-full"
               title="Close"
@@ -489,7 +518,7 @@ export default function OrderedCardStatusPopup() {
         /* ========================================================= */
         /* Full Expanded Card Container                              */
         /* ========================================================= */
-        <div className="relative bg-white/98 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl p-4 transition-all duration-300 overflow-hidden ring-1 ring-black/5 hover:border-slate-300">
+        <div className="relative bg-white/98 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl p-3.5 sm:p-4 transition-all duration-300 overflow-hidden ring-1 ring-black/5 hover:border-slate-300">
           {/* Header Controls (Minimize & Close) */}
           <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -548,15 +577,15 @@ export default function OrderedCardStatusPopup() {
           {popupMode === "EXPLORE_PROMO" && (
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-rose-50 border border-amber-200 flex items-center justify-center shrink-0 shadow-xs">
-                  <span className="text-2xl">💌</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-50 to-rose-50 border border-amber-200 flex items-center justify-center shrink-0 shadow-xs">
+                  <span className="text-xl sm:text-2xl">💌</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm leading-snug">
                     Looking for Physical Printed Cards?
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                    Order premium custom physical cards with luxury metallic foil & cardstock starting at reasonable prices!
+                    Order premium custom physical cards with luxury metallic foil &amp; cardstock starting from just ₹{minCardPrice}!
                   </p>
                 </div>
               </div>
@@ -564,10 +593,10 @@ export default function OrderedCardStatusPopup() {
               <div className="pt-1">
                 <Link
                   href="/shop"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-[#7A1F2B] to-[#991B1B] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all group"
+                  className="w-full flex items-center justify-center gap-2 py-2 sm:py-2.5 px-3.5 sm:px-4 bg-gradient-to-r from-[#7A1F2B] to-[#991B1B] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all group"
                 >
                   <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                  <span>Explore Invitation Cards (From ₹10)</span>
+                  <span>Explore Invitation Cards (From ₹{minCardPrice})</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
