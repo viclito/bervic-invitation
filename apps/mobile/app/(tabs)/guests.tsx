@@ -91,7 +91,9 @@ export default function GuestsScreen() {
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={refetch}
+            onRefresh={() => {
+              refetch();
+            }}
             tintColor={BRAND_COLORS.primaryRed}
           />
         }

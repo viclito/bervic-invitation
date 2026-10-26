@@ -49,7 +49,7 @@ export function EventHeroCard({
       <Svg
         width="100%"
         height="100%"
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       >
         <Defs>
           <LinearGradient id="heroRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">

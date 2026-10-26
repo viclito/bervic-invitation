@@ -7,21 +7,25 @@ const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch packages and root node_modules
-config.watchFolders = [
-  path.resolve(monorepoRoot, "packages/shared"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
+// 1. Watch all files in the monorepo so all hoisted and local dependencies are monitored
+config.watchFolders = [monorepoRoot];
 
+// 2. Resolve local workspace packages first, then hoisted monorepo node_modules
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Single unified React & core instances
-const reactDir = path.resolve(projectRoot, "node_modules/react");
-const reactDomDir = path.resolve(projectRoot, "node_modules/react-dom");
-const reactNativeDir = path.resolve(projectRoot, "node_modules/react-native");
+// 3. Pin single unified React, React DOM, and React Native paths across workspaces
+const reactDir = path.dirname(
+  require.resolve("react/package.json", { paths: [projectRoot, monorepoRoot] })
+);
+const reactDomDir = path.dirname(
+  require.resolve("react-dom/package.json", { paths: [projectRoot, monorepoRoot] })
+);
+const reactNativeDir = path.dirname(
+  require.resolve("react-native/package.json", { paths: [projectRoot, monorepoRoot] })
+);
 
 config.resolver.extraNodeModules = {
   react: reactDir,

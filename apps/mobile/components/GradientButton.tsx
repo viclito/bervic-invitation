@@ -25,7 +25,7 @@ export function GradientButton({
       disabled={disabled || isLoading}
       className={`h-12 rounded-2xl overflow-hidden shadow-md shadow-red-200 active:opacity-90 ${className}`}
     >
-      <View style={StyleSheet.absoluteFillObject}>
+      <View style={StyleSheet.absoluteFill}>
         <Svg width="100%" height="100%">
           <Defs>
             <LinearGradient id="luxuryRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">

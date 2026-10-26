@@ -2,12 +2,12 @@
   "expo": {
     "name": "Bervic Invitation",
     "slug": "bervic-invitation",
+    "owner": "berglin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "bervic",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

@@ -153,7 +153,11 @@ export function RazorpayCheckoutModal({
 
 const styles = StyleSheet.create({
   fullScreenWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "#FFFFFF",
     zIndex: 99999,
     elevation: 99999,
@@ -199,7 +203,11 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",

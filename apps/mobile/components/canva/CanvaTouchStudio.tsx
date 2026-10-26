@@ -86,6 +86,16 @@ const FONTS = [
   { name: "Imperial Roman", value: Platform.OS === "ios" ? "Times New Roman" : "serif" },
 ];
 
+const resolveFont = (fontFamily?: string) => {
+  if (!fontFamily) return undefined;
+  if (Platform.OS === "ios") {
+    if (fontFamily === "serif") return "Georgia";
+    if (fontFamily === "sans-serif") return "Helvetica Neue";
+    if (fontFamily === "monospace") return "Courier";
+  }
+  return fontFamily;
+};
+
 interface CanvaTouchStudioProps {
   visible: boolean;
   onClose: () => void;
@@ -417,7 +427,7 @@ export function CanvaTouchStudio({
             {backgroundImage ? (
               <Image
                 source={{ uri: resolveAssetUrl(backgroundImage) }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 resizeMode="cover"
               />
             ) : null}
@@ -481,7 +491,7 @@ export function CanvaTouchStudio({
                         fontStyle: el.fontStyle === "italic" ? "italic" : "normal",
                         textAlign: el.textAlign || "center",
                         letterSpacing: el.letterSpacing || 0,
-                        fontFamily: el.fontFamily,
+                        fontFamily: resolveFont(el.fontFamily),
                         lineHeight: el.fontSize ? Math.round(el.fontSize * (el.lineHeight || 1.2)) : undefined,
                       }}
                     >

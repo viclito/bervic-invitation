@@ -124,7 +124,7 @@ export function DoorScannerModal({ visible, onClose, invitationId }: DoorScanner
         ) : (
           <View style={styles.cameraBox}>
             <CameraView
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
               facing="back"
               barcodeScannerSettings={{
                 barcodeTypes: ["qr"],

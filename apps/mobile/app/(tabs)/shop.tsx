@@ -1294,11 +1294,13 @@ export default function ShopScreen() {
       </Modal>
 
       {/* Canva Touch Studio Modal */}
-      <CanvaTouchStudio
-        visible={showCanva}
-        initialTemplate={activeCanvaTemplate}
-        onClose={() => setShowCanva(false)}
-      />
+      {showCanva && (
+        <CanvaTouchStudio
+          visible={showCanva}
+          initialTemplate={activeCanvaTemplate}
+          onClose={() => setShowCanva(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

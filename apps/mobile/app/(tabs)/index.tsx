@@ -54,7 +54,9 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={refetch}
+            onRefresh={() => {
+              refetch();
+            }}
             tintColor={BRAND_COLORS.primaryRed}
           />
         }
