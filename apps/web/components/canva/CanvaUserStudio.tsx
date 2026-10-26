@@ -2166,14 +2166,14 @@ export default function CanvaUserStudio() {
         <aside className="hidden lg:flex lg:static lg:z-10 lg:w-80 flex-col border-r border-slate-200 shrink-0 bg-white shadow-xs">
 
           {/* Tabs: SETTINGS | TEXT | ASSETS | LAYERS | TEMPLATES */}
-          <div className="shrink-0 grid grid-cols-5 p-1.5 gap-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold">
+          <div className="shrink-0 grid grid-cols-5 p-1 gap-1 bg-slate-100/80 border-b border-slate-200 text-[9.5px] font-bold">
             <button
               type="button"
               onClick={() => setActiveTab("SETTINGS")}
-              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`py-1 px-1 rounded-md flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                 activeTab === "SETTINGS"
-                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  ? "bg-[#991B1B] text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -2183,10 +2183,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("TEXT")}
-              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`py-1 px-1 rounded-md flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                 activeTab === "TEXT"
-                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  ? "bg-[#991B1B] text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
               }`}
             >
               <Type className="w-3.5 h-3.5" />
@@ -2196,10 +2196,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("ASSETS")}
-              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`py-1 px-1 rounded-md flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                 activeTab === "ASSETS"
-                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  ? "bg-[#991B1B] text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
@@ -2209,10 +2209,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("LAYERS")}
-              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`py-1 px-1 rounded-md flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                 activeTab === "LAYERS"
-                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  ? "bg-[#991B1B] text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -2222,13 +2222,13 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("TEMPLATES")}
-              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`py-1 px-1 rounded-md flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                 activeTab === "TEMPLATES"
-                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  ? "bg-[#991B1B] text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>Designs</span>
             </button>
           </div>
@@ -2237,24 +2237,19 @@ export default function CanvaUserStudio() {
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar select-auto overscroll-contain bg-white">
             {/* ── TAB 1: CANVAS & SETTINGS (ASPECT RATIOS, DECK LAYERS, BACKGROUNDS) ── */}
             {activeTab === "SETTINGS" && (
-              <div className="p-4 space-y-5 text-xs">
-                {/* Brand New Feature Banner in Canvas Settings */}
-                <div className="p-3 rounded-2xl bg-gradient-to-r from-red-50 to-amber-50 border border-red-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-[#991B1B] text-xs flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" /> Start New Card
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCreateModal(true)}
-                      className="px-2.5 py-1 bg-[#991B1B] hover:bg-[#7F1D1D] text-white rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
-                    >
-                      New Card
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-600">
-                    Create a customized invitation card with custom aspect ratios, multi-deck layers, and luxury textures.
-                  </p>
+              <div className="p-2.5 space-y-3 text-xs">
+                {/* Compact New Card Action */}
+                <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-red-50 to-amber-50 border border-red-200">
+                  <span className="font-extrabold text-[#991B1B] text-[11px] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> Start New Card
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-2 py-0.5 bg-[#991B1B] hover:bg-[#7F1D1D] text-white rounded-md text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    + New
+                  </button>
                 </div>
 
                 {/* Aspect Ratio Selector */}
@@ -2515,21 +2510,19 @@ export default function CanvaUserStudio() {
               </div>
             )}
 
-            {/* ── TAB 2: TEXT & WEDDING TYPOGRAPHY PRESETS ── */}
+            {/* ── TAB 2: TEXT & WEDDING TYPOGRAPHY PRESETS (COMPACT PHOTOSHOP-STYLE) ── */}
             {activeTab === "TEXT" && (
-              <div className="p-4 space-y-5 text-xs">
-                {/* 1. Styled Quick Text Adders */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="font-extrabold text-slate-900 tracking-wider text-[11px] uppercase">
-                      Add Text
-                    </label>
-                    <span className="text-[10px] text-slate-400 font-medium">Click or drag</span>
+              <div className="p-2 space-y-2 text-xs">
+                {/* 1. Quick Add Text - SINGLE LINE (Heading, Subheading, Body) */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[9.5px] text-slate-500 font-extrabold uppercase tracking-wider px-0.5">
+                    <span>Quick Add Text</span>
+                    <span className="text-[9px] font-normal lowercase text-slate-400">click or drag</span>
                   </div>
-
-                  <div className="space-y-2">
-                    {/* Add Heading */}
-                    <div
+                  <div className="grid grid-cols-3 gap-1">
+                    {/* Heading */}
+                    <button
+                      type="button"
                       draggable
                       onDragStart={(e) =>
                         handleDragStartAsset(e, {
@@ -2553,30 +2546,16 @@ export default function CanvaUserStudio() {
                           letterSpacing: 2,
                         })
                       }
-                      className="w-full p-3 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
-                      title="Click to add to center, or drag to position"
+                      className="h-8 px-1.5 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-grab active:cursor-grabbing text-slate-800 hover:text-[#991B1B] shadow-2xs group"
+                      title="Heading: Cinzel • 32px • Bold (Drag or Click)"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-red-50 text-[#991B1B] flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform border border-red-100">
-                          H1
-                        </div>
-                        <div className="truncate">
-                          <span
-                            style={{ fontFamily: "'Cinzel', serif", letterSpacing: "1.5px" }}
-                            className="font-bold text-base text-slate-900 block leading-tight truncate"
-                          >
-                            Add a Heading
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-sans">Cinzel • 32px • Bold</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
-                        + Add
-                      </span>
-                    </div>
+                      <span className="font-serif font-black text-xs text-[#991B1B] shrink-0">H1</span>
+                      <span className="text-[11px] font-bold truncate">Heading</span>
+                    </button>
 
-                    {/* Add Subheading */}
-                    <div
+                    {/* Subheading */}
+                    <button
+                      type="button"
                       draggable
                       onDragStart={(e) =>
                         handleDragStartAsset(e, {
@@ -2600,36 +2579,22 @@ export default function CanvaUserStudio() {
                           letterSpacing: 1,
                         })
                       }
-                      className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
-                      title="Click to add to center, or drag to position"
+                      className="h-8 px-1.5 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-grab active:cursor-grabbing text-slate-800 hover:text-[#991B1B] shadow-2xs group"
+                      title="Subheading: Montserrat • 20px (Drag or Click)"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
-                          H2
-                        </div>
-                        <div className="truncate">
-                          <span
-                            style={{ fontFamily: "'Montserrat', sans-serif", letterSpacing: "0.5px" }}
-                            className="font-semibold text-sm text-slate-800 block leading-tight truncate"
-                          >
-                            Add a Subheading
-                          </span>
-                          <span className="text-[10px] text-slate-400">Montserrat • 20px • Semibold</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
-                        + Add
-                      </span>
-                    </div>
+                      <span className="font-sans font-black text-[11px] text-slate-600 group-hover:text-[#991B1B] shrink-0">H2</span>
+                      <span className="text-[11px] font-semibold truncate">Subhead</span>
+                    </button>
 
-                    {/* Add Body Text */}
-                    <div
+                    {/* Body */}
+                    <button
+                      type="button"
                       draggable
                       onDragStart={(e) =>
                         handleDragStartAsset(e, {
                           type: "text",
                           preset: {
-                            text: "Add a little bit of body text...",
+                            text: "Add body text...",
                             fontFamily: "'Cormorant Garamond', serif",
                             fontSize: 14,
                             fontStyle: "italic",
@@ -2639,238 +2604,208 @@ export default function CanvaUserStudio() {
                       }
                       onClick={() =>
                         handleAddTextElement({
-                          text: "Add a little bit of body text...",
+                          text: "Add body text...",
                           fontFamily: "'Cormorant Garamond', serif",
                           fontSize: 14,
                           fontStyle: "italic",
                         })
                       }
-                      className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
-                      title="Click to add to center, or drag to position"
+                      className="h-8 px-1.5 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-grab active:cursor-grabbing text-slate-800 hover:text-[#991B1B] shadow-2xs group"
+                      title="Body Text: Cormorant • 14px (Drag or Click)"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-serif italic text-xs shrink-0 group-hover:scale-105 transition-transform">
-                          p
-                        </div>
-                        <div className="truncate">
-                          <span
-                            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                            className="font-serif italic text-xs text-slate-700 block leading-tight truncate"
-                          >
-                            Add Body Text
-                          </span>
-                          <span className="text-[10px] text-slate-400">Cormorant • 14px • Italic</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
-                        + Add
-                      </span>
-                    </div>
+                      <span className="font-serif italic font-bold text-xs text-slate-500 group-hover:text-[#991B1B] shrink-0">p</span>
+                      <span className="text-[11px] font-medium truncate">Body</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* 2. Organized Wedding Typography Library */}
-                <div className="space-y-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="font-extrabold text-slate-900 tracking-wider text-[11px] uppercase flex items-center gap-1.5">
-                        <span>👑</span>
-                        <span>Wedding Typography</span>
-                      </label>
-                      <span className="text-[10px] text-slate-500">
-                        {totalFilteredPresetsCount} presets • Drag or click to canvas
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-extrabold text-[#991B1B] bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                      219 Designs
-                    </span>
-                  </div>
-
-                  {/* Search Input */}
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={textSearchQuery}
-                      onChange={(e) => setTextSearchQuery(e.target.value)}
-                      placeholder="Search names, vows, dates, rituals..."
-                      className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all shadow-2xs"
-                    />
-                    {textSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setTextSearchQuery("")}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        title="Clear search"
+                {/* 2. Compact Search & Category Filter Toolbar */}
+                <div className="space-y-1.5 pt-1.5 border-t border-slate-200">
+                  <div className="flex items-center gap-1.5">
+                    {/* Category Selector Dropdown */}
+                    <div className="relative w-[50%] shrink-0">
+                      <select
+                        value={selectedTextCategory}
+                        onChange={(e) => setSelectedTextCategory(e.target.value)}
+                        className="w-full h-7 pl-2 pr-5 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg text-[10px] font-bold text-slate-800 focus:outline-none focus:border-[#991B1B] focus:bg-white truncate cursor-pointer appearance-none"
                       >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                        {allTextCategories.map((catName) => {
+                          const icon = CATEGORY_ICONS[catName] || "✨";
+                          const count =
+                            catName === "All"
+                              ? WEDDING_TEXT_PRESETS.reduce((sum, c) => sum + c.items.length, 0)
+                              : WEDDING_TEXT_PRESETS.find((c) => c.category === catName)?.items.length || 0;
+                          return (
+                            <option key={catName} value={catName}>
+                              {icon} {catName} ({count})
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                      <Search className="w-3 h-3 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={textSearchQuery}
+                        onChange={(e) => setTextSearchQuery(e.target.value)}
+                        placeholder="Search presets..."
+                        className="w-full h-7 pl-6 pr-5 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg text-[10.5px] placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-colors"
+                      />
+                      {textSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setTextSearchQuery("")}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Category Filter Pills (Horizontal Scroll with Icons & Counts) */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 -mx-1 px-1 custom-scrollbar scrollbar-none">
+                  {/* Micro Category Pills (Horizontal, Clean, No Bulky Scrollbar) */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                     {allTextCategories.map((catName) => {
                       const isSel = selectedTextCategory === catName;
                       const icon = CATEGORY_ICONS[catName] || "✨";
-                      const count =
-                        catName === "All"
-                          ? WEDDING_TEXT_PRESETS.reduce((sum, c) => sum + c.items.length, 0)
-                          : WEDDING_TEXT_PRESETS.find((c) => c.category === catName)?.items.length || 0;
                       return (
                         <button
                           key={catName}
                           type="button"
                           onClick={() => setSelectedTextCategory(catName)}
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
                             isSel
-                              ? "bg-gradient-to-r from-[#991B1B] to-[#7F1D1D] text-white shadow-xs"
-                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/60"
+                              ? "bg-[#991B1B] text-white shadow-2xs"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/50"
                           }`}
                         >
                           <span>{icon}</span>
                           <span>{catName}</span>
-                          <span
-                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
-                              isSel ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-500"
-                            }`}
-                          >
-                            {count}
-                          </span>
                         </button>
                       );
                     })}
                   </div>
-
-                  {/* Presets List */}
-                  {filteredTextPresets.length === 0 ? (
-                    <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
-                      <p className="text-xs text-slate-600 font-medium">
-                        No presets found for &ldquo;{textSearchQuery}&rdquo;
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTextSearchQuery("");
-                          setSelectedTextCategory("All");
-                        }}
-                        className="text-[11px] font-bold text-[#991B1B] hover:underline cursor-pointer"
-                      >
-                        Reset filters & view all presets
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-[calc(100vh-450px)] overflow-y-auto pr-1 custom-scrollbar">
-                      {filteredTextPresets.map((cat) => (
-                        <div key={cat.category} className="space-y-2">
-                          <div className="flex items-center justify-between px-0.5">
-                            <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider flex items-center gap-1">
-                              <span>{CATEGORY_ICONS[cat.category] || "✨"}</span>
-                              <span>{cat.category}</span>
-                            </span>
-                            <span className="text-[9px] text-slate-400 font-semibold">
-                              {cat.items.length} designs
-                            </span>
-                          </div>
-
-                          <div className="space-y-2">
-                            {cat.items.map((item) => {
-                              const fontDisplayName =
-                                item.fontFamily
-                                  ?.replace(/['",]/g, "")
-                                  .split(" ")[0] || "Serif";
-
-                              return (
-                                <div
-                                  key={item.label}
-                                  draggable
-                                  onDragStart={(e) =>
-                                    handleDragStartAsset(e, {
-                                      type: "text",
-                                      preset: item,
-                                    })
-                                  }
-                                  onClick={() => handleAddTextElement(item)}
-                                  className="w-full p-3 bg-white hover:bg-red-50/30 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-sm relative overflow-hidden"
-                                  title="Click or drag onto canvas"
-                                >
-                                  {/* Top Row: Label & Font badge */}
-                                  <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[10px] font-extrabold text-slate-600 group-hover:text-[#991B1B] transition-colors truncate">
-                                      {item.label}
-                                    </span>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
-                                        {fontDisplayName}
-                                      </span>
-                                      <span className="text-[9.5px] font-bold text-[#991B1B] opacity-0 group-hover:opacity-100 transition-opacity bg-red-100 px-2 py-0.5 rounded-full">
-                                        + Add
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Live Typographic Preview */}
-                                  <div
-                                    style={{
-                                      fontFamily: item.fontFamily,
-                                      color: item.color,
-                                      letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
-                                      fontWeight: item.fontWeight as any,
-                                      fontStyle: item.fontStyle,
-                                    }}
-                                    className="text-xs leading-snug py-1 line-clamp-3 select-none"
-                                  >
-                                    {item.text}
-                                  </div>
-
-                                  {/* Subdued Footer hint */}
-                                  <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400">
-                                    <span className="group-hover:text-slate-600 transition-colors">
-                                      Drag to card or click
-                                    </span>
-                                    <span className="opacity-0 group-hover:opacity-100 text-[#991B1B] font-bold transition-opacity">
-                                      Insert ↗
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
+                {/* 3. Compact High-Density Presets List (Zero Wasted Space) */}
+                {filteredTextPresets.length === 0 ? (
+                  <div className="p-3 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200 space-y-1">
+                    <p className="text-[11px] text-slate-600 font-medium">
+                      No presets found for &ldquo;{textSearchQuery}&rdquo;
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTextSearchQuery("");
+                        setSelectedTextCategory("All");
+                      }}
+                      className="text-[10px] font-bold text-[#991B1B] hover:underline cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-[calc(100vh-175px)] overflow-y-auto pr-0.5 custom-scrollbar">
+                    {filteredTextPresets.map((cat) => (
+                      <div key={cat.category} className="space-y-1">
+                        {/* Compact Category Header */}
+                        <div className="flex items-center justify-between px-1.5 py-0.5 bg-slate-100 rounded text-[9px] font-extrabold text-slate-700 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-xs">
+                          <span className="flex items-center gap-1 text-[#991B1B]">
+                            <span>{CATEGORY_ICONS[cat.category] || "✨"}</span>
+                            <span>{cat.category}</span>
+                          </span>
+                          <span className="text-[8.5px] text-slate-400 font-mono">
+                            {cat.items.length}
+                          </span>
+                        </div>
+
+                        {/* Dense Preset Items */}
+                        <div className="space-y-1">
+                          {cat.items.map((item) => {
+                            const fontDisplayName =
+                              item.fontFamily?.replace(/['",]/g, "").split(" ")[0] || "Serif";
+
+                            return (
+                              <div
+                                key={item.label}
+                                draggable
+                                onDragStart={(e) =>
+                                  handleDragStartAsset(e, {
+                                    type: "text",
+                                    preset: item,
+                                  })
+                                }
+                                onClick={() => handleAddTextElement(item)}
+                                className="w-full px-2 py-1.5 bg-white hover:bg-red-50/30 border border-slate-200/90 hover:border-[#991B1B] rounded-lg text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs relative"
+                                title={`${item.label} (${fontDisplayName}) - Click to insert or drag to position`}
+                              >
+                                {/* Micro Header: Label & Font Tag */}
+                                <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 mb-0.5 leading-none">
+                                  <span className="truncate group-hover:text-[#991B1B] transition-colors pr-1 font-semibold">
+                                    {item.label}
+                                  </span>
+                                  <span className="font-mono text-[8px] text-slate-400 bg-slate-100 group-hover:bg-red-100 group-hover:text-[#991B1B] px-1 py-0.5 rounded transition-colors shrink-0">
+                                    {fontDisplayName}
+                                  </span>
+                                </div>
+
+                                {/* Actual Styled Typography Preview (Compact, Clean, Zero Bloat) */}
+                                <div
+                                  style={{
+                                    fontFamily: item.fontFamily,
+                                    color: item.color,
+                                    letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
+                                    fontWeight: item.fontWeight as any,
+                                    fontStyle: item.fontStyle,
+                                  }}
+                                  className="text-xs leading-tight line-clamp-2 select-none"
+                                >
+                                  {item.text}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* ── TAB 3: ASSETS (UPLOAD PHOTOS, TRADITIONAL MOTIFS, BORDERS, SHAPES) ── */}
             {activeTab === "ASSETS" && (
-              <div className="p-4 space-y-5 text-xs">
-                {/* 1. Photo Uploader */}
-                <div className="space-y-2">
+              <div className="p-2.5 space-y-3 text-xs">
+                {/* 1. Compact Photo Uploader */}
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px] block">
                       Upload Photos & Graphics
                     </label>
                     {session?.user ? (
-                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-emerald-200">
+                      <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 border border-emerald-200">
                         <Lock className="w-2.5 h-2.5" /> Account Private
                       </span>
                     ) : (
-                      <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold border border-amber-200">
-                        Guest Storage
+                      <span className="text-[9px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md font-bold border border-amber-200">
+                        Guest
                       </span>
                     )}
                   </div>
 
-                  <label className="block p-4 border-2 border-dashed border-slate-200 hover:border-[#991B1B] rounded-2xl text-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-red-50/20 group">
-                    <Upload className="w-5 h-5 text-[#991B1B] mx-auto mb-1 group-hover:scale-110 transition-transform" />
-                    <span className="text-xs font-bold text-slate-800 block">
-                      {isUploading ? "Uploading to your account..." : "Click to Upload Couple Photo / PNG"}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Supports PNG, JPG, WebP • Drag & drop onto card
+                  <label className="block p-2.5 border border-dashed border-slate-300 hover:border-[#991B1B] rounded-xl text-center cursor-pointer transition-colors bg-slate-50/60 hover:bg-red-50/20 group">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="w-4 h-4 text-[#991B1B] shrink-0" />
+                      <span className="text-[11px] font-bold text-slate-800">
+                        {isUploading ? "Uploading..." : "Upload Photo / PNG"}
+                      </span>
+                    </div>
+                    <span className="text-[9.5px] text-slate-400 block mt-0.5">
+                      PNG, JPG, WebP • Drag & drop onto card
                     </span>
                     <input
                       ref={fileInputRef}
