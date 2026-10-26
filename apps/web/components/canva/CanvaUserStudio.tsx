@@ -69,11 +69,12 @@ import { calculateTieredCardPrice, CARD_PRICING_TIERS } from "@/lib/pricing";
 import OrderOrCartModal from "@/components/cart/OrderOrCartModal";
 import {
   WEDDING_TEXT_PRESETS,
+  CATEGORY_ICONS,
   type TextPresetCategory,
   type TextPresetItem,
 } from "@/data/canvaTextPresets";
 
-export { WEDDING_TEXT_PRESETS };
+export { WEDDING_TEXT_PRESETS, CATEGORY_ICONS };
 export type { TextPresetCategory, TextPresetItem };
 
 export interface CanvasElement {
@@ -536,6 +537,7 @@ export default function CanvaUserStudio() {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"SETTINGS" | "TEXT" | "ASSETS" | "LAYERS" | "TEMPLATES">("SETTINGS");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [testMode, setTestMode] = useState(false);
   const [zoom, setZoom] = useState<number>(0.9);
   const [scaleContentWithSize, setScaleContentWithSize] = useState<boolean>(true);
@@ -638,6 +640,21 @@ export default function CanvaUserStudio() {
   const baseDimensions = getLayerDimensions(baseLayer, baseLayer);
   const selectedRatio = ASPECT_RATIOS.find((r) => r.id === activeLayer.aspectRatio) || ASPECT_RATIOS[0];
   const selectedElement = activeLayer.elements.find((el) => el.id === selectedElementId) || null;
+
+  // Deck Layer / Sheet Navigation
+  const activeLayerIndex = Math.max(0, cardLayers.findIndex((l) => l.id === activeLayerId));
+  const handleNextSheet = () => {
+    if (activeLayerIndex < cardLayers.length - 1) {
+      setActiveLayerId(cardLayers[activeLayerIndex + 1].id);
+      setSelectedElementId(null);
+    }
+  };
+  const handlePrevSheet = () => {
+    if (activeLayerIndex > 0) {
+      setActiveLayerId(cardLayers[activeLayerIndex - 1].id);
+      setSelectedElementId(null);
+    }
+  };
 
   // Categorized Wedding Typography Presets (200+ Presets) Filter & Search
   const allTextCategories = useMemo(() => {
@@ -1934,33 +1951,33 @@ export default function CanvaUserStudio() {
 
   return (
     <div className="h-screen w-screen max-h-screen overflow-hidden flex flex-col bg-slate-100/70 text-slate-900 font-sans select-none">
-      {/* ── TOPBAR: CLEAN RESPONSIVE MOBILE & DESKTOP STUDIO HEADER ── */}
-      <header className="h-12 sm:h-14 bg-white border-b border-slate-200 shrink-0 z-30 shadow-xs flex items-center justify-between px-2 sm:px-4 md:px-6 gap-1.5 sm:gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+      {/* ── TOPBAR: CLEAN, ORGANIZED & LUXURY STUDIO HEADER ── */}
+      <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shrink-0 z-30 shadow-2xs flex items-center justify-between px-3 sm:px-5 gap-2">
+        {/* LEFT: BACK, NEW CARD, EDITABLE TITLE & STATUS */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/templates"
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1.5 text-xs font-bold shrink-0"
             title="Back to Templates"
           >
             <ArrowLeft className="w-4 h-4 text-[#991B1B]" />
             <span className="hidden md:inline">Templates</span>
           </Link>
 
-          {/* Create New Card Button (Desktop / Tablet) */}
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-extrabold items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0"
+            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] border border-red-200 text-xs font-bold items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0"
             title="Create a brand new invitation card from scratch"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-[#991B1B]" />
             <span>New Card</span>
           </button>
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
 
-          {/* Card Title Input & Badge */}
-          <div className="flex items-center gap-1 min-w-0">
+          {/* Card Title Input & Saved Indicator */}
+          <div className="flex items-center gap-2 min-w-0">
             <input
               type="text"
               value={docTitle}
@@ -1968,24 +1985,58 @@ export default function CanvaUserStudio() {
                 setDocTitle(e.target.value);
                 setHasUnsavedChanges(true);
               }}
-              className="bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#991B1B] text-xs sm:text-sm font-bold text-slate-900 outline-none px-2 py-1 rounded-xl transition-all w-20 sm:w-40 md:w-52 truncate shadow-2xs"
-              placeholder="Card Title..."
+              className="bg-transparent hover:bg-slate-50 focus:bg-white border border-transparent hover:border-slate-200 focus:border-[#991B1B] text-xs sm:text-sm font-bold text-slate-900 outline-none px-2 py-1 rounded-xl transition-all w-28 sm:w-48 md:w-60 truncate"
+              placeholder="Invitation Title..."
+              title="Click to rename your invitation card"
             />
-            <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[8.5px] font-bold border border-slate-200 hidden lg:inline-flex shrink-0">
-              {selectedRatio.name}
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                hasUnsavedChanges
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${hasUnsavedChanges ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+              <span>{hasUnsavedChanges ? "Unsaved" : "Saved"}</span>
             </span>
           </div>
         </div>
 
-        {/* Action Buttons: Undo/Redo, Preview, Download, Save, Order */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          {/* Undo / Redo - Enabled on both Mobile and Desktop */}
+        {/* CENTER: SHEET / PAGE SWITCHER (DESKTOP) */}
+        <div className="hidden xl:flex items-center gap-1 bg-slate-100/80 border border-slate-200/90 rounded-2xl p-1 text-xs shadow-2xs">
+          <button
+            type="button"
+            onClick={handlePrevSheet}
+            disabled={activeLayerIndex <= 0}
+            className="p-1 rounded-xl text-slate-600 hover:bg-white disabled:opacity-25 transition-all cursor-pointer"
+            title="Previous Sheet"
+          >
+            <ChevronDown className="w-3.5 h-3.5 rotate-90" />
+          </button>
+          <div className="px-2 font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
+            <span className="text-[#991B1B] font-mono">Sheet {activeLayerIndex + 1}/{cardLayers.length}:</span>
+            <span className="truncate max-w-[130px]">{activeLayer.name}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleNextSheet}
+            disabled={activeLayerIndex >= cardLayers.length - 1}
+            className="p-1 rounded-xl text-slate-600 hover:bg-white disabled:opacity-25 transition-all cursor-pointer"
+            title="Next Sheet"
+          >
+            <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+          </button>
+        </div>
+
+        {/* RIGHT: ACTIONS (UNDO/REDO, PREVIEW, EXPORT, SAVE, ORDER) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Undo / Redo */}
           <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
             <button
               type="button"
               onClick={handleUndo}
               disabled={historyIndex <= 0}
-              className="p-1 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-30 cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-25 transition-colors cursor-pointer"
               title="Undo (Ctrl+Z)"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1994,7 +2045,7 @@ export default function CanvaUserStudio() {
               type="button"
               onClick={handleRedo}
               disabled={historyIndex >= history.length - 1}
-              className="p-1 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-30 cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-25 transition-colors cursor-pointer"
               title="Redo (Ctrl+Y)"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -2005,10 +2056,10 @@ export default function CanvaUserStudio() {
           <button
             type="button"
             onClick={() => setShowPreviewModal(true)}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer border bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
-            title="Preview full invitation card"
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+            title="Preview full card"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-3.5 h-3.5 text-slate-600" />
             <span className="hidden md:inline">Preview</span>
           </button>
 
@@ -2018,8 +2069,8 @@ export default function CanvaUserStudio() {
               type="button"
               disabled={isExporting}
               onClick={() => setShowExportMenu((prev) => !prev)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-              title="Download Card"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Export Card as High-Res File"
             >
               <Download className="w-3.5 h-3.5 text-slate-600" />
               <span className="hidden sm:inline">Export</span>
@@ -2031,17 +2082,20 @@ export default function CanvaUserStudio() {
                   className="fixed inset-0 z-40"
                   onClick={() => setShowExportMenu(false)}
                 />
-                <div className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <button
                     type="button"
                     onClick={() => {
                       setShowExportMenu(false);
                       handleExport("png");
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-3.5 py-2.5 text-xs font-semibold hover:bg-red-50/50 text-slate-700 flex items-center gap-2.5 cursor-pointer"
                   >
-                    <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-                    <span>High-Res PNG</span>
+                    <ImageIcon className="w-4 h-4 text-[#991B1B]" />
+                    <div>
+                      <span className="block font-bold text-slate-900">High-Res PNG</span>
+                      <span className="text-[10px] text-slate-400">Crystal clear digital image</span>
+                    </div>
                   </button>
                   <button
                     type="button"
@@ -2049,27 +2103,30 @@ export default function CanvaUserStudio() {
                       setShowExportMenu(false);
                       handleExport("pdf");
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-3.5 py-2.5 text-xs font-semibold hover:bg-red-50/50 text-slate-700 flex items-center gap-2.5 cursor-pointer"
                   >
-                    <FileText className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Print-Ready PDF</span>
+                    <FileText className="w-4 h-4 text-[#991B1B]" />
+                    <div>
+                      <span className="block font-bold text-slate-900">Print-Ready PDF</span>
+                      <span className="text-[10px] text-slate-400">Standard print document</span>
+                    </div>
                   </button>
                 </div>
               </>
             )}
           </div>
 
-          {/* Save Button */}
+          {/* Save to Gallery Button */}
           <button
             type="button"
             disabled={saving}
             onClick={handleSaveCard}
-            className={`p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 shadow-sm transition-all cursor-pointer ${
+            className={`p-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer ${
               hasUnsavedChanges
                 ? "bg-[#991B1B] hover:bg-[#7F1D1D] text-white"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                : "bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100"
             }`}
-            title={hasUnsavedChanges ? "Save Changes" : "Saved"}
+            title="Save invitation card to your dashboard gallery"
           >
             {saving ? (
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -2085,8 +2142,8 @@ export default function CanvaUserStudio() {
           <button
             type="button"
             onClick={() => setShowOrderModal(true)}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-extrabold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
-            title="Order Physical Prints"
+            className="px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-slate-800"
+            title="Order Physical Luxury Printed Cards"
           >
             <ShoppingCart className="w-3.5 h-3.5 text-amber-300" />
             <span className="hidden sm:inline">Order Prints</span>
@@ -2109,12 +2166,14 @@ export default function CanvaUserStudio() {
         <aside className="hidden lg:flex lg:static lg:z-10 lg:w-80 flex-col border-r border-slate-200 shrink-0 bg-white shadow-xs">
 
           {/* Tabs: SETTINGS | TEXT | ASSETS | LAYERS | TEMPLATES */}
-          <div className="shrink-0 grid grid-cols-5 p-2 gap-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold">
+          <div className="shrink-0 grid grid-cols-5 p-1.5 gap-1 bg-slate-50 border-b border-slate-200 text-[10px] font-bold">
             <button
               type="button"
               onClick={() => setActiveTab("SETTINGS")}
-              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                activeTab === "SETTINGS" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "SETTINGS"
+                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -2124,8 +2183,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("TEXT")}
-              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                activeTab === "TEXT" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "TEXT"
+                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
               }`}
             >
               <Type className="w-3.5 h-3.5" />
@@ -2135,8 +2196,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("ASSETS")}
-              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                activeTab === "ASSETS" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "ASSETS"
+                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
@@ -2146,8 +2209,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("LAYERS")}
-              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                activeTab === "LAYERS" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "LAYERS"
+                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -2157,8 +2222,10 @@ export default function CanvaUserStudio() {
             <button
               type="button"
               onClick={() => setActiveTab("TEMPLATES")}
-              className={`py-2 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                activeTab === "TEMPLATES" ? "bg-[#991B1B] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`py-2 px-1 rounded-xl flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                activeTab === "TEMPLATES"
+                  ? "bg-gradient-to-b from-[#991B1B] to-[#7F1D1D] text-white shadow-xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -2451,92 +2518,228 @@ export default function CanvaUserStudio() {
             {/* ── TAB 2: TEXT & WEDDING TYPOGRAPHY PRESETS ── */}
             {activeTab === "TEXT" && (
               <div className="p-4 space-y-5 text-xs">
-                {/* Standard Text Adders */}
+                {/* 1. Styled Quick Text Adders */}
                 <div className="space-y-2">
-                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                    Add Text to Card
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleAddTextElement({ text: "Heading", fontSize: 32, fontWeight: "bold" })}
-                      className="p-3 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-xl text-center transition-all cursor-pointer"
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-900 tracking-wider text-[11px] uppercase">
+                      Add Text
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-medium">Click or drag</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Add Heading */}
+                    <div
+                      draggable
+                      onDragStart={(e) =>
+                        handleDragStartAsset(e, {
+                          type: "text",
+                          preset: {
+                            text: "Add a Heading",
+                            fontFamily: "'Cinzel', serif",
+                            fontSize: 32,
+                            fontWeight: "bold",
+                            color: "#1E293B",
+                            letterSpacing: 2,
+                          },
+                        })
+                      }
+                      onClick={() =>
+                        handleAddTextElement({
+                          text: "Add a Heading",
+                          fontFamily: "'Cinzel', serif",
+                          fontSize: 32,
+                          fontWeight: "bold",
+                          letterSpacing: 2,
+                        })
+                      }
+                      className="w-full p-3 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
+                      title="Click to add to center, or drag to position"
                     >
-                      <span className="text-base font-bold text-slate-900 block">Heading</span>
-                      <span className="text-[9px] text-slate-500">32px</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddTextElement({ text: "Subheading", fontSize: 20, fontWeight: "600" })}
-                      className="p-3 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-xl text-center transition-all cursor-pointer"
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-red-50 text-[#991B1B] flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform border border-red-100">
+                          H1
+                        </div>
+                        <div className="truncate">
+                          <span
+                            style={{ fontFamily: "'Cinzel', serif", letterSpacing: "1.5px" }}
+                            className="font-bold text-base text-slate-900 block leading-tight truncate"
+                          >
+                            Add a Heading
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-sans">Cinzel • 32px • Bold</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
+                        + Add
+                      </span>
+                    </div>
+
+                    {/* Add Subheading */}
+                    <div
+                      draggable
+                      onDragStart={(e) =>
+                        handleDragStartAsset(e, {
+                          type: "text",
+                          preset: {
+                            text: "Add a Subheading",
+                            fontFamily: "'Montserrat', sans-serif",
+                            fontSize: 20,
+                            fontWeight: "600",
+                            color: "#334155",
+                            letterSpacing: 1,
+                          },
+                        })
+                      }
+                      onClick={() =>
+                        handleAddTextElement({
+                          text: "Add a Subheading",
+                          fontFamily: "'Montserrat', sans-serif",
+                          fontSize: 20,
+                          fontWeight: "600",
+                          letterSpacing: 1,
+                        })
+                      }
+                      className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
+                      title="Click to add to center, or drag to position"
                     >
-                      <span className="text-sm font-semibold text-slate-900 block">Subhead</span>
-                      <span className="text-[9px] text-slate-500">20px</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddTextElement({ text: "Body Text", fontSize: 14 })}
-                      className="p-3 bg-slate-50 hover:bg-red-50 hover:border-[#991B1B] border border-slate-200 rounded-xl text-center transition-all cursor-pointer"
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
+                          H2
+                        </div>
+                        <div className="truncate">
+                          <span
+                            style={{ fontFamily: "'Montserrat', sans-serif", letterSpacing: "0.5px" }}
+                            className="font-semibold text-sm text-slate-800 block leading-tight truncate"
+                          >
+                            Add a Subheading
+                          </span>
+                          <span className="text-[10px] text-slate-400">Montserrat • 20px • Semibold</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
+                        + Add
+                      </span>
+                    </div>
+
+                    {/* Add Body Text */}
+                    <div
+                      draggable
+                      onDragStart={(e) =>
+                        handleDragStartAsset(e, {
+                          type: "text",
+                          preset: {
+                            text: "Add a little bit of body text...",
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: 14,
+                            fontStyle: "italic",
+                            color: "#475569",
+                          },
+                        })
+                      }
+                      onClick={() =>
+                        handleAddTextElement({
+                          text: "Add a little bit of body text...",
+                          fontFamily: "'Cormorant Garamond', serif",
+                          fontSize: 14,
+                          fontStyle: "italic",
+                        })
+                      }
+                      className="w-full p-2.5 bg-white hover:bg-red-50/40 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs"
+                      title="Click to add to center, or drag to position"
                     >
-                      <span className="text-xs text-slate-900 block">Body</span>
-                      <span className="text-[9px] text-slate-500">14px</span>
-                    </button>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-serif italic text-xs shrink-0 group-hover:scale-105 transition-transform">
+                          p
+                        </div>
+                        <div className="truncate">
+                          <span
+                            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                            className="font-serif italic text-xs text-slate-700 block leading-tight truncate"
+                          >
+                            Add Body Text
+                          </span>
+                          <span className="text-[10px] text-slate-400">Cormorant • 14px • Italic</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#991B1B] transition-colors shrink-0">
+                        + Add
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Pre-Curated Wedding Typography Presets */}
+                {/* 2. Organized Wedding Typography Library */}
                 <div className="space-y-3 pt-3 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
-                        Royal & Wedding Typography
+                      <label className="font-extrabold text-slate-900 tracking-wider text-[11px] uppercase flex items-center gap-1.5">
+                        <span>👑</span>
+                        <span>Wedding Typography</span>
                       </label>
                       <span className="text-[10px] text-slate-500">
-                        {totalFilteredPresetsCount} curated presets • Click or drag to canvas
+                        {totalFilteredPresetsCount} presets • Drag or click to canvas
                       </span>
                     </div>
                     <span className="text-[10px] font-extrabold text-[#991B1B] bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                      200+ Designs
+                      219 Designs
                     </span>
                   </div>
 
                   {/* Search Input */}
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={textSearchQuery}
                       onChange={(e) => setTextSearchQuery(e.target.value)}
-                      placeholder="Search names, ceremonies, vows, venues..."
-                      className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all"
+                      placeholder="Search names, vows, dates, rituals..."
+                      className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#991B1B] focus:bg-white transition-all shadow-2xs"
                     />
                     {textSearchQuery && (
                       <button
                         type="button"
                         onClick={() => setTextSearchQuery("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        title="Clear search"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
 
-                  {/* Category Filter Pills (Horizontal Scroll) */}
+                  {/* Category Filter Pills (Horizontal Scroll with Icons & Counts) */}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 -mx-1 px-1 custom-scrollbar scrollbar-none">
-                    {allTextCategories.map((catName) => (
-                      <button
-                        key={catName}
-                        type="button"
-                        onClick={() => setSelectedTextCategory(catName)}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
-                          selectedTextCategory === catName
-                            ? "bg-[#991B1B] text-white shadow-xs"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                        }`}
-                      >
-                        {catName}
-                      </button>
-                    ))}
+                    {allTextCategories.map((catName) => {
+                      const isSel = selectedTextCategory === catName;
+                      const icon = CATEGORY_ICONS[catName] || "✨";
+                      const count =
+                        catName === "All"
+                          ? WEDDING_TEXT_PRESETS.reduce((sum, c) => sum + c.items.length, 0)
+                          : WEDDING_TEXT_PRESETS.find((c) => c.category === catName)?.items.length || 0;
+                      return (
+                        <button
+                          key={catName}
+                          type="button"
+                          onClick={() => setSelectedTextCategory(catName)}
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                            isSel
+                              ? "bg-gradient-to-r from-[#991B1B] to-[#7F1D1D] text-white shadow-xs"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/60"
+                          }`}
+                        >
+                          <span>{icon}</span>
+                          <span>{catName}</span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
+                              isSel ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-500"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Presets List */}
@@ -2557,59 +2760,81 @@ export default function CanvaUserStudio() {
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-4 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="space-y-4 max-h-[calc(100vh-450px)] overflow-y-auto pr-1 custom-scrollbar">
                       {filteredTextPresets.map((cat) => (
                         <div key={cat.category} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider">
-                              {cat.category}
+                          <div className="flex items-center justify-between px-0.5">
+                            <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider flex items-center gap-1">
+                              <span>{CATEGORY_ICONS[cat.category] || "✨"}</span>
+                              <span>{cat.category}</span>
                             </span>
                             <span className="text-[9px] text-slate-400 font-semibold">
-                              {cat.items.length} options
+                              {cat.items.length} designs
                             </span>
                           </div>
-                          <div className="space-y-1.5">
-                            {cat.items.map((item) => (
-                              <div
-                                key={item.label}
-                                draggable
-                                onDragStart={(e) =>
-                                  handleDragStartAsset(e, {
-                                    type: "text",
-                                    preset: item,
-                                  })
-                                }
-                                onClick={() => handleAddTextElement(item)}
-                                className="w-full p-2.5 bg-slate-50 hover:bg-red-50/60 hover:border-[#991B1B] border border-slate-200 rounded-xl text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-sm"
-                                title="Click or drag onto canvas"
-                              >
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-[10px] font-bold text-slate-500 group-hover:text-[#991B1B] transition-colors">
-                                    {item.label}
-                                  </span>
-                                  <span className="text-[9px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono">
-                                    Drag / Click ↗
-                                  </span>
-                                </div>
+
+                          <div className="space-y-2">
+                            {cat.items.map((item) => {
+                              const fontDisplayName =
+                                item.fontFamily
+                                  ?.replace(/['",]/g, "")
+                                  .split(" ")[0] || "Serif";
+
+                              return (
                                 <div
-                                  style={{
-                                    fontFamily: item.fontFamily,
-                                    color: item.color,
-                                    letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
-                                    fontWeight: item.fontWeight as any,
-                                    fontStyle: item.fontStyle,
-                                  }}
-                                  className="text-xs leading-snug truncate"
+                                  key={item.label}
+                                  draggable
+                                  onDragStart={(e) =>
+                                    handleDragStartAsset(e, {
+                                      type: "text",
+                                      preset: item,
+                                    })
+                                  }
+                                  onClick={() => handleAddTextElement(item)}
+                                  className="w-full p-3 bg-white hover:bg-red-50/30 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-sm relative overflow-hidden"
+                                  title="Click or drag onto canvas"
                                 >
-                                  {item.text.split("\n")[0]}
+                                  {/* Top Row: Label & Font badge */}
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[10px] font-extrabold text-slate-600 group-hover:text-[#991B1B] transition-colors truncate">
+                                      {item.label}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
+                                        {fontDisplayName}
+                                      </span>
+                                      <span className="text-[9.5px] font-bold text-[#991B1B] opacity-0 group-hover:opacity-100 transition-opacity bg-red-100 px-2 py-0.5 rounded-full">
+                                        + Add
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Live Typographic Preview */}
+                                  <div
+                                    style={{
+                                      fontFamily: item.fontFamily,
+                                      color: item.color,
+                                      letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
+                                      fontWeight: item.fontWeight as any,
+                                      fontStyle: item.fontStyle,
+                                    }}
+                                    className="text-xs leading-snug py-1 line-clamp-3 select-none"
+                                  >
+                                    {item.text}
+                                  </div>
+
+                                  {/* Subdued Footer hint */}
+                                  <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400">
+                                    <span className="group-hover:text-slate-600 transition-colors">
+                                      Drag to card or click
+                                    </span>
+                                    <span className="opacity-0 group-hover:opacity-100 text-[#991B1B] font-bold transition-opacity">
+                                      Insert ↗
+                                    </span>
+                                  </div>
                                 </div>
-                                {item.text.includes("\n") && (
-                                  <span className="text-[9px] text-slate-400 block mt-0.5 truncate">
-                                    {item.text.split("\n").slice(1).join(" ")}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -3408,144 +3633,90 @@ export default function CanvaUserStudio() {
             </div>
           </div>
 
-          {/* ── FLOATING ZOOM & CANVAS CONTROLS (BOTTOM CENTER) ── */}
-          <div className="fixed bottom-[68px] lg:absolute lg:bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xl flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-700 select-none pointer-events-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => setZoom((prev) => Math.max(0.25, Math.round((prev - 0.1) * 10) / 10))}
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
-              title="Zoom Out"
-            >
-              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={handleFitToScreen}
-              className="w-10 sm:w-12 text-center text-[10px] sm:text-[11px] font-extrabold text-slate-900 font-mono hover:text-[#991B1B] cursor-pointer"
-              title="Auto-Fit Screen"
-            >
-              {Math.round(zoom * 100)}%
-            </button>
-            <button
-              type="button"
-              onClick={() => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10))}
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
-              title="Zoom In"
-            >
-              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
-            <div className="h-4 w-px bg-slate-200 mx-0.5" />
-            <button
-              type="button"
-              onClick={handleFitToScreen}
-              className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl bg-red-50 hover:bg-red-100 text-[#991B1B] text-[10px] font-extrabold flex items-center gap-1 cursor-pointer border border-red-200"
-            >
-              <Maximize2 className="w-3 h-3" />
-              <span>Fit</span>
-            </button>
-          </div>
-        </main>
-
-        {/* ── DESKTOP CARD THUMBNAILS STACK (RIGHT COLUMN 1: SHEET SELECTOR & ADD EXTRA LAYER) ── */}
-        <div className="hidden lg:flex w-24 sm:w-28 h-full flex-col items-center shrink-0 py-6 px-1 z-10 select-none overflow-y-auto custom-scrollbar bg-slate-50 border-l border-slate-200">
-          <div className="flex flex-col items-center gap-4 w-full">
-            {cardLayers.map((layer, idx) => {
-              const isSelected = layer.id === activeLayerId;
-              const lDim = getLayerDimensions(layer, baseLayer);
-              const maxThumbW = 54;
-              const maxThumbH = 76;
-              const scale = Math.min(maxThumbW / lDim.width, maxThumbH / lDim.height);
-              const thumbW = Math.max(34, Math.round(lDim.width * scale));
-              const thumbH = Math.max(34, Math.round(lDim.height * scale));
-
-              return (
-                <div
-                  key={layer.id}
-                  onClick={() => {
-                    setActiveLayerId(layer.id);
-                    setSelectedElementId(null);
-                  }}
-                  className="flex flex-col items-center gap-1 w-full cursor-pointer group relative"
-                >
-                  {/* Proportional Card Frame Thumbnail */}
-                  <div className="relative p-1 flex items-center justify-center">
-                    <div
-                      style={{
-                        width: `${thumbW}px`,
-                        height: `${thumbH}px`,
-                        backgroundColor: layer.backgroundColor?.startsWith("#") ? layer.backgroundColor : "#FFFFFF",
-                        backgroundImage: layer.backgroundImage ? `url(${layer.backgroundImage})` : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                      className={`rounded-md overflow-hidden transition-all relative select-none ${
-                        isSelected
-                          ? "opacity-100 ring-2 ring-[#991B1B] border-2 border-[#991B1B] shadow-sm bg-white scale-102"
-                          : "opacity-45 hover:opacity-85 border border-slate-300 bg-white hover:scale-102"
-                      }`}
-                    >
-                      {/* Mini Elements inside Thumbnail */}
-                      {layer.elements.map((el) => (
-                        <div
-                          key={el.id}
-                          style={{
-                            position: "absolute",
-                            left: `${el.x}%`,
-                            top: `${el.y}%`,
-                            width: `${el.width}%`,
-                            height: el.height ? `${el.height}%` : "auto",
-                            transform: `rotate(${el.rotation || 0}deg)`,
-                            opacity: 0.8,
-                          }}
-                          className="pointer-events-none"
-                        >
-                          {el.type === "image" && el.src && (
-                            <img src={el.src} alt="" className="w-full h-full object-contain pointer-events-none" />
-                          )}
-                          {el.type === "text" && (
-                            <div
-                              style={{
-                                fontSize: "4.5px",
-                                color: el.color || "#1E293B",
-                                textAlign: el.textAlign || "center",
-                              }}
-                              className="truncate font-sans leading-none pointer-events-none"
-                            >
-                              {el.text}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Sheet Name */}
-                  <span
-                    className={`text-[9.5px] text-center truncate max-w-[80px] transition-colors leading-tight ${
-                      isSelected ? "font-bold text-[#991B1B]" : "font-medium text-slate-500 group-hover:text-slate-700"
+          {/* ── UNIFIED SLEEK BOTTOM DOCK: CARD SHEETS TRAY & ZOOM CONTROLS ── */}
+          <div className="fixed bottom-[68px] lg:absolute lg:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none pointer-events-auto max-w-[95vw] overflow-x-auto p-1 custom-scrollbar scrollbar-none">
+            {/* Sheet / Deck Switcher Pill Dock */}
+            <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-1.5 shadow-xl flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 pl-1.5 pr-1 hidden sm:inline">
+                Sheets:
+              </span>
+              {cardLayers.map((layer, idx) => {
+                const isSelected = layer.id === activeLayerId;
+                return (
+                  <button
+                    key={layer.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveLayerId(layer.id);
+                      setSelectedElementId(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                      isSelected
+                        ? "bg-[#991B1B] text-white shadow-xs scale-102"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
-                    {layer.name || (idx === 0 ? "Main Invi..." : `Insert Shee ${idx + 1}`)}
-                  </span>
-                  {/* Sheet Subtitle: Base / Percentage */}
-                  <span className="text-[8px] font-mono text-slate-400">
-                    {layer.isBase ? "Base" : `${layer.heightPercent || 85}%`}
-                  </span>
-                </div>
-              );
-            })}
+                    <span>{idx === 0 ? "Main Card" : layer.name || `Insert ${idx + 1}`}</span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-extrabold ${
+                        isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {layer.isBase ? "Base" : `${layer.heightPercent}%`}
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={handleAddLayer}
+                className="px-2.5 py-1.5 rounded-xl border border-dashed border-red-300 hover:border-[#991B1B] hover:bg-red-50 text-[#991B1B] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                title="Add new insert card sheet"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Add Sheet</span>
+              </button>
+            </div>
 
-            {/* Plus Button to Add Card Insert Sheet */}
-            <button
-              type="button"
-              onClick={handleAddLayer}
-              className="w-8 h-8 rounded-full border border-slate-300 hover:border-[#991B1B] hover:bg-red-50 text-slate-500 hover:text-[#991B1B] flex items-center justify-center transition-all cursor-pointer shadow-2xs mt-1"
-              title="Add new card insert sheet"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            {/* Zoom Controls Pill */}
+            <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-2.5 py-1.5 shadow-xl flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
+              <button
+                type="button"
+                onClick={() => setZoom((prev) => Math.max(0.25, Math.round((prev - 0.1) * 10) / 10))}
+                className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+                title="Zoom Out"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={handleFitToScreen}
+                className="w-10 text-center text-[10px] font-extrabold text-slate-900 font-mono hover:text-[#991B1B] cursor-pointer"
+                title="Fit to Screen"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.1) * 10) / 10))}
+                className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+                title="Zoom In"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+              <div className="h-4 w-px bg-slate-200 mx-0.5" />
+              <button
+                type="button"
+                onClick={handleFitToScreen}
+                className="px-2 py-0.5 rounded-lg bg-red-50 hover:bg-red-100 text-[#991B1B] text-[10px] font-extrabold flex items-center gap-1 cursor-pointer"
+                title="Reset zoom to fit screen"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span>Fit</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </main>
 
         {/* ── DESKTOP RIGHT INSPECTOR PANEL (TYPOGRAPHY, COLORS, DIMENSIONS, ALIGNMENT) ── */}
         <aside className="hidden lg:flex lg:static lg:z-10 lg:w-80 flex-col border-l border-slate-200 shrink-0 bg-white shadow-xs">
@@ -3595,26 +3766,28 @@ export default function CanvaUserStudio() {
           <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 custom-scrollbar text-xs">
             {selectedElement ? (
               <>
-                {/* Text Content */}
+                {/* ── 1. TEXT ELEMENT CONTROLS ── */}
                 {selectedElement.type === "text" && (
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
+                    {/* Content */}
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-800">Edit Text Content</label>
+                      <label className="font-bold text-slate-800 text-[11px] block">Text Content</label>
                       <textarea
                         rows={3}
                         value={selectedElement.text || ""}
                         onChange={(e) => updateSelectedElement({ text: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 focus:border-[#991B1B] text-xs outline-none"
+                        className="w-full p-2.5 rounded-xl border border-slate-200 focus:border-[#991B1B] text-xs outline-none bg-slate-50/50 focus:bg-white transition-all resize-y"
+                        placeholder="Type text..."
                       />
                     </div>
 
                     {/* Font Family Selection */}
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-800">Typography Font</label>
+                      <label className="font-bold text-slate-800 text-[11px] block">Typography Font</label>
                       <select
                         value={selectedElement.fontFamily || "'Cormorant Garamond', serif"}
                         onChange={(e) => updateSelectedElement({ fontFamily: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50 focus:border-[#991B1B] outline-none"
+                        className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50 focus:border-[#991B1B] focus:bg-white outline-none cursor-pointer"
                       >
                         {CURATED_FONTS.map((font) => (
                           <option key={font.name} value={font.family}>
@@ -3624,76 +3797,288 @@ export default function CanvaUserStudio() {
                       </select>
                     </div>
 
-                    {/* Font Size & Weight */}
+                    {/* Size and Quick Steppers */}
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="font-bold text-slate-800">Size (px)</label>
-                        <input
-                          type="number"
-                          min={8}
-                          max={120}
-                          value={selectedElement.fontSize || 16}
-                          onChange={(e) => updateSelectedElement({ fontSize: Number(e.target.value) || 16 })}
-                          className="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold"
-                        />
+                        <label className="font-bold text-slate-800 text-[11px] block">Font Size</label>
+                        <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateSelectedElement({
+                                fontSize: Math.max(8, (selectedElement.fontSize || 16) - 2),
+                              })
+                            }
+                            className="w-7 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 cursor-pointer font-bold"
+                            title="Decrease font size"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <input
+                            type="number"
+                            min={8}
+                            max={120}
+                            value={selectedElement.fontSize || 16}
+                            onChange={(e) => updateSelectedElement({ fontSize: Number(e.target.value) || 16 })}
+                            className="w-full text-center text-xs font-bold bg-transparent outline-none py-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateSelectedElement({
+                                fontSize: Math.min(120, (selectedElement.fontSize || 16) + 2),
+                              })
+                            }
+                            className="w-7 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 cursor-pointer font-bold"
+                            title="Increase font size"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Text Color + Picker */}
                       <div className="space-y-1">
-                        <label className="font-bold text-slate-800">Color</label>
-                        <div className="flex items-center gap-1.5 p-1 border border-slate-200 rounded-xl">
+                        <label className="font-bold text-slate-800 text-[11px] block">Text Color</label>
+                        <div className="flex items-center gap-1.5 p-1 border border-slate-200 rounded-xl bg-slate-50 h-8">
                           <input
                             type="color"
                             value={selectedElement.color || "#1E293B"}
                             onChange={(e) => updateSelectedElement({ color: e.target.value })}
-                            className="w-6 h-6 rounded-lg cursor-pointer border-0"
+                            className="w-6 h-6 rounded-lg cursor-pointer border-0 shrink-0"
                           />
-                          <span className="text-[10px] font-mono">{selectedElement.color}</span>
+                          <span className="text-[10px] font-mono text-slate-600 truncate">{selectedElement.color}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Text Styling Buttons (Bold, Italic, Align) */}
-                    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateSelectedElement({
-                            fontWeight: selectedElement.fontWeight === "bold" ? "normal" : "bold",
-                          })
-                        }
-                        className={`p-1.5 rounded-lg text-xs font-bold ${
-                          selectedElement.fontWeight === "bold" ? "bg-white text-[#991B1B] shadow-2xs" : "text-slate-600"
-                        }`}
-                      >
-                        B
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateSelectedElement({
-                            fontStyle: selectedElement.fontStyle === "italic" ? "normal" : "italic",
-                          })
-                        }
-                        className={`p-1.5 rounded-lg text-xs italic ${
-                          selectedElement.fontStyle === "italic" ? "bg-white text-[#991B1B] shadow-2xs" : "text-slate-600"
-                        }`}
-                      >
-                        I
-                      </button>
-                      <div className="h-3 w-px bg-slate-300 mx-1" />
-                      {(["left", "center", "right"] as const).map((align) => (
+                    {/* Curated Luxury Wedding Swatches */}
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Royal Palette
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { name: "Royal Gold", hex: "#D4AF37" },
+                          { name: "Imperial Crimson", hex: "#991B1B" },
+                          { name: "Palace Burgundy", hex: "#4A0E17" },
+                          { name: "Midnight Navy", hex: "#0F172A" },
+                          { name: "Rose Gold", hex: "#B76E79" },
+                          { name: "Emerald", hex: "#064E3B" },
+                          { name: "Champagne", hex: "#C5A880" },
+                          { name: "Charcoal", hex: "#1E293B" },
+                        ].map((swatch) => (
+                          <button
+                            key={swatch.name}
+                            type="button"
+                            onClick={() => updateSelectedElement({ color: swatch.hex })}
+                            style={{ backgroundColor: swatch.hex }}
+                            className={`w-6 h-6 rounded-lg border transition-transform cursor-pointer hover:scale-110 shadow-2xs ${
+                              selectedElement.color?.toLowerCase() === swatch.hex.toLowerCase()
+                                ? "ring-2 ring-[#991B1B] ring-offset-1 border-white"
+                                : "border-black/10"
+                            }`}
+                            title={swatch.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Typography Style & Align Toolbar */}
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-800 text-[11px] block">Style & Alignment</label>
+                      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
                         <button
-                          key={align}
                           type="button"
-                          onClick={() => updateSelectedElement({ textAlign: align })}
-                          className={`p-1.5 rounded-lg ${
-                            selectedElement.textAlign === align ? "bg-white text-[#991B1B] shadow-2xs" : "text-slate-600"
+                          onClick={() =>
+                            updateSelectedElement({
+                              fontWeight: selectedElement.fontWeight === "bold" ? "normal" : "bold",
+                            })
+                          }
+                          className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
+                            selectedElement.fontWeight === "bold"
+                              ? "bg-white text-[#991B1B] shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900"
                           }`}
+                          title="Bold"
                         >
-                          {align === "left" && <AlignLeft className="w-3.5 h-3.5" />}
-                          {align === "center" && <AlignCenter className="w-3.5 h-3.5" />}
-                          {align === "right" && <AlignRight className="w-3.5 h-3.5" />}
+                          B
                         </button>
-                      ))}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSelectedElement({
+                              fontStyle: selectedElement.fontStyle === "italic" ? "normal" : "italic",
+                            })
+                          }
+                          className={`flex-1 py-1 rounded-lg text-xs italic font-serif transition-all ${
+                            selectedElement.fontStyle === "italic"
+                              ? "bg-white text-[#991B1B] shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                          title="Italic"
+                        >
+                          I
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSelectedElement({
+                              textDecoration:
+                                selectedElement.textDecoration === "underline" ? "none" : "underline",
+                            })
+                          }
+                          className={`flex-1 py-1 rounded-lg text-xs underline transition-all ${
+                            selectedElement.textDecoration === "underline"
+                              ? "bg-white text-[#991B1B] shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                          title="Underline"
+                        >
+                          U
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSelectedElement({
+                              textTransform:
+                                selectedElement.textTransform === "uppercase" ? "none" : "uppercase",
+                            })
+                          }
+                          className={`flex-1 py-1 rounded-lg text-xs font-bold transition-all ${
+                            selectedElement.textTransform === "uppercase"
+                              ? "bg-white text-[#991B1B] shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                          title="Uppercase"
+                        >
+                          AA
+                        </button>
+                        <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                        {(["left", "center", "right"] as const).map((align) => (
+                          <button
+                            key={align}
+                            type="button"
+                            onClick={() => updateSelectedElement({ textAlign: align })}
+                            className={`p-1.5 rounded-lg transition-all ${
+                              selectedElement.textAlign === align
+                                ? "bg-white text-[#991B1B] shadow-2xs"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                            title={`Align ${align}`}
+                          >
+                            {align === "left" && <AlignLeft className="w-3.5 h-3.5" />}
+                            {align === "center" && <AlignCenter className="w-3.5 h-3.5" />}
+                            {align === "right" && <AlignRight className="w-3.5 h-3.5" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Letter Spacing (Tracking) */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-slate-800 text-[11px]">Letter Spacing (Tracking)</label>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {selectedElement.letterSpacing || 0}px
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={-2}
+                        max={20}
+                        step={0.5}
+                        value={selectedElement.letterSpacing || 0}
+                        onChange={(e) =>
+                          updateSelectedElement({ letterSpacing: parseFloat(e.target.value) || 0 })
+                        }
+                        className="w-full accent-[#991B1B]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 2. SHAPE ELEMENT CONTROLS ── */}
+                {selectedElement.type === "shape" && (
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-800">Shape Fill Color</span>
+                      <div className="flex items-center gap-1.5 p-1 border border-slate-200 rounded-xl bg-slate-50 h-8">
+                        <input
+                          type="color"
+                          value={selectedElement.backgroundColor || "#D4AF37"}
+                          onChange={(e) => updateSelectedElement({ backgroundColor: e.target.value })}
+                          className="w-6 h-6 rounded-lg cursor-pointer border-0 shrink-0"
+                        />
+                        <span className="text-[10px] font-mono text-slate-600">
+                          {selectedElement.backgroundColor || "#D4AF37"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Curated Luxury Wedding Swatches */}
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Royal Palette
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { name: "Royal Gold", hex: "#D4AF37" },
+                          { name: "Imperial Crimson", hex: "#991B1B" },
+                          { name: "Palace Burgundy", hex: "#4A0E17" },
+                          { name: "Midnight Navy", hex: "#0F172A" },
+                          { name: "Rose Gold", hex: "#B76E79" },
+                          { name: "Emerald", hex: "#064E3B" },
+                          { name: "Champagne", hex: "#C5A880" },
+                          { name: "White", hex: "#FFFFFF" },
+                        ].map((swatch) => (
+                          <button
+                            key={swatch.name}
+                            type="button"
+                            onClick={() => updateSelectedElement({ backgroundColor: swatch.hex })}
+                            style={{ backgroundColor: swatch.hex }}
+                            className={`w-6 h-6 rounded-lg border transition-transform cursor-pointer hover:scale-110 shadow-2xs ${
+                              selectedElement.backgroundColor?.toLowerCase() === swatch.hex.toLowerCase()
+                                ? "ring-2 ring-[#991B1B] ring-offset-1 border-white"
+                                : "border-black/10"
+                            }`}
+                            title={swatch.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 3. IMAGE / GRAPHIC CONTROLS ── */}
+                {selectedElement.type === "image" && (
+                  <div className="space-y-3">
+                    <label className="font-bold text-slate-800 text-[11px] block">Graphic Actions</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateSelectedElement({ flipH: !selectedElement.flipH })}
+                        className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          selectedElement.flipH
+                            ? "bg-red-50 border-[#991B1B] text-[#991B1B]"
+                            : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <FlipHorizontal className="w-3.5 h-3.5" />
+                        <span>Flip H</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSelectedElement({ flipV: !selectedElement.flipV })}
+                        className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          selectedElement.flipV
+                            ? "bg-red-50 border-[#991B1B] text-[#991B1B]"
+                            : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <FlipVertical className="w-3.5 h-3.5" />
+                        <span>Flip V</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -3722,42 +4107,42 @@ export default function CanvaUserStudio() {
                     <button
                       type="button"
                       onClick={() => handleAlignElement("left")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Left
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAlignElement("center")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Center
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAlignElement("right")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Right
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAlignElement("top")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Top
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAlignElement("middle")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Middle
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAlignElement("bottom")}
-                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                      className="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer"
                     >
                       Bottom
                     </button>
@@ -3765,9 +4150,131 @@ export default function CanvaUserStudio() {
                 </div>
               </>
             ) : (
-              <div className="p-8 text-center text-slate-400 space-y-2">
-                <Settings className="w-6 h-6 text-slate-300 mx-auto" />
-                <p className="text-xs">Click on any text or motif on the card to inspect and style it.</p>
+              <div className="space-y-4">
+                {/* Active Sheet Card */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                      Active Card Sheet
+                    </span>
+                    <span className="text-[9.5px] font-extrabold bg-[#991B1B] text-white px-2 py-0.5 rounded-full">
+                      {activeLayer.isBase ? "Base Layer" : `${activeLayer.heightPercent}% Insert`}
+                    </span>
+                  </div>
+                  <h4 className="font-serif font-bold text-slate-900 text-sm">
+                    {activeLayer.name}
+                  </h4>
+                  <div className="flex items-center gap-2 text-[10.5px] text-slate-500 font-mono">
+                    <span>{selectedRatio.name}</span>
+                    <span>•</span>
+                    <span>{activeDimensions.width} × {activeDimensions.height} px</span>
+                  </div>
+                </div>
+
+                {/* Quick Add Actions */}
+                <div className="space-y-2 pt-1">
+                  <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">
+                    Quick Add to Sheet
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleAddTextElement({ text: "Add Headline", fontSize: 28, fontWeight: "bold" })}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 text-left transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <Type className="w-4 h-4 text-[#991B1B]" />
+                      <span className="font-bold text-slate-800 text-xs">Add Text</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("ASSETS")}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:border-[#991B1B] hover:bg-red-50/40 text-left transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span className="font-bold text-slate-800 text-xs">Add Motif</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Background Material Quick Swatches */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">
+                      Sheet Background
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("SETTINGS")}
+                      className="text-[10px] font-bold text-[#991B1B] hover:underline cursor-pointer"
+                    >
+                      Customize →
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { name: "Texture 1", val: "/images/canva/backgrounds/texture-01.webp" },
+                      { name: "Texture 2", val: "/images/canva/backgrounds/texture-02.webp" },
+                      { name: "Texture 3", val: "/images/canva/backgrounds/texture-03.webp" },
+                      { name: "Parchment", val: "#FAF6EE" },
+                      { name: "Ivory", val: "#F3EAD8" },
+                      { name: "Burgundy", val: "#4A0E17" },
+                      { name: "Navy", val: "#0B192C" },
+                      { name: "Blush", val: "#FDF2F2" },
+                    ].map((swatch) => (
+                      <button
+                        key={swatch.name}
+                        type="button"
+                        onClick={() =>
+                          updateActiveLayer({
+                            bgMode: swatch.val.startsWith("/") ? "textures" : "solid",
+                            backgroundColor: swatch.val.startsWith("/") ? "#F3EAD8" : swatch.val,
+                            backgroundImage: swatch.val.startsWith("/") ? swatch.val : null,
+                          })
+                        }
+                        style={{
+                          backgroundColor: swatch.val.startsWith("#") ? swatch.val : "#F3EAD8",
+                          backgroundImage: swatch.val.startsWith("/") ? `url(${swatch.val})` : undefined,
+                          backgroundSize: "cover",
+                        }}
+                        className="h-10 rounded-xl border border-slate-200 hover:scale-105 hover:border-[#991B1B] transition-all cursor-pointer shadow-2xs"
+                        title={swatch.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sheet Layer Stack Quick View */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px]">
+                      Sheet Elements ({activeLayer.elements.length})
+                    </label>
+                  </div>
+                  {activeLayer.elements.length === 0 ? (
+                    <p className="text-slate-400 text-[11px] italic">No elements placed yet. Tap &ldquo;Add Text&rdquo; or choose a preset.</p>
+                  ) : (
+                    <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+                      {activeLayer.elements.map((el, i) => (
+                        <div
+                          key={el.id}
+                          onClick={() => setSelectedElementId(el.id)}
+                          className="p-2 rounded-xl bg-slate-50 hover:bg-red-50/50 border border-slate-200/80 hover:border-[#991B1B] flex items-center justify-between cursor-pointer text-[11px] transition-colors"
+                        >
+                          <span className="font-bold text-slate-700 truncate max-w-[180px]">
+                            {el.type === "text" ? el.text || "Text Box" : el.type === "image" ? "Motif / Image" : "Shape"}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-mono">#{i + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Helpful Tip */}
+                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 text-[10.5px] text-amber-900 leading-relaxed flex items-start gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <span>Click on any text or graphic on the card to edit fonts, size, letter spacing, and colors.</span>
+                </div>
               </div>
             )}
           </div>
@@ -4296,20 +4803,25 @@ export default function CanvaUserStudio() {
 
                       {/* Horizontal Category Filters */}
                       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 custom-scrollbar scrollbar-none">
-                        {allTextCategories.map((catName) => (
-                          <button
-                            key={catName}
-                            type="button"
-                            onClick={() => setSelectedTextCategory(catName)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
-                              selectedTextCategory === catName
-                                ? "bg-[#991B1B] text-white shadow-xs"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                            }`}
-                          >
-                            {catName}
-                          </button>
-                        ))}
+                        {allTextCategories.map((catName) => {
+                          const isSel = selectedTextCategory === catName;
+                          const icon = CATEGORY_ICONS[catName] || "✨";
+                          return (
+                            <button
+                              key={catName}
+                              type="button"
+                              onClick={() => setSelectedTextCategory(catName)}
+                              className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                                isSel
+                                  ? "bg-gradient-to-r from-[#991B1B] to-[#7F1D1D] text-white shadow-xs"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60"
+                              }`}
+                            >
+                              <span>{icon}</span>
+                              <span>{catName}</span>
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {/* Presets List */}
@@ -4331,34 +4843,44 @@ export default function CanvaUserStudio() {
                         <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
                           {filteredTextPresets.map((cat) => (
                             <div key={cat.category} className="space-y-1.5">
-                              <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider block">
-                                {cat.category} ({cat.items.length})
+                              <span className="text-[10px] font-extrabold text-[#991B1B] uppercase tracking-wider flex items-center gap-1">
+                                <span>{CATEGORY_ICONS[cat.category] || "✨"}</span>
+                                <span>{cat.category} ({cat.items.length})</span>
                               </span>
-                              {cat.items.map((item) => (
-                                <div
-                                  key={item.label}
-                                  onClick={() => {
-                                    handleAddTextElement(item);
-                                    setMobileSheet(null);
-                                  }}
-                                  className="p-2.5 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left bg-white active:scale-98"
-                                >
-                                  <span className="text-[10px] font-bold text-[#991B1B] block mb-0.5">
-                                    {item.label}
-                                  </span>
-                                  <p
-                                    style={{
-                                      fontFamily: item.fontFamily,
-                                      color: item.color,
-                                      fontWeight: item.fontWeight as any,
-                                      fontStyle: item.fontStyle,
+                              {cat.items.map((item) => {
+                                const fontDisplayName =
+                                  item.fontFamily?.replace(/['",]/g, "").split(" ")[0] || "Serif";
+                                return (
+                                  <div
+                                    key={item.label}
+                                    onClick={() => {
+                                      handleAddTextElement(item);
+                                      setMobileSheet(null);
                                     }}
-                                    className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"
+                                    className="p-3 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl cursor-pointer hover:bg-red-50/30 transition-all text-left bg-white active:scale-98 shadow-2xs"
                                   >
-                                    {item.text}
-                                  </p>
-                                </div>
-                              ))}
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-[10px] font-extrabold text-slate-700 block">
+                                        {item.label}
+                                      </span>
+                                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200/60">
+                                        {fontDisplayName}
+                                      </span>
+                                    </div>
+                                    <p
+                                      style={{
+                                        fontFamily: item.fontFamily,
+                                        color: item.color,
+                                        fontWeight: item.fontWeight as any,
+                                        fontStyle: item.fontStyle,
+                                      }}
+                                      className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap py-0.5"
+                                    >
+                                      {item.text}
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ))}
                         </div>

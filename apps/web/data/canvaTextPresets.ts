@@ -18,6 +18,40 @@ export interface TextPresetCategory {
   items: TextPresetItem[];
 }
 
+export const CATEGORY_ICONS: Record<string, string> = {
+  All: "✨",
+  "Royal Couple Names": "👑",
+  "Couple Names": "👑",
+  "Formal Invitation Lines": "📜",
+  Invitations: "📜",
+  "Save The Date Announcements": "🗓️",
+  "Save The Date": "🗓️",
+  "Wedding Functions & Ceremonies": "🪔",
+  Functions: "🪔",
+  "Dates, Days & Timings": "⏰",
+  "Dates & Times": "⏰",
+  "Venues, Palaces & Locations": "🏰",
+  Venues: "🏰",
+  "RSVP & Contact Blocks": "💌",
+  RSVP: "💌",
+  "Love Quotes & Vows": "💖",
+  "Quotes & Vows": "💖",
+  "Blessings & Invocations": "🙏",
+  Blessings: "🙏",
+  "Dress Codes & Themes": "👗",
+  "Dress Code": "👗",
+  "Feasts, Dining & Celebrations": "🥂",
+  Dining: "🥂",
+  "Accommodations & Travel": "✈️",
+  Travel: "✈️",
+  "Hashtags & Social Tags": "🏷️",
+  Hashtags: "🏷️",
+  "Special Notes & Requests": "📝",
+  "Special Notes": "📝",
+  "Monograms & Badges": "⚜️",
+  Badges: "⚜️",
+};
+
 export const WEDDING_TEXT_PRESETS: TextPresetCategory[] = [
   // ── CATEGORY 1: ROYAL COUPLE NAMES & HEADLINES (16 items) ──
   {
