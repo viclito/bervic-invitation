@@ -1463,6 +1463,75 @@ function CanvaTemplateBuilderInner() {
     };
   }, []);
 
+  // ── Keyboard Shortcuts (Delete / Backspace, Arrow Nudge, Escape) ──
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      const activeTag = (activeEl?.tagName || "").toLowerCase();
+      const isContentEditable = Boolean(activeEl?.isContentEditable);
+      const isTargetInput = Boolean(
+        (e.target as HTMLElement)?.closest?.("input, textarea, select, [contenteditable='true']")
+      );
+
+      if (
+        activeTag === "input" ||
+        activeTag === "textarea" ||
+        activeTag === "select" ||
+        isContentEditable ||
+        isTargetInput
+      ) {
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedElementId) {
+          const targetEl = elements.find((el) => el.id === selectedElementId);
+          if (targetEl) {
+            e.preventDefault();
+            if (targetEl.isLocked) return;
+            handleDeleteElement(selectedElementId);
+          }
+          return;
+        }
+      }
+
+      if (e.key === "Escape") {
+        if (selectedElementId) {
+          e.preventDefault();
+          setSelectedElementId(null);
+        }
+        return;
+      }
+
+      if (
+        selectedElement &&
+        !selectedElement.isLocked &&
+        ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+      ) {
+        e.preventDefault();
+        const step = e.shiftKey ? 5 : 1;
+        if (e.key === "ArrowLeft") {
+          updateSelectedElement({ x: Math.max(0, Number((selectedElement.x - step).toFixed(2))) });
+        } else if (e.key === "ArrowRight") {
+          updateSelectedElement({
+            x: Math.min(100 - selectedElement.width, Number((selectedElement.x + step).toFixed(2))),
+          });
+        } else if (e.key === "ArrowUp") {
+          updateSelectedElement({ y: Math.max(0, Number((selectedElement.y - step).toFixed(2))) });
+        } else if (e.key === "ArrowDown") {
+          updateSelectedElement({
+            y: Math.min(100 - selectedElement.height, Number((selectedElement.y + step).toFixed(2))),
+          });
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedElementId, selectedElement, elements]);
+
   // Quick Corner & Alignment Helpers
   const handleAlign = (type: "tl" | "tr" | "bl" | "br" | "center" | "centerH" | "centerV") => {
     if (!selectedElement || selectedElement.isLocked) return;

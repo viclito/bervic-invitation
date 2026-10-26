@@ -1671,6 +1671,139 @@ export default function CanvaUserStudio() {
     };
   }, [selectedElementId, recordHistory]);
 
+  // ── Keyboard Shortcuts (Delete / Backspace, Arrow Nudge, Undo / Redo, Escape) ──
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If typing in any input, textarea, select, or contenteditable element, do not trigger canvas shortcuts
+      const activeEl = document.activeElement as HTMLElement | null;
+      const activeTag = (activeEl?.tagName || "").toLowerCase();
+      const isContentEditable = Boolean(activeEl?.isContentEditable);
+      const isTargetInput = Boolean(
+        (e.target as HTMLElement)?.closest?.("input, textarea, select, [contenteditable='true']")
+      );
+
+      if (
+        activeTag === "input" ||
+        activeTag === "textarea" ||
+        activeTag === "select" ||
+        isContentEditable ||
+        isTargetInput
+      ) {
+        return;
+      }
+
+      // 1. Delete / Backspace: Remove selected element or multi-selection
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedIds && selectedIds.length > 0) {
+          e.preventDefault();
+          const deletable = selectedIds.filter((id) => {
+            const el = activeLayer.elements.find((item) => item.id === id);
+            return el && !el.isLocked;
+          });
+          if (deletable.length > 0) {
+            setElements((prev) => prev.filter((el) => !deletable.includes(el.id)));
+            setSelectedIds([]);
+            setSelectedElementId(null);
+            setStatusToast("🗑️ Selected elements deleted");
+            setTimeout(() => setStatusToast(""), 2000);
+          } else {
+            setStatusToast("🔒 Selected elements are locked");
+            setTimeout(() => setStatusToast(""), 2000);
+          }
+          return;
+        }
+
+        if (selectedElementId) {
+          const targetEl = activeLayer.elements.find((el) => el.id === selectedElementId);
+          if (targetEl) {
+            e.preventDefault();
+            if (targetEl.isLocked) {
+              setStatusToast("🔒 Cannot delete locked element");
+              setTimeout(() => setStatusToast(""), 2000);
+              return;
+            }
+            handleDeleteElement(selectedElementId);
+            setStatusToast("🗑️ Element deleted");
+            setTimeout(() => setStatusToast(""), 2000);
+          }
+          return;
+        }
+      }
+
+      // 2. Escape: Deselect current element
+      if (e.key === "Escape") {
+        if (selectedElementId || (selectedIds && selectedIds.length > 0)) {
+          e.preventDefault();
+          setSelectedElementId(null);
+          setSelectedIds([]);
+        }
+        return;
+      }
+
+      // 3. Undo / Redo: Ctrl+Z / Cmd+Z / Ctrl+Y / Cmd+Y
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      // 4. Duplicate: Ctrl+D / Cmd+D
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        if (selectedElementId) {
+          e.preventDefault();
+          handleDuplicateElement(selectedElementId);
+          setStatusToast("📑 Element duplicated");
+          setTimeout(() => setStatusToast(""), 2000);
+        }
+        return;
+      }
+
+      // 5. Arrow Nudge: Move selected element by 1% (or 5% with Shift)
+      if (
+        selectedElement &&
+        !selectedElement.isLocked &&
+        ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+      ) {
+        e.preventDefault();
+        const step = e.shiftKey ? 5 : 1;
+        if (e.key === "ArrowLeft") {
+          updateSelectedElement({ x: Math.max(0, Number((selectedElement.x - step).toFixed(2))) });
+        } else if (e.key === "ArrowRight") {
+          updateSelectedElement({
+            x: Math.min(100 - selectedElement.width, Number((selectedElement.x + step).toFixed(2))),
+          });
+        } else if (e.key === "ArrowUp") {
+          updateSelectedElement({ y: Math.max(0, Number((selectedElement.y - step).toFixed(2))) });
+        } else if (e.key === "ArrowDown") {
+          updateSelectedElement({
+            y: Math.min(100 - selectedElement.height, Number((selectedElement.y + step).toFixed(2))),
+          });
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    selectedElementId,
+    selectedIds,
+    selectedElement,
+    activeLayer,
+    handleUndo,
+    handleRedo,
+  ]);
+
   // Save Card Handler
   const handleSaveCard = async () => {
     setSaving(true);
