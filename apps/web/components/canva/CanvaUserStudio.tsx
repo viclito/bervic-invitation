@@ -2725,50 +2725,35 @@ export default function CanvaUserStudio() {
 
                         {/* Dense Preset Items */}
                         <div className="space-y-1">
-                          {cat.items.map((item) => {
-                            const fontDisplayName =
-                              item.fontFamily?.replace(/['",]/g, "").split(" ")[0] || "Serif";
-
-                            return (
+                          {cat.items.map((item) => (
+                            <div
+                              key={item.label}
+                              draggable
+                              onDragStart={(e) =>
+                                handleDragStartAsset(e, {
+                                  type: "text",
+                                  preset: item,
+                                })
+                              }
+                              onClick={() => handleAddTextElement(item)}
+                              className="w-full px-2.5 py-2 bg-white hover:bg-red-50/25 border border-slate-200 hover:border-[#991B1B] rounded-lg text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs relative"
+                              title={`${item.label} (${item.fontFamily?.replace(/['",]/g, "").split(" ")[0] || "Serif"}) - Drag or click`}
+                            >
+                              {/* Pure Styled Typography Preview */}
                               <div
-                                key={item.label}
-                                draggable
-                                onDragStart={(e) =>
-                                  handleDragStartAsset(e, {
-                                    type: "text",
-                                    preset: item,
-                                  })
-                                }
-                                onClick={() => handleAddTextElement(item)}
-                                className="w-full px-2 py-1.5 bg-white hover:bg-red-50/30 border border-slate-200/90 hover:border-[#991B1B] rounded-lg text-left transition-all cursor-grab active:cursor-grabbing group shadow-2xs hover:shadow-xs relative"
-                                title={`${item.label} (${fontDisplayName}) - Click to insert or drag to position`}
+                                style={{
+                                  fontFamily: item.fontFamily,
+                                  color: item.color,
+                                  letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
+                                  fontWeight: item.fontWeight as any,
+                                  fontStyle: item.fontStyle,
+                                }}
+                                className="text-xs leading-tight line-clamp-2 select-none"
                               >
-                                {/* Micro Header: Label & Font Tag */}
-                                <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 mb-0.5 leading-none">
-                                  <span className="truncate group-hover:text-[#991B1B] transition-colors pr-1 font-semibold">
-                                    {item.label}
-                                  </span>
-                                  <span className="font-mono text-[8px] text-slate-400 bg-slate-100 group-hover:bg-red-100 group-hover:text-[#991B1B] px-1 py-0.5 rounded transition-colors shrink-0">
-                                    {fontDisplayName}
-                                  </span>
-                                </div>
-
-                                {/* Actual Styled Typography Preview (Compact, Clean, Zero Bloat) */}
-                                <div
-                                  style={{
-                                    fontFamily: item.fontFamily,
-                                    color: item.color,
-                                    letterSpacing: item.letterSpacing ? `${item.letterSpacing}px` : undefined,
-                                    fontWeight: item.fontWeight as any,
-                                    fontStyle: item.fontStyle,
-                                  }}
-                                  className="text-xs leading-tight line-clamp-2 select-none"
-                                >
-                                  {item.text}
-                                </div>
+                                {item.text}
                               </div>
-                            );
-                          })}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -4792,16 +4777,9 @@ export default function CanvaUserStudio() {
                                       handleAddTextElement(item);
                                       setMobileSheet(null);
                                     }}
-                                    className="p-3 border border-slate-200/90 hover:border-[#991B1B] rounded-2xl cursor-pointer hover:bg-red-50/30 transition-all text-left bg-white active:scale-98 shadow-2xs"
+                                    className="px-3 py-2 border border-slate-200 hover:border-[#991B1B] rounded-xl cursor-pointer hover:bg-red-50/30 transition-all text-left bg-white active:scale-98 shadow-2xs"
+                                    title={item.label}
                                   >
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="text-[10px] font-extrabold text-slate-700 block">
-                                        {item.label}
-                                      </span>
-                                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200/60">
-                                        {fontDisplayName}
-                                      </span>
-                                    </div>
                                     <p
                                       style={{
                                         fontFamily: item.fontFamily,
